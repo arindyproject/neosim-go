@@ -1,0 +1,44 @@
+Struktur folder saya
+neosim_go/
+    |---- cmd/
+    |       |---- api/
+    |       |       |---- main.go 
+    |       |
+    |       |---- migrate/
+    |               |---- main.go
+    |
+    |---- config/
+    |       |---- config.go
+    |       |---- database.go
+    |
+    |---- internal/
+    |       |---- apps/
+    |       |       |---- apps.go
+    |       |
+    |       |---- registry/
+    |       |       |---- registry.go
+    |       |
+    |       |---- modules/
+    |       |       |---- users/
+    |       |       |       |---- dto/
+    |       |       |       |       |---- user_request.go
+    |       |       |       |       |---- user_response.go
+    |       |       |       |
+    |       |       |       |---- handlers/
+    |       |       |       |       |---- user_handler.go
+    |       |       |       |
+    |       |       |       |---- migrations/
+    |       |       |       |       |---- migrate.go
+    |       |       |       |       |---- 001_create_users_table.sql
+    |       |       |       |
+    |       |       |       |---- models\
+    |       |       |       |       |---- users.go
+    |       |       |       |       
+    |       |       |       |---- repositories\
+    |       |       |       |       |---- user_repository.go
+    |       |       |       |
+    |       |       |       |---- services\
+    |       |       |       |       |---- user_service.go
+    |       |       |       |---- module.go
+    |       |       |       |---- repository.go
+    |       |       |       |---- routes.go
