@@ -5,7 +5,13 @@ import (
 	"log"
 
 	"neosim_go/config"
-	"neosim_go/internal/modules/users/tests/seeders"
+
+	// =====================================================================
+	// import seeder di sini
+	// =====================================================================
+	// Menggunakan alias untuk membedakan kedua paket seeders
+	userSeed "neosim_go/internal/modules/users/tests/seeders"
+	// =====================================================================
 )
 
 func main() {
@@ -38,7 +44,7 @@ func main() {
 	// Jalankan semua seeder di sini
 	// Contoh: user seeder
 	// =====================================================================
-	userSeeder := seeders.NewUserSeeder(db)
+	userSeeder := userSeed.NewUserSeeder(db)
 
 	if *fresh {
 		if err := userSeeder.Fresh(); err != nil {
@@ -49,6 +55,7 @@ func main() {
 			log.Fatal("Gagal seed users:", err)
 		}
 	}
+	// =====================================================================
 	// =====================================================================
 
 	log.Println("✅ Seeding selesai!")

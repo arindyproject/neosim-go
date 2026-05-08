@@ -70,7 +70,7 @@ type fileEntry struct {
 
 func buildFileList(cfg ModuleConfig, base string) []fileEntry {
 	return []fileEntry{
-		{filepath.Join(base, "contracts", "contracts.go"), tmplContracts},
+		{filepath.Join(base, "contracts", "interfaces.go"), tmplContracts},
 		{filepath.Join(base, "dto", fmt.Sprintf("%s_request.go", cfg.ModuleName)), tmplRequest},
 		{filepath.Join(base, "dto", fmt.Sprintf("%s_response.go", cfg.ModuleName)), tmplResponse},
 		{filepath.Join(base, "models", fmt.Sprintf("%s.go", cfg.ModuleName)), tmplModel},
@@ -178,8 +178,6 @@ var tmplContracts = `package contracts
 import (
 	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/dto"
 	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/models"
-
-	"gorm.io/gorm"
 )
 
 // Repository defines database operations
@@ -201,7 +199,7 @@ type Service interface {
 }
 
 // Ensure interfaces are used
-var _ Repository = (*struct{ *gorm.DB })(nil)
+//var _ Repository = (*struct{ *gorm.DB })(nil)
 `
 
 var tmplRequest = `package dto
@@ -278,7 +276,6 @@ type {{.ModuleTitle}} struct {
 	UpdatedBy   *int64         ` + "`" + `gorm:"column:updated_by" json:"updated_by"` + "`" + `
 	CreatedAt   time.Time      ` + "`" + `gorm:"column:created_at;type:timestamptz;not null;default:NOW()" json:"created_at"` + "`" + `
 	UpdatedAt   time.Time      ` + "`" + `gorm:"column:updated_at;type:timestamptz;not null;default:NOW()" json:"updated_at"` + "`" + `
-	DeletedAt   gorm.DeletedAt ` + "`" + `gorm:"column:deleted_at;type:timestamptz" json:"deleted_at"` + "`" + `
 }
 
 func ({{.ModuleTitle}}) TableName() string {
@@ -469,11 +466,11 @@ func New{{.ModuleTitle}}Handler(service contracts.Service) *{{.ModuleTitle}}Hand
 	return &{{.ModuleTitle}}Handler{service: service}
 }
 
-func parseID(c echo.Context) (int64, error) {
-	return strconv.ParseInt(c.PathParam("id"), 10, 64)
+func parseID(c *echo.Context) (int64, error) {
+	return strconv.ParseInt(c.Param("id"), 10, 64)
 }
 
-func getActorID(c echo.Context) *int64 {
+func getActorID(c *echo.Context) *int64 {
 	if userID, ok := c.Get("userID").(int64); ok {
 		return &userID
 	}
@@ -481,7 +478,7 @@ func getActorID(c echo.Context) *int64 {
 }
 
 // List handles GET /api/v1/{{.ModuleName}}s
-func (h *{{.ModuleTitle}}Handler) List(c echo.Context) error {
+func (h *{{.ModuleTitle}}Handler) List(c *echo.Context) error {
 	page, pageSize := 1, 10
 
 	if p := c.QueryParam("page"); p != "" {
@@ -504,7 +501,7 @@ func (h *{{.ModuleTitle}}Handler) List(c echo.Context) error {
 }
 
 // GetByID handles GET /api/v1/{{.ModuleName}}s/:id
-func (h *{{.ModuleTitle}}Handler) GetByID(c echo.Context) error {
+func (h *{{.ModuleTitle}}Handler) GetByID(c *echo.Context) error {
 	id, err := parseID(c)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
@@ -519,7 +516,7 @@ func (h *{{.ModuleTitle}}Handler) GetByID(c echo.Context) error {
 }
 
 // Create handles POST /api/v1/{{.ModuleName}}s
-func (h *{{.ModuleTitle}}Handler) Create(c echo.Context) error {
+func (h *{{.ModuleTitle}}Handler) Create(c *echo.Context) error {
 	var req dto.Create{{.ModuleTitle}}Request
 	if err := c.Bind(&req); err != nil {
 		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
@@ -538,7 +535,7 @@ func (h *{{.ModuleTitle}}Handler) Create(c echo.Context) error {
 }
 
 // Update handles PUT /api/v1/{{.ModuleName}}s/:id
-func (h *{{.ModuleTitle}}Handler) Update(c echo.Context) error {
+func (h *{{.ModuleTitle}}Handler) Update(c *echo.Context) error {
 	id, err := parseID(c)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
@@ -566,7 +563,7 @@ func (h *{{.ModuleTitle}}Handler) Update(c echo.Context) error {
 }
 
 // Delete handles DELETE /api/v1/{{.ModuleName}}s/:id
-func (h *{{.ModuleTitle}}Handler) Delete(c echo.Context) error {
+func (h *{{.ModuleTitle}}Handler) Delete(c *echo.Context) error {
 	id, err := parseID(c)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
@@ -632,10 +629,9 @@ CREATE TABLE IF NOT EXISTS {{.ModuleName}}s (
     updated_by  BIGINT,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    deleted_at  TIMESTAMPTZ
 );
 
-CREATE INDEX IF NOT EXISTS idx_{{.ModuleName}}s_deleted_at ON {{.ModuleName}}s(deleted_at);
+
 `
 
 var tmplFactory = `package factories

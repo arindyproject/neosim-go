@@ -7,11 +7,13 @@ import (
 	"neosim_go/config"
 	"neosim_go/internal/apps"
 
-	// Blank import untuk trigger init() tiap module
-	// Harus sama dengan yang ada di internal/apps/apps.go
+	// =====================================================================
+	// import module di sini
+	// =====================================================================
 	_ "neosim_go/internal/modules/users"
 	// _ "neosim_go/internal/modules/auth"
 	// _ "neosim_go/internal/modules/roles"
+	// =====================================================================
 )
 
 func main() {
