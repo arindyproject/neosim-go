@@ -6,20 +6,23 @@ import (
 	"neosim_go/internal/modules/users/repositories"
 	"neosim_go/internal/modules/users/services"
 
+	"neosim_go/internal/modules/auth/utils"
+
 	"github.com/labstack/echo/v5"
 	"gorm.io/gorm"
 )
 
 // Module represents the users module
 type Module struct {
-	db      *gorm.DB
-	handler *handlers.Handler
-	service contracts.Service
-	repo    contracts.Repository
+	db         *gorm.DB
+	handler    *handlers.Handler
+	service    contracts.Service
+	repo       contracts.Repository
+	jwtManager *utils.JWTManager
 }
 
 // NewModule creates a new users module instance
-func NewModule(db *gorm.DB) *Module {
+func NewModule(db *gorm.DB, jwtManager *utils.JWTManager) *Module {
 	// Create repository
 	repo := repositories.NewRepository(db)
 
@@ -30,16 +33,17 @@ func NewModule(db *gorm.DB) *Module {
 	handler := handlers.NewHandler(service)
 
 	return &Module{
-		db:      db,
-		handler: handler,
-		service: service,
-		repo:    repo,
+		db:         db,
+		handler:    handler,
+		service:    service,
+		repo:       repo,
+		jwtManager: jwtManager,
 	}
 }
 
 // InitRoutes registers the module routes to the echo instance
 func (m *Module) InitRoutes(e *echo.Echo) {
-	RegisterRoutes(e, m.handler)
+	RegisterRoutes(e, m.handler, m.jwtManager)
 }
 
 // GetRepository returns the repository

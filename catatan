@@ -5,21 +5,67 @@ neosim_go/
     |       |       |---- main.go 
     |       |
     |       |---- migrate/
-    |               |---- main.go
+    |       |       |---- main.go
+    |       |
+    |       |---- seed/
+    |       |       |---- main.go
     |
     |---- config/
     |       |---- config.go
     |       |---- database.go
+    |       |---- redis.go
+    |       |---- .env.dev
+    |       |---- .env.prod
     |
     |---- internal/
     |       |---- apps/
     |       |       |---- apps.go
-    |       |
-    |       |---- registry/
     |       |       |---- registry.go
     |       |
     |       |---- modules/
+    |       |       |---- auth/
+    |       |       |       |---- contracts
+    |       |       |       |       |---- interfaces.go
+    |       |       |       |
+    |       |       |       |---- dto/
+    |       |       |       |       |---- auth_request.go
+    |       |       |       |       |---- auth_response.go
+    |       |       |       |
+    |       |       |       |---- handlers/
+    |       |       |       |       |---- auth_handler.go
+    |       |       |       |
+    |       |       |       |---- middlewares/
+    |       |       |       |       |---- jwt_middleware.go
+    |       |       |       |   
+    |       |       |       |---- migrations/
+    |       |       |       |       |---- auth_migrate.go
+    |       |       |       |       |---- 001_create_auth_tokens_table.sql
+    |       |       |       |       |---- 002_create_login_histories_table.sql
+    |       |       |       |       |---- 003_create_password_histories_table.sql
+    |       |       |       |
+    |       |       |       |---- models\
+    |       |       |       |       |---- auth_models.go
+    |       |       |       |       
+    |       |       |       |---- repositories\
+    |       |       |       |       |---- auth_repository.go
+    |       |       |       |
+    |       |       |       |---- services\
+    |       |       |       |       |---- auth_service.go
+    |       |       |       |
+    |       |       |       |---- utils\
+    |       |       |       |       |---- jwt.go
+    |       |       |       |       |---- mailer.go
+    |       |       |       |       |---- password.go
+    |       |       |       |       |---- redis_keys.go
+    |       |       |       |
+    |       |       |       |---- module.go
+    |       |       |       |---- register.go
+    |       |       |       |---- routes.go
+    |       |       |   
     |       |       |---- users/
+    |       |       |       |---- contracts
+    |       |       |       |       |---- interfaces.go
+    |       |       |       |
     |       |       |       |---- dto/
     |       |       |       |       |---- user_request.go
     |       |       |       |       |---- user_response.go
@@ -39,6 +85,7 @@ neosim_go/
     |       |       |       |
     |       |       |       |---- services\
     |       |       |       |       |---- user_service.go
+    |       |       |       |
     |       |       |       |---- module.go
-    |       |       |       |---- repository.go
+    |       |       |       |---- register.go
     |       |       |       |---- routes.go

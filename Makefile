@@ -1,6 +1,10 @@
 # Makefile for Neosim Go Project
 
-.PHONY: build run migrate migrate-dev migrate-prod clean test
+#.PHONY: build run migrate migrate-dev migrate-prod clean test
+.PHONY: build run migrate migrate-dev migrate-prod migrate-sql migrate-sql-prod \
+        clean test create-migration db-stats migrate-fresh-dev migrate-fresh-dev-sql \
+        migrate-fresh-prod migrate-fresh-prod-sql seed seed-prod seed-fresh \
+        migrate-seed migrate-fresh-seed gen-jwt-dev gen-jwt-prod
 
 # Build the API
 build:
@@ -147,3 +151,34 @@ migrate-fresh-seed:
 	else \
 		echo "❌ Aborted."; \
 	fi
+
+
+
+# Tambahkan ke baris .PHONY di bagian atas:
+# .PHONY: ... gen-jwt-dev gen-jwt-prod
+
+# ─── JWT Secret Generation ──────────────────────────────────────────────────
+
+# Generate dan update JWT_SECRET di config/.env.dev
+gen-jwt-dev:
+	@echo "Generating JWT Secret for DEV..."
+	@NEW_SECRET=$$(openssl rand -base64 32 | head -c 32); \
+	if [ -f config/.env.dev ]; then \
+		sed -i "s|^JWT_SECRET=.*|JWT_SECRET=$$NEW_SECRET|" config/.env.dev; \
+		echo "✅ JWT_SECRET berhasil diupdate di config/.env.dev"; \
+    else \
+        echo "❌ File config/.env.dev tidak ditemukan!"; \
+        echo "Secret baru Anda: $$NEW_SECRET"; \
+    fi
+
+# Generate dan update JWT_SECRET di config/.env.prod
+gen-jwt-prod:
+	@echo "Generating JWT Secret for PROD..."
+    @NEW_SECRET=$$(openssl rand -base64 48 | head -c 48); \
+    if [ -f config/.env.prod ]; then \
+        sed -i "s|^JWT_SECRET=.*|JWT_SECRET=$$NEW_SECRET|" config/.env.prod; \
+        echo "✅ JWT_SECRET berhasil diupdate di config/.env.prod"; \
+    else \
+        echo "❌ File config/.env.prod tidak ditemukan!"; \
+        echo "Secret baru Anda: $$NEW_SECRET"; \
+    fi

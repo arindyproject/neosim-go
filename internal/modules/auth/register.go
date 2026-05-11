@@ -1,61 +1,62 @@
-package users
+package auth
 
 import (
 	"database/sql"
 
 	"neosim_go/config"
+
 	"neosim_go/internal/apps"
-	"neosim_go/internal/modules/auth/utils"
-	"neosim_go/internal/modules/users/migrations"
-	"neosim_go/internal/modules/users/models"
+	"neosim_go/internal/modules/auth/models"
 
 	"github.com/labstack/echo/v5"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
-// registryModule adalah implementasi apps.Module untuk users
 type registryModule struct {
-	db  *gorm.DB
-	cfg *config.Config
+	db    *gorm.DB
+	redis *redis.Client
+	cfg   *config.Config
 }
 
-// init() dipanggil otomatis saat package di-import (via blank import di apps.go)
 func init() {
 	apps.Register(&registryModule{})
 }
 
-// ─── DBInjectable ──────────────────────────────────────────────────────────────
+// ─── Injections ────────────────────────────────────────────────────────────────
 
-// SetDB menerima db dari registry sebelum InitRoutes dipanggil
 func (r *registryModule) SetDB(db *gorm.DB) {
 	r.db = db
 }
 
-func (r *registryModule) SetConfig(cfg *config.Config) { r.cfg = cfg }
+func (r *registryModule) SetRedis(client *redis.Client) {
+	r.redis = client
+}
+
+func (r *registryModule) SetConfig(cfg *config.Config) {
+	r.cfg = cfg
+}
 
 // ─── Routes ────────────────────────────────────────────────────────────────────
+
 func (r *registryModule) InitRoutes(e *echo.Echo) {
-	jwtManager := utils.NewJWTManager(
-		r.cfg.JWTSecret,
-		r.cfg.JWTIssuer,
-		r.cfg.JWTAccessTokenExpMinutes,
-		r.cfg.JWTRefreshTokenExpDays,
-	)
-	NewModule(r.db, jwtManager).InitRoutes(e)
+	NewModule(r.db, r.redis, r.cfg).InitRoutes(e)
 }
 
 // ─── Migration ─────────────────────────────────────────────────────────────────
 
 func (r *registryModule) Models() []interface{} {
 	return []interface{}{
-		&models.User{},
+		&models.AuthToken{},
+		&models.LoginHistory{},
+		&models.PasswordHistory{},
 	}
 }
 
 func (r *registryModule) SeedData(db *gorm.DB) error {
-	return migrations.SeedDefaultSettings(db)
+	return nil
 }
 
 func (r *registryModule) MigrateSQL(sqlDB *sql.DB) error {
-	return migrations.MigrateUsersWithSQL(sqlDB)
+	return nil // Gunakan GORM auto-migrate
 }

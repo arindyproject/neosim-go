@@ -3,13 +3,17 @@ package users
 import (
 	"neosim_go/internal/modules/users/handlers"
 
+	"neosim_go/internal/modules/auth/middlewares"
+	"neosim_go/internal/modules/auth/utils"
+
 	"github.com/labstack/echo/v5"
 )
 
 // RegisterRoutes registers user routes to the echo instance
-func RegisterRoutes(e *echo.Echo, handler *handlers.Handler) {
+func RegisterRoutes(e *echo.Echo, handler *handlers.Handler, jwtManager *utils.JWTManager) {
 	// Public routes (no auth required)
-	userGroup := e.Group("/api/v1/users")
+	userGroup := e.Group("/api/v1/users") // Apply JWT auth middleware to all user routes
+	userGroup.Use(middlewares.JWTMiddleware(jwtManager))
 
 	// Create user
 	userGroup.POST("", handler.CreateUserHandler)

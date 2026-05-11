@@ -4,11 +4,15 @@ import (
 	"database/sql"
 	"log"
 
+	"neosim_go/config"
+
 	"github.com/labstack/echo/v5"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
-// Module interface yang harus diimplementasi tiap module
+// ─── Interfaces ────────────────────────────────────────────────────────────────
+
 type Module interface {
 	Models() []interface{}
 	SeedData(db *gorm.DB) error
@@ -16,30 +20,36 @@ type Module interface {
 	InitRoutes(e *echo.Echo)
 }
 
-// DBInjectable optional interface untuk module yang butuh DB
 type DBInjectable interface {
 	SetDB(db *gorm.DB)
 }
 
+type RedisInjectable interface {
+	SetRedis(client *redis.Client)
+}
+
+type ConfigInjectable interface {
+	SetConfig(cfg *config.Config)
+}
+
+// ─── Registry ──────────────────────────────────────────────────────────────────
+
 var registeredModules []Module
 
-// Register mendaftarkan module ke registry
 func Register(m Module) {
 	registeredModules = append(registeredModules, m)
 }
 
 // ─── Routes ────────────────────────────────────────────────────────────────────
 
-// InitAllRoutes menginisialisasi semua routes dari semua module
 func InitAllRoutes(e *echo.Echo) {
 	for _, m := range registeredModules {
 		m.InitRoutes(e)
 	}
 }
 
-// ─── DB Injection ──────────────────────────────────────────────────────────────
+// ─── Injections ────────────────────────────────────────────────────────────────
 
-// InjectDB menyuntikkan db ke semua module yang mengimplementasi DBInjectable
 func InjectDB(db *gorm.DB) {
 	for _, m := range registeredModules {
 		if injectable, ok := m.(DBInjectable); ok {
@@ -48,9 +58,24 @@ func InjectDB(db *gorm.DB) {
 	}
 }
 
+func InjectRedis(client *redis.Client) {
+	for _, m := range registeredModules {
+		if injectable, ok := m.(RedisInjectable); ok {
+			injectable.SetRedis(client)
+		}
+	}
+}
+
+func InjectConfig(cfg *config.Config) {
+	for _, m := range registeredModules {
+		if injectable, ok := m.(ConfigInjectable); ok {
+			injectable.SetConfig(cfg)
+		}
+	}
+}
+
 // ─── Migration ─────────────────────────────────────────────────────────────────
 
-// AllModels mengumpulkan semua model dari semua module
 func AllModels() []interface{} {
 	var all []interface{}
 	for _, m := range registeredModules {
@@ -59,7 +84,6 @@ func AllModels() []interface{} {
 	return all
 }
 
-// DropAll menghapus semua tabel dalam urutan reverse (FK constraint)
 func DropAll(db *gorm.DB) error {
 	models := AllModels()
 	reversed := make([]interface{}, len(models))
@@ -69,7 +93,6 @@ func DropAll(db *gorm.DB) error {
 	return db.Migrator().DropTable(reversed...)
 }
 
-// MigrateAll menjalankan GORM auto-migration semua module
 func MigrateAll(db *gorm.DB) error {
 	for _, m := range registeredModules {
 		if err := db.AutoMigrate(m.Models()...); err != nil {
@@ -79,7 +102,6 @@ func MigrateAll(db *gorm.DB) error {
 	return nil
 }
 
-// SeedAll menjalankan seed data semua module
 func SeedAll(db *gorm.DB) {
 	for _, m := range registeredModules {
 		if err := m.SeedData(db); err != nil {
@@ -88,7 +110,6 @@ func SeedAll(db *gorm.DB) {
 	}
 }
 
-// MigrateAllSQL menjalankan SQL migration semua module
 func MigrateAllSQL(db *gorm.DB) error {
 	sqlDB, err := db.DB()
 	if err != nil {
