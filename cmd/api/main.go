@@ -7,12 +7,15 @@ import (
 	"neosim_go/config"
 	"neosim_go/internal/apps"
 
+	appErrors "neosim_go/internal/shared/errors"
+
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
 
 	// =============== Modules ===============
 	// input module baru di sini saat ada, misal:
 	_ "neosim_go/internal/modules/auth"
+	_ "neosim_go/internal/modules/rbac"
 	_ "neosim_go/internal/modules/users"
 	// =============== Modules ===============
 )
@@ -23,6 +26,8 @@ func main() {
 
 	// 2. Echo Instance
 	e := echo.New()
+
+	e.HTTPErrorHandler = appErrors.Handler // global error handler khusus AppError
 
 	// 3. Global Middleware
 	e.Use(middleware.RequestLogger())

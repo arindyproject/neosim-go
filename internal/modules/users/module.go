@@ -1,12 +1,12 @@
 package users
 
 import (
+	"neosim_go/internal/modules/auth/utils"
+	rbacContracts "neosim_go/internal/modules/rbac/contracts"
 	"neosim_go/internal/modules/users/contracts"
 	"neosim_go/internal/modules/users/handlers"
 	"neosim_go/internal/modules/users/repositories"
 	"neosim_go/internal/modules/users/services"
-
-	"neosim_go/internal/modules/auth/utils"
 
 	"github.com/labstack/echo/v5"
 	"gorm.io/gorm"
@@ -18,32 +18,35 @@ type Module struct {
 	handler    *handlers.Handler
 	service    contracts.Service
 	repo       contracts.Repository
+	rbacRepo   rbacContracts.RBACRepository
 	jwtManager *utils.JWTManager
 }
 
 // NewModule creates a new users module instance
-func NewModule(db *gorm.DB, jwtManager *utils.JWTManager) *Module {
-	// Create repository
+func NewModule(db *gorm.DB, jwtManager *utils.JWTManager, rbacRepo rbacContracts.RBACRepository) *Module {
+	// Layer 1: Repository
 	repo := repositories.NewRepository(db)
 
-	// Create service
-	service := services.NewService(repo)
+	// Layer 2: Service — inject rbacRepo untuk authorization
+	svc := services.NewUserService(repo, rbacRepo)
 
-	// Create handler
-	handler := handlers.NewHandler(service)
+	// Layer 3: Handler
+	handler := handlers.NewHandler(svc)
 
 	return &Module{
 		db:         db,
 		handler:    handler,
-		service:    service,
+		service:    svc,
 		repo:       repo,
+		rbacRepo:   rbacRepo,
 		jwtManager: jwtManager,
 	}
 }
 
-// InitRoutes registers the module routes to the echo instance
+// InitRoutes mendaftarkan routes ke echo instance
 func (m *Module) InitRoutes(e *echo.Echo) {
-	RegisterRoutes(e, m.handler, m.jwtManager)
+	// Inject rbacRepo ke routes untuk RBAC middleware
+	RegisterRoutes(e, m.handler, m.rbacRepo, m.jwtManager)
 }
 
 // GetRepository returns the repository

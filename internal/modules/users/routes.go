@@ -1,44 +1,57 @@
 package users
 
 import (
-	"neosim_go/internal/modules/users/handlers"
-
-	"neosim_go/internal/modules/auth/middlewares"
+	authMiddlewares "neosim_go/internal/modules/auth/middlewares"
 	"neosim_go/internal/modules/auth/utils"
+	"neosim_go/internal/modules/rbac/contracts"
+	rbacMiddlewares "neosim_go/internal/modules/rbac/middlewares"
+	rbacModels "neosim_go/internal/modules/rbac/models"
+	"neosim_go/internal/modules/users/handlers"
 
 	"github.com/labstack/echo/v5"
 )
 
-// RegisterRoutes registers user routes to the echo instance
-func RegisterRoutes(e *echo.Echo, handler *handlers.Handler, jwtManager *utils.JWTManager) {
-	// Public routes (no auth required)
-	userGroup := e.Group("/api/v1/users") // Apply JWT auth middleware to all user routes
-	userGroup.Use(middlewares.JWTMiddleware(jwtManager))
+// RegisterRoutes mendaftarkan semua routes users dengan RBAC
+//
+// Aturan akses UpdateUser (dicek di service):
+// - Superadmin         → boleh
+// - Diri sendiri       → boleh
+// - Permission users:update → boleh
+// - Role hrd           → boleh
+func RegisterRoutes(e *echo.Echo, h *handlers.Handler, rbacRepo contracts.RBACRepository, jwtManager *utils.JWTManager) {
+	jwt := authMiddlewares.JWTMiddleware(jwtManager)
 
-	// Create user
-	userGroup.POST("", handler.CreateUserHandler)
+	// ─── Public (tidak butuh login) ────────────────────────────
+	public := e.Group("/api/v1/users")
+	public.GET("/username/:username", h.GetByUsernameHandler)
 
-	// List users
-	userGroup.GET("", handler.ListUsersHandler)
+	// ─── Protected (butuh login) ───────────────────────────────
+	protected := e.Group("/api/v1/users", jwt)
 
-	// Get user by ID
-	userGroup.GET("/:id", handler.GetUserHandler)
+	// List — butuh permission users:read
+	protected.GET("", h.ListUsersHandler,
+		rbacMiddlewares.RequirePermission(rbacRepo, rbacModels.PermUsersRead),
+	)
 
-	// Get user by username
-	userGroup.GET("/username/:username", handler.GetByUsernameHandler)
+	// Get by ID — authorization di service (diri sendiri atau punya permission)
+	protected.GET("/:id", h.GetUserHandler)
 
-	// Update user
-	userGroup.PUT("/:id", handler.UpdateUserHandler)
+	// Create — butuh permission users:create
+	protected.POST("", h.CreateUserHandler,
+		rbacMiddlewares.RequirePermission(rbacRepo, rbacModels.PermUsersCreate),
+	)
 
-	// Delete user
-	userGroup.DELETE("/:id", handler.DeleteUserHandler)
+	// Update — route tidak ada middleware khusus karena authorization
+	// dilakukan di service (superadmin | diri sendiri | users:update | role hrd)
+	protected.PUT("/:id", h.UpdateUserHandler)
 
-	// Change password
-	userGroup.POST("/:id/change-password", handler.ChangePasswordHandler)
+	// Delete — butuh permission users:delete atau superadmin (dicek di service)
+	protected.DELETE("/:id", h.DeleteUserHandler)
 
-	// Get user settings
-	userGroup.GET("/:id/settings", handler.GetSettingsHandler)
+	// Change Password — authorization di service (diri sendiri atau superadmin)
+	protected.PUT("/:id/change-password", h.ChangePasswordHandler)
 
-	// Update user settings
-	userGroup.PUT("/:id/settings", handler.UpdateSettingsHandler)
+	// Settings — diri sendiri atau superadmin
+	protected.GET("/:id/settings", h.GetSettingsHandler)
+	protected.PUT("/:id/settings", h.UpdateSettingsHandler)
 }

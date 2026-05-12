@@ -5,27 +5,14 @@ import (
 	"neosim_go/internal/modules/users/models"
 )
 
-// Service interface defines the business logic operations
-type Service interface {
-	// CRUD
-	CreateUser(req *dto.CreateUserRequest, createdBy *int64) (*dto.UserResponse, error)
-	GetUserByID(id int64) (*dto.UserResponse, error)
-	GetUserByUsername(username string) (*dto.UserResponse, error)
-	GetUserByEmail(email string) (*dto.UserResponse, error)
-	ListUsers(page, pageSize int) ([]dto.UserResponse, int64, error)
-	UpdateUser(id int64, req *dto.UpdateUserRequest, updatedBy *int64) (*dto.UserResponse, error)
-	DeleteUser(id int64) error
-
-	// Password
-	ChangePassword(id int64, req *dto.ChangePasswordRequest) error
-	UpdateLastLogin(id int64) error
-
-	// Settings
-	GetSettings(id int64) ([]models.UserSetting, error)
-	UpdateSettings(id int64, req *dto.UpdateSettingsRequest) error
+// AuthContext berisi informasi user yang sedang login untuk authorization
+type AuthContext struct {
+	UserID      int64
+	IsSuperuser bool
 }
 
-// Repository interface defines the database operations
+// ─── Repository ────────────────────────────────────────────────────────────────
+
 type Repository interface {
 	Create(user *models.User) error
 	GetByID(id int64) (*models.User, error)
@@ -36,4 +23,25 @@ type Repository interface {
 	Delete(id int64) error
 	GetSettings(id int64) ([]models.UserSetting, error)
 	UpdateSettings(id int64, settings []models.UserSetting) error
+}
+
+// ─── Service ───────────────────────────────────────────────────────────────────
+
+type Service interface {
+	// CRUD — operasi yang butuh auth context
+	CreateUser(req *dto.CreateUserRequest, createdBy *int64) (*dto.UserResponse, error)
+	GetUserByID(id int64, actor AuthContext) (*dto.UserResponse, error)
+	GetUserByUsername(username string) (*dto.UserResponse, error)
+	GetUserByEmail(email string) (*dto.UserResponse, error)
+	ListUsers(page, pageSize int) ([]dto.UserResponse, int64, error)
+	UpdateUser(id int64, req *dto.UpdateUserRequest, actor AuthContext) (*dto.UserResponse, error)
+	DeleteUser(id int64, actor AuthContext) error
+
+	// Password
+	ChangePassword(id int64, req *dto.ChangePasswordRequest, actor AuthContext) error
+	UpdateLastLogin(id int64) error
+
+	// Settings
+	GetSettings(id int64) ([]models.UserSetting, error)
+	UpdateSettings(id int64, req *dto.UpdateSettingsRequest) error
 }

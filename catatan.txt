@@ -22,6 +22,16 @@ neosim_go/
     |       |       |---- apps.go
     |       |       |---- registry.go
     |       |
+    |       |---- shared/
+    |       |       |---- error/
+    |       |       |       |---- error.go
+    |       |       |
+    |       |       |---- response/
+    |       |       |       |---- response.go
+    |       |       |
+    |       |       |---- validator/
+    |       |       |       |---- validator.go
+    |       |
     |       |---- modules/
     |       |       |---- auth/
     |       |       |       |---- contracts

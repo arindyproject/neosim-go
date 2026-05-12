@@ -6,6 +6,8 @@ import (
 	"neosim_go/config"
 	"neosim_go/internal/apps"
 	"neosim_go/internal/modules/auth/utils"
+	rbacContracts "neosim_go/internal/modules/rbac/contracts"
+	rbacRepositories "neosim_go/internal/modules/rbac/repositories"
 	"neosim_go/internal/modules/users/migrations"
 	"neosim_go/internal/modules/users/models"
 
@@ -13,27 +15,31 @@ import (
 	"gorm.io/gorm"
 )
 
-// registryModule adalah implementasi apps.Module untuk users
 type registryModule struct {
-	db  *gorm.DB
-	cfg *config.Config
+	db       *gorm.DB
+	cfg      *config.Config
+	rbacRepo rbacContracts.RBACRepository
 }
 
-// init() dipanggil otomatis saat package di-import (via blank import di apps.go)
 func init() {
 	apps.Register(&registryModule{})
 }
 
-// ─── DBInjectable ──────────────────────────────────────────────────────────────
+// ─── Injections ────────────────────────────────────────────────────────────────
 
-// SetDB menerima db dari registry sebelum InitRoutes dipanggil
 func (r *registryModule) SetDB(db *gorm.DB) {
 	r.db = db
+	// Build rbacRepo saat DB tersedia
+	// rbacRepo tidak punya table sendiri di module ini, reuse dari rbac module
+	r.rbacRepo = rbacRepositories.NewRBACRepository(db)
 }
 
-func (r *registryModule) SetConfig(cfg *config.Config) { r.cfg = cfg }
+func (r *registryModule) SetConfig(cfg *config.Config) {
+	r.cfg = cfg
+}
 
 // ─── Routes ────────────────────────────────────────────────────────────────────
+
 func (r *registryModule) InitRoutes(e *echo.Echo) {
 	jwtManager := utils.NewJWTManager(
 		r.cfg.JWTSecret,
@@ -41,7 +47,7 @@ func (r *registryModule) InitRoutes(e *echo.Echo) {
 		r.cfg.JWTAccessTokenExpMinutes,
 		r.cfg.JWTRefreshTokenExpDays,
 	)
-	NewModule(r.db, jwtManager).InitRoutes(e)
+	NewModule(r.db, jwtManager, r.rbacRepo).InitRoutes(e)
 }
 
 // ─── Migration ─────────────────────────────────────────────────────────────────
