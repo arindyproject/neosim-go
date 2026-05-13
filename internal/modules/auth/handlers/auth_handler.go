@@ -24,6 +24,21 @@ func NewAuthHandler(service contracts.AuthService) *AuthHandler {
 
 // ─── Login ─────────────────────────────────────────────────────────────────────
 
+// Login godoc
+//
+//	@Summary		Login user
+//	@Description	Login menggunakan username atau email dan password
+//	@Tags			Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		dto.LoginRequest	true	"Login Request"
+//	@Success		200		{object}	response.MyGoResponse{data=dto.TokenResponse}
+//	@Failure		401		{object}	response.MyGoResponse
+//	@Failure		403		{object}	response.MyGoResponse
+//	@Failure		422		{object}	response.MyGoResponse
+//	@Failure		429		{object}	response.MyGoResponse
+//	@Router			/auth/login [post]
+//
 // Login handles POST /api/v1/auth/login
 func (h *AuthHandler) Login(c *echo.Context) error {
 	var req dto.LoginRequest
@@ -47,7 +62,19 @@ func (h *AuthHandler) Login(c *echo.Context) error {
 }
 
 // ─── Register ──────────────────────────────────────────────────────────────────
-
+// Register godoc
+//
+//	@Summary		Register user baru
+//	@Description	Mendaftarkan akun baru
+//	@Tags			Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		dto.RegisterRequest	true	"Register Request"
+//	@Success		201		{object}	response.MyGoResponse{data=dto.RegisterResponse}
+//	@Failure		403		{object}	response.MyGoResponse
+//	@Failure		422		{object}	response.MyGoResponse
+//	@Router			/auth/register [post]
+//
 // Register handles POST /api/v1/auth/register
 func (h *AuthHandler) Register(c *echo.Context) error {
 	var req dto.RegisterRequest
@@ -68,7 +95,18 @@ func (h *AuthHandler) Register(c *echo.Context) error {
 }
 
 // ─── Refresh Token ─────────────────────────────────────────────────────────────
-
+// RefreshToken godoc
+//
+//	@Summary		Refresh access token
+//	@Description	Memperbarui access token menggunakan refresh token
+//	@Tags			Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		dto.RefreshTokenRequest	true	"Refresh Token Request"
+//	@Success		200		{object}	response.MyGoResponse{data=dto.TokenResponse}
+//	@Failure		401		{object}	response.MyGoResponse
+//	@Router			/auth/refresh [post]
+//
 // RefreshToken handles POST /api/v1/auth/refresh
 func (h *AuthHandler) RefreshToken(c *echo.Context) error {
 	var req dto.RefreshTokenRequest
@@ -89,7 +127,17 @@ func (h *AuthHandler) RefreshToken(c *echo.Context) error {
 }
 
 // ─── Forgot Password ───────────────────────────────────────────────────────────
-
+// ForgotPassword godoc
+//
+//	@Summary		Lupa password
+//	@Description	Mengirim email reset password. Selalu response 200 untuk keamanan.
+//	@Tags			Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		dto.ForgotPasswordRequest	true	"Forgot Password Request"
+//	@Success		200		{object}	response.MyGoResponse
+//	@Router			/auth/forgot-password [post]
+//
 // ForgotPassword handles POST /api/v1/auth/forgot-password
 func (h *AuthHandler) ForgotPassword(c *echo.Context) error {
 	var req dto.ForgotPasswordRequest
@@ -109,7 +157,19 @@ func (h *AuthHandler) ForgotPassword(c *echo.Context) error {
 }
 
 // ─── Reset Password ────────────────────────────────────────────────────────────
-
+// ResetPassword godoc
+//
+//	@Summary		Reset password
+//	@Description	Mereset password menggunakan token dari email
+//	@Tags			Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		dto.ResetPasswordRequest	true	"Reset Password Request"
+//	@Success		200		{object}	response.MyGoResponse
+//	@Failure		400		{object}	response.MyGoResponse
+//	@Failure		422		{object}	response.MyGoResponse
+//	@Router			/auth/reset-password [post]
+//
 // ResetPassword handles POST /api/v1/auth/reset-password
 func (h *AuthHandler) ResetPassword(c *echo.Context) error {
 	var req dto.ResetPasswordRequest

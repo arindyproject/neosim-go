@@ -182,3 +182,34 @@ gen-jwt-prod:
         echo "❌ File config/.env.prod tidak ditemukan!"; \
         echo "Secret baru Anda: $$NEW_SECRET"; \
     fi
+
+
+# ─── Swagger ───────────────────────────────────────────────────────────────────
+
+# Install swag CLI
+swagger-install:
+	@echo "📦 Installing swag CLI..."
+	go install github.com/swaggo/swag/cmd/swag@latest
+	@echo "✅ swag installed. Pastikan $(go env GOPATH)/bin ada di PATH."
+
+# Generate swagger docs dari anotasi handler
+# Ambil path binari secara dinamis
+GO_BIN := $(shell go env GOPATH)/bin
+
+swagger-gen:
+	@echo "📝 Generating Swagger docs..."
+	$(GO_BIN)/swag init \
+		--generalInfo cmd/api/main.go \
+		--output docs \
+		--parseDependency \
+		--parseInternal
+	@echo "✅ Swagger docs generated di folder docs/"
+
+# Shortcut: generate + run
+swagger:
+	@make swagger-gen
+	@make run
+
+# Format komentar swagger (opsional)
+swagger-fmt:
+	swag fmt

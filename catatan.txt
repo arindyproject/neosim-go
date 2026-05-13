@@ -1,4 +1,7 @@
-Struktur folder saya
+Struktur folder saya dari project Echo v5.2, Go-Lang
+
+contracts (interface) => dto => models => repositories => services => handlers => routes
+
 neosim_go/
     |---- cmd/
     |       |---- api/
@@ -34,7 +37,7 @@ neosim_go/
     |       |
     |       |---- modules/
     |       |       |---- auth/
-    |       |       |       |---- contracts
+    |       |       |       |---- contracts/
     |       |       |       |       |---- interfaces.go
     |       |       |       |
     |       |       |       |---- dto/
@@ -53,16 +56,16 @@ neosim_go/
     |       |       |       |       |---- 002_create_login_histories_table.sql
     |       |       |       |       |---- 003_create_password_histories_table.sql
     |       |       |       |
-    |       |       |       |---- models\
+    |       |       |       |---- models/
     |       |       |       |       |---- auth_models.go
     |       |       |       |       
-    |       |       |       |---- repositories\
+    |       |       |       |---- repositories/
     |       |       |       |       |---- auth_repository.go
     |       |       |       |
-    |       |       |       |---- services\
+    |       |       |       |---- services/
     |       |       |       |       |---- auth_service.go
     |       |       |       |
-    |       |       |       |---- utils\
+    |       |       |       |---- utils/
     |       |       |       |       |---- jwt.go
     |       |       |       |       |---- mailer.go
     |       |       |       |       |---- password.go
@@ -71,9 +74,52 @@ neosim_go/
     |       |       |       |---- module.go
     |       |       |       |---- register.go
     |       |       |       |---- routes.go
+    |       |       |
+    |       |       |---- rbac/
+    |       |       |       |---- contracts/
+    |       |       |       |       |---- interfaces.go
+    |       |       |       |
+    |       |       |       |---- dto/
+    |       |       |       |       |---- rbac_request.go
+    |       |       |       |       |---- rbac_response.go
+    |       |       |       |
+    |       |       |       |---- handlers/
+    |       |       |       |       |---- rbac_handler.go
+    |       |       |       |
+    |       |       |       |---- middlewares/
+    |       |       |       |       |---- rbac_middleware.go
+    |       |       |       |   
+    |       |       |       |---- migrations/
+    |       |       |       |       |---- rbac_migrate.go
+    |       |       |       |       |---- 001_create_permissions_table.sql
+    |       |       |       |       |---- 002_create_roles_table.sql
+    |       |       |       |       |---- 003_create_role_permissions_table.sql
+    |       |       |       |       |---- 004_create_user_roles_table.sql
+    |       |       |       |       |---- 005_create_user_permissions_table.sql
+    |       |       |       |
+    |       |       |       |---- models/
+    |       |       |       |       |---- rbac_models.go
+    |       |       |       |       
+    |       |       |       |---- repositories/
+    |       |       |       |       |---- rbac_repository.go
+    |       |       |       |
+    |       |       |       |---- services/
+    |       |       |       |       |---- rbac_service.go
+    |       |       |       |
+    |       |       |       |---- tests/
+    |       |       |       |       |---- factories/
+    |       |       |       |       |       |---- permission_factory.go    
+    |       |       |       |       |       |---- role_factory.go      
+    |       |       |       |       |
+    |       |       |       |       |---- seeders/
+    |       |       |       |       |       |---- rbac_seeder.go
+    |       |       |       | 
+    |       |       |       |---- module.go
+    |       |       |       |---- register.go
+    |       |       |       |---- routes.go
     |       |       |   
     |       |       |---- users/
-    |       |       |       |---- contracts
+    |       |       |       |---- contracts/
     |       |       |       |       |---- interfaces.go
     |       |       |       |
     |       |       |       |---- dto/
@@ -87,15 +133,25 @@ neosim_go/
     |       |       |       |       |---- migrate.go
     |       |       |       |       |---- 001_create_users_table.sql
     |       |       |       |
-    |       |       |       |---- models\
+    |       |       |       |---- models/
     |       |       |       |       |---- users.go
     |       |       |       |       
-    |       |       |       |---- repositories\
+    |       |       |       |---- repositories/
     |       |       |       |       |---- user_repository.go
     |       |       |       |
-    |       |       |       |---- services\
+    |       |       |       |---- services/
     |       |       |       |       |---- user_service.go
     |       |       |       |
+    |       |       |       |---- tests/
+    |       |       |       |       |---- factories/
+    |       |       |       |       |       |---- user_factory.go
+    |       |       |       |       |
+    |       |       |       |       |---- helpers/
+    |       |       |       |       |       |---- db_helper.go
+    |       |       |       |       |
+    |       |       |       |       |---- seeders/
+    |       |       |       |       |       |---- user_seeder.go
+    |       |       |       |       
     |       |       |       |---- module.go
     |       |       |       |---- register.go
     |       |       |       |---- routes.go

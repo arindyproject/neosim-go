@@ -1,5 +1,23 @@
 package main
 
+//	@title			Neosim API V1
+//	@version		1.0
+//	@description	REST API untuk Neosim — sistem manajemen informasi
+//	@termsOfService	http://swagger.io/terms/
+
+//	@contact.name	Neosim Support
+//	@contact.email	support@neosim.id
+
+//	@license.name	MIT
+//	@license.url	https://opensource.org/licenses/MIT
+
+//	@host		localhost:1323
+//	@BasePath	/api/v1
+
+//	@securityDefinitions.apikey	BearerAuth
+//	@in							header
+//	@name						Authorization
+//	@description				Masukkan token dengan format: Bearer {token}
 import (
 	"log"
 	"net/http"
@@ -8,6 +26,10 @@ import (
 	"neosim_go/internal/apps"
 
 	appErrors "neosim_go/internal/shared/errors"
+
+	echoSwagger "github.com/swaggo/echo-swagger/v2"
+	// Import docs yang di-generate swag
+	_ "neosim_go/docs"
 
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
@@ -59,15 +81,20 @@ func main() {
 	// 7. Register semua module — inject cfg, db, redis sekaligus
 	apps.RegisterModules(cfg, db, redisClient, e)
 
+	// 8. Swagger UI (DEV only)
+	if cfg.Env == "development" {
+		// Swagger UI tersedia di /swagger/index.html
+		e.GET("/swagger/*", echoSwagger.WrapHandler)
+	}
+
 	// Debug: uncomment untuk cek routes terdaftar
 	for _, r := range e.Router().Routes() {
 		log.Printf("-------------------------------------")
 		log.Printf("%-7s %s", r.Method, r.Path)
 	}
 
-	// 8. Start Server
+	// 9. Start Server
 	if err := e.Start(":" + cfg.ServerPort); err != nil {
-
 		e.Logger.Error("failed to start server", "error", err)
 	}
 }
