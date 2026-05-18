@@ -18,6 +18,13 @@ type RegisterRequest struct {
 	Name     *string `json:"name"     validate:"omitempty,min=1,max=255"`
 }
 
+// ─── Logout ────────────────────────────────────────────────────────────────────
+
+// LogoutRequest request body untuk logout dari device saat ini
+type LogoutRequest struct {
+	RefreshToken string `json:"refresh_token" validate:"required"`
+}
+
 // ─── Refresh Token ─────────────────────────────────────────────────────────────
 
 // RefreshTokenRequest request body untuk refresh token

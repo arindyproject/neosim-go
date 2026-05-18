@@ -19,6 +19,13 @@ definitions:
     - identifier
     - password
     type: object
+  dto.LogoutRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
   dto.RefreshTokenRequest:
     properties:
       refresh_token:
@@ -88,24 +95,76 @@ definitions:
         description: Bearer
         type: string
       user:
-        $ref: '#/definitions/dto.UserInfo'
+        $ref: '#/definitions/dto.UserResponse'
     type: object
-  dto.UserInfo:
+  dto.UserResponse:
     properties:
+      created_at:
+        type: string
       email:
         type: string
+      histories:
+        items:
+          $ref: '#/definitions/models.LoginHistory'
+        type: array
       id:
         type: integer
+      is_active:
+        type: boolean
       is_staff:
         type: boolean
       is_superuser:
         type: boolean
       is_verified:
         type: boolean
+      last_login_at:
+        type: string
       name:
+        type: string
+      password_changed_at:
+        type: string
+      photo:
+        type: string
+      photo_thumbnail:
+        type: string
+      settings:
+        items:
+          $ref: '#/definitions/models.UserSetting'
+        type: array
+      updated_at:
         type: string
       username:
         type: string
+    type: object
+  models.LoginHistory:
+    properties:
+      created_at:
+        type: string
+      failure_reason:
+        type: string
+      id:
+        type: integer
+      identifier:
+        type: string
+      ip_address:
+        type: string
+      status:
+        description: success | failed
+        type: string
+      user_agent:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  models.UserSetting:
+    properties:
+      description:
+        type: string
+      key:
+        type: string
+      type:
+        type: string
+      value: {}
     type: object
   response.MyGoResponse:
     description: Standard JSON response
@@ -176,23 +235,48 @@ paths:
                 data:
                   $ref: '#/definitions/dto.TokenResponse'
               type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.MyGoResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.MyGoResponse'
-        "422":
-          description: Unprocessable Entity
-          schema:
-            $ref: '#/definitions/response.MyGoResponse'
-        "429":
-          description: Too Many Requests
-          schema:
-            $ref: '#/definitions/response.MyGoResponse'
       summary: Login user
+      tags:
+      - Auth
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Memblacklist refresh token sehingga tidak bisa dipakai lagi. Access
+        token tetap valid hingga expired (simpan di client dan hapus saat logout).
+      parameters:
+      - description: Logout Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LogoutRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Logout dari device saat ini
+      tags:
+      - Auth
+  /auth/logout-all:
+    post:
+      description: Memblacklist semua refresh token user sehingga semua sesi aktif
+        dihentikan
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Logout dari semua device
       tags:
       - Auth
   /auth/refresh:
@@ -219,10 +303,6 @@ paths:
                 data:
                   $ref: '#/definitions/dto.TokenResponse'
               type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.MyGoResponse'
       summary: Refresh access token
       tags:
       - Auth
@@ -250,14 +330,6 @@ paths:
                 data:
                   $ref: '#/definitions/dto.RegisterResponse'
               type: object
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.MyGoResponse'
-        "422":
-          description: Unprocessable Entity
-          schema:
-            $ref: '#/definitions/response.MyGoResponse'
       summary: Register user baru
       tags:
       - Auth
@@ -278,14 +350,6 @@ paths:
       responses:
         "200":
           description: OK
-          schema:
-            $ref: '#/definitions/response.MyGoResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.MyGoResponse'
-        "422":
-          description: Unprocessable Entity
           schema:
             $ref: '#/definitions/response.MyGoResponse'
       summary: Reset password

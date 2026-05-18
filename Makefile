@@ -2,9 +2,9 @@
 
 #.PHONY: build run migrate migrate-dev migrate-prod clean test
 .PHONY: build run migrate migrate-dev migrate-prod migrate-sql migrate-sql-prod \
-        clean test create-migration db-stats migrate-fresh-dev migrate-fresh-dev-sql \
+        clean create-migration db-stats migrate-fresh-dev migrate-fresh-dev-sql \
         migrate-fresh-prod migrate-fresh-prod-sql seed seed-prod seed-fresh \
-        migrate-seed migrate-fresh-seed gen-jwt-dev gen-jwt-prod
+        migrate-seed migrate-fresh-seed gen-jwt-dev gen-jwt-prod test test-auth
 
 # Build the API
 build:
@@ -13,6 +13,8 @@ build:
 # Run the API
 run:
 	go run ./cmd/api/main.go
+
+
 
 # Run migrations using GORM auto-migration (development)
 migrate-dev:
@@ -41,6 +43,9 @@ clean:
 # Run tests
 test:
 	go test ./...
+
+test-auth:
+	go test -v -run= internal/modules/auth/tests/auth_handler_test.go 
 
 # Create new migration file (example)
 create-migration:
@@ -213,3 +218,16 @@ swagger:
 # Format komentar swagger (opsional)
 swagger-fmt:
 	swag fmt
+
+
+
+# Run the API and generate OpenAPI
+run-api:
+	@echo "📝 Generating Swagger docs..."
+	$(GO_BIN)/swag init \
+		--generalInfo cmd/api/main.go \
+		--output docs \
+		--parseDependency \
+		--parseInternal
+	@echo "✅ Swagger docs generated di folder docs/"
+	go run ./cmd/api/main.go

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strconv"
 	"strings"
 	"time"
 
@@ -83,7 +84,7 @@ func (s *authService) Login(req *dto.LoginRequest, ip, userAgent string) (*dto.T
 
 	// 3. Cek IP blacklist
 	if exists, _ := s.redis.Exists(ctx, utils.KeyIPBlacklist(ip)).Result(); exists > 0 {
-		return nil, NewAuthError(429, "IP Anda telah diblokir sementara karena terlalu banyak percobaan login.")
+		return nil, NewAuthError(429, fmt.Sprintf("IP Anda (%s) telah diblokir sementara karena terlalu banyak percobaan login.", ip))
 	}
 
 	// 4. Cek login lock
@@ -107,7 +108,7 @@ func (s *authService) Login(req *dto.LoginRequest, ip, userAgent string) (*dto.T
 		return nil, NewAuthError(500, "Terjadi kesalahan sistem.")
 	}
 	if activeCount >= int64(s.cfg.MaxConcurrentSessions) {
-		return nil, NewAuthError(403, "Batas sesi aktif tercapai. Silakan logout dari perangkat lain terlebih dahulu.")
+		return nil, NewAuthError(403, fmt.Sprintf("Batas sesi aktif tercapai (max: %s device). Silakan logout dari perangkat lain terlebih dahulu.", strconv.Itoa(s.cfg.MaxConcurrentSessions)))
 	}
 
 	// 7. Generate tokens
@@ -387,6 +388,40 @@ func (s *authService) ResetPassword(req *dto.ResetPasswordRequest) error {
 	return nil
 }
 
+// ─── Logout ────────────────────────────────────────────────────────────────────
+
+// Logout memblacklist refresh token dari device saat ini
+func (s *authService) Logout(req *dto.LogoutRequest) error {
+	// Parse token untuk ambil JTI
+	claims, err := s.cfg.JWTManager.ParseToken(req.RefreshToken)
+	if err != nil {
+		// Token tidak valid / expired — anggap sudah logout, return success
+		return nil
+	}
+
+	// Cek token ada di DB
+	authToken, err := s.repo.GetTokenByJTI(claims.ID)
+	if err != nil || authToken == nil {
+		// Token tidak ditemukan — anggap sudah logout
+		return nil
+	}
+
+	// Blacklist token
+	if err := s.repo.BlacklistToken(claims.ID); err != nil {
+		return NewAuthError(500, "Gagal logout. Coba lagi.")
+	}
+
+	return nil
+}
+
+// LogoutAll memblacklist semua refresh token user (logout dari semua device)
+func (s *authService) LogoutAll(userID int64) error {
+	if err := s.repo.BlacklistAllUserTokens(userID); err != nil {
+		return NewAuthError(500, "Gagal logout dari semua perangkat.")
+	}
+	return nil
+}
+
 // ─── Private Helpers ───────────────────────────────────────────────────────────
 
 // findUserByIdentifier mencari user by username atau email
@@ -456,19 +491,28 @@ func (s *authService) updateLastLogin(user *userModels.User) {
 
 // buildTokenResponse membangun response token dari user model
 func (s *authService) buildTokenResponse(accessToken, refreshToken string, user *userModels.User) *dto.TokenResponse {
+	settings, _ := user.GetSettings()
+	histories, _ := s.repo.GetUserLoginHistories(user.ID, 10)
 	return &dto.TokenResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		TokenType:    "Bearer",
 		ExpiresIn:    s.cfg.JWTManager.AccessExpSeconds(),
-		User: dto.UserInfo{
-			ID:          user.ID,
-			Username:    user.Username,
-			Email:       user.Email,
-			Name:        user.Name,
-			IsSuperuser: user.IsSuperuser,
-			IsStaff:     user.IsStaff,
-			IsVerified:  user.IsVerified,
+		User: userDto.UserResponse{
+			ID:             user.ID,
+			Photo:          user.Photo,
+			PhotoThumbnail: user.PhotoThumbnail,
+			Username:       user.Username,
+			Email:          user.Email,
+			Name:           user.Name,
+			IsSuperuser:    user.IsSuperuser,
+			IsStaff:        user.IsStaff,
+			IsVerified:     user.IsVerified,
+			Settings:       settings,
+			Histories:      histories,
+			LastLoginAt:    user.LastLoginAt,
+			CreatedAt:      user.CreatedAt,
+			UpdatedAt:      user.UpdatedAt,
 		},
 	}
 }

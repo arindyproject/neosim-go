@@ -99,27 +99,67 @@ const docTemplate = `{
                                 }
                             ]
                         }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
+                    }
+                }
+            }
+        },
+        "/auth/logout": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Memblacklist refresh token sehingga tidak bisa dipakai lagi. Access token tetap valid hingga expired (simpan di client dan hapus saat logout).",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Logout dari device saat ini",
+                "parameters": [
+                    {
+                        "description": "Logout Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.LogoutRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/response.MyGoResponse"
                         }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.MyGoResponse"
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocessable Entity",
-                        "schema": {
-                            "$ref": "#/definitions/response.MyGoResponse"
-                        }
-                    },
-                    "429": {
-                        "description": "Too Many Requests",
+                    }
+                }
+            }
+        },
+        "/auth/logout-all": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Memblacklist semua refresh token user sehingga semua sesi aktif dihentikan",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Logout dari semua device",
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/response.MyGoResponse"
                         }
@@ -169,12 +209,6 @@ const docTemplate = `{
                                 }
                             ]
                         }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.MyGoResponse"
-                        }
                     }
                 }
             }
@@ -221,18 +255,6 @@ const docTemplate = `{
                                 }
                             ]
                         }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.MyGoResponse"
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocessable Entity",
-                        "schema": {
-                            "$ref": "#/definitions/response.MyGoResponse"
-                        }
                     }
                 }
             }
@@ -267,18 +289,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/response.MyGoResponse"
                         }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.MyGoResponse"
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocessable Entity",
-                        "schema": {
-                            "$ref": "#/definitions/response.MyGoResponse"
-                        }
                     }
                 }
             }
@@ -309,6 +319,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.LogoutRequest": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
                     "type": "string"
                 }
             }
@@ -413,18 +434,30 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user": {
-                    "$ref": "#/definitions/dto.UserInfo"
+                    "$ref": "#/definitions/dto.UserResponse"
                 }
             }
         },
-        "dto.UserInfo": {
+        "dto.UserResponse": {
             "type": "object",
             "properties": {
+                "created_at": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
+                "histories": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.LoginHistory"
+                    }
+                },
                 "id": {
                     "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
                 },
                 "is_staff": {
                     "type": "boolean"
@@ -435,12 +468,78 @@ const docTemplate = `{
                 "is_verified": {
                     "type": "boolean"
                 },
+                "last_login_at": {
+                    "type": "string"
+                },
                 "name": {
+                    "type": "string"
+                },
+                "password_changed_at": {
+                    "type": "string"
+                },
+                "photo": {
+                    "type": "string"
+                },
+                "photo_thumbnail": {
+                    "type": "string"
+                },
+                "settings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.UserSetting"
+                    }
+                },
+                "updated_at": {
                     "type": "string"
                 },
                 "username": {
                     "type": "string"
                 }
+            }
+        },
+        "models.LoginHistory": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "failure_reason": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "identifier": {
+                    "type": "string"
+                },
+                "ip_address": {
+                    "type": "string"
+                },
+                "status": {
+                    "description": "success | failed",
+                    "type": "string"
+                },
+                "user_agent": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.UserSetting": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "value": {}
             }
         },
         "response.MyGoResponse": {

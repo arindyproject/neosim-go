@@ -18,6 +18,7 @@ type AuthRepository interface {
 
 	// Login History
 	SaveLoginHistory(history *models.LoginHistory) error
+	GetUserLoginHistories(userID int64, limit int) ([]models.LoginHistory, error)
 
 	// Password History
 	SavePasswordHistory(history *models.PasswordHistory) error
@@ -28,9 +29,16 @@ type AuthRepository interface {
 
 // AuthService mendefinisikan business logic untuk auth
 type AuthService interface {
+	// Auth
 	Login(req *dto.LoginRequest, ip, userAgent string) (*dto.TokenResponse, error)
 	Register(req *dto.RegisterRequest) (*dto.RegisterResponse, error)
 	RefreshToken(req *dto.RefreshTokenRequest) (*dto.TokenResponse, error)
+
+	// Logout
+	Logout(req *dto.LogoutRequest) error // logout device saat ini
+	LogoutAll(userID int64) error        // logout semua device
+
+	// Password
 	ForgotPassword(req *dto.ForgotPasswordRequest) error
 	ResetPassword(req *dto.ResetPasswordRequest) error
 }

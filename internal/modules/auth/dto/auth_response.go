@@ -1,16 +1,19 @@
 package dto
 
-import "time"
+import (
+	userDto "neosim_go/internal/modules/users/dto"
+	"time"
+)
 
 // ─── Token Response ────────────────────────────────────────────────────────────
 
 // TokenResponse response setelah login / refresh berhasil
 type TokenResponse struct {
-	AccessToken  string   `json:"access_token"`
-	RefreshToken string   `json:"refresh_token"`
-	TokenType    string   `json:"token_type"` // Bearer
-	ExpiresIn    int      `json:"expires_in"` // detik
-	User         UserInfo `json:"user"`
+	AccessToken  string               `json:"access_token"`
+	RefreshToken string               `json:"refresh_token"`
+	TokenType    string               `json:"token_type"` // Bearer
+	ExpiresIn    int                  `json:"expires_in"` // detik
+	User         userDto.UserResponse `json:"user"`
 }
 
 // UserInfo data user ringkas untuk response token

@@ -16,9 +16,10 @@ import (
 
 // Module mewakili auth module
 type Module struct {
-	db      *gorm.DB
-	redis   *redis.Client
-	handler *handlers.AuthHandler
+	db         *gorm.DB
+	redis      *redis.Client
+	handler    *handlers.AuthHandler
+	jwtManager *utils.JWTManager
 }
 
 // NewModule membuat instance module dan wire semua layer
@@ -70,15 +71,22 @@ func NewModule(db *gorm.DB, redisClient *redis.Client, cfg *config.Config) *Modu
 
 	svc := services.NewAuthService(authRepo, userRepo, redisClient, svcCfg)
 	handler := handlers.NewAuthHandler(svc)
+	jwtManager := utils.NewJWTManager(
+		cfg.JWTSecret,
+		cfg.JWTIssuer,
+		cfg.JWTAccessTokenExpMinutes,
+		cfg.JWTRefreshTokenExpDays,
+	)
 
 	return &Module{
-		db:      db,
-		redis:   redisClient,
-		handler: handler,
+		db:         db,
+		redis:      redisClient,
+		handler:    handler,
+		jwtManager: jwtManager,
 	}
 }
 
 // InitRoutes mendaftarkan routes ke echo instance
 func (m *Module) InitRoutes(e *echo.Echo) {
-	RegisterRoutes(e, m.handler)
+	RegisterRoutes(e, m.handler, m.jwtManager)
 }

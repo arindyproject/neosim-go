@@ -5,6 +5,7 @@ import (
 
 	"neosim_go/internal/modules/auth/contracts"
 	"neosim_go/internal/modules/auth/dto"
+	authMiddlewares "neosim_go/internal/modules/auth/middlewares"
 	"neosim_go/internal/modules/auth/services"
 	"neosim_go/internal/shared/response"
 	"neosim_go/internal/shared/validator"
@@ -33,10 +34,6 @@ func NewAuthHandler(service contracts.AuthService) *AuthHandler {
 //	@Produce		json
 //	@Param			body	body		dto.LoginRequest	true	"Login Request"
 //	@Success		200		{object}	response.MyGoResponse{data=dto.TokenResponse}
-//	@Failure		401		{object}	response.MyGoResponse
-//	@Failure		403		{object}	response.MyGoResponse
-//	@Failure		422		{object}	response.MyGoResponse
-//	@Failure		429		{object}	response.MyGoResponse
 //	@Router			/auth/login [post]
 //
 // Login handles POST /api/v1/auth/login
@@ -71,8 +68,6 @@ func (h *AuthHandler) Login(c *echo.Context) error {
 //	@Produce		json
 //	@Param			body	body		dto.RegisterRequest	true	"Register Request"
 //	@Success		201		{object}	response.MyGoResponse{data=dto.RegisterResponse}
-//	@Failure		403		{object}	response.MyGoResponse
-//	@Failure		422		{object}	response.MyGoResponse
 //	@Router			/auth/register [post]
 //
 // Register handles POST /api/v1/auth/register
@@ -104,7 +99,6 @@ func (h *AuthHandler) Register(c *echo.Context) error {
 //	@Produce		json
 //	@Param			body	body		dto.RefreshTokenRequest	true	"Refresh Token Request"
 //	@Success		200		{object}	response.MyGoResponse{data=dto.TokenResponse}
-//	@Failure		401		{object}	response.MyGoResponse
 //	@Router			/auth/refresh [post]
 //
 // RefreshToken handles POST /api/v1/auth/refresh
@@ -166,8 +160,6 @@ func (h *AuthHandler) ForgotPassword(c *echo.Context) error {
 //	@Produce		json
 //	@Param			body	body		dto.ResetPasswordRequest	true	"Reset Password Request"
 //	@Success		200		{object}	response.MyGoResponse
-//	@Failure		400		{object}	response.MyGoResponse
-//	@Failure		422		{object}	response.MyGoResponse
 //	@Router			/auth/reset-password [post]
 //
 // ResetPassword handles POST /api/v1/auth/reset-password
@@ -187,6 +179,56 @@ func (h *AuthHandler) ResetPassword(c *echo.Context) error {
 
 	return response.Response(c, http.StatusOK, true,
 		"Password berhasil direset. Silakan login dengan password baru.", nil, nil)
+}
+
+// Logout godoc
+//
+//	@Summary		Logout dari device saat ini
+//	@Description	Memblacklist refresh token sehingga tidak bisa dipakai lagi. Access token tetap valid hingga expired (simpan di client dan hapus saat logout).
+//	@Tags			Auth
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		dto.LogoutRequest	true	"Logout Request"
+//	@Success		200		{object}	response.MyGoResponse
+//	@Router			/auth/logout [post]
+func (h *AuthHandler) Logout(c *echo.Context) error {
+	var req dto.LogoutRequest
+	if err := c.Bind(&req); err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
+	}
+	if errs := validator.Validate(req); errs != nil {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
+	}
+
+	// Logout tidak return error meski token sudah expired/tidak valid
+	// untuk mencegah informasi bocor
+	h.service.Logout(&req)
+
+	return response.Response(c, http.StatusOK, true, "Logout berhasil", nil, nil)
+}
+
+// LogoutAll godoc
+//
+//	@Summary		Logout dari semua device
+//	@Description	Memblacklist semua refresh token user sehingga semua sesi aktif dihentikan
+//	@Tags			Auth
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{object}	response.MyGoResponse
+//	@Router			/auth/logout-all [post]
+func (h *AuthHandler) LogoutAll(c *echo.Context) error {
+	// Ambil userID dari JWT claims yang sudah di-set oleh JWTMiddleware
+	userID, ok := authMiddlewares.GetUserID(c)
+	if !ok {
+		return response.Response(c, http.StatusUnauthorized, false, "Autentikasi diperlukan", nil, nil)
+	}
+
+	if err := h.service.LogoutAll(userID); err != nil {
+		return handleAuthError(c, err)
+	}
+
+	return response.Response(c, http.StatusOK, true, "Berhasil logout dari semua perangkat", nil, nil)
 }
 
 // ─── Helper ────────────────────────────────────────────────────────────────────
