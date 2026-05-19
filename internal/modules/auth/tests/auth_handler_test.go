@@ -1,7 +1,10 @@
 package tests
 
 import (
+	"fmt"
 	"net/http"
+	"os"
+	"strings"
 	"testing"
 
 	"neosim_go/internal/modules/auth/handlers"
@@ -37,6 +40,22 @@ func (s *AuthHandlerTestSuite) TearDownTest() {
 // Entrypoint suite
 func TestAuthHandler(t *testing.T) {
 	suite.Run(t, new(AuthHandlerTestSuite))
+}
+
+func TestMain(m *testing.M) {
+	fmt.Println("\033[34m" + strings.Repeat("─", 55) + "\033[0m")
+	fmt.Println("\033[35m  Auth Handler Test Suite\033[0m")
+	fmt.Println("\033[34m" + strings.Repeat("─", 55) + "\033[0m")
+
+	code := m.Run()
+
+	if code == 0 {
+		fmt.Println("\n\033[32m✓  PASS\033[0m  neosim_go/internal/modules/auth")
+	} else {
+		fmt.Println("\n\033[31m✗  FAIL\033[0m  neosim_go/internal/modules/auth")
+	}
+
+	os.Exit(code)
 }
 
 // ─── Login Tests ───────────────────────────────────────────────────────────────

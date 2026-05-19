@@ -41,11 +41,11 @@ clean:
 	rm -rf bin/
 
 # Run tests
-test:
-	go test ./...
-
 test-auth:
-	go test -v -run= internal/modules/auth/tests/auth_handler_test.go 
+	@go test -json ./internal/modules/auth/tests | gotestfmt
+
+test:
+	@go test -json ./internal/modules/.../tests | gotestfmt
 
 # Create new migration file (example)
 create-migration:

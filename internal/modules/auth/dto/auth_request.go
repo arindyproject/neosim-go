@@ -12,10 +12,10 @@ type LoginRequest struct {
 
 // RegisterRequest request body untuk registrasi
 type RegisterRequest struct {
-	Username string  `json:"username" validate:"required,min=3,max=150"`
-	Email    string  `json:"email"    validate:"required,email"`
-	Password string  `json:"password" validate:"required"`
-	Name     *string `json:"name"     validate:"omitempty,min=1,max=255"`
+	Username string  `json:"username" validate:"required,min=3,max=50"`
+	Email    string  `json:"email" validate:"required,email"`
+	Password string  `json:"password" validate:"required,min=8"`
+	Name     *string `json:"name,omitempty"`
 }
 
 // ─── Logout ────────────────────────────────────────────────────────────────────

@@ -9,7 +9,6 @@ CREATE TABLE IF NOT EXISTS users (
     is_active BOOLEAN NOT NULL DEFAULT true,
     is_staff BOOLEAN NOT NULL DEFAULT false,
     is_verified BOOLEAN NOT NULL DEFAULT false,
-    must_change_password BOOLEAN NOT NULL DEFAULT false,
     password VARCHAR(255) NOT NULL,
     password_changed_at TIMESTAMPTZ,
     last_login_at TIMESTAMPTZ,

@@ -6,7 +6,7 @@ package auth
 import (
 	"neosim_go/internal/modules/auth/handlers"
 	authMiddlewares "neosim_go/internal/modules/auth/middlewares"
-	"neosim_go/internal/modules/auth/utils"
+	"neosim_go/internal/shared/utils"
 
 	"github.com/labstack/echo/v5"
 )

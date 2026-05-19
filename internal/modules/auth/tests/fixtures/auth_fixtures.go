@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"neosim_go/internal/modules/auth/dto"
+	userDto "neosim_go/internal/modules/users/dto"
 )
 
 // ─── Request Fixtures ──────────────────────────────────────────────────────────
@@ -59,14 +60,18 @@ func TokenResponse() *dto.TokenResponse {
 		RefreshToken: "eyJ.refresh.token",
 		TokenType:    "Bearer",
 		ExpiresIn:    900, // 15 menit
-		User: dto.UserInfo{
-			ID:          1,
-			Username:    "testuser",
-			Email:       "test@example.com",
-			Name:        "Test User",
-			IsSuperuser: false,
-			IsStaff:     false,
-			IsVerified:  true,
+		User: userDto.UserResponse{
+			ID:             1,
+			Photo:          nil,
+			PhotoThumbnail: nil,
+			Username:       "testuser",
+			Email:          "test@example.com",
+			Name:           "Test User",
+			IsSuperuser:    false,
+			IsStaff:        false,
+			IsVerified:     true,
+			Histories:      nil,
+			Settings:       nil,
 		},
 	}
 }

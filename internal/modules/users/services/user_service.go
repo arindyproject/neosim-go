@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	authContracts "neosim_go/internal/modules/auth/contracts"
 	"neosim_go/internal/modules/rbac/contracts"
 	rbacMiddlewares "neosim_go/internal/modules/rbac/middlewares"
 	rbacModels "neosim_go/internal/modules/rbac/models"
@@ -31,12 +32,14 @@ import (
 type service struct {
 	repo     userContracts.Repository
 	rbacRepo contracts.RBACRepository // ← inject RBAC repo
+	authRepo authContracts.AuthRepository
 }
 
-func NewUserService(repo userContracts.Repository, rbacRepo contracts.RBACRepository) userContracts.Service {
+func NewUserService(repo userContracts.Repository, rbacRepo contracts.RBACRepository, authRepo authContracts.AuthRepository) userContracts.Service {
 	return &service{
 		repo:     repo,
 		rbacRepo: rbacRepo,
+		authRepo: authRepo,
 	}
 }
 
@@ -139,7 +142,8 @@ func (s *service) CreateUser(req *dto.CreateUserRequest, createdBy *int64) (*dto
 	if err := s.repo.Create(user); err != nil {
 		return nil, appErrors.Internal("gagal membuat user")
 	}
-	return dto.ToUserResponse(user), nil
+
+	return dto.ToUserResponse(user, nil, nil), nil
 }
 
 func (s *service) GetUserByID(id int64, actor userContracts.AuthContext) (*dto.UserResponse, error) {
@@ -159,7 +163,19 @@ func (s *service) GetUserByID(id int64, actor userContracts.AuthContext) (*dto.U
 	if user == nil {
 		return nil, appErrors.NotFound("user tidak ditemukan")
 	}
-	return dto.ToUserResponse(user), nil
+
+	var creatorDTO *models.UserCreator
+	creatorUser, err := s.repo.GetByID(*user.CreatedBy)
+	if err == nil {
+		creatorDTO = &models.UserCreator{
+			ID:       creatorUser.ID,
+			Username: creatorUser.Username,
+			Name:     creatorUser.Name,
+		}
+	}
+
+	histories, _ := s.authRepo.GetUserLoginHistories(id, 10)
+	return dto.ToUserResponse(user, histories, creatorDTO), nil
 }
 
 func (s *service) GetUserByUsername(username string) (*dto.UserResponse, error) {
@@ -167,7 +183,19 @@ func (s *service) GetUserByUsername(username string) (*dto.UserResponse, error) 
 	if err != nil || user == nil {
 		return nil, appErrors.NotFound("user tidak ditemukan")
 	}
-	return dto.ToUserResponse(user), nil
+
+	var creatorDTO *models.UserCreator
+	creatorUser, err := s.repo.GetByID(*user.CreatedBy)
+	if err == nil {
+		creatorDTO = &models.UserCreator{
+			ID:       creatorUser.ID,
+			Username: creatorUser.Username,
+			Name:     creatorUser.Name,
+		}
+	}
+
+	histories, _ := s.authRepo.GetUserLoginHistories(user.ID, 10)
+	return dto.ToUserResponse(user, histories, creatorDTO), nil
 }
 
 func (s *service) GetUserByEmail(email string) (*dto.UserResponse, error) {
@@ -175,10 +203,21 @@ func (s *service) GetUserByEmail(email string) (*dto.UserResponse, error) {
 	if err != nil || user == nil {
 		return nil, appErrors.NotFound("user tidak ditemukan")
 	}
-	return dto.ToUserResponse(user), nil
+
+	var creatorDTO *models.UserCreator
+	creatorUser, err := s.repo.GetByID(*user.CreatedBy)
+	if err == nil {
+		creatorDTO = &models.UserCreator{
+			ID:       creatorUser.ID,
+			Username: creatorUser.Username,
+			Name:     creatorUser.Name,
+		}
+	}
+	histories, _ := s.authRepo.GetUserLoginHistories(user.ID, 10)
+	return dto.ToUserResponse(user, histories, creatorDTO), nil
 }
 
-func (s *service) ListUsers(page, pageSize int) ([]dto.UserResponse, int64, error) {
+func (s *service) ListUsers(page, pageSize int) ([]dto.UserSimpleResponse, int64, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -253,7 +292,18 @@ func (s *service) UpdateUser(id int64, req *dto.UpdateUserRequest, actor userCon
 	if err := s.repo.Update(user); err != nil {
 		return nil, appErrors.Internal("gagal mengupdate user")
 	}
-	return dto.ToUserResponse(user), nil
+
+	var creatorDTO *models.UserCreator
+	creatorUser, err := s.repo.GetByID(*user.CreatedBy)
+	if err == nil {
+		creatorDTO = &models.UserCreator{
+			ID:       creatorUser.ID,
+			Username: creatorUser.Username,
+			Name:     creatorUser.Name,
+		}
+	}
+	histories, _ := s.authRepo.GetUserLoginHistories(user.ID, 10)
+	return dto.ToUserResponse(user, histories, creatorDTO), nil
 }
 
 // DeleteUser — hanya superadmin atau yang punya permission users:delete
@@ -309,7 +359,6 @@ func (s *service) ChangePassword(
 	now := time.Now()
 	user.Password = hashed
 	user.PasswordChangedAt = &now
-	user.MustChangePassword = false
 
 	return s.repo.Update(user)
 }

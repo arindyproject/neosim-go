@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strings"
 
-	"neosim_go/internal/modules/auth/utils"
 	"neosim_go/internal/shared/response"
+	"neosim_go/internal/shared/utils"
 
 	"github.com/labstack/echo/v5"
 )

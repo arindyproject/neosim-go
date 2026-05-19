@@ -38,13 +38,12 @@ definitions:
       email:
         type: string
       name:
-        maxLength: 255
-        minLength: 1
         type: string
       password:
+        minLength: 8
         type: string
       username:
-        maxLength: 150
+        maxLength: 50
         minLength: 3
         type: string
     required:
@@ -101,6 +100,8 @@ definitions:
     properties:
       created_at:
         type: string
+      creator:
+        $ref: '#/definitions/models.UserCreator'
       email:
         type: string
       histories:
@@ -155,6 +156,15 @@ definitions:
         type: string
       user_id:
         type: integer
+    type: object
+  models.UserCreator:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      username:
+        type: string
     type: object
   models.UserSetting:
     properties:

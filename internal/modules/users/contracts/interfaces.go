@@ -33,7 +33,7 @@ type Service interface {
 	GetUserByID(id int64, actor AuthContext) (*dto.UserResponse, error)
 	GetUserByUsername(username string) (*dto.UserResponse, error)
 	GetUserByEmail(email string) (*dto.UserResponse, error)
-	ListUsers(page, pageSize int) ([]dto.UserResponse, int64, error)
+	ListUsers(page, pageSize int) ([]dto.UserSimpleResponse, int64, error)
 	UpdateUser(id int64, req *dto.UpdateUserRequest, actor AuthContext) (*dto.UserResponse, error)
 	DeleteUser(id int64, actor AuthContext) error
 

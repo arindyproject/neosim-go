@@ -2,11 +2,11 @@ package users
 
 import (
 	authMiddlewares "neosim_go/internal/modules/auth/middlewares"
-	"neosim_go/internal/modules/auth/utils"
 	"neosim_go/internal/modules/rbac/contracts"
 	rbacMiddlewares "neosim_go/internal/modules/rbac/middlewares"
 	rbacModels "neosim_go/internal/modules/rbac/models"
 	"neosim_go/internal/modules/users/handlers"
+	"neosim_go/internal/shared/utils"
 
 	"github.com/labstack/echo/v5"
 )

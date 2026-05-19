@@ -2,11 +2,11 @@ package rbac
 
 import (
 	"neosim_go/config"
-	"neosim_go/internal/modules/auth/utils"
 	"neosim_go/internal/modules/rbac/contracts"
 	"neosim_go/internal/modules/rbac/handlers"
 	"neosim_go/internal/modules/rbac/repositories"
 	"neosim_go/internal/modules/rbac/services"
+	"neosim_go/internal/shared/utils"
 
 	"github.com/labstack/echo/v5"
 	"gorm.io/gorm"

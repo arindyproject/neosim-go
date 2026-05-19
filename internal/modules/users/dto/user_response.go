@@ -23,12 +23,28 @@ type UserResponse struct {
 	LastLoginAt       *time.Time                `json:"last_login_at"`
 	Settings          []models.UserSetting      `json:"settings"`
 	Histories         []authModels.LoginHistory `json:"histories"`
+	Creator           *models.UserCreator       `json:"creator"`
 	CreatedAt         time.Time                 `json:"created_at"`
 	UpdatedAt         time.Time                 `json:"updated_at"`
 }
 
+type UserSimpleResponse struct {
+	ID             int64     `json:"id"`
+	PhotoThumbnail *string   `json:"photo_thumbnail"`
+	Username       string    `json:"username"`
+	Email          string    `json:"email"`
+	Name           string    `json:"name"`
+	IsSuperuser    bool      `json:"is_superuser"`
+	IsActive       bool      `json:"is_active"`
+	IsStaff        bool      `json:"is_staff"`
+	IsVerified     bool      `json:"is_verified"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+}
+
 // ToUserResponse mengubah models.User menjadi UserResponse
-func ToUserResponse(u *models.User) *UserResponse {
+func ToUserResponse(u *models.User, histories []authModels.LoginHistory, creator *models.UserCreator) *UserResponse {
+
 	settings, _ := u.GetSettings()
 	return &UserResponse{
 		ID:                u.ID,
@@ -44,16 +60,33 @@ func ToUserResponse(u *models.User) *UserResponse {
 		PasswordChangedAt: u.PasswordChangedAt,
 		LastLoginAt:       u.LastLoginAt,
 		Settings:          settings,
+		Creator:           creator,
 		CreatedAt:         u.CreatedAt,
 		UpdatedAt:         u.UpdatedAt,
 	}
 }
 
+func ToUserSimpleResponse(u *models.User) *UserSimpleResponse {
+	return &UserSimpleResponse{
+		ID:             u.ID,
+		PhotoThumbnail: u.PhotoThumbnail,
+		Username:       u.Username,
+		Email:          u.Email,
+		Name:           u.Name,
+		IsSuperuser:    u.IsSuperuser,
+		IsActive:       u.IsActive,
+		IsStaff:        u.IsStaff,
+		IsVerified:     u.IsVerified,
+		CreatedAt:      u.CreatedAt,
+		UpdatedAt:      u.UpdatedAt,
+	}
+}
+
 // ToUserListResponse mengubah slice models.User menjadi slice UserResponse
-func ToUserListResponse(users []models.User) []UserResponse {
-	var responses []UserResponse
+func ToUserListResponse(users []models.User) []UserSimpleResponse {
+	var responses []UserSimpleResponse
 	for _, u := range users {
-		responses = append(responses, *ToUserResponse(&u))
+		responses = append(responses, *ToUserSimpleResponse(&u))
 	}
 	return responses
 }

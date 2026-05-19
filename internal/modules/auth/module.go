@@ -5,9 +5,9 @@ import (
 	"neosim_go/internal/modules/auth/handlers"
 	"neosim_go/internal/modules/auth/repositories"
 	"neosim_go/internal/modules/auth/services"
-	"neosim_go/internal/modules/auth/utils"
 	userContracts "neosim_go/internal/modules/users/contracts"
 	userRepositories "neosim_go/internal/modules/users/repositories"
+	"neosim_go/internal/shared/utils"
 
 	"github.com/labstack/echo/v5"
 	"github.com/redis/go-redis/v9"

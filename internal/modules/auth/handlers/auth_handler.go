@@ -13,6 +13,7 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
+// ─── Init ──────────────────────────────────────────────────────────────────────
 // AuthHandler menangani HTTP request untuk auth
 type AuthHandler struct {
 	service contracts.AuthService
@@ -22,6 +23,8 @@ type AuthHandler struct {
 func NewAuthHandler(service contracts.AuthService) *AuthHandler {
 	return &AuthHandler{service: service}
 }
+
+// ─── End Init ──────────────────────────────────────────────────────────────────
 
 // ─── Login ─────────────────────────────────────────────────────────────────────
 

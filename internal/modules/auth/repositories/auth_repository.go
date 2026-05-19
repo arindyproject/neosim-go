@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// ─── Init ──────────────────────────────────────────────────────────────────────
 type authRepository struct {
 	db *gorm.DB
 }
@@ -17,6 +18,8 @@ type authRepository struct {
 func NewAuthRepository(db *gorm.DB) contracts.AuthRepository {
 	return &authRepository{db: db}
 }
+
+// ─── End Init ──────────────────────────────────────────────────────────────────
 
 // ─── Auth Token ────────────────────────────────────────────────────────────────
 

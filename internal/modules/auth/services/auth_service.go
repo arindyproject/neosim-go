@@ -14,10 +14,10 @@ import (
 	"neosim_go/internal/modules/auth/contracts"
 	"neosim_go/internal/modules/auth/dto"
 	"neosim_go/internal/modules/auth/models"
-	"neosim_go/internal/modules/auth/utils"
 	userContracts "neosim_go/internal/modules/users/contracts"
 	userDto "neosim_go/internal/modules/users/dto"
 	userModels "neosim_go/internal/modules/users/models"
+	"neosim_go/internal/shared/utils"
 
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
@@ -40,8 +40,7 @@ type AuthServiceConfig struct {
 	Mailer                       *utils.Mailer
 }
 
-// ─── Service ───────────────────────────────────────────────────────────────────
-
+// ─── Init ──────────────────────────────────────────────────────────────────────
 type authService struct {
 	repo     contracts.AuthRepository
 	userRepo userContracts.Repository // ← reuse users repository
@@ -62,6 +61,8 @@ func NewAuthService(
 		cfg:      cfg,
 	}
 }
+
+// ─── End Init ──────────────────────────────────────────────────────────────────
 
 // ─── Login ─────────────────────────────────────────────────────────────────────
 
@@ -369,7 +370,6 @@ func (s *authService) ResetPassword(req *dto.ResetPasswordRequest) error {
 	now := time.Now()
 	user.Password = hashed
 	user.PasswordChangedAt = &now
-	user.MustChangePassword = false
 
 	if err := s.userRepo.Update(user); err != nil {
 		return NewAuthError(500, "Gagal mengupdate password.")
@@ -493,6 +493,20 @@ func (s *authService) updateLastLogin(user *userModels.User) {
 func (s *authService) buildTokenResponse(accessToken, refreshToken string, user *userModels.User) *dto.TokenResponse {
 	settings, _ := user.GetSettings()
 	histories, _ := s.repo.GetUserLoginHistories(user.ID, 10)
+
+	// 1. Ambil data creator jika CreatedBy tidak nil
+	var creatorDTO *userModels.UserCreator
+	if user.CreatedBy != nil {
+		creatorUser, err := s.userRepo.GetByID(*user.CreatedBy)
+		if err == nil && creatorUser != nil {
+			creatorDTO = &userModels.UserCreator{
+				ID:       creatorUser.ID,
+				Username: creatorUser.Username,
+				Name:     creatorUser.Name,
+			}
+		}
+	}
+
 	return &dto.TokenResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
@@ -511,6 +525,7 @@ func (s *authService) buildTokenResponse(accessToken, refreshToken string, user 
 			Settings:       settings,
 			Histories:      histories,
 			LastLoginAt:    user.LastLoginAt,
+			Creator:        creatorDTO,
 			CreatedAt:      user.CreatedAt,
 			UpdatedAt:      user.UpdatedAt,
 		},

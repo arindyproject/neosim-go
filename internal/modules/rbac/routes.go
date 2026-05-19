@@ -5,11 +5,11 @@ package rbac
 
 import (
 	"neosim_go/internal/modules/auth/middlewares"
-	"neosim_go/internal/modules/auth/utils"
 	"neosim_go/internal/modules/rbac/contracts"
 	"neosim_go/internal/modules/rbac/handlers"
 	rbacMiddlewares "neosim_go/internal/modules/rbac/middlewares"
 	rbacModels "neosim_go/internal/modules/rbac/models"
+	"neosim_go/internal/shared/utils"
 
 	"github.com/labstack/echo/v5"
 )

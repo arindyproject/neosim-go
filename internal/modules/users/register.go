@@ -5,11 +5,12 @@ import (
 
 	"neosim_go/config"
 	"neosim_go/internal/apps"
-	"neosim_go/internal/modules/auth/utils"
+	authContracts "neosim_go/internal/modules/auth/contracts"
 	rbacContracts "neosim_go/internal/modules/rbac/contracts"
 	rbacRepositories "neosim_go/internal/modules/rbac/repositories"
 	"neosim_go/internal/modules/users/migrations"
 	"neosim_go/internal/modules/users/models"
+	"neosim_go/internal/shared/utils"
 
 	"github.com/labstack/echo/v5"
 	"gorm.io/gorm"
@@ -19,6 +20,7 @@ type registryModule struct {
 	db       *gorm.DB
 	cfg      *config.Config
 	rbacRepo rbacContracts.RBACRepository
+	authRepo authContracts.AuthRepository
 }
 
 func init() {
@@ -47,7 +49,7 @@ func (r *registryModule) InitRoutes(e *echo.Echo) {
 		r.cfg.JWTAccessTokenExpMinutes,
 		r.cfg.JWTRefreshTokenExpDays,
 	)
-	NewModule(r.db, jwtManager, r.rbacRepo).InitRoutes(e)
+	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo).InitRoutes(e)
 }
 
 // ─── Migration ─────────────────────────────────────────────────────────────────

@@ -1,12 +1,13 @@
 package users
 
 import (
-	"neosim_go/internal/modules/auth/utils"
+	authContracts "neosim_go/internal/modules/auth/contracts"
 	rbacContracts "neosim_go/internal/modules/rbac/contracts"
 	"neosim_go/internal/modules/users/contracts"
 	"neosim_go/internal/modules/users/handlers"
 	"neosim_go/internal/modules/users/repositories"
 	"neosim_go/internal/modules/users/services"
+	"neosim_go/internal/shared/utils"
 
 	"github.com/labstack/echo/v5"
 	"gorm.io/gorm"
@@ -23,12 +24,12 @@ type Module struct {
 }
 
 // NewModule creates a new users module instance
-func NewModule(db *gorm.DB, jwtManager *utils.JWTManager, rbacRepo rbacContracts.RBACRepository) *Module {
+func NewModule(db *gorm.DB, jwtManager *utils.JWTManager, rbacRepo rbacContracts.RBACRepository, authRepo authContracts.AuthRepository) *Module {
 	// Layer 1: Repository
 	repo := repositories.NewRepository(db)
 
 	// Layer 2: Service — inject rbacRepo untuk authorization
-	svc := services.NewUserService(repo, rbacRepo)
+	svc := services.NewUserService(repo, rbacRepo, authRepo)
 
 	// Layer 3: Handler
 	handler := handlers.NewHandler(svc)
