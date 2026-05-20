@@ -114,7 +114,7 @@ func (s *authService) Login(req *dto.LoginRequest, ip, userAgent string) (*dto.T
 
 	// 7. Generate tokens
 	accessToken, err := s.cfg.JWTManager.GenerateAccessToken(
-		user.ID, user.Username, user.IsSuperuser, user.IsStaff,
+		user.ID, user.Username, user.IsSuperadmin, user.IsStaff,
 	)
 	if err != nil {
 		return nil, NewAuthError(500, "Gagal membuat token.")
@@ -265,7 +265,7 @@ func (s *authService) RefreshToken(req *dto.RefreshTokenRequest) (*dto.TokenResp
 	}
 
 	accessToken, err := s.cfg.JWTManager.GenerateAccessToken(
-		user.ID, user.Username, user.IsSuperuser, user.IsStaff,
+		user.ID, user.Username, user.IsSuperadmin, user.IsStaff,
 	)
 	if err != nil {
 		return nil, NewAuthError(500, "Gagal membuat token baru.")
@@ -519,7 +519,7 @@ func (s *authService) buildTokenResponse(accessToken, refreshToken string, user 
 			Username:       user.Username,
 			Email:          user.Email,
 			Name:           user.Name,
-			IsSuperuser:    user.IsSuperuser,
+			IsSuperadmin:   user.IsSuperadmin,
 			IsStaff:        user.IsStaff,
 			IsVerified:     user.IsVerified,
 			Settings:       settings,

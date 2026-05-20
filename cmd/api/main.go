@@ -17,6 +17,8 @@ package main
 //	@securityDefinitions.apikey	BearerAuth
 //	@in							header
 //	@name						Authorization
+//	@scheme						bearer
+//	@bearerFormat				JWT
 //	@description				Masukkan token dengan format: Bearer {token}
 import (
 	"log"

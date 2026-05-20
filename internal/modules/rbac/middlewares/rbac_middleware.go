@@ -16,7 +16,7 @@ import (
 func RequirePermission(repo contracts.RBACRepository, permission string) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {
-			if IsSuperuser(c) {
+			if IsSuperadmin(c) {
 				return next(c)
 			}
 			userID, ok := GetUserIDFromContext(c)
@@ -40,7 +40,7 @@ func RequirePermission(repo contracts.RBACRepository, permission string) echo.Mi
 func RequireAnyPermission(repo contracts.RBACRepository, permissions ...string) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {
-			if IsSuperuser(c) {
+			if IsSuperadmin(c) {
 				return next(c)
 			}
 			userID, ok := GetUserIDFromContext(c)
@@ -66,7 +66,7 @@ func RequireAnyPermission(repo contracts.RBACRepository, permissions ...string) 
 func RequireRole(repo contracts.RBACRepository, roleName string) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {
-			if IsSuperuser(c) {
+			if IsSuperadmin(c) {
 				return next(c)
 			}
 			userID, ok := GetUserIDFromContext(c)
@@ -88,8 +88,8 @@ func RequireRole(repo contracts.RBACRepository, roleName string) echo.Middleware
 
 // ─── Context Helpers ───────────────────────────────────────────────────────────
 
-func IsSuperuser(c *echo.Context) bool {
-	v, _ := c.Get("isSuperuser").(bool)
+func IsSuperadmin(c *echo.Context) bool {
+	v, _ := c.Get("isSuperadmin").(bool)
 	return v
 }
 
@@ -100,6 +100,20 @@ func GetUserIDFromContext(c *echo.Context) (int64, bool) {
 
 func GetTargetUserID(c *echo.Context) (int64, error) {
 	return strconv.ParseInt(c.Param("id"), 10, 64)
+}
+
+// IsSelf mengembalikan true jika user yang sedang login mengakses datanya sendiri.
+// Berguna jika Anda ingin mengizinkan user non-admin mengedit profil mereka sendiri tanpa perlu permission admin.
+func IsSelf(c *echo.Context) bool {
+	currentUserID, ok := GetUserIDFromContext(c)
+	if !ok {
+		return false
+	}
+	targetUserID, err := GetTargetUserID(c)
+	if err != nil {
+		return false
+	}
+	return currentUserID == targetUserID
 }
 
 // ─── Programmatic Helpers (untuk service/handler) ─────────────────────────────

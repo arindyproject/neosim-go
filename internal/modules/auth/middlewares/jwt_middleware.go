@@ -13,7 +13,7 @@ import (
 // ─── JWT Middleware ────────────────────────────────────────────────────────────
 
 // JWTMiddleware memvalidasi access token dari header Authorization
-func JWTMiddleware(jwtManager *utils.JWTManager) echo.MiddlewareFunc {
+func JWTMiddleware2(jwtManager *utils.JWTManager) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {
 			// Ambil token dari header
@@ -44,7 +44,54 @@ func JWTMiddleware(jwtManager *utils.JWTManager) echo.MiddlewareFunc {
 			// Set claims ke context — bisa diambil di handler
 			c.Set("userID", claims.UserID)
 			c.Set("username", claims.Username)
-			c.Set("isSuperuser", claims.IsSuperuser)
+			c.Set("isSuperadmin", claims.IsSuperadmin)
+			c.Set("isStaff", claims.IsStaff)
+
+			return next(c)
+		}
+	}
+}
+
+func JWTMiddleware(jwtManager *utils.JWTManager) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c *echo.Context) error {
+
+			// Ambil token dari header
+			authHeader := c.Request().Header.Get("Authorization")
+			if authHeader == "" {
+				return response.Response(c, http.StatusUnauthorized, false, "Token tidak ditemukan.", nil, nil)
+			}
+
+			// Support:
+			// - "Bearer <token>"
+			// - "<token>"
+			tokenStr := authHeader
+
+			if strings.Contains(authHeader, " ") {
+				parts := strings.SplitN(authHeader, " ", 2)
+
+				if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
+					return response.Response(c, http.StatusUnauthorized, false, "Format token tidak valid.", nil, nil)
+				}
+
+				tokenStr = parts[1]
+			}
+
+			// Parse & validasi token
+			claims, err := jwtManager.ParseToken(tokenStr)
+			if err != nil {
+				return response.Response(c, http.StatusUnauthorized, false, "Token tidak valid atau sudah kedaluwarsa.", nil, nil)
+			}
+
+			// Pastikan hanya access token yang diterima
+			if claims.TokenType != "access" {
+				return response.Response(c, http.StatusUnauthorized, false, "Tipe token tidak valid.", nil, nil)
+			}
+
+			// Set claims ke context
+			c.Set("userID", claims.UserID)
+			c.Set("username", claims.Username)
+			c.Set("isSuperadmin", claims.IsSuperadmin)
 			c.Set("isStaff", claims.IsStaff)
 
 			return next(c)
@@ -58,8 +105,8 @@ func JWTMiddleware(jwtManager *utils.JWTManager) echo.MiddlewareFunc {
 func RequireSuperuser() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {
-			isSuperuser, _ := c.Get("isSuperuser").(bool)
-			if !isSuperuser {
+			isSuperadmin, _ := c.Get("isSuperadmin").(bool)
+			if !isSuperadmin {
 				return response.Response(c, http.StatusForbidden, false, "Akses ditolak. Hanya superuser.", nil, nil)
 			}
 			return next(c)
@@ -72,8 +119,8 @@ func RequireStaff() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {
 			isStaff, _ := c.Get("isStaff").(bool)
-			isSuperuser, _ := c.Get("isSuperuser").(bool)
-			if !isStaff && !isSuperuser {
+			isSuperadmin, _ := c.Get("isSuperadmin").(bool)
+			if !isStaff && !isSuperadmin {
 				return response.Response(c, http.StatusForbidden, false, "Akses ditolak. Hanya staff.", nil, nil)
 			}
 			return next(c)

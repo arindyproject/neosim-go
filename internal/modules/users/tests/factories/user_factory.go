@@ -56,22 +56,22 @@ func (f *UserFactory) Make() *models.User {
 	hashed, _ := bcrypt.GenerateFromPassword([]byte(password), 10)
 
 	user := &models.User{
-		Username:    username,
-		Email:       email,
-		Name:        name,
-		Password:    string(hashed),
-		IsActive:    true,
-		IsVerified:  false,
-		IsSuperuser: false,
-		IsStaff:     false,
+		Username:     username,
+		Email:        email,
+		Name:         name,
+		Password:     string(hashed),
+		IsActive:     true,
+		IsVerified:   false,
+		IsSuperadmin: false,
+		IsStaff:      false,
 	}
 
 	// Apply boolean overrides
 	if v, ok := f.overrides["is_active"]; ok {
 		user.IsActive = v.(bool)
 	}
-	if v, ok := f.overrides["is_superuser"]; ok {
-		user.IsSuperuser = v.(bool)
+	if v, ok := f.overrides["is_superadmin"]; ok {
+		user.IsSuperadmin = v.(bool)
 	}
 	if v, ok := f.overrides["is_staff"]; ok {
 		user.IsStaff = v.(bool)

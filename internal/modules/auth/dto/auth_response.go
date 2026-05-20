@@ -18,13 +18,13 @@ type TokenResponse struct {
 
 // UserInfo data user ringkas untuk response token
 type UserInfo struct {
-	ID          int64  `json:"id"`
-	Username    string `json:"username"`
-	Email       string `json:"email"`
-	Name        string `json:"name"`
-	IsSuperuser bool   `json:"is_superuser"`
-	IsStaff     bool   `json:"is_staff"`
-	IsVerified  bool   `json:"is_verified"`
+	ID           int64  `json:"id"`
+	Username     string `json:"username"`
+	Email        string `json:"email"`
+	Name         string `json:"name"`
+	IsSuperadmin bool   `json:"is_superadmin"`
+	IsStaff      bool   `json:"is_staff"`
+	IsVerified   bool   `json:"is_verified"`
 }
 
 // ─── Register Response ─────────────────────────────────────────────────────────

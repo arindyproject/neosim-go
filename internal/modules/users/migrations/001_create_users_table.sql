@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(150) UNIQUE NOT NULL,
     email VARCHAR(254) UNIQUE NOT NULL,
     name VARCHAR(255) NOT NULL DEFAULT '',
-    is_superuser BOOLEAN NOT NULL DEFAULT false,
+    is_superadmin BOOLEAN NOT NULL DEFAULT false,
     is_active BOOLEAN NOT NULL DEFAULT true,
     is_staff BOOLEAN NOT NULL DEFAULT false,
     is_verified BOOLEAN NOT NULL DEFAULT false,

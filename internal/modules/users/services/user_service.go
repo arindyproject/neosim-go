@@ -1,6 +1,7 @@
 package services
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"time"
@@ -24,7 +25,7 @@ import (
 // Di-inject dari handler → service untuk authorization
 //type AuthContext struct {
 //	UserID      int64
-//	IsSuperuser bool
+//	IsSuperadmin bool
 //}
 
 // ─── Service ───────────────────────────────────────────────────────────────────
@@ -48,13 +49,42 @@ func NewUserService(repo userContracts.Repository, rbacRepo contracts.RBACReposi
 // canUpdateUser mengecek apakah actor boleh update targetUserID
 //
 // Boleh update jika:
-// 1. Superuser
+// 1. Superadmin
 // 2. Dirinya sendiri (actor == target)
 // 3. Memiliki permission "users:update"
 // 4. Memiliki role "hrd"
+
+func (s *service) canCreateuser(actor userContracts.AuthContext) (bool, error) {
+	// 1. Superadmin — boleh semua
+	if actor.IsSuperadmin {
+		return true, nil
+	}
+
+	// 2. Cek permission users:update
+	hasPermission, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermUsersCreate)
+	if err != nil {
+		return false, err
+	}
+	if hasPermission {
+		return true, nil
+	}
+
+	// 3. Cek any Roles
+	hasRole, err := rbacMiddlewares.HasAnyRole(s.rbacRepo, actor.UserID, "admin", "superadmin", "hrd")
+	if err != nil {
+		return false, err
+	}
+	if hasRole {
+		return true, nil
+	}
+
+	return false, nil
+
+}
+
 func (s *service) canUpdateUser(actor userContracts.AuthContext, targetUserID int64) (bool, error) {
-	// 1. Superuser — boleh semua
-	if actor.IsSuperuser {
+	// 1. Superadmin — boleh semua
+	if actor.IsSuperadmin {
 		return true, nil
 	}
 
@@ -87,10 +117,10 @@ func (s *service) canUpdateUser(actor userContracts.AuthContext, targetUserID in
 // canDeleteUser mengecek apakah actor boleh delete user
 //
 // Boleh delete jika:
-// 1. Superuser
+// 1. Superadmin
 // 2. Memiliki permission "users:delete"
 func (s *service) canDeleteUser(actor userContracts.AuthContext) (bool, error) {
-	if actor.IsSuperuser {
+	if actor.IsSuperadmin {
 		return true, nil
 	}
 	return rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermUsersDelete)
@@ -99,11 +129,11 @@ func (s *service) canDeleteUser(actor userContracts.AuthContext) (bool, error) {
 // canReadUser mengecek apakah actor boleh membaca data user
 //
 // Boleh read jika:
-// 1. Superuser
+// 1. Superadmin
 // 2. Dirinya sendiri
 // 3. Memiliki permission "users:read"
 func (s *service) canReadUser(actor userContracts.AuthContext, targetUserID int64) (bool, error) {
-	if actor.IsSuperuser {
+	if actor.IsSuperadmin {
 		return true, nil
 	}
 	if actor.UserID == targetUserID {
@@ -114,7 +144,19 @@ func (s *service) canReadUser(actor userContracts.AuthContext, targetUserID int6
 
 // ─── CRUD ──────────────────────────────────────────────────────────────────────
 
-func (s *service) CreateUser(req *dto.CreateUserRequest, createdBy *int64) (*dto.UserResponse, error) {
+func (s *service) CreateUser(req *dto.CreateUserRequest, actor userContracts.AuthContext) (*dto.UserSimpleResponse, error) {
+	//----------------------------------------------------------------------------
+	can, err := s.canCreateuser(actor)
+	if err != nil {
+		return nil, appErrors.Internal("gagal cek akses")
+	}
+
+	if !can {
+		return nil, appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda tidak memiliki Hak Akses untuk mebuat User Baru.", nil)
+	}
+	//----------------------------------------------------------------------------
+
 	existing, _ := s.repo.GetByUsername(req.Username)
 	if existing != nil {
 		return nil, appErrors.BadRequest("username sudah digunakan")
@@ -129,21 +171,45 @@ func (s *service) CreateUser(req *dto.CreateUserRequest, createdBy *int64) (*dto
 		return nil, appErrors.Internal("gagal memproses password")
 	}
 
+	defaultSettingsList := models.DefaultSettings() // Pastikan huruf 'D' besar jika diakses dari luar package models
+	settingsBytes, err := json.Marshal(defaultSettingsList)
+	if err != nil {
+		return nil, appErrors.Internal("gagal memproses setting bawaan")
+	}
+
+	isActive := true // Default IsActive = true
+	if req.IsActive != nil {
+		isActive = *req.IsActive
+	}
+
+	isStaff := false // Default IsStaff = false
+	if req.IsStaff != nil {
+		isStaff = *req.IsStaff
+	}
+
+	isSuperuser := false // Default IsSuperuser = false
+	if req.IsSuperadmin != nil {
+		isSuperuser = *req.IsSuperadmin
+	}
+
 	user := &models.User{
-		Username:  req.Username,
-		Email:     req.Email,
-		Name:      req.Name,
-		Password:  hashed,
-		IsActive:  true,
-		CreatedBy: createdBy,
-		UpdatedBy: createdBy,
+		Username:     req.Username,
+		Email:        req.Email,
+		Name:         req.Name,
+		Password:     hashed,
+		IsActive:     isActive,
+		IsStaff:      isStaff,
+		IsSuperadmin: isSuperuser,
+		Settings:     models.JSONB(settingsBytes),
+		CreatedBy:    &actor.UserID,
+		UpdatedBy:    &actor.UserID,
 	}
 
 	if err := s.repo.Create(user); err != nil {
 		return nil, appErrors.Internal("gagal membuat user")
 	}
 
-	return dto.ToUserResponse(user, nil, nil), nil
+	return dto.ToUserSimpleResponse(user), nil
 }
 
 func (s *service) GetUserByID(id int64, actor userContracts.AuthContext) (*dto.UserResponse, error) {
@@ -264,8 +330,8 @@ func (s *service) UpdateUser(id int64, req *dto.UpdateUserRequest, actor userCon
 	}
 
 	// Field sensitif hanya bisa diubah oleh superadmin / yang punya permission users:manage
-	if req.IsActive != nil || req.IsStaff != nil || req.IsSuperuser != nil {
-		canManage := actor.IsSuperuser
+	if req.IsActive != nil || req.IsStaff != nil || req.IsSuperadmin != nil {
+		canManage := actor.IsSuperadmin
 		if !canManage {
 			canManage, _ = rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermUsersManage)
 		}
@@ -280,8 +346,8 @@ func (s *service) UpdateUser(id int64, req *dto.UpdateUserRequest, actor userCon
 		if req.IsStaff != nil {
 			user.IsStaff = *req.IsStaff
 		}
-		if req.IsSuperuser != nil {
-			user.IsSuperuser = *req.IsSuperuser
+		if req.IsSuperadmin != nil {
+			user.IsSuperadmin = *req.IsSuperadmin
 		}
 	}
 
@@ -338,7 +404,7 @@ func (s *service) ChangePassword(
 	actor userContracts.AuthContext, // ✅ ini penting
 ) error {
 	// Hanya diri sendiri atau superadmin
-	if !actor.IsSuperuser && actor.UserID != id {
+	if !actor.IsSuperadmin && actor.UserID != id {
 		return appErrors.Wrap(http.StatusForbidden, "Akses ditolak. Hanya bisa mengubah password sendiri.", nil)
 	}
 

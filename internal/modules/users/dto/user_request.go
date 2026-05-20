@@ -5,19 +5,22 @@ import "neosim_go/internal/modules/users/models"
 // ─── Request DTOs ──────────────────────────────────────────────────────────────
 
 type CreateUserRequest struct {
-	Username string `json:"username" validate:"required,min=3,max=150"`
-	Email    string `json:"email"    validate:"required,email"`
-	Name     string `json:"name"     validate:"required,min=1,max=255"`
-	Password string `json:"password" validate:"required,min=8"`
+	Username     string `json:"username" validate:"required,min=3,max=150"`
+	Email        string `json:"email"    validate:"required,email"`
+	Name         string `json:"name"     validate:"required,min=1,max=255"`
+	Password     string `json:"password" validate:"required,min=8"`
+	IsActive     *bool  `json:"is_active"`
+	IsStaff      *bool  `json:"is_staff"`
+	IsSuperadmin *bool  `json:"is_superadmin"`
 }
 
 type UpdateUserRequest struct {
-	Name        *string `json:"name"         validate:"omitempty,min=1,max=255"`
-	Email       *string `json:"email"        validate:"omitempty,email"`
-	Photo       *string `json:"photo"        validate:"omitempty,max=500"`
-	IsActive    *bool   `json:"is_active"`
-	IsStaff     *bool   `json:"is_staff"`
-	IsSuperuser *bool   `json:"is_superuser"`
+	Name         *string `json:"name"         validate:"omitempty,min=1,max=255"`
+	Email        *string `json:"email"        validate:"omitempty,email"`
+	Photo        *string `json:"photo"        validate:"omitempty,max=500"`
+	IsActive     *bool   `json:"is_active"`
+	IsStaff      *bool   `json:"is_staff"`
+	IsSuperadmin *bool   `json:"is_superadmin"`
 }
 
 type ChangePasswordRequest struct {

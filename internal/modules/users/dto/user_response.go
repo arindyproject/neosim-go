@@ -15,7 +15,7 @@ type UserResponse struct {
 	Username          string                    `json:"username"`
 	Email             string                    `json:"email"`
 	Name              string                    `json:"name"`
-	IsSuperuser       bool                      `json:"is_superuser"`
+	IsSuperadmin      bool                      `json:"is_superadmin"`
 	IsActive          bool                      `json:"is_active"`
 	IsStaff           bool                      `json:"is_staff"`
 	IsVerified        bool                      `json:"is_verified"`
@@ -34,7 +34,7 @@ type UserSimpleResponse struct {
 	Username       string    `json:"username"`
 	Email          string    `json:"email"`
 	Name           string    `json:"name"`
-	IsSuperuser    bool      `json:"is_superuser"`
+	IsSuperadmin   bool      `json:"is_superadmin"`
 	IsActive       bool      `json:"is_active"`
 	IsStaff        bool      `json:"is_staff"`
 	IsVerified     bool      `json:"is_verified"`
@@ -53,7 +53,7 @@ func ToUserResponse(u *models.User, histories []authModels.LoginHistory, creator
 		Username:          u.Username,
 		Email:             u.Email,
 		Name:              u.Name,
-		IsSuperuser:       u.IsSuperuser,
+		IsSuperadmin:      u.IsSuperadmin,
 		IsActive:          u.IsActive,
 		IsStaff:           u.IsStaff,
 		IsVerified:        u.IsVerified,
@@ -73,7 +73,7 @@ func ToUserSimpleResponse(u *models.User) *UserSimpleResponse {
 		Username:       u.Username,
 		Email:          u.Email,
 		Name:           u.Name,
-		IsSuperuser:    u.IsSuperuser,
+		IsSuperadmin:   u.IsSuperadmin,
 		IsActive:       u.IsActive,
 		IsStaff:        u.IsStaff,
 		IsVerified:     u.IsVerified,

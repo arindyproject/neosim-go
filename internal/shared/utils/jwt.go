@@ -12,11 +12,11 @@ import (
 
 // JWTClaims custom claims untuk JWT
 type JWTClaims struct {
-	UserID      int64  `json:"user_id"`
-	Username    string `json:"username"`
-	IsSuperuser bool   `json:"is_superuser"`
-	IsStaff     bool   `json:"is_staff"`
-	TokenType   string `json:"token_type"` // access | refresh
+	UserID       int64  `json:"user_id"`
+	Username     string `json:"username"`
+	IsSuperadmin bool   `json:"is_superadmin"`
+	IsStaff      bool   `json:"is_staff"`
+	TokenType    string `json:"token_type"` // access | refresh
 	jwt.RegisteredClaims
 }
 
@@ -39,13 +39,13 @@ func NewJWTManager(secret, issuer string, accessExpMin, refreshExpDay int) *JWTM
 }
 
 // GenerateAccessToken membuat access token JWT
-func (j *JWTManager) GenerateAccessToken(userID int64, username string, isSuperuser, isStaff bool) (string, error) {
+func (j *JWTManager) GenerateAccessToken(userID int64, username string, isSuperadmin, isStaff bool) (string, error) {
 	claims := JWTClaims{
-		UserID:      userID,
-		Username:    username,
-		IsSuperuser: isSuperuser,
-		IsStaff:     isStaff,
-		TokenType:   "access",
+		UserID:       userID,
+		Username:     username,
+		IsSuperadmin: isSuperadmin,
+		IsStaff:      isStaff,
+		TokenType:    "access",
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    j.issuer,
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

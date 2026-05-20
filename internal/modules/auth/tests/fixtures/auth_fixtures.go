@@ -67,7 +67,7 @@ func TokenResponse() *dto.TokenResponse {
 			Username:       "testuser",
 			Email:          "test@example.com",
 			Name:           "Test User",
-			IsSuperuser:    false,
+			IsSuperadmin:   false,
 			IsStaff:        false,
 			IsVerified:     true,
 			Histories:      nil,

@@ -1,5 +1,26 @@
 basePath: /api/v1
 definitions:
+  dto.CreateUserRequest:
+    properties:
+      email:
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+      password:
+        minLength: 8
+        type: string
+      username:
+        maxLength: 150
+        minLength: 3
+        type: string
+    required:
+    - email
+    - name
+    - password
+    - username
+    type: object
   dto.ForgotPasswordRequest:
     properties:
       identifier:
@@ -114,7 +135,7 @@ definitions:
         type: boolean
       is_staff:
         type: boolean
-      is_superuser:
+      is_superadmin:
         type: boolean
       is_verified:
         type: boolean
@@ -132,6 +153,31 @@ definitions:
         items:
           $ref: '#/definitions/models.UserSetting'
         type: array
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+  dto.UserSimpleResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      is_staff:
+        type: boolean
+      is_superadmin:
+        type: boolean
+      is_verified:
+        type: boolean
+      name:
+        type: string
+      photo_thumbnail:
+        type: string
       updated_at:
         type: string
       username:
@@ -365,6 +411,35 @@ paths:
       summary: Reset password
       tags:
       - Auth
+  /users:
+    post:
+      consumes:
+      - application/json
+      description: Create New user
+      parameters:
+      - description: Login Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserSimpleResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create user
+      tags:
+      - Users
 securityDefinitions:
   BearerAuth:
     description: 'Masukkan token dengan format: Bearer {token}'

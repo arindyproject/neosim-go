@@ -21,10 +21,6 @@ import (
 func RegisterRoutes(e *echo.Echo, h *handlers.Handler, rbacRepo contracts.RBACRepository, jwtManager *utils.JWTManager) {
 	jwt := authMiddlewares.JWTMiddleware(jwtManager)
 
-	// ─── Public (tidak butuh login) ────────────────────────────
-	public := e.Group("/api/v1/users")
-	public.GET("/username/:username", h.GetByUsernameHandler)
-
 	// ─── Protected (butuh login) ───────────────────────────────
 	protected := e.Group("/api/v1/users", jwt)
 
@@ -33,13 +29,14 @@ func RegisterRoutes(e *echo.Echo, h *handlers.Handler, rbacRepo contracts.RBACRe
 		rbacMiddlewares.RequirePermission(rbacRepo, rbacModels.PermUsersRead),
 	)
 
+	// Get by Username
+	protected.GET("/username/:username", h.GetByUsernameHandler)
+
 	// Get by ID — authorization di service (diri sendiri atau punya permission)
 	protected.GET("/:id", h.GetUserHandler)
 
 	// Create — butuh permission users:create
-	protected.POST("", h.CreateUserHandler,
-		rbacMiddlewares.RequirePermission(rbacRepo, rbacModels.PermUsersCreate),
-	)
+	protected.POST("", h.CreateUserHandler) //rbacMiddlewares.RequirePermission(rbacRepo, rbacModels.PermUsersCreate),
 
 	// Update — route tidak ada middleware khusus karena authorization
 	// dilakukan di service (superadmin | diri sendiri | users:update | role hrd)

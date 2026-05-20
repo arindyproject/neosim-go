@@ -7,8 +7,8 @@ import (
 
 // AuthContext berisi informasi user yang sedang login untuk authorization
 type AuthContext struct {
-	UserID      int64
-	IsSuperuser bool
+	UserID       int64
+	IsSuperadmin bool
 }
 
 // ─── Repository ────────────────────────────────────────────────────────────────
@@ -29,7 +29,7 @@ type Repository interface {
 
 type Service interface {
 	// CRUD — operasi yang butuh auth context
-	CreateUser(req *dto.CreateUserRequest, createdBy *int64) (*dto.UserResponse, error)
+	CreateUser(req *dto.CreateUserRequest, actor AuthContext) (*dto.UserSimpleResponse, error)
 	GetUserByID(id int64, actor AuthContext) (*dto.UserResponse, error)
 	GetUserByUsername(username string) (*dto.UserResponse, error)
 	GetUserByEmail(email string) (*dto.UserResponse, error)

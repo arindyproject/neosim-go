@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// ─── Init ──────────────────────────────────────────────────────────────────────
 // repository implements the contracts.Repository interface
 type repository struct {
 	db *gorm.DB
@@ -18,6 +19,8 @@ type repository struct {
 func NewRepository(db *gorm.DB) contracts.Repository {
 	return &repository{db: db}
 }
+
+// ─── End Init ──────────────────────────────────────────────────────────────────
 
 // Create creates a new user
 func (r *repository) Create(user *models.User) error {

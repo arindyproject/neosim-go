@@ -30,14 +30,48 @@ func parseID(c *echo.Context) (int64, error) {
 // buildAuthContext membuat AuthContext dari JWT claims di context
 func buildAuthContext(c *echo.Context) userContracts.AuthContext {
 	userID, _ := rbacMiddlewares.GetUserIDFromContext(c)
-	isSuperuser := rbacMiddlewares.IsSuperuser(c)
+	isSuperadmin := rbacMiddlewares.IsSuperadmin(c)
 	return userContracts.AuthContext{
-		UserID:      userID,
-		IsSuperuser: isSuperuser,
+		UserID:       userID,
+		IsSuperadmin: isSuperadmin,
 	}
 }
 
 // ─── User CRUD ─────────────────────────────────────────────────────────────────
+
+// ─── CreateUserHandler ─────────────────────────────────────────────────────────────
+// CreateUserHandler godoc
+//
+//	@Summary		Create user
+//	@Description	Create New user
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		dto.CreateUserRequest	true	"Login Request"
+//	@Success		200		{object}	response.MyGoResponse{data=dto.UserSimpleResponse}
+//	@Router			/users [post]
+//
+// CreateUserHandler handles POST /api/v1/users
+func (h *Handler) CreateUserHandler(c *echo.Context) error {
+	var req dto.CreateUserRequest
+	if err := c.Bind(&req); err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
+	}
+	if errs := validator.Validate(req); errs != nil {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
+	}
+
+	actor := buildAuthContext(c)
+	user, err := h.service.CreateUser(&req, actor)
+	if err != nil {
+		if appErr, ok := err.(interface{ StatusCode() int }); ok {
+			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
+		}
+		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusCreated, true, "User berhasil dibuat", user, nil)
+}
 
 // ListUsersHandler handles GET /api/v1/users
 // Siapa yang bisa: semua yang login (data dirinya sendiri disaring di service)
@@ -78,27 +112,6 @@ func (h *Handler) GetUserHandler(c *echo.Context) error {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
 	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data user", user, nil)
-}
-
-// CreateUserHandler handles POST /api/v1/users
-func (h *Handler) CreateUserHandler(c *echo.Context) error {
-	var req dto.CreateUserRequest
-	if err := c.Bind(&req); err != nil {
-		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
-	}
-	if errs := validator.Validate(req); errs != nil {
-		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
-	}
-
-	actorID, _ := rbacMiddlewares.GetUserIDFromContext(c)
-	user, err := h.service.CreateUser(&req, &actorID)
-	if err != nil {
-		if appErr, ok := err.(interface{ StatusCode() int }); ok {
-			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
-		}
-		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
-	}
-	return response.Response(c, http.StatusCreated, true, "User berhasil dibuat", user, nil)
 }
 
 // UpdateUserHandler handles PUT /api/v1/users/:id
