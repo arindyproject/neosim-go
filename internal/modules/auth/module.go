@@ -5,6 +5,7 @@ import (
 	"neosim_go/internal/modules/auth/handlers"
 	"neosim_go/internal/modules/auth/repositories"
 	"neosim_go/internal/modules/auth/services"
+	rbacContracts "neosim_go/internal/modules/rbac/contracts" // ← Tambahkan import RBAC contract
 	userContracts "neosim_go/internal/modules/users/contracts"
 	userRepositories "neosim_go/internal/modules/users/repositories"
 	"neosim_go/internal/shared/utils"
@@ -23,7 +24,8 @@ type Module struct {
 }
 
 // NewModule membuat instance module dan wire semua layer
-func NewModule(db *gorm.DB, redisClient *redis.Client, cfg *config.Config) *Module {
+// Tambahkan rbacRepo rbacContracts.RBACRepository pada parameter fungsi
+func NewModule(db *gorm.DB, redisClient *redis.Client, rbacRepo rbacContracts.RBACRepository, cfg *config.Config) *Module {
 	authRepo := repositories.NewAuthRepository(db)
 
 	var userRepo userContracts.Repository = userRepositories.NewRepository(db)
@@ -72,7 +74,8 @@ func NewModule(db *gorm.DB, redisClient *redis.Client, cfg *config.Config) *Modu
 		cfg.JWTRefreshTokenExpDays,
 	)
 
-	svc := services.NewAuthService(authRepo, userRepo, redisClient, svcCfg)
+	// SOLUSI: Masukkan rbacRepo ke dalam parameter NewAuthService sesuai urutan di servicenya
+	svc := services.NewAuthService(authRepo, userRepo, rbacRepo, redisClient, svcCfg)
 	handler := handlers.NewAuthHandler(svc)
 
 	return &Module{

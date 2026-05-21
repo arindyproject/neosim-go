@@ -53,6 +53,25 @@ definitions:
     required:
     - refresh_token
     type: object
+  dto.PermissionResponse:
+    properties:
+      action:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      display_name:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      resource:
+        type: string
+      updated_at:
+        type: string
+    type: object
   dto.RefreshTokenRequest:
     properties:
       refresh_token:
@@ -108,6 +127,27 @@ definitions:
     - new_password
     - token
     type: object
+  dto.RoleResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      display_name:
+        type: string
+      id:
+        type: integer
+      is_system:
+        type: boolean
+      name:
+        type: string
+      permissions:
+        items:
+          $ref: '#/definitions/dto.PermissionResponse'
+        type: array
+      updated_at:
+        type: string
+    type: object
   dto.TokenResponse:
     properties:
       access_token:
@@ -151,10 +191,20 @@ definitions:
         type: string
       password_changed_at:
         type: string
+      permissions:
+        description: '← tambah (semua permission: dari role + direct)'
+        items:
+          type: string
+        type: array
       photo:
         type: string
       photo_thumbnail:
         type: string
+      roles:
+        description: ← tambah
+        items:
+          $ref: '#/definitions/dto.RoleResponse'
+        type: array
       settings:
         items:
           $ref: '#/definitions/models.UserSetting'

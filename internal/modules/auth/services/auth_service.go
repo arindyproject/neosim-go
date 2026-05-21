@@ -14,6 +14,8 @@ import (
 	"neosim_go/internal/modules/auth/contracts"
 	"neosim_go/internal/modules/auth/dto"
 	"neosim_go/internal/modules/auth/models"
+	rbacContracts "neosim_go/internal/modules/rbac/contracts"
+	rbacDto "neosim_go/internal/modules/rbac/dto"
 	userContracts "neosim_go/internal/modules/users/contracts"
 	userDto "neosim_go/internal/modules/users/dto"
 	userModels "neosim_go/internal/modules/users/models"
@@ -41,9 +43,11 @@ type AuthServiceConfig struct {
 }
 
 // ─── Init ──────────────────────────────────────────────────────────────────────
+// ─── Init ──────────────────────────────────────────────────────────────────────
 type authService struct {
 	repo     contracts.AuthRepository
-	userRepo userContracts.Repository // ← reuse users repository
+	userRepo userContracts.Repository
+	rbacRepo rbacContracts.RBACRepository // ← Tambahkan ini
 	redis    *redis.Client
 	cfg      AuthServiceConfig
 }
@@ -51,12 +55,14 @@ type authService struct {
 func NewAuthService(
 	repo contracts.AuthRepository,
 	userRepo userContracts.Repository,
+	rbacRepo rbacContracts.RBACRepository, // ← Tambahkan ini
 	redisClient *redis.Client,
 	cfg AuthServiceConfig,
 ) contracts.AuthService {
 	return &authService{
 		repo:     repo,
 		userRepo: userRepo,
+		rbacRepo: rbacRepo, // ← Set di sini
 		redis:    redisClient,
 		cfg:      cfg,
 	}
@@ -494,7 +500,19 @@ func (s *authService) buildTokenResponse(accessToken, refreshToken string, user 
 	settings, _ := user.GetSettings()
 	histories, _ := s.repo.GetUserLoginHistories(user.ID, 10)
 
-	// 1. Ambil data creator jika CreatedBy tidak nil
+	// 1. Ambil data RBAC (Roles & Permissions)
+	var roleResponses []rbacDto.RoleResponse
+	roles, err := s.rbacRepo.GetUserRoles(user.ID)
+	if err == nil {
+		roleResponses = rbacDto.ToRoleListResponse(roles)
+	}
+
+	perms, err := s.rbacRepo.GetUserAllPermissions(user.ID)
+	if err != nil {
+		perms = []string{}
+	}
+
+	// 2. Ambil data creator jika CreatedBy tidak nil
 	var creatorDTO *userModels.UserCreator
 	if user.CreatedBy != nil {
 		creatorUser, err := s.userRepo.GetByID(*user.CreatedBy)
@@ -522,6 +540,8 @@ func (s *authService) buildTokenResponse(accessToken, refreshToken string, user 
 			IsSuperadmin:   user.IsSuperadmin,
 			IsStaff:        user.IsStaff,
 			IsVerified:     user.IsVerified,
+			Roles:          roleResponses, // ← Inject Roles ke DTO Response
+			Permissions:    perms,         // ← Inject Permissions ke DTO Response
 			Settings:       settings,
 			Histories:      histories,
 			LastLoginAt:    user.LastLoginAt,

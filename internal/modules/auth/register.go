@@ -7,6 +7,8 @@ import (
 
 	"neosim_go/internal/apps"
 	"neosim_go/internal/modules/auth/models"
+	rbacContracts "neosim_go/internal/modules/rbac/contracts"       // ← Tambahkan import contract RBAC
+	rbacRepositories "neosim_go/internal/modules/rbac/repositories" // ← Tambahkan import repository RBAC
 
 	"github.com/labstack/echo/v5"
 	"github.com/redis/go-redis/v9"
@@ -14,9 +16,10 @@ import (
 )
 
 type registryModule struct {
-	db    *gorm.DB
-	redis *redis.Client
-	cfg   *config.Config
+	db       *gorm.DB
+	redis    *redis.Client
+	cfg      *config.Config
+	rbacRepo rbacContracts.RBACRepository // ← Tambahkan field rbacRepo di struct registry
 }
 
 func init() {
@@ -27,6 +30,8 @@ func init() {
 
 func (r *registryModule) SetDB(db *gorm.DB) {
 	r.db = db
+	// SOLUSI: Inisialisasi rbacRepo di sini agar tidak nil saat aplikasi dijalankan
+	r.rbacRepo = rbacRepositories.NewRBACRepository(db)
 }
 
 func (r *registryModule) SetRedis(client *redis.Client) {
@@ -40,7 +45,8 @@ func (r *registryModule) SetConfig(cfg *config.Config) {
 // ─── Routes ────────────────────────────────────────────────────────────────────
 
 func (r *registryModule) InitRoutes(e *echo.Echo) {
-	NewModule(r.db, r.redis, r.cfg).InitRoutes(e)
+	// SOLUSI: Sisipkan rbacRepo sebagai parameter ke-3 sesuai perubahan pada fungsi NewModule sebelumnya
+	NewModule(r.db, r.redis, r.rbacRepo, r.cfg).InitRoutes(e)
 }
 
 // ─── Migration ─────────────────────────────────────────────────────────────────
