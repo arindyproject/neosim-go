@@ -23,15 +23,10 @@ type Module struct {
 	jwtManager *utils.JWTManager
 }
 
-// NewModule creates a new users module instance
+// NewModule membuat instance module dan wire semua layer
 func NewModule(db *gorm.DB, jwtManager *utils.JWTManager, rbacRepo rbacContracts.RBACRepository, authRepo authContracts.AuthRepository) *Module {
-	// Layer 1: Repository
 	repo := repositories.NewRepository(db)
-
-	// Layer 2: Service — inject rbacRepo untuk authorization
-	svc := services.NewUserService(repo, rbacRepo, authRepo)
-
-	// Layer 3: Handler
+	svc := services.NewUserService(repo, rbacRepo, authRepo) // ← hanya repo + rbacRepo
 	handler := handlers.NewHandler(svc)
 
 	return &Module{
@@ -44,23 +39,11 @@ func NewModule(db *gorm.DB, jwtManager *utils.JWTManager, rbacRepo rbacContracts
 	}
 }
 
-// InitRoutes mendaftarkan routes ke echo instance
+// InitRoutes mendaftarkan routes — db diteruskan ke JWTMiddleware untuk realtime check
 func (m *Module) InitRoutes(e *echo.Echo) {
-	// Inject rbacRepo ke routes untuk RBAC middleware
-	RegisterRoutes(e, m.handler, m.rbacRepo, m.jwtManager)
+	RegisterRoutes(e, m.handler, m.rbacRepo, m.jwtManager, m.db)
 }
 
-// GetRepository returns the repository
-func (m *Module) GetRepository() contracts.Repository {
-	return m.repo
-}
-
-// GetService returns the service
-func (m *Module) GetService() contracts.Service {
-	return m.service
-}
-
-// GetHandler returns the handler
-func (m *Module) GetHandler() *handlers.Handler {
-	return m.handler
-}
+func (m *Module) GetRepository() contracts.Repository { return m.repo }
+func (m *Module) GetService() contracts.Service       { return m.service }
+func (m *Module) GetHandler() *handlers.Handler       { return m.handler }

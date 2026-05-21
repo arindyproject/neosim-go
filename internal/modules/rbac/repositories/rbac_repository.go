@@ -5,6 +5,7 @@ import (
 
 	"neosim_go/internal/modules/rbac/contracts"
 	"neosim_go/internal/modules/rbac/models"
+	userModel "neosim_go/internal/modules/users/models"
 
 	"gorm.io/gorm"
 )
@@ -15,6 +16,26 @@ type rbacRepository struct {
 
 func NewRBACRepository(db *gorm.DB) contracts.RBACRepository {
 	return &rbacRepository{db: db}
+}
+
+// IsSuperadmin mengambil langsung status terbaru dari database
+func (r *rbacRepository) IsSuperadmin(userID int64) (bool, error) {
+	var isSuperadmin bool
+
+	// Kita gunakan .Pluck untuk mengambil satu kolom saja secara efisien
+	err := r.db.Model(&userModel.User{}).
+		Where("id = ? AND deleted_at IS NULL", userID).
+		Pluck("is_superadmin", &isSuperadmin).
+		Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	return isSuperadmin, nil
 }
 
 // ─── Permission ────────────────────────────────────────────────────────────────

@@ -24,13 +24,10 @@ type Module struct {
 
 // NewModule membuat instance module dan wire semua layer
 func NewModule(db *gorm.DB, redisClient *redis.Client, cfg *config.Config) *Module {
-	// Auth repository
 	authRepo := repositories.NewAuthRepository(db)
 
-	// Reuse users repository yang sudah ada
 	var userRepo userContracts.Repository = userRepositories.NewRepository(db)
 
-	// Build mailer jika SMTP dikonfigurasi
 	var mailer *utils.Mailer
 	if cfg.SMTPHost != "" {
 		mailer = utils.NewMailer(utils.MailConfig{
@@ -43,7 +40,6 @@ func NewModule(db *gorm.DB, redisClient *redis.Client, cfg *config.Config) *Modu
 		})
 	}
 
-	// Build service config dari Config struct
 	svcCfg := services.AuthServiceConfig{
 		JWTManager: utils.NewJWTManager(
 			cfg.JWTSecret,
@@ -69,14 +65,15 @@ func NewModule(db *gorm.DB, redisClient *redis.Client, cfg *config.Config) *Modu
 		Mailer:                   mailer,
 	}
 
-	svc := services.NewAuthService(authRepo, userRepo, redisClient, svcCfg)
-	handler := handlers.NewAuthHandler(svc)
 	jwtManager := utils.NewJWTManager(
 		cfg.JWTSecret,
 		cfg.JWTIssuer,
 		cfg.JWTAccessTokenExpMinutes,
 		cfg.JWTRefreshTokenExpDays,
 	)
+
+	svc := services.NewAuthService(authRepo, userRepo, redisClient, svcCfg)
+	handler := handlers.NewAuthHandler(svc)
 
 	return &Module{
 		db:         db,
@@ -86,7 +83,7 @@ func NewModule(db *gorm.DB, redisClient *redis.Client, cfg *config.Config) *Modu
 	}
 }
 
-// InitRoutes mendaftarkan routes ke echo instance
 func (m *Module) InitRoutes(e *echo.Echo) {
-	RegisterRoutes(e, m.handler, m.jwtManager)
+	// Inject db ke RegisterRoutes untuk JWTMiddleware realtime
+	RegisterRoutes(e, m.handler, m.jwtManager, m.db)
 }

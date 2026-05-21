@@ -30,6 +30,7 @@ import (
 
 // ─── Service ───────────────────────────────────────────────────────────────────
 
+// ─── Init ──────────────────────────────────────────────────────────────────────
 type service struct {
 	repo     userContracts.Repository
 	rbacRepo contracts.RBACRepository // ← inject RBAC repo
@@ -40,9 +41,11 @@ func NewUserService(repo userContracts.Repository, rbacRepo contracts.RBACReposi
 	return &service{
 		repo:     repo,
 		rbacRepo: rbacRepo,
-		authRepo: authRepo,
+		authRepo: authRepo, // <-- Dipastikan diisi di sini
 	}
 }
+
+// ─── End Init ──────────────────────────────────────────────────────────────────
 
 // ─── Authorization Helper ──────────────────────────────────────────────────────
 
@@ -139,11 +142,13 @@ func (s *service) canReadUser(actor userContracts.AuthContext, targetUserID int6
 	if actor.UserID == targetUserID {
 		return true, nil
 	}
+
 	return rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermUsersRead)
 }
 
 // ─── CRUD ──────────────────────────────────────────────────────────────────────
 
+// Create-------------------------------------------------------------------------
 func (s *service) CreateUser(req *dto.CreateUserRequest, actor userContracts.AuthContext) (*dto.UserSimpleResponse, error) {
 	//----------------------------------------------------------------------------
 	can, err := s.canCreateuser(actor)
@@ -210,10 +215,12 @@ func (s *service) CreateUser(req *dto.CreateUserRequest, actor userContracts.Aut
 	}
 
 	return dto.ToUserSimpleResponse(user), nil
-}
+} // Create-----------------------------------------------------------------------
 
+// Get By ID----------------------------------------------------------------------
 func (s *service) GetUserByID(id int64, actor userContracts.AuthContext) (*dto.UserResponse, error) {
 	// Authorization
+
 	can, err := s.canReadUser(actor, id)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -231,18 +238,23 @@ func (s *service) GetUserByID(id int64, actor userContracts.AuthContext) (*dto.U
 	}
 
 	var creatorDTO *models.UserCreator
-	creatorUser, err := s.repo.GetByID(*user.CreatedBy)
-	if err == nil {
-		creatorDTO = &models.UserCreator{
-			ID:       creatorUser.ID,
-			Username: creatorUser.Username,
-			Name:     creatorUser.Name,
+
+	// Cek dulu apakah pointernya nil atau tidak
+	if user.CreatedBy != nil {
+		creatorUser, err := s.repo.GetByID(*user.CreatedBy)
+		// Pastikan creatorUser juga ditemukan dan tidak nil
+		if err == nil && creatorUser != nil {
+			creatorDTO = &models.UserCreator{
+				ID:       creatorUser.ID,
+				Username: creatorUser.Username,
+				Name:     creatorUser.Name,
+			}
 		}
 	}
 
-	histories, _ := s.authRepo.GetUserLoginHistories(id, 10)
+	histories, _ := s.authRepo.GetUserLoginHistories(user.ID, 10)
 	return dto.ToUserResponse(user, histories, creatorDTO), nil
-}
+} // Get By ID-------------------------------------------------------------------
 
 func (s *service) GetUserByUsername(username string) (*dto.UserResponse, error) {
 	user, err := s.repo.GetByUsername(username)

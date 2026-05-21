@@ -12,6 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// Module mewakili rbac module
 type Module struct {
 	db         *gorm.DB
 	repo       contracts.RBACRepository
@@ -39,10 +40,9 @@ func NewModule(db *gorm.DB, cfg *config.Config) *Module {
 }
 
 func (m *Module) InitRoutes(e *echo.Echo) {
-	RegisterRoutes(e, m.handler, m.repo, m.jwtManager)
+	RegisterRoutes(e, m.handler, m.repo, m.jwtManager, m.db) // ← tambah m.db
 }
 
-// GetRepository mengekspos repo untuk dipakai module lain (misal users)
 func (m *Module) GetRepository() contracts.RBACRepository {
 	return m.repo
 }

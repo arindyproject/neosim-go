@@ -40,6 +40,7 @@ func (r *repository) GetByID(id int64) (*models.User, error) {
 		return nil, err
 	}
 	return &user, nil
+
 }
 
 // GetByUsername retrieves a user by username

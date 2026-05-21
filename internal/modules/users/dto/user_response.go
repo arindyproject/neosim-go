@@ -60,6 +60,7 @@ func ToUserResponse(u *models.User, histories []authModels.LoginHistory, creator
 		PasswordChangedAt: u.PasswordChangedAt,
 		LastLoginAt:       u.LastLoginAt,
 		Settings:          settings,
+		Histories:         histories,
 		Creator:           creator,
 		CreatedAt:         u.CreatedAt,
 		UpdatedAt:         u.UpdatedAt,

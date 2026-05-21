@@ -4,6 +4,12 @@ definitions:
     properties:
       email:
         type: string
+      is_active:
+        type: boolean
+      is_staff:
+        type: boolean
+      is_superadmin:
+        type: boolean
       name:
         maxLength: 255
         minLength: 1
@@ -438,6 +444,34 @@ paths:
       security:
       - BearerAuth: []
       summary: Create user
+      tags:
+      - Users
+  /users/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get user by :id
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserSimpleResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get user
       tags:
       - Users
 securityDefinitions:

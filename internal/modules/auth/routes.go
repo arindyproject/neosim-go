@@ -1,6 +1,3 @@
-// ════════════════════════════════════════════════════════════
-// FILE: internal/modules/auth/routes.go
-// ════════════════════════════════════════════════════════════
 package auth
 
 import (
@@ -9,11 +6,13 @@ import (
 	"neosim_go/internal/shared/utils"
 
 	"github.com/labstack/echo/v5"
+	"gorm.io/gorm"
 )
 
 // RegisterRoutes mendaftarkan semua routes untuk module auth
-func RegisterRoutes(e *echo.Echo, h *handlers.AuthHandler, jwtManager *utils.JWTManager) {
-	// ─── Public routes (tidak butuh login) ────────────────────
+// db dibutuhkan oleh JWTMiddleware untuk cek isSuperadmin secara realtime
+func RegisterRoutes(e *echo.Echo, h *handlers.AuthHandler, jwtManager *utils.JWTManager, db *gorm.DB) {
+	// ─── Public routes ─────────────────────────────────────────
 	public := e.Group("/api/v1/auth")
 	public.POST("/login", h.Login)
 	public.POST("/register", h.Register)
@@ -21,11 +20,9 @@ func RegisterRoutes(e *echo.Echo, h *handlers.AuthHandler, jwtManager *utils.JWT
 	public.POST("/forgot-password", h.ForgotPassword)
 	public.POST("/reset-password", h.ResetPassword)
 
-	// ─── Protected routes (butuh login) ───────────────────────
-	// Logout butuh JWT untuk:
-	// 1. Verifikasi user yang request adalah pemilik sesi
-	// 2. LogoutAll butuh userID dari claims
-	protected := e.Group("/api/v1/auth", authMiddlewares.JWTMiddleware(jwtManager))
+	// ─── Protected routes ──────────────────────────────────────
+	// JWTMiddleware sekarang terima db untuk query isSuperadmin realtime
+	protected := e.Group("/api/v1/auth", authMiddlewares.JWTMiddleware(jwtManager, db))
 	protected.POST("/logout", h.Logout)
 	protected.POST("/logout-all", h.LogoutAll)
 }

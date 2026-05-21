@@ -2,142 +2,143 @@ package middlewares
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 
 	"neosim_go/internal/shared/response"
 	"neosim_go/internal/shared/utils"
 
 	"github.com/labstack/echo/v5"
+	"gorm.io/gorm"
+)
+
+// ─── Context Keys ──────────────────────────────────────────────────────────────
+
+const (
+	CtxUserID       = "userID"
+	CtxUsername     = "username"
+	CtxIsStaff      = "isStaff"
+	CtxIsSuperadmin = "isSuperadmin" // diisi realtime dari DB, bukan dari JWT
 )
 
 // ─── JWT Middleware ────────────────────────────────────────────────────────────
 
-// JWTMiddleware memvalidasi access token dari header Authorization
-func JWTMiddleware2(jwtManager *utils.JWTManager) echo.MiddlewareFunc {
+// JWTMiddleware memvalidasi access token dan mengambil isSuperadmin realtime dari DB
+func JWTMiddleware(jwtManager *utils.JWTManager, db *gorm.DB) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {
-			// Ambil token dari header
 			authHeader := c.Request().Header.Get("Authorization")
 			if authHeader == "" {
 				return response.Response(c, http.StatusUnauthorized, false, "Token tidak ditemukan.", nil, nil)
 			}
 
-			// Format: "Bearer <token>"
-			parts := strings.SplitN(authHeader, " ", 2)
-			if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
-				return response.Response(c, http.StatusUnauthorized, false, "Format token tidak valid.", nil, nil)
+			tokenStr := authHeader
+			if strings.Contains(authHeader, " ") {
+				parts := strings.SplitN(authHeader, " ", 2)
+				if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
+					return response.Response(c, http.StatusUnauthorized, false, "Format token tidak valid.", nil, nil)
+				}
+				tokenStr = parts[1]
 			}
 
-			tokenStr := parts[1]
-
-			// Parse & validasi token
 			claims, err := jwtManager.ParseToken(tokenStr)
 			if err != nil {
 				return response.Response(c, http.StatusUnauthorized, false, "Token tidak valid atau sudah kedaluwarsa.", nil, nil)
 			}
 
-			// Pastikan hanya access token yang diterima
 			if claims.TokenType != "access" {
 				return response.Response(c, http.StatusUnauthorized, false, "Tipe token tidak valid.", nil, nil)
 			}
 
-			// Set claims ke context — bisa diambil di handler
-			c.Set("userID", claims.UserID)
-			c.Set("username", claims.Username)
-			c.Set("isSuperadmin", claims.IsSuperadmin)
-			c.Set("isStaff", claims.IsStaff)
+			// Set dari JWT claims dulu
+			c.Set(CtxUserID, claims.UserID)
+			c.Set(CtxUsername, claims.Username)
+			c.Set(CtxIsStaff, claims.IsStaff)
+
+			// ─── Realtime check isSuperadmin dari DB ───────────────
+			// Query hanya kolom is_superadmin — ringan dan tidak load seluruh model
+			var isSuperadmin bool
+			db.Raw("SELECT is_superadmin FROM users WHERE id = ? AND deleted_at IS NULL", claims.UserID).
+				Scan(&isSuperadmin)
+
+			c.Set(CtxIsSuperadmin, isSuperadmin)
 
 			return next(c)
 		}
 	}
 }
 
-func JWTMiddleware(jwtManager *utils.JWTManager) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c *echo.Context) error {
+// ─── Context Helpers ───────────────────────────────────────────────────────────
 
-			// Ambil token dari header
-			authHeader := c.Request().Header.Get("Authorization")
-			if authHeader == "" {
-				return response.Response(c, http.StatusUnauthorized, false, "Token tidak ditemukan.", nil, nil)
-			}
+// IsSuperadmin mengambil status superadmin dari context (sudah realtime dari DB)
+func IsSuperadmin(c *echo.Context) bool {
+	v, _ := c.Get(CtxIsSuperadmin).(bool)
+	return v
+}
 
-			// Support:
-			// - "Bearer <token>"
-			// - "<token>"
-			tokenStr := authHeader
+// GetUserID mengambil userID dari context
+func GetUserID(c *echo.Context) (int64, bool) {
+	id, ok := c.Get(CtxUserID).(int64)
+	return id, ok
+}
 
-			if strings.Contains(authHeader, " ") {
-				parts := strings.SplitN(authHeader, " ", 2)
+// GetUsername mengambil username dari context
+func GetUsername(c *echo.Context) (string, bool) {
+	username, ok := c.Get(CtxUsername).(string)
+	return username, ok
+}
 
-				if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
-					return response.Response(c, http.StatusUnauthorized, false, "Format token tidak valid.", nil, nil)
-				}
+// IsStaff mengambil status staff dari context
+func IsStaff(c *echo.Context) bool {
+	v, _ := c.Get(CtxIsStaff).(bool)
+	return v
+}
 
-				tokenStr = parts[1]
-			}
+// ─── Alias untuk backward compatibility ────────────────────────────────────────
 
-			// Parse & validasi token
-			claims, err := jwtManager.ParseToken(tokenStr)
-			if err != nil {
-				return response.Response(c, http.StatusUnauthorized, false, "Token tidak valid atau sudah kedaluwarsa.", nil, nil)
-			}
+// GetUserIDFromContext alias dari GetUserID
+func GetUserIDFromContext(c *echo.Context) (int64, bool) {
+	return GetUserID(c)
+}
 
-			// Pastikan hanya access token yang diterima
-			if claims.TokenType != "access" {
-				return response.Response(c, http.StatusUnauthorized, false, "Tipe token tidak valid.", nil, nil)
-			}
+// GetTargetUserID mengambil :id dari path param
+func GetTargetUserID(c *echo.Context) (int64, error) {
+	return strconv.ParseInt(c.Param("id"), 10, 64)
+}
 
-			// Set claims ke context
-			c.Set("userID", claims.UserID)
-			c.Set("username", claims.Username)
-			c.Set("isSuperadmin", claims.IsSuperadmin)
-			c.Set("isStaff", claims.IsStaff)
-
-			return next(c)
-		}
+// IsSelf mengembalikan true jika actor mengakses datanya sendiri
+func IsSelf(c *echo.Context) bool {
+	currentUserID, ok := GetUserID(c)
+	if !ok {
+		return false
 	}
+	targetUserID, err := GetTargetUserID(c)
+	if err != nil {
+		return false
+	}
+	return currentUserID == targetUserID
 }
 
 // ─── Authorization Middlewares ─────────────────────────────────────────────────
 
-// RequireSuperuser memastikan user adalah superuser
 func RequireSuperuser() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {
-			isSuperadmin, _ := c.Get("isSuperadmin").(bool)
-			if !isSuperadmin {
-				return response.Response(c, http.StatusForbidden, false, "Akses ditolak. Hanya superuser.", nil, nil)
+			if !IsSuperadmin(c) {
+				return response.Response(c, http.StatusForbidden, false, "Akses ditolak. Hanya superadmin.", nil, nil)
 			}
 			return next(c)
 		}
 	}
 }
 
-// RequireStaff memastikan user adalah staff atau superuser
 func RequireStaff() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {
-			isStaff, _ := c.Get("isStaff").(bool)
-			isSuperadmin, _ := c.Get("isSuperadmin").(bool)
-			if !isStaff && !isSuperadmin {
+			if !IsStaff(c) && !IsSuperadmin(c) {
 				return response.Response(c, http.StatusForbidden, false, "Akses ditolak. Hanya staff.", nil, nil)
 			}
 			return next(c)
 		}
 	}
-}
-
-// ─── Helper untuk Handler ──────────────────────────────────────────────────────
-
-// GetUserID mengambil userID dari context (set oleh JWTMiddleware)
-func GetUserID(c *echo.Context) (int64, bool) {
-	userID, ok := c.Get("userID").(int64)
-	return userID, ok
-}
-
-// GetUsername mengambil username dari context
-func GetUsername(c *echo.Context) (string, bool) {
-	username, ok := c.Get("username").(string)
-	return username, ok
 }

@@ -1,10 +1,7 @@
-// ════════════════════════════════════════════════════════════════
-// FILE: internal/modules/rbac/routes.go
-// ════════════════════════════════════════════════════════════════
 package rbac
 
 import (
-	"neosim_go/internal/modules/auth/middlewares"
+	authMiddlewares "neosim_go/internal/modules/auth/middlewares"
 	"neosim_go/internal/modules/rbac/contracts"
 	"neosim_go/internal/modules/rbac/handlers"
 	rbacMiddlewares "neosim_go/internal/modules/rbac/middlewares"
@@ -12,10 +9,13 @@ import (
 	"neosim_go/internal/shared/utils"
 
 	"github.com/labstack/echo/v5"
+	"gorm.io/gorm"
 )
 
-func RegisterRoutes(e *echo.Echo, h *handlers.RBACHandler, repo contracts.RBACRepository, jwtManager *utils.JWTManager) {
-	jwt := middlewares.JWTMiddleware(jwtManager)
+// RegisterRoutes mendaftarkan semua routes RBAC
+// db dibutuhkan JWTMiddleware untuk cek isSuperadmin realtime
+func RegisterRoutes(e *echo.Echo, h *handlers.RBACHandler, repo contracts.RBACRepository, jwtManager *utils.JWTManager, db *gorm.DB) {
+	jwt := authMiddlewares.JWTMiddleware(jwtManager, db) // ← tambah db
 
 	// ─── Permissions (superadmin only) ─────────────────────────
 	perms := e.Group("/api/v1/permissions",

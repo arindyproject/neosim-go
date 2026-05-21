@@ -67,13 +67,24 @@ func (r *authRepository) SaveLoginHistory(history *models.LoginHistory) error {
 }
 
 func (r *authRepository) GetUserLoginHistories(userID int64, limit int) ([]models.LoginHistory, error) {
-	var histories []models.LoginHistory
-	limit = 10
+	// Inisialisasi slice kosong (bukan nil) agar aman saat di-return
+	histories := make([]models.LoginHistory, 0)
+
+	// Jika limit yang diinput kurang dari atau sama dengan 0, beri default 10
+	if limit <= 0 {
+		limit = 10
+	}
+
 	err := r.db.Where("user_id = ?", userID).
 		Order("created_at DESC").
 		Limit(limit).
 		Find(&histories).Error
-	return histories, err
+
+	if err != nil {
+		return nil, err
+	}
+
+	return histories, nil
 }
 
 // ─── Password History ──────────────────────────────────────────────────────────

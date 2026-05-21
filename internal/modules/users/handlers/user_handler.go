@@ -37,7 +37,7 @@ func buildAuthContext(c *echo.Context) userContracts.AuthContext {
 	}
 }
 
-// ─── User CRUD ─────────────────────────────────────────────────────────────────
+// ─── User CRUD ─────────────────────────────────────────────────────────────────────
 
 // ─── CreateUserHandler ─────────────────────────────────────────────────────────────
 // CreateUserHandler godoc
@@ -71,7 +71,40 @@ func (h *Handler) CreateUserHandler(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
 	return response.Response(c, http.StatusCreated, true, "User berhasil dibuat", user, nil)
-}
+} // ─── CreateUserHandler ───────────────────────────────────────────────────────────
+
+// ─── GetUserHandler ────────────────────────────────────────────────────────────────
+// GetUserHandler godoc
+//
+//		@Summary		Get user
+//		@Description	Get user by :id
+//		@Tags			Users
+//		@Accept			json
+//		@Produce		json
+//		@Security		BearerAuth
+//	 	@Param          id      path        int     true    "User ID"
+//		@Success		200		{object}	response.MyGoResponse{data=dto.UserSimpleResponse}
+//		@Router			/users/{id} [get]
+//
+// GetUserHandler handles GET /api/v1/users/:id
+func (h *Handler) GetUserHandler(c *echo.Context) error {
+	id, err := parseID(c)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
+	}
+
+	actor := buildAuthContext(c)
+
+	user, err := h.service.GetUserByID(id, actor)
+
+	if err != nil {
+		if appErr, ok := err.(interface{ StatusCode() int }); ok {
+			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
+		}
+		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data user", user, nil)
+} // ─── GetUserHandler ──────────────────────────────────────────────────────────────
 
 // ListUsersHandler handles GET /api/v1/users
 // Siapa yang bisa: semua yang login (data dirinya sendiri disaring di service)
@@ -93,25 +126,6 @@ func (h *Handler) ListUsersHandler(c *echo.Context) error {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data user", nil, nil)
 	}
 	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data user", users, total, page, pageSize)
-}
-
-// GetUserHandler handles GET /api/v1/users/:id
-// Siapa yang bisa: superadmin, diri sendiri, atau yang punya permission users:read
-func (h *Handler) GetUserHandler(c *echo.Context) error {
-	id, err := parseID(c)
-	if err != nil {
-		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
-	}
-
-	actor := buildAuthContext(c)
-	user, err := h.service.GetUserByID(id, actor)
-	if err != nil {
-		if appErr, ok := err.(interface{ StatusCode() int }); ok {
-			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
-		}
-		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
-	}
-	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data user", user, nil)
 }
 
 // UpdateUserHandler handles PUT /api/v1/users/:id

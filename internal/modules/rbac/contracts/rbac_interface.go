@@ -8,6 +8,7 @@ import (
 // ─── Repository ────────────────────────────────────────────────────────────────
 
 type RBACRepository interface {
+	IsSuperadmin(userID int64) (bool, error)
 	// Permission
 	CreatePermission(p *models.Permission) error
 	GetPermissionByID(id int64) (*models.Permission, error)

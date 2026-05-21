@@ -6,6 +6,7 @@ import (
 	"neosim_go/config"
 	"neosim_go/internal/apps"
 	authContracts "neosim_go/internal/modules/auth/contracts"
+	authRepositories "neosim_go/internal/modules/auth/repositories"
 	rbacContracts "neosim_go/internal/modules/rbac/contracts"
 	rbacRepositories "neosim_go/internal/modules/rbac/repositories"
 	"neosim_go/internal/modules/users/migrations"
@@ -31,9 +32,8 @@ func init() {
 
 func (r *registryModule) SetDB(db *gorm.DB) {
 	r.db = db
-	// Build rbacRepo saat DB tersedia
-	// rbacRepo tidak punya table sendiri di module ini, reuse dari rbac module
 	r.rbacRepo = rbacRepositories.NewRBACRepository(db)
+	r.authRepo = authRepositories.NewAuthRepository(db)
 }
 
 func (r *registryModule) SetConfig(cfg *config.Config) {
@@ -49,6 +49,7 @@ func (r *registryModule) InitRoutes(e *echo.Echo) {
 		r.cfg.JWTAccessTokenExpMinutes,
 		r.cfg.JWTRefreshTokenExpDays,
 	)
+	// ← hapus r.authRepo, NewModule hanya butuh 3 argumen
 	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo).InitRoutes(e)
 }
 
