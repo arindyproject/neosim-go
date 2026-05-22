@@ -477,9 +477,6 @@ const docTemplate = `{
                 "action": {
                     "type": "string"
                 },
-                "created_at": {
-                    "type": "string"
-                },
                 "description": {
                     "type": "string"
                 },
@@ -493,9 +490,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "resource": {
-                    "type": "string"
-                },
-                "updated_at": {
                     "type": "string"
                 }
             }
@@ -581,12 +575,9 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.RoleResponse": {
+        "dto.RoleSimpleResponse": {
             "type": "object",
             "properties": {
-                "created_at": {
-                    "type": "string"
-                },
                 "description": {
                     "type": "string"
                 },
@@ -600,15 +591,6 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "name": {
-                    "type": "string"
-                },
-                "permissions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.PermissionResponse"
-                    }
-                },
-                "updated_at": {
                     "type": "string"
                 }
             }
@@ -678,10 +660,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "permissions": {
-                    "description": "← tambah (semua permission: dari role + direct)",
+                    "description": "← object lengkap, deduplicated",
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/dto.PermissionResponse"
                     }
                 },
                 "photo": {
@@ -691,10 +673,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "roles": {
-                    "description": "← tambah",
+                    "description": "← tanpa permissions",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/dto.RoleResponse"
+                        "$ref": "#/definitions/dto.RoleSimpleResponse"
                     }
                 },
                 "settings": {

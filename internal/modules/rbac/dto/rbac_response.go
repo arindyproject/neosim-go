@@ -1,26 +1,20 @@
 package dto
 
 import (
-	"time"
-
 	"neosim_go/internal/modules/rbac/models"
 )
 
-// ═══════════════════════════════════════════════════════════════
-// RESPONSE DTOs
-// ═══════════════════════════════════════════════════════════════
-
-// ─── Permission ────────────────────────────────────────────────
+// ─── Permission ────────────────────────────────────────────────────────────────
 
 type PermissionResponse struct {
-	ID          int64     `json:"id"`
-	Name        string    `json:"name"`
-	DisplayName string    `json:"display_name"`
-	Description *string   `json:"description"`
-	Resource    string    `json:"resource"`
-	Action      string    `json:"action"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID          int64   `json:"id"`
+	Name        string  `json:"name"`
+	DisplayName string  `json:"display_name"`
+	Description *string `json:"description"`
+	Resource    string  `json:"resource"`
+	Action      string  `json:"action"`
+	//CreatedAt   time.Time `json:"created_at"`
+	//UpdatedAt   time.Time `json:"updated_at"`
 }
 
 func ToPermissionResponse(p *models.Permission) *PermissionResponse {
@@ -31,21 +25,20 @@ func ToPermissionResponse(p *models.Permission) *PermissionResponse {
 		Description: p.Description,
 		Resource:    p.Resource,
 		Action:      p.Action,
-		CreatedAt:   p.CreatedAt,
-		UpdatedAt:   p.UpdatedAt,
 	}
 }
 
 func ToPermissionListResponse(items []models.Permission) []PermissionResponse {
-	var result []PermissionResponse
+	result := make([]PermissionResponse, 0, len(items))
 	for _, p := range items {
 		result = append(result, *ToPermissionResponse(&p))
 	}
 	return result
 }
 
-// ─── Role ──────────────────────────────────────────────────────
+// ─── Role (dengan permissions) ─────────────────────────────────────────────────
 
+// RoleResponse dipakai untuk endpoint CRUD role — include permissions di dalamnya
 type RoleResponse struct {
 	ID          int64                `json:"id"`
 	Name        string               `json:"name"`
@@ -53,8 +46,8 @@ type RoleResponse struct {
 	Description *string              `json:"description"`
 	IsSystem    bool                 `json:"is_system"`
 	Permissions []PermissionResponse `json:"permissions,omitempty"`
-	CreatedAt   time.Time            `json:"created_at"`
-	UpdatedAt   time.Time            `json:"updated_at"`
+	//CreatedAt   time.Time            `json:"created_at"`
+	//UpdatedAt   time.Time            `json:"updated_at"`
 }
 
 func ToRoleResponse(r *models.Role) *RoleResponse {
@@ -64,8 +57,6 @@ func ToRoleResponse(r *models.Role) *RoleResponse {
 		DisplayName: r.DisplayName,
 		Description: r.Description,
 		IsSystem:    r.IsSystem,
-		CreatedAt:   r.CreatedAt,
-		UpdatedAt:   r.UpdatedAt,
 	}
 	if r.Permissions != nil {
 		resp.Permissions = ToPermissionListResponse(r.Permissions)
@@ -74,25 +65,57 @@ func ToRoleResponse(r *models.Role) *RoleResponse {
 }
 
 func ToRoleListResponse(items []models.Role) []RoleResponse {
-	var result []RoleResponse
+	result := make([]RoleResponse, 0, len(items))
 	for _, r := range items {
 		result = append(result, *ToRoleResponse(&r))
 	}
 	return result
 }
 
-// ─── Direct Permission ─────────────────────────────────────────
+// ─── Role Simple (tanpa permissions) ──────────────────────────────────────────
+
+// RoleSimpleResponse dipakai di UserResponse — tanpa permissions
+// karena permissions sudah ditampilkan flat di field "permissions" UserResponse
+type RoleSimpleResponse struct {
+	ID          int64   `json:"id"`
+	Name        string  `json:"name"`
+	DisplayName string  `json:"display_name"`
+	Description *string `json:"description"`
+	IsSystem    bool    `json:"is_system"`
+	//CreatedAt   time.Time `json:"created_at"`
+	//UpdatedAt   time.Time `json:"updated_at"`
+}
+
+func ToRoleSimpleResponse(r *models.Role) *RoleSimpleResponse {
+	return &RoleSimpleResponse{
+		ID:          r.ID,
+		Name:        r.Name,
+		DisplayName: r.DisplayName,
+		Description: r.Description,
+		IsSystem:    r.IsSystem,
+	}
+}
+
+func ToRoleSimpleListResponse(items []models.Role) []RoleSimpleResponse {
+	result := make([]RoleSimpleResponse, 0, len(items))
+	for _, r := range items {
+		result = append(result, *ToRoleSimpleResponse(&r))
+	}
+	return result
+}
+
+// ─── Direct Permission ─────────────────────────────────────────────────────────
 
 type DirectPermissionResponse struct {
 	Permission PermissionResponse `json:"permission"`
 	IsGranted  bool               `json:"is_granted"`
 }
 
-// ─── User RBAC Summary ─────────────────────────────────────────
+// ─── User RBAC Summary ─────────────────────────────────────────────────────────
 
 type UserRBACResponse struct {
 	UserID         int64                      `json:"user_id"`
-	Roles          []RoleResponse             `json:"roles"`
+	Roles          []RoleSimpleResponse       `json:"roles"`
 	Permissions    []DirectPermissionResponse `json:"direct_permissions"`
 	AllPermissions []string                   `json:"all_permissions"`
 }

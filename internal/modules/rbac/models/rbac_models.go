@@ -109,5 +109,8 @@ const (
 
 	// Permissions
 	PermPermissionsRead   = "permissions:read"
+	PermPermissionsCreate = "permissions:create"
+	PermPermissionsUpdate = "permissions:update"
+	PermPermissionsDelete = "permissions:delete"
 	PermPermissionsManage = "permissions:manage"
 )

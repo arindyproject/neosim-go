@@ -91,6 +91,16 @@ func MakeUserWritePermission(resourceName string) *models.Permission {
 	}
 }
 
+func MakeUserUpdatePermission(resourceName string) *models.Permission {
+	return &models.Permission{
+		Name:        fmt.Sprintf("%s:update", resourceName),
+		DisplayName: fmt.Sprintf("Update %s", resourceName),
+		Description: nil,
+		Resource:    resourceName,
+		Action:      "update",
+	}
+}
+
 func MakeUserDeletePermission(resourceName string) *models.Permission {
 	return &models.Permission{
 		Name:        fmt.Sprintf("%s:delete", resourceName),
@@ -103,10 +113,10 @@ func MakeUserDeletePermission(resourceName string) *models.Permission {
 
 func MakeUserAllPermission(resourceName string) *models.Permission {
 	return &models.Permission{
-		Name:        fmt.Sprintf("%s:all", resourceName),
+		Name:        fmt.Sprintf("%s:manage", resourceName),
 		DisplayName: fmt.Sprintf("All permissions for %s", resourceName),
 		Description: nil,
 		Resource:    resourceName,
-		Action:      "all",
+		Action:      "manage",
 	}
 }

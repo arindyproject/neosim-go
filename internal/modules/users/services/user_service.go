@@ -83,23 +83,59 @@ func (s *service) canReadUser(actor userContracts.AuthContext, targetUserID int6
 }
 
 // ─── RBAC Data Builder ─────────────────────────────────────────────────────────
+// Letakkan di internal/modules/users/services/user_service.go
+// Ganti fungsi buildUserRBAC yang lama dengan ini
 
-// buildUserRBAC mengambil roles dan permissions untuk user — dipanggil saat butuh UserResponse
-func (s *service) buildUserRBAC(userID int64) ([]rbacDto.RoleResponse, []string) {
-	// Ambil roles
+// buildUserRBAC mengambil roles (tanpa permissions) dan permissions (object lengkap, deduplicated)
+func (s *service) buildUserRBAC(userID int64) ([]rbacDto.RoleSimpleResponse, []rbacDto.PermissionResponse) {
+	// 1. Ambil roles dari DB — tanpa preload permissions agar ringan
 	roles, err := s.rbacRepo.GetUserRoles(userID)
-	var roleResponses []rbacDto.RoleResponse
+	var roleSimple []rbacDto.RoleSimpleResponse
 	if err == nil {
-		roleResponses = rbacDto.ToRoleListResponse(roles)
+		roleSimple = rbacDto.ToRoleSimpleListResponse(roles)
+	} else {
+		roleSimple = []rbacDto.RoleSimpleResponse{}
 	}
 
-	// Ambil semua permissions (dari role + direct)
-	perms, err := s.rbacRepo.GetUserAllPermissions(userID)
-	if err != nil {
-		perms = []string{}
+	// 2. Ambil semua permissions (dari role + direct) sebagai object lengkap
+	// Gunakan map untuk deduplication berdasarkan permission ID
+	permMap := make(map[int64]rbacDto.PermissionResponse)
+
+	// 2a. Permissions dari role
+	for _, role := range roles {
+		for _, p := range role.Permissions {
+			if _, exists := permMap[p.ID]; !exists {
+				permMap[p.ID] = *rbacDto.ToPermissionResponse(&p)
+			}
+		}
 	}
 
-	return roleResponses, perms
+	// 2b. Direct permissions yang di-grant — override/tambah ke map
+	directPerms, err := s.rbacRepo.GetUserDirectPermissions(userID)
+	if err == nil {
+		for _, up := range directPerms {
+			if !up.IsGranted {
+				// Direct deny — hapus dari map jika ada
+				delete(permMap, up.PermissionID)
+				continue
+			}
+			// Direct grant — tambah jika belum ada
+			if _, exists := permMap[up.PermissionID]; !exists {
+				perm, err := s.rbacRepo.GetPermissionByID(up.PermissionID)
+				if err == nil && perm != nil {
+					permMap[perm.ID] = *rbacDto.ToPermissionResponse(perm)
+				}
+			}
+		}
+	}
+
+	// 3. Convert map ke slice
+	permList := make([]rbacDto.PermissionResponse, 0, len(permMap))
+	for _, p := range permMap {
+		permList = append(permList, p)
+	}
+
+	return roleSimple, permList
 }
 
 // buildCreator mengambil data creator user

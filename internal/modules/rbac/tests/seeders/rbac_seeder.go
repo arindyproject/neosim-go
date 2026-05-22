@@ -77,13 +77,25 @@ func (s *RBACSeeder) Fresh() error {
 func (s *RBACSeeder) seedPermissions() (map[string]*models.Permission, error) {
 	log.Println("   🔑 Seeding permissions...")
 
-	resource := "users"
-
 	list := []*models.Permission{
-		factories.MakeUserReadPermission(resource),
-		factories.MakeUserWritePermission(resource),
-		factories.MakeUserDeletePermission(resource),
-		factories.MakeUserAllPermission(resource),
+		//users
+		factories.MakeUserReadPermission("users"),
+		factories.MakeUserWritePermission("users"),
+		factories.MakeUserUpdatePermission("users"),
+		factories.MakeUserDeletePermission("users"),
+		factories.MakeUserAllPermission("users"),
+		//roles
+		factories.MakeUserReadPermission("roles"),
+		factories.MakeUserWritePermission("roles"),
+		factories.MakeUserUpdatePermission("roles"),
+		factories.MakeUserDeletePermission("roles"),
+		factories.MakeUserAllPermission("roles"),
+		//permissions
+		factories.MakeUserReadPermission("permissions"),
+		factories.MakeUserWritePermission("permissions"),
+		factories.MakeUserUpdatePermission("permissions"),
+		factories.MakeUserDeletePermission("permissions"),
+		factories.MakeUserAllPermission("permissions"),
 	}
 
 	result := make(map[string]*models.Permission)
@@ -155,7 +167,7 @@ func (s *RBACSeeder) assignPermissionsToRoles(
 
 	assign := map[string][]string{
 		"superuser": {
-			"users:all",
+			"users:manage",
 		},
 		"admin": {
 			"users:read",

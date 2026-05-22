@@ -500,16 +500,45 @@ func (s *authService) buildTokenResponse(accessToken, refreshToken string, user 
 	settings, _ := user.GetSettings()
 	histories, _ := s.repo.GetUserLoginHistories(user.ID, 10)
 
-	// 1. Ambil data RBAC (Roles & Permissions)
-	var roleResponses []rbacDto.RoleResponse
+	// 1. Ambil roles dari DB — tanpa preload permissions agar ringan
 	roles, err := s.rbacRepo.GetUserRoles(user.ID)
+	var roleSimple []rbacDto.RoleSimpleResponse
 	if err == nil {
-		roleResponses = rbacDto.ToRoleListResponse(roles)
+		roleSimple = rbacDto.ToRoleSimpleListResponse(roles)
+	} else {
+		roleSimple = []rbacDto.RoleSimpleResponse{}
 	}
 
-	perms, err := s.rbacRepo.GetUserAllPermissions(user.ID)
-	if err != nil {
-		perms = []string{}
+	// 2. Ambil semua permissions (dari role + direct) sebagai object lengkap
+	// Gunakan map untuk deduplication berdasarkan permission ID
+	permMap := make(map[int64]rbacDto.PermissionResponse)
+
+	// 2a. Permissions dari role
+	for _, role := range roles {
+		for _, p := range role.Permissions {
+			if _, exists := permMap[p.ID]; !exists {
+				permMap[p.ID] = *rbacDto.ToPermissionResponse(&p)
+			}
+		}
+	}
+
+	// 2b. Direct permissions yang di-grant — override/tambah ke map
+	directPerms, err := s.rbacRepo.GetUserDirectPermissions(user.ID)
+	if err == nil {
+		for _, up := range directPerms {
+			if !up.IsGranted {
+				// Direct deny — hapus dari map jika ada
+				delete(permMap, up.PermissionID)
+				continue
+			}
+			// Direct grant — tambah jika belum ada
+			if _, exists := permMap[up.PermissionID]; !exists {
+				perm, err := s.rbacRepo.GetPermissionByID(up.PermissionID)
+				if err == nil && perm != nil {
+					permMap[perm.ID] = *rbacDto.ToPermissionResponse(perm)
+				}
+			}
+		}
 	}
 
 	// 2. Ambil data creator jika CreatedBy tidak nil
@@ -523,6 +552,12 @@ func (s *authService) buildTokenResponse(accessToken, refreshToken string, user 
 				Name:     creatorUser.Name,
 			}
 		}
+	}
+
+	// 3. Convert map ke slice
+	permList := make([]rbacDto.PermissionResponse, 0, len(permMap))
+	for _, p := range permMap {
+		permList = append(permList, p)
 	}
 
 	return &dto.TokenResponse{
@@ -540,8 +575,8 @@ func (s *authService) buildTokenResponse(accessToken, refreshToken string, user 
 			IsSuperadmin:   user.IsSuperadmin,
 			IsStaff:        user.IsStaff,
 			IsVerified:     user.IsVerified,
-			Roles:          roleResponses, // ← Inject Roles ke DTO Response
-			Permissions:    perms,         // ← Inject Permissions ke DTO Response
+			Roles:          roleSimple, // ← Inject Roles ke DTO Response
+			Permissions:    permList,   // ← Inject Permissions ke DTO Response
 			Settings:       settings,
 			Histories:      histories,
 			LastLoginAt:    user.LastLoginAt,

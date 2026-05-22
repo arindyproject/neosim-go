@@ -10,32 +10,34 @@ import (
 
 // ─── User Response (detail) ────────────────────────────────────────────────────
 
-// UserResponse response lengkap untuk single user — include roles, permissions
+// UserResponse response lengkap untuk single user
+// - roles      : tanpa permissions di dalamnya (flat)
+// - permissions: semua permission dari role + direct, ditampilkan sebagai object lengkap
 type UserResponse struct {
-	ID                int64                     `json:"id"`
-	Photo             *string                   `json:"photo"`
-	PhotoThumbnail    *string                   `json:"photo_thumbnail"`
-	Username          string                    `json:"username"`
-	Email             string                    `json:"email"`
-	Name              string                    `json:"name"`
-	IsSuperadmin      bool                      `json:"is_superadmin"`
-	IsActive          bool                      `json:"is_active"`
-	IsStaff           bool                      `json:"is_staff"`
-	IsVerified        bool                      `json:"is_verified"`
-	PasswordChangedAt *time.Time                `json:"password_changed_at"`
-	LastLoginAt       *time.Time                `json:"last_login_at"`
-	Settings          []models.UserSetting      `json:"settings"`
-	Roles             []rbacDto.RoleResponse    `json:"roles"`       // ← tambah
-	Permissions       []string                  `json:"permissions"` // ← tambah (semua permission: dari role + direct)
-	Histories         []authModels.LoginHistory `json:"histories"`
-	Creator           *models.UserCreator       `json:"creator"`
-	CreatedAt         time.Time                 `json:"created_at"`
-	UpdatedAt         time.Time                 `json:"updated_at"`
+	ID                int64                        `json:"id"`
+	Photo             *string                      `json:"photo"`
+	PhotoThumbnail    *string                      `json:"photo_thumbnail"`
+	Username          string                       `json:"username"`
+	Email             string                       `json:"email"`
+	Name              string                       `json:"name"`
+	IsSuperadmin      bool                         `json:"is_superadmin"`
+	IsActive          bool                         `json:"is_active"`
+	IsStaff           bool                         `json:"is_staff"`
+	IsVerified        bool                         `json:"is_verified"`
+	PasswordChangedAt *time.Time                   `json:"password_changed_at"`
+	LastLoginAt       *time.Time                   `json:"last_login_at"`
+	Settings          []models.UserSetting         `json:"settings"`
+	Roles             []rbacDto.RoleSimpleResponse `json:"roles"`       // ← tanpa permissions
+	Permissions       []rbacDto.PermissionResponse `json:"permissions"` // ← object lengkap, deduplicated
+	Histories         []authModels.LoginHistory    `json:"histories"`
+	Creator           *models.UserCreator          `json:"creator"`
+	CreatedAt         time.Time                    `json:"created_at"`
+	UpdatedAt         time.Time                    `json:"updated_at"`
 }
 
 // ─── User Simple Response (list) ──────────────────────────────────────────────
 
-// UserSimpleResponse response ringkas untuk list — tanpa roles/permissions/histories
+// UserSimpleResponse response ringkas untuk list
 type UserSimpleResponse struct {
 	ID             int64     `json:"id"`
 	PhotoThumbnail *string   `json:"photo_thumbnail"`
@@ -52,28 +54,27 @@ type UserSimpleResponse struct {
 
 // ─── Builders ──────────────────────────────────────────────────────────────────
 
-// UserResponseParams parameter untuk ToUserResponse agar tidak terlalu banyak argumen
+// UserResponseParams parameter untuk ToUserResponse
 type UserResponseParams struct {
 	User        *models.User
-	Roles       []rbacDto.RoleResponse
-	Permissions []string
+	Roles       []rbacDto.RoleSimpleResponse // ← simple (tanpa permissions)
+	Permissions []rbacDto.PermissionResponse // ← object lengkap
 	Histories   []authModels.LoginHistory
 	Creator     *models.UserCreator
 }
 
-// ToUserResponse mengubah models.User + data RBAC menjadi UserResponse lengkap
+// ToUserResponse mengubah User + RBAC data menjadi UserResponse lengkap
 func ToUserResponse(p UserResponseParams) *UserResponse {
 	settings, _ := p.User.GetSettings()
 
-	// Default empty slice agar JSON output [] bukan null
 	roles := p.Roles
 	if roles == nil {
-		roles = []rbacDto.RoleResponse{}
+		roles = []rbacDto.RoleSimpleResponse{}
 	}
 
 	permissions := p.Permissions
 	if permissions == nil {
-		permissions = []string{}
+		permissions = []rbacDto.PermissionResponse{}
 	}
 
 	histories := p.Histories
