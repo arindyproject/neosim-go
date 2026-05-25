@@ -24,6 +24,7 @@ type RBACRepository interface {
 	ListRoles(page, pageSize int) ([]models.Role, int64, error)
 	UpdateRole(r *models.Role) error
 	DeleteRole(id int64) error
+	GetUsersRoles(userIDs []int64) (map[int64][]models.Role, error)
 
 	// Role ↔ Permission
 	AssignPermissionsToRole(roleID int64, permissionIDs []int64) error

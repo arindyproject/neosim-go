@@ -83,7 +83,7 @@ func (h *Handler) CreateUserHandler(c *echo.Context) error {
 //		@Produce		json
 //		@Security		BearerAuth
 //	 	@Param          id      path        int     true    "User ID"
-//		@Success		200		{object}	response.MyGoResponse{data=dto.UserSimpleResponse}
+//		@Success		200		{object}	response.MyGoResponse{data=dto.UserResponse}
 //		@Router			/users/{id} [get]
 //
 // GetUserHandler handles GET /api/v1/users/:id
@@ -106,6 +106,55 @@ func (h *Handler) GetUserHandler(c *echo.Context) error {
 	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data user", user, nil)
 } // ─── GetUserHandler ──────────────────────────────────────────────────────────────
 
+// ─── By Username ───────────────────────────────────────────────────────────────────
+// GetByUsernameHandler godoc
+//
+//		@Summary		Get user
+//		@Description	Get user by :username
+//		@Tags			Users
+//		@Accept			json
+//		@Produce		json
+//		@Security		BearerAuth
+//	 	@Param          username      path        string     true    "Username"
+//		@Success		200		{object}	response.MyGoResponse{data=dto.UserResponse}
+//		@Router			/users/username/{username} [get]
+//
+// GetByUsernameHandler handles GET /api/v1/users/username/:username
+func (h *Handler) GetByUsernameHandler(c *echo.Context) error {
+	username := c.Param("username")
+	if username == "" {
+		return response.Response(c, http.StatusBadRequest, false, "Username tidak boleh kosong", nil, nil)
+	}
+
+	actor := buildAuthContext(c)
+
+	user, err := h.service.GetUserByUsername(username, actor)
+	if err != nil {
+		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data user", user, nil)
+} // ─── By Username ─────────────────────────────────────────────────────────────────
+
+// ─── ListUsersHandler ──────────────────────────────────────────────────────────────
+// ListUsersHandler godoc
+//
+//		@Summary		Get list of users
+//		@Description	Get paginated list of users
+//		@Tags			Users
+//		@Accept			json
+//		@Produce		json
+//		@Security		BearerAuth
+//	 	@Param          page        query       int     false    "Page number"
+//	 	@Param          page_size   query       int     false    "Page size"
+//	 	@Param          name        query       string  false    "Filter by name (partial match)"
+//	 	@Param          username    query       string  false    "Filter by username (partial match)"
+//	 	@Param          email       query       string  false    "Filter by email (partial match)"
+//	 	@Param          is_superadmin query     bool    false    "Filter by superadmin status"
+//	 	@Param          is_active   query       bool    false    "Filter by active status"
+//	 	@Param          is_staff    query       bool    false    "Filter by staff status"
+//		@Success		200		{object}	response.MyGoResponse{data=[]dto.UserSimpleResponse}
+//		@Router			/users [get]
+//
 // ListUsersHandler handles GET /api/v1/users
 // Siapa yang bisa: semua yang login (data dirinya sendiri disaring di service)
 func (h *Handler) ListUsersHandler(c *echo.Context) error {
@@ -121,13 +170,61 @@ func (h *Handler) ListUsersHandler(c *echo.Context) error {
 		}
 	}
 
-	users, total, err := h.service.ListUsers(page, pageSize)
+	// Mengambil query parameter untuk filter
+	filter := dto.UserFilter{
+		Name:     c.QueryParam("name"),
+		Username: c.QueryParam("username"),
+		Email:    c.QueryParam("email"),
+	}
+
+	// Menggunakan pointer untuk boolean agar bisa membedakan antara "false" kiriman user vs default value Go (false)
+	if isSuperadmin := c.QueryParam("is_superadmin"); isSuperadmin != "" {
+		b, err := strconv.ParseBool(isSuperadmin)
+		if err == nil {
+			filter.IsSuperadmin = &b
+		}
+	}
+	if isActive := c.QueryParam("is_active"); isActive != "" {
+		b, err := strconv.ParseBool(isActive)
+		if err == nil {
+			filter.IsActive = &b
+		}
+	}
+	if isStaff := c.QueryParam("is_staff"); isStaff != "" {
+		b, err := strconv.ParseBool(isStaff)
+		if err == nil {
+			filter.IsStaff = &b
+		}
+	}
+
+	users, total, err := h.service.ListUsers(page, pageSize, &filter)
 	if err != nil {
+		// ─── CEK JENIS ERROR UNTUK RESPONS 404 ───────────────────────────
+		if err.Error() == "user tidak ditemukan" {
+			return response.Response(c, http.StatusNotFound, false, "User tidak ditemukan dengan filter tersebut", nil, nil)
+		}
+		// ──────────────────────────────────────────────────────────────────
+
+		// Error internal sesungguhnya (misal: database down)
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data user", nil, nil)
 	}
 	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data user", users, total, page, pageSize)
-}
+} // ─── ListUsersHandler ────────────────────────────────────────────────────────────
 
+// ─── UpdateUserHandler ─────────────────────────────────────────────────────────────
+// UpdateUserHandler godoc
+//
+//		@Summary		Update user
+//		@Description	Update user by :id
+//		@Tags			Users
+//		@Accept			json
+//		@Produce		json
+//		@Security		BearerAuth
+//	 	@Param          id      path        int     true    "User ID"
+//	 	@Param			body	body		dto.UpdateUserRequest	true	"Update User Request"
+//		@Success		200		{object}	response.MyGoResponse{data=dto.UserResponse}
+//		@Router			/users/{id} [put]
+//
 // UpdateUserHandler handles PUT /api/v1/users/:id
 //
 // Authorization (dicek di service):
@@ -158,25 +255,106 @@ func (h *Handler) UpdateUserHandler(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
 	return response.Response(c, http.StatusOK, true, "User berhasil diupdate", user, nil)
-}
+} // ─── UpdateUserHandler ───────────────────────────────────────────────────────────
 
+// ─── DeleteUserHandler ─────────────────────────────────────────────────────────────
+// DeleteUserHandler godoc
+//
+//		@Summary		Delete user
+//		@Description	Delete user by :id
+//		@Tags			Users
+//		@Accept			json
+//		@Produce		json
+//		@Security		BearerAuth
+//	 	@Param          id      path        int     true    "User ID"
+//	 	@Param			body	body		dto.DeleteUserRequest	true	"Delete User Request"
+//		@Success		200		{object}	response.MyGoResponse
+//		@Router			/users/{id} [delete]
+//
 // DeleteUserHandler handles DELETE /api/v1/users/:id
-// Siapa yang bisa: superadmin atau punya permission users:delete
+// Siapa yang bisa: superadmin
 func (h *Handler) DeleteUserHandler(c *echo.Context) error {
 	id, err := parseID(c)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 
+	// Bind body request untuk mengambil alasan dihapus
+	var req dto.DeleteUserRequest
+	if err := c.Bind(&req); err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Format data tidak valid", nil, nil)
+	}
+
+	// Opsional: Jika Anda menggunakan validator/struct tag di echo
+	if errs := validator.Validate(req); errs != nil {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
+	}
+
 	actor := buildAuthContext(c)
-	if err := h.service.DeleteUser(id, actor); err != nil {
+
+	// Kirim req.Reason ke service
+	if err := h.service.DeleteUser(id, req.Reason, actor); err != nil {
 		if appErr, ok := err.(interface{ StatusCode() int }); ok {
 			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
 		}
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
 	return response.Response(c, http.StatusOK, true, "User berhasil dihapus", nil, nil)
-}
+} // ─── DeleteUserHandler ───────────────────────────────────────────────────────────
+
+// ─── ListDeletedUsersHandler ───────────────────────────────────────────────────────
+// ListDeletedUsersHandler godoc
+//
+//		@Summary		Get list of deleted users
+//		@Description	Get paginated list of soft-deleted users
+//		@Tags			Users
+//		@Accept			json
+//		@Produce		json
+//		@Security		BearerAuth
+//	 	@Param          page        query       int     false    "Page number"
+//	 	@Param          page_size   query       int     false    "Page size"
+//	 	@Param          name        query       string  false    "Filter by name (partial match)"
+//	 	@Param          username    query       string  false    "Filter by username (partial match)"
+//	 	@Param          email       query       string  false    "Filter by email (partial match)"
+//		@Success		200		{object}	response.MyGoResponse{data=[]dto.UserSimpleResponse}
+//		@Router			/users/deleted [get]
+//
+// ListDeletedUsersHandler handles GET /api/v1/users/deleted
+// Siapa yang bisa: superadmin
+func (h *Handler) ListDeletedUsersHandler(c *echo.Context) error {
+	actor := buildAuthContext(c)
+	page, pageSize := 1, 10
+	if p := c.QueryParam("page"); p != "" {
+		if v, err := strconv.Atoi(p); err == nil && v > 0 {
+			page = v
+		}
+	}
+	if ps := c.QueryParam("page_size"); ps != "" {
+		if v, err := strconv.Atoi(ps); err == nil && v > 0 && v <= 100 {
+			pageSize = v
+		}
+	}
+
+	// Tangkap kriteria filter dari Query Param URL
+	filter := dto.UserDeletedFilter{
+		Name:     c.QueryParam("name"),
+		Username: c.QueryParam("username"),
+		Email:    c.QueryParam("email"),
+	}
+
+	// Eksekusi ke Service
+	users, total, err := h.service.ListDeletedUsers(page, pageSize, &filter, actor)
+	if err != nil {
+		// Jika data memang tidak ada/tidak cocok dengan filter
+		if err.Error() == "data sampah user kosong" {
+			return response.Response(c, http.StatusNotFound, false, "Tidak ada data user yang telah dihapus", nil, nil)
+		}
+		// Jika ada kendala internal server database
+		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data sampah user", nil, nil)
+	}
+
+	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data sampah user", users, total, page, pageSize)
+} // ─── ListDeletedUsersHandler ─────────────────────────────────────────────────────
 
 // ─── Password ──────────────────────────────────────────────────────────────────
 
@@ -236,18 +414,4 @@ func (h *Handler) UpdateSettingsHandler(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
 	return response.Response(c, http.StatusOK, true, "Settings berhasil diupdate", nil, nil)
-}
-
-// ─── By Username ───────────────────────────────────────────────────────────────
-
-func (h *Handler) GetByUsernameHandler(c *echo.Context) error {
-	username := c.Param("username")
-	if username == "" {
-		return response.Response(c, http.StatusBadRequest, false, "Username tidak boleh kosong", nil, nil)
-	}
-	user, err := h.service.GetUserByUsername(username)
-	if err != nil {
-		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
-	}
-	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data user", user, nil)
 }

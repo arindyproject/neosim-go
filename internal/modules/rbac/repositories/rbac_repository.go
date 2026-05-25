@@ -139,6 +139,52 @@ func (r *rbacRepository) DeleteRole(id int64) error {
 	return r.db.Where("id = ?", id).Delete(&models.Role{}).Error
 }
 
+func (r *rbacRepository) GetUsersRoles(userIDs []int64) (map[int64][]models.Role, error) {
+	// 1. Definisikan struct flat agar GORM tidak mengiranya sebagai relasi/foreign key
+	type dbResult struct {
+		UserID      int64
+		ID          int64
+		Name        string
+		DisplayName string
+		Description *string
+		IsSystem    bool
+		CreatedBy   *int64
+		UpdatedBy   *int64
+		// Masukkan yang lain jika memang kolom ini dibutuhkan di aplikasi
+		// CreatedAt   time.Time
+		// UpdatedAt   time.Time
+	}
+	var results []dbResult
+
+	// 2. Lakukan query dan scan ke struct flat tadi
+	err := r.db.Table("user_roles ur").
+		Select("ur.user_id, r.id, r.name, r.display_name, r.description, r.is_system, r.created_by, r.updated_by").
+		Joins("JOIN roles r ON r.id = ur.role_id").
+		Where("ur.user_id IN ? AND r.deleted_at IS NULL", userIDs).
+		Scan(&results).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	// 3. Petakan hasil flat dbResult ke objek map[int64][]models.Role
+	userRolesMap := make(map[int64][]models.Role)
+	for _, res := range results {
+		role := models.Role{
+			ID:          res.ID,
+			Name:        res.Name,
+			DisplayName: res.DisplayName,
+			Description: res.Description,
+			IsSystem:    res.IsSystem,
+			CreatedBy:   res.CreatedBy,
+			UpdatedBy:   res.UpdatedBy,
+		}
+		userRolesMap[res.UserID] = append(userRolesMap[res.UserID], role)
+	}
+
+	return userRolesMap, nil
+}
+
 // ─── Role ↔ Permission ─────────────────────────────────────────────────────────
 
 func (r *rbacRepository) AssignPermissionsToRole(roleID int64, permissionIDs []int64) error {

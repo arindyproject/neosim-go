@@ -59,17 +59,11 @@ func (s *service) canUpdateUser(actor userContracts.AuthContext, targetUserID in
 	if actor.UserID == targetUserID {
 		return true, nil
 	}
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermUsersUpdate); err != nil || has {
-		return has, err
-	}
-	return rbacMiddlewares.HasRole(s.rbacRepo, actor.UserID, "hrd")
+	return rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermUsersUpdate)
 }
 
 func (s *service) canDeleteUser(actor userContracts.AuthContext) (bool, error) {
-	if actor.IsSuperadmin {
-		return true, nil
-	}
-	return rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermUsersDelete)
+	return actor.IsSuperadmin, nil
 }
 
 func (s *service) canReadUser(actor userContracts.AuthContext, targetUserID int64) (bool, error) {
@@ -138,6 +132,26 @@ func (s *service) buildUserRBAC(userID int64) ([]rbacDto.RoleSimpleResponse, []r
 	return roleSimple, permList
 }
 
+func (s *service) buildUsersRBAC(userIDs []int64) map[int64][]rbacDto.RoleSimpleResponse {
+	userRolesMap := make(map[int64][]rbacDto.RoleSimpleResponse)
+	if len(userIDs) == 0 {
+		return userRolesMap
+	}
+
+	// Menggunakan method batch repository yang sudah ada
+	dbRolesMap, err := s.rbacRepo.GetUsersRoles(userIDs)
+	if err != nil {
+		return userRolesMap
+	}
+
+	// Konversi dari map[int64][]models.Role ke map[int64][]rbacDto.RoleSimpleResponse
+	for userID, roles := range dbRolesMap {
+		userRolesMap[userID] = rbacDto.ToRoleSimpleListResponse(roles)
+	}
+
+	return userRolesMap
+}
+
 // buildCreator mengambil data creator user
 func (s *service) buildCreator(createdBy *int64) *models.UserCreator {
 	if createdBy == nil {
@@ -156,6 +170,7 @@ func (s *service) buildCreator(createdBy *int64) *models.UserCreator {
 
 // ─── CRUD ──────────────────────────────────────────────────────────────────────
 
+// CreateUser --------------------------------------------------------------------
 func (s *service) CreateUser(req *dto.CreateUserRequest, actor userContracts.AuthContext) (*dto.UserSimpleResponse, error) {
 	can, err := s.canCreateUser(actor)
 	if err != nil {
@@ -214,16 +229,19 @@ func (s *service) CreateUser(req *dto.CreateUserRequest, actor userContracts.Aut
 		return nil, appErrors.Internal("gagal membuat user")
 	}
 
-	return dto.ToUserSimpleResponse(user), nil
-}
+	roles, _ := s.buildUserRBAC(user.ID)
 
+	return dto.ToUserSimpleResponse(dto.UserSimpleResponseParams{
+		User:  user,
+		Roles: roles,
+	}), nil
+} // CreateUser ------------------------------------------------------------------
+
+// GetUserByID -------------------------------------------------------------------
 func (s *service) GetUserByID(id int64, actor userContracts.AuthContext) (*dto.UserResponse, error) {
 	can, err := s.canReadUser(actor, id)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
-	}
-	if !can {
-		return nil, appErrors.Wrap(http.StatusForbidden, "Akses ditolak. Anda tidak memiliki izin untuk melihat data ini.", nil)
 	}
 
 	user, err := s.repo.GetByID(id)
@@ -249,32 +267,20 @@ func (s *service) GetUserByID(id int64, actor userContracts.AuthContext) (*dto.U
 		Permissions: permissions,
 		Histories:   histories,
 		Creator:     creator,
-	}), nil
-}
+	}, can), nil
+} // GetUserByID -----------------------------------------------------------------
 
-func (s *service) GetUserByUsername(username string) (*dto.UserResponse, error) {
+// GetUserByUsername -------------------------------------------------------------
+func (s *service) GetUserByUsername(username string, actor userContracts.AuthContext) (*dto.UserResponse, error) {
+
 	user, err := s.repo.GetByUsername(username)
 	if err != nil || user == nil {
 		return nil, appErrors.NotFound("user tidak ditemukan")
 	}
 
-	roles, permissions := s.buildUserRBAC(user.ID)
-	creator := s.buildCreator(user.CreatedBy)
-	histories, _ := s.authRepo.GetUserLoginHistories(user.ID, 10)
-
-	return dto.ToUserResponse(dto.UserResponseParams{
-		User:        user,
-		Roles:       roles,
-		Permissions: permissions,
-		Histories:   histories,
-		Creator:     creator,
-	}), nil
-}
-
-func (s *service) GetUserByEmail(email string) (*dto.UserResponse, error) {
-	user, err := s.repo.GetByEmail(email)
-	if err != nil || user == nil {
-		return nil, appErrors.NotFound("user tidak ditemukan")
+	can, err := s.canReadUser(actor, user.ID)
+	if err != nil {
+		return nil, appErrors.Internal("gagal cek akses")
 	}
 
 	roles, permissions := s.buildUserRBAC(user.ID)
@@ -287,23 +293,69 @@ func (s *service) GetUserByEmail(email string) (*dto.UserResponse, error) {
 		Permissions: permissions,
 		Histories:   histories,
 		Creator:     creator,
-	}), nil
-}
+	}, can), nil
+} // GetUserByUsername -----------------------------------------------------------
 
-func (s *service) ListUsers(page, pageSize int) ([]dto.UserSimpleResponse, int64, error) {
+// GetUserByEmail ----------------------------------------------------------------
+func (s *service) GetUserByEmail(email string, actor userContracts.AuthContext) (*dto.UserResponse, error) {
+	user, err := s.repo.GetByEmail(email)
+	if err != nil || user == nil {
+		return nil, appErrors.NotFound("user tidak ditemukan")
+	}
+
+	can, err := s.canReadUser(actor, user.ID)
+	if err != nil {
+		return nil, appErrors.Internal("gagal cek akses")
+	}
+
+	roles, permissions := s.buildUserRBAC(user.ID)
+	creator := s.buildCreator(user.CreatedBy)
+	histories, _ := s.authRepo.GetUserLoginHistories(user.ID, 10)
+
+	return dto.ToUserResponse(dto.UserResponseParams{
+		User:        user,
+		Roles:       roles,
+		Permissions: permissions,
+		Histories:   histories,
+		Creator:     creator,
+	}, can), nil
+} // GetUserByEmail --------------------------------------------------------------
+
+// ListUsers ---------------------------------------------------------------------
+func (s *service) ListUsers(page, pageSize int, filter *dto.UserFilter) ([]dto.UserSimpleResponse, int64, error) {
 	if page < 1 {
 		page = 1
 	}
 	if pageSize < 1 || pageSize > 100 {
 		pageSize = 10
 	}
-	users, total, err := s.repo.List(page, pageSize)
+
+	users, total, err := s.repo.List(page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}
-	return dto.ToUserListResponse(users), total, nil
-}
 
+	// ─── AMANKAN DI SINI: CEK JIKA DATA KOSONG ───────────────────────────
+	if len(users) == 0 {
+		// Mengembalikan error spesifik bahwa data tidak ditemukan
+		return nil, 0, errors.New("user tidak ditemukan")
+	}
+	// ──────────────────────────────────────────────────────────────────────
+
+	// Amankan pemanggilan index [0], sekarang sudah pasti aman karena len > 0
+	// 1. Kumpulkan semua User ID untuk batching query
+	userIDs := make([]int64, len(users))
+	for i, u := range users {
+		userIDs[i] = u.ID
+	}
+
+	// 2. Ambil data roles secara batch (Hanya 1x query tambahan, bukan N kali)
+	userRolesMap := s.buildUsersRBAC(userIDs)
+
+	return dto.ToUserListResponse(users, userRolesMap), total, nil
+} // ListUsers -------------------------------------------------------------------
+
+// UpdateUser --------------------------------------------------------------------
 func (s *service) UpdateUser(id int64, req *dto.UpdateUserRequest, actor userContracts.AuthContext) (*dto.UserResponse, error) {
 	can, err := s.canUpdateUser(actor, id)
 	if err != nil {
@@ -311,7 +363,7 @@ func (s *service) UpdateUser(id int64, req *dto.UpdateUserRequest, actor userCon
 	}
 	if !can {
 		return nil, appErrors.Wrap(http.StatusForbidden,
-			"Akses ditolak. Hanya superadmin, diri sendiri, atau yang memiliki permission 'users:update' / role 'hrd' yang bisa mengubah data ini.", nil)
+			"Akses ditolak. Anda Tidak bisa mengubah data ini.", nil)
 	}
 
 	user, err := s.repo.GetByID(id)
@@ -328,29 +380,12 @@ func (s *service) UpdateUser(id int64, req *dto.UpdateUserRequest, actor userCon
 		}
 		user.Email = *req.Email
 	}
-	if req.Photo != nil {
-		user.Photo = req.Photo
-	}
 
-	// Field sensitif — hanya superadmin / users:manage
-	if req.IsActive != nil || req.IsStaff != nil || req.IsSuperadmin != nil {
-		canManage := actor.IsSuperadmin
-		if !canManage {
-			canManage, _ = rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermUsersManage)
+	if req.Username != nil {
+		if existing, _ := s.repo.GetByUsername(*req.Username); existing != nil && existing.ID != id {
+			return nil, appErrors.BadRequest("username sudah digunakan")
 		}
-		if !canManage {
-			return nil, appErrors.Wrap(http.StatusForbidden,
-				"Akses ditolak. Hanya superadmin atau yang memiliki permission 'users:manage' yang bisa mengubah status user.", nil)
-		}
-		if req.IsActive != nil {
-			user.IsActive = *req.IsActive
-		}
-		if req.IsStaff != nil {
-			user.IsStaff = *req.IsStaff
-		}
-		if req.IsSuperadmin != nil {
-			user.IsSuperadmin = *req.IsSuperadmin
-		}
+		user.Username = *req.Username
 	}
 
 	user.UpdatedBy = &actor.UserID
@@ -370,17 +405,18 @@ func (s *service) UpdateUser(id int64, req *dto.UpdateUserRequest, actor userCon
 		Permissions: permissions,
 		Histories:   histories,
 		Creator:     creator,
-	}), nil
-}
+	}, true), nil
+} // UpdateUser ------------------------------------------------------------------
 
-func (s *service) DeleteUser(id int64, actor userContracts.AuthContext) error {
+// DeleteUser --------------------------------------------------------------------
+func (s *service) DeleteUser(id int64, reason string, actor userContracts.AuthContext) error {
 	can, err := s.canDeleteUser(actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
 	}
 	if !can {
 		return appErrors.Wrap(http.StatusForbidden,
-			"Akses ditolak. Hanya superadmin atau yang memiliki permission 'users:delete' yang bisa menghapus user.", nil)
+			"Akses ditolak. Anda tidak bisa menghapus user.", nil)
 	}
 
 	user, err := s.repo.GetByID(id)
@@ -391,8 +427,61 @@ func (s *service) DeleteUser(id int64, actor userContracts.AuthContext) error {
 		return appErrors.BadRequest("tidak bisa menghapus akun sendiri")
 	}
 
-	return s.repo.Delete(id)
-}
+	// Teruskan ID, ID Penghapus (Actor), dan Alasan ke repository
+	return s.repo.Delete(id, actor.UserID, reason)
+} // DeleteUser ------------------------------------------------------------------
+
+// ListDeletedUsers --------------------------------------------------------------
+func (s *service) ListDeletedUsers(page, pageSize int, filter *dto.UserDeletedFilter, actor userContracts.AuthContext) ([]dto.UserDeletedResponse, int64, error) {
+	can, err := s.canDeleteUser(actor)
+	if err != nil {
+		return nil, 0, appErrors.Internal("gagal cek akses")
+	}
+	if !can {
+		return nil, 0, appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda tidak bisa menghapus user.", nil)
+	}
+
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 10
+	}
+
+	// Panggil repo khusus deleted list
+	users, total, err := s.repo.DeletedList(page, pageSize, filter)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Antisipasi Error 500 jika data kosong
+	if len(users) == 0 {
+		return nil, 0, errors.New("data sampah user kosong")
+	}
+
+	// 1. Kumpulkan semua User ID untuk batching query
+	userIDs := make([]int64, len(users))
+	for i, u := range users {
+		userIDs[i] = u.ID
+	}
+
+	// 2. Ambil data roles secara batch (Hanya 1x query tambahan, bukan N kali)
+	userRolesMap := s.buildUsersRBAC(userIDs)
+
+	// 3. Ambil data creator dan deleter secara batch untuk semua user yang dihapus
+	creatorsMap := make(map[int64]*models.UserCreator)
+	deletersMap := make(map[int64]*models.UserCreator)
+	for _, u := range users {
+		creatorsMap[u.ID] = s.buildCreator(u.CreatedBy)
+		deletersMap[u.ID] = s.buildCreator(u.DeletedBy)
+	}
+
+	// 4. Convert ke response DTO dengan data lengkap (roles, creator, deleter)
+
+	// Mengonversi data models.User ke DTO response ringkas
+	return dto.ToUserDeletedListResponse(users, userRolesMap, creatorsMap, deletersMap), total, nil
+} // ListDeletedUsers ------------------------------------------------------------
 
 // ─── Password ──────────────────────────────────────────────────────────────────
 

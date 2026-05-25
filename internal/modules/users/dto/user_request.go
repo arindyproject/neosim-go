@@ -15,12 +15,9 @@ type CreateUserRequest struct {
 }
 
 type UpdateUserRequest struct {
-	Name         *string `json:"name"         validate:"omitempty,min=1,max=255"`
-	Email        *string `json:"email"        validate:"omitempty,email"`
-	Photo        *string `json:"photo"        validate:"omitempty,max=500"`
-	IsActive     *bool   `json:"is_active"`
-	IsStaff      *bool   `json:"is_staff"`
-	IsSuperadmin *bool   `json:"is_superadmin"`
+	Name     *string `json:"name"         validate:"omitempty,min=1,max=255"`
+	Email    *string `json:"email"        validate:"omitempty,email"`
+	Username *string `json:"username"     validate:"omitempty,min=3,max=150"`
 }
 
 type ChangePasswordRequest struct {
@@ -31,6 +28,26 @@ type ChangePasswordRequest struct {
 // UpdateSettingsRequest request untuk update settings user
 type UpdateSettingsRequest struct {
 	Settings []models.UserSetting `json:"settings" validate:"required"`
+}
+
+type DeleteUserRequest struct {
+	Reason string `json:"reason" validate:"required,max=500"`
+}
+
+// ─── Filters          ──────────────────────────────────────────────────────────
+type UserFilter struct {
+	Name         string `query:"name"`
+	Username     string `query:"username"`
+	Email        string `query:"email"`
+	IsSuperadmin *bool  `query:"is_superadmin"`
+	IsActive     *bool  `query:"is_active"`
+	IsStaff      *bool  `query:"is_staff"`
+}
+
+type UserDeletedFilter struct {
+	Name     string `query:"name"`
+	Username string `query:"username"`
+	Email    string `query:"email"`
 }
 
 // ─── Default Settings ──────────────────────────────────────────────────────────

@@ -32,6 +32,8 @@ type User struct {
 	CreatedAt         time.Time      `gorm:"column:created_at;type:timestamptz;not null;default:NOW()" json:"created_at"`
 	UpdatedAt         time.Time      `gorm:"column:updated_at;type:timestamptz;not null;default:NOW()" json:"updated_at"`
 	DeletedAt         gorm.DeletedAt `gorm:"column:deleted_at;type:timestamptz" json:"deleted_at"`
+	DeletedBy         *int64         `gorm:"column:deleted_by" json:"deleted_by"`
+	DeleteReason      *string        `gorm:"column:delete_reason;type:varchar(500)" json:"delete_reason"`
 }
 
 func (User) TableName() string {
