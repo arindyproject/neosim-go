@@ -159,6 +159,15 @@ definitions:
       user:
         $ref: '#/definitions/dto.UserResponse'
     type: object
+  dto.UpdateSettingsRequest:
+    properties:
+      settings:
+        items:
+          $ref: '#/definitions/models.UserSetting'
+        type: array
+    required:
+    - settings
+    type: object
   dto.UpdateUserRequest:
     properties:
       email:
@@ -652,6 +661,64 @@ paths:
       security:
       - BearerAuth: []
       summary: Update user
+      tags:
+      - Users
+  /users/{id}/settings:
+    get:
+      consumes:
+      - application/json
+      description: Get settings of a user by :id
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.UserSetting'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get user settings
+      tags:
+      - Users
+    put:
+      consumes:
+      - application/json
+      description: Update settings of a user by :id
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Settings Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateSettingsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Update user settings
       tags:
       - Users
   /users/deleted:

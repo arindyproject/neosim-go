@@ -356,8 +356,71 @@ func (h *Handler) ListDeletedUsersHandler(c *echo.Context) error {
 	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data sampah user", users, total, page, pageSize)
 } // ─── ListDeletedUsersHandler ─────────────────────────────────────────────────────
 
-// ─── Password ──────────────────────────────────────────────────────────────────
+// ─── Settings ──────────────────────────────────────────────────────────────────────
+// GetSettingsHandler godoc
+//
+//		@Summary		Get user settings
+//		@Description	Get settings of a user by :id
+//		@Tags			Users
+//		@Accept			json
+//		@Produce		json
+//		@Security		BearerAuth
+//	 	@Param          id      path        int     true    "User ID"
+//		@Success		200		{object}	response.MyGoResponse{data=[]models.UserSetting}
+//		@Router			/users/{id}/settings [get]
+//
+// GetSettingsHandler handles GET /api/v1/users/:id/settings
+// Siapa yang bisa: diri sendiri atau superadmin
+func (h *Handler) GetSettingsHandler(c *echo.Context) error {
+	id, err := parseID(c)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
+	}
+	actor := buildAuthContext(c)
+	settings, err := h.service.GetSettings(id, actor)
+	if err != nil {
+		return response.Response(c, http.StatusInternalServerError, false, err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Berhasil mengambil settings", settings, nil)
+}
 
+// UpdateSettingsHandler godoc
+//
+//		@Summary		Update user settings
+//		@Description	Update settings of a user by :id
+//		@Tags			Users
+//		@Accept			json
+//		@Produce		json
+//		@Security		BearerAuth
+//	 	@Param          id      path        int     true    "User ID"
+//	 	@Param			body	body		dto.UpdateSettingsRequest	true	"Update Settings Request"
+//		@Success		200		{object}	response.MyGoResponse
+//		@Router			/users/{id}/settings [put]
+//
+// UpdateSettingsHandler handles PUT /api/v1/users/:id/settings
+// Siapa yang bisa: diri sendiri atau superadmin
+func (h *Handler) UpdateSettingsHandler(c *echo.Context) error {
+	id, err := parseID(c)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
+	}
+	var req dto.UpdateSettingsRequest
+	if err := c.Bind(&req); err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
+	}
+	if errs := validator.Validate(req); errs != nil {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
+	}
+	actor := buildAuthContext(c)
+	if err := h.service.UpdateSettings(id, &req, actor); err != nil {
+		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Settings berhasil diupdate", nil, nil)
+}
+
+// ─── Settings ──────────────────────────────────────────────────────────────────────
+
+// ─── Password ──────────────────────────────────────────────────────────────────
 // ChangePasswordHandler handles PUT /api/v1/users/:id/change-password
 // Siapa yang bisa: diri sendiri atau superadmin
 func (h *Handler) ChangePasswordHandler(c *echo.Context) error {
@@ -382,36 +445,4 @@ func (h *Handler) ChangePasswordHandler(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
 	return response.Response(c, http.StatusOK, true, "Password berhasil diubah", nil, nil)
-}
-
-// ─── Settings ──────────────────────────────────────────────────────────────────
-
-func (h *Handler) GetSettingsHandler(c *echo.Context) error {
-	id, err := parseID(c)
-	if err != nil {
-		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
-	}
-	settings, err := h.service.GetSettings(id)
-	if err != nil {
-		return response.Response(c, http.StatusInternalServerError, false, err.Error(), nil, nil)
-	}
-	return response.Response(c, http.StatusOK, true, "Berhasil mengambil settings", settings, nil)
-}
-
-func (h *Handler) UpdateSettingsHandler(c *echo.Context) error {
-	id, err := parseID(c)
-	if err != nil {
-		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
-	}
-	var req dto.UpdateSettingsRequest
-	if err := c.Bind(&req); err != nil {
-		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
-	}
-	if errs := validator.Validate(req); errs != nil {
-		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
-	}
-	if err := h.service.UpdateSettings(id, &req); err != nil {
-		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
-	}
-	return response.Response(c, http.StatusOK, true, "Settings berhasil diupdate", nil, nil)
 }

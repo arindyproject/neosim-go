@@ -483,6 +483,31 @@ func (s *service) ListDeletedUsers(page, pageSize int, filter *dto.UserDeletedFi
 	return dto.ToUserDeletedListResponse(users, userRolesMap, creatorsMap, deletersMap), total, nil
 } // ListDeletedUsers ------------------------------------------------------------
 
+// ─── Settings ──────────────────────────────────────────────────────────────────
+func (s *service) GetSettings(id int64, actor userContracts.AuthContext) ([]models.UserSetting, error) {
+	can, err := s.canUpdateUser(actor, id)
+	if err != nil {
+		return nil, appErrors.Internal("gagal cek akses")
+	}
+	if !can {
+		return nil, appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda Tidak bisa mengubah data ini.", nil)
+	}
+	return s.repo.GetSettings(id)
+}
+
+func (s *service) UpdateSettings(id int64, req *dto.UpdateSettingsRequest, actor userContracts.AuthContext) error {
+	can, err := s.canUpdateUser(actor, id)
+	if err != nil {
+		return appErrors.Internal("gagal cek akses")
+	}
+	if !can {
+		return appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda Tidak bisa mengubah data ini.", nil)
+	}
+	return s.repo.UpdateSettings(id, req.Settings)
+} // ─── Settings ────────────────────────────────────────────────────────────────
+
 // ─── Password ──────────────────────────────────────────────────────────────────
 
 func (s *service) ChangePassword(id int64, req *dto.ChangePasswordRequest, actor userContracts.AuthContext) error {
@@ -518,16 +543,6 @@ func (s *service) UpdateLastLogin(id int64) error {
 	now := time.Now()
 	user.LastLoginAt = &now
 	return s.repo.Update(user)
-}
-
-// ─── Settings ──────────────────────────────────────────────────────────────────
-
-func (s *service) GetSettings(id int64) ([]models.UserSetting, error) {
-	return s.repo.GetSettings(id)
-}
-
-func (s *service) UpdateSettings(id int64, req *dto.UpdateSettingsRequest) error {
-	return s.repo.UpdateSettings(id, req.Settings)
 }
 
 // ─── Private Helpers ───────────────────────────────────────────────────────────

@@ -44,6 +44,6 @@ type Service interface {
 	UpdateLastLogin(id int64) error
 
 	// Settings
-	GetSettings(id int64) ([]models.UserSetting, error)
-	UpdateSettings(id int64, req *dto.UpdateSettingsRequest) error
+	GetSettings(id int64, actor AuthContext) ([]models.UserSetting, error)
+	UpdateSettings(id int64, req *dto.UpdateSettingsRequest, actor AuthContext) error
 }
