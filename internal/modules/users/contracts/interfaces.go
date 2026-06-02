@@ -1,6 +1,7 @@
 package contracts
 
 import (
+	"io"
 	"neosim_go/internal/modules/users/dto"
 	"neosim_go/internal/modules/users/models"
 )
@@ -41,9 +42,13 @@ type Service interface {
 
 	// Password
 	ChangePassword(id int64, req *dto.ChangePasswordRequest, actor AuthContext) (*dto.UserResponse, error)
+	ResetPassword(id int64, actor AuthContext) error
 	UpdateLastLogin(id int64) error
 
 	// Settings
 	GetSettings(id int64, actor AuthContext) ([]models.UserSetting, error)
 	UpdateSettings(id int64, req *dto.UpdateSettingsRequest, actor AuthContext) (*dto.UserResponse, error)
+
+	//Photo
+	UploadPhoto(id int64, filename string, reader io.Reader, actor AuthContext) (*dto.UserResponse, error)
 }

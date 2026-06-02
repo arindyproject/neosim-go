@@ -5,8 +5,6 @@ import (
 	"neosim_go/config"
 	"neosim_go/internal/modules/users/models"
 	"unicode"
-
-	"github.com/go-playground/validator/v10"
 )
 
 // ─── Request DTOs ──────────────────────────────────────────────────────────────
@@ -40,6 +38,11 @@ type UpdateSettingsRequest struct {
 
 type DeleteUserRequest struct {
 	Reason string `json:"reason" validate:"required,max=500"`
+}
+
+// UploadPhotoRequest request untuk upload foto user
+type UploadPhotoRequest struct {
+	Photo string `json:"photo" validate:"required"`
 }
 
 // ─── Filters          ──────────────────────────────────────────────────────────
@@ -76,49 +79,10 @@ func DefaultUserSettings() []models.UserSetting {
 
 // RegisterPasswordValidation mendaftarkan rule validasi dinamis berdasarkan config.
 // Panggil fungsi ini sekali saat inisialisasi aplikasi (misal di main.go atau di setup validator).
-func RegisterPasswordPolicyValidation(v *validator.Validate, cfg *config.Config) error {
-	return v.RegisterValidation("password_policy", func(fl validator.FieldLevel) bool {
-		password := fl.Field().String()
-
-		// 1. Validasi Panjang Minimal
-		if len(password) < cfg.PasswordMinLength {
-			return false
-		}
-
-		var hasUpper, hasNumber, hasSymbol bool
-
-		for _, char := range password {
-			switch {
-			case unicode.IsUpper(char):
-				hasUpper = true
-			case unicode.IsNumber(char):
-				hasNumber = true
-			case unicode.IsPunct(char) || unicode.IsSymbol(char):
-				hasSymbol = true
-			}
-		}
-
-		// 2. Validasi Huruf Besar (jika diaktifkan di config)
-		if cfg.PasswordRequireUppercase && !hasUpper {
-			return false
-		}
-
-		// 3. Validasi Angka (jika diaktifkan di config)
-		if cfg.PasswordRequireNumber && !hasNumber {
-			return false
-		}
-
-		// 4. Validasi Simbol/Karakter Unik (jika diaktifkan di config)
-		if cfg.PasswordRequireSymbol && !hasSymbol {
-			return false
-		}
-
-		return true
-	})
-}
 
 // ValidatePasswordPolicy mengecek string password terhadap policy yang aktif di config
-func ValidatePasswordPolicy(password string, cfg *config.Config) map[string]string {
+func ValidatePasswordPolicy(password string) map[string]string {
+	cfg := config.LoadConfig()
 	errs := make(map[string]string)
 
 	if len(password) < cfg.PasswordMinLength {

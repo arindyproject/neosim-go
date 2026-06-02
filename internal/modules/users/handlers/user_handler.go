@@ -420,15 +420,13 @@ func (h *Handler) UpdateSettingsHandler(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
 	return response.Response(c, http.StatusOK, true, "Settings berhasil diupdate", user, nil)
-}
-
-// ─── Settings ──────────────────────────────────────────────────────────────────────
+} // ─── Settings ────────────────────────────────────────────────────────────────────
 
 // ─── Password ──────────────────────────────────────────────────────────────────────
-// GetChangePasswordHandler godoc
+// ChangePasswordHandler godoc
 //
-//		@Summary		Get change password info
-//		@Description	Get info needed for changing password (misal: apakah user punya 2FA?)
+//		@Summary		Change password
+//		@Description	Change password of a user by :id
 //		@Tags			Users
 //		@Accept			json
 //		@Produce		json
@@ -436,7 +434,7 @@ func (h *Handler) UpdateSettingsHandler(c *echo.Context) error {
 //	 	@Param          id      path        int     true    "User ID"
 //	 	@Param			body	body		dto.ChangePasswordRequest	true	"Change Password Request"
 //		@Success		200		{object}	response.MyGoResponse{data=dto.UserResponse}
-//		@Router			/users/{id}/change-password [get]
+//		@Router			/users/{id}/change-password [put]
 //
 // GetChangePasswordHandler handles GET /api/v1/users/:id/change-password
 // Siapa yang bisa: diri sendiri atau superadmin
@@ -454,6 +452,10 @@ func (h *Handler) ChangePasswordHandler(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 
+	if errs := dto.ValidatePasswordPolicy(req.NewPassword); errs != nil {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Password tidak memenuhi kebijakan keamanan", nil, errs)
+	}
+
 	actor := buildAuthContext(c)
 	user, err := h.service.ChangePassword(id, &req, actor)
 	if err != nil {
@@ -462,5 +464,66 @@ func (h *Handler) ChangePasswordHandler(c *echo.Context) error {
 		}
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
-	return response.Response(c, http.StatusOK, true, "Settings berhasil diupdate", user, nil)
+	return response.Response(c, http.StatusOK, true, "Password berhasil diubah", user, nil)
+}
+
+// ResetPasswordHandler godoc
+//
+//		@Summary		Reset password
+//		@Description	Reset password of a user by :id to default password
+//		@Tags			Users
+//		@Accept			json
+//		@Produce		json
+//		@Security		BearerAuth
+//	 	@Param          id      path        int     true    "User ID"
+//		@Success		200		{object}	response.MyGoResponse
+//		@Router			/users/{id}/reset-password [post]
+//
+// ResetPasswordHandler handles POST /api/v1/users/:id/reset-password
+// Siapa yang bisa: superadmin
+func (h *Handler) ResetPasswordHandler(c *echo.Context) error {
+	id, err := parseID(c)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
+	}
+	actor := buildAuthContext(c)
+	if err := h.service.ResetPassword(id, actor); err != nil {
+		if appErr, ok := err.(interface{ StatusCode() int }); ok {
+			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
+		}
+		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Password berhasil direset ke default", nil, nil)
+} // ─── Password ──────────────────────────────────────────────────────────────────
+
+// ─── Upload Photo	 ───────────────────────────────────────────────────────────────
+// PUT /users/:id/photo
+func (h *Handler) UploadPhoto(c *echo.Context) error {
+
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
+	}
+
+	file, err := c.FormFile("photo")
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "file photo wajib diisi", nil, nil)
+	}
+
+	src, err := file.Open()
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "gagal membaca file", nil, nil)
+	}
+	defer src.Close()
+
+	actor := buildAuthContext(c)
+	result, err := h.service.UploadPhoto(id, file.Filename, src, actor)
+	if err != nil {
+		if appErr, ok := err.(interface{ StatusCode() int }); ok {
+			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
+		}
+		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
+	}
+
+	return response.Response(c, http.StatusOK, true, "Foto berhasil diperbarui", result, nil)
 }

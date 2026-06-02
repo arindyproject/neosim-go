@@ -709,13 +709,13 @@ const docTemplate = `{
             }
         },
         "/users/{id}/change-password": {
-            "get": {
+            "put": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get info needed for changing password (misal: apakah user punya 2FA?)",
+                "description": "Change password of a user by :id",
                 "consumes": [
                     "application/json"
                 ],
@@ -725,7 +725,7 @@ const docTemplate = `{
                 "tags": [
                     "Users"
                 ],
-                "summary": "Get change password info",
+                "summary": "Change password",
                 "parameters": [
                     {
                         "type": "integer",
@@ -761,6 +761,43 @@ const docTemplate = `{
                                     }
                                 }
                             ]
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{id}/reset-password": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Reset password of a user by :id to default password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Reset password",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.MyGoResponse"
                         }
                     }
                 }
@@ -876,8 +913,8 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "new_password": {
-                    "type": "string",
-                    "minLength": 8
+                    "description": "Validasi min length dipindah ke custom validator",
+                    "type": "string"
                 },
                 "old_password": {
                     "type": "string"
@@ -911,8 +948,8 @@ const docTemplate = `{
                     "minLength": 1
                 },
                 "password": {
-                    "type": "string",
-                    "minLength": 8
+                    "description": "Validasi min length dipindah ke custom validator",
+                    "type": "string"
                 },
                 "username": {
                     "type": "string",

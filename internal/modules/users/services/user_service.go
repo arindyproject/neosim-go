@@ -1,11 +1,15 @@
 package services
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"net/http"
 	"time"
 
+	"neosim_go/config"
 	authContracts "neosim_go/internal/modules/auth/contracts"
 	rbacContracts "neosim_go/internal/modules/rbac/contracts"
 	rbacDto "neosim_go/internal/modules/rbac/dto"
@@ -17,6 +21,7 @@ import (
 
 	appErrors "neosim_go/internal/shared/errors"
 
+	"github.com/disintegration/imaging"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -515,6 +520,12 @@ func (s *service) UpdateSettings(id int64, req *dto.UpdateSettingsRequest, actor
 		return nil, appErrors.Internal("gagal mengupdate settings user")
 	}
 
+	user.UpdatedBy = &actor.UserID
+	user.UpdatedAt = time.Now()
+	if err := s.repo.Update(user); err != nil {
+		return nil, appErrors.Internal("gagal mengupdate user setelah update settings")
+	}
+
 	// Refresh data user setelah update settings
 	user, err = s.repo.GetByID(id)
 	if err != nil || user == nil {
@@ -556,6 +567,8 @@ func (s *service) ChangePassword(id int64, req *dto.ChangePasswordRequest, actor
 	now := time.Now()
 	user.Password = hashed
 	user.PasswordChangedAt = &now
+	user.UpdatedBy = &actor.UserID
+	user.UpdatedAt = time.Now()
 
 	if err := s.repo.Update(user); err != nil {
 		return nil, appErrors.Internal("gagal mengupdate password")
@@ -575,13 +588,24 @@ func (s *service) ChangePassword(id int64, req *dto.ChangePasswordRequest, actor
 } // ─── Password ────────────────────────────────────────────────────────────────
 
 // ─── Reset Password ────────────────────────────────────────────────────────────
-func (s *service) ResetPassword(id int64, newPassword string) error {
+func (s *service) ResetPassword(id int64, actor userContracts.AuthContext) error {
+	cfg := config.LoadConfig()
+
+	can, err := s.canDeleteUser(actor) // Cek akses superadmin
+	if err != nil {
+		return appErrors.Internal("gagal cek akses")
+	}
+	if !can {
+		return appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda tidak bisa mereset password.", nil)
+	}
+
 	user, err := s.repo.GetByID(id)
 	if err != nil || user == nil {
 		return appErrors.NotFound("user tidak ditemukan")
 	}
 
-	hashed, err := s.hashPassword(newPassword)
+	hashed, err := s.hashPassword(cfg.DefaultPassword)
 	if err != nil {
 		return appErrors.Internal("gagal memproses password")
 	}
@@ -590,6 +614,112 @@ func (s *service) ResetPassword(id int64, newPassword string) error {
 	user.PasswordChangedAt = func() *time.Time { t := time.Now(); return &t }()
 
 	return s.repo.Update(user)
+}
+
+// ─── Upload Foto ───────────────────────────────────────────────────────────────
+func (s *service) UploadPhoto(
+	id int64,
+	filename string,
+	reader io.Reader,
+	actor userContracts.AuthContext,
+) (*dto.UserResponse, error) {
+	can, err := s.canUpdateUser(actor, id)
+	if err != nil {
+		return nil, appErrors.Internal("gagal cek akses")
+	}
+	if !can {
+		return nil, appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda Tidak bisa mengubah data ini.", nil)
+	}
+
+	user, err := s.repo.GetByID(id)
+	if err != nil || user == nil {
+		return nil, appErrors.NotFound("user tidak ditemukan")
+	}
+
+	//lakukan update foto di sini, misal:
+	//-----------------------------------------------------------------------------
+	oldPhoto := user.Photo
+	oldThumb := user.PhotoThumbnail
+
+	// baca file ke memory
+	data, err := io.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	// upload original
+	photoKey := fmt.Sprintf(
+		"users/%d/%d_%s",
+		id,
+		time.Now().Unix(),
+		filename,
+	)
+
+	err = s.storage.UploadBytes(photoKey, data)
+	if err != nil {
+		return nil, err
+	}
+
+	// generate thumbnail
+	img, err := imaging.Decode(bytes.NewReader(data))
+	if err != nil {
+		return nil, err
+	}
+
+	thumb := imaging.Resize(
+		img,
+		300,
+		0,
+		imaging.Lanczos,
+	)
+
+	var thumbBuf bytes.Buffer
+
+	err = imaging.Encode(
+		&thumbBuf,
+		thumb,
+		imaging.JPEG,
+		imaging.JPEGQuality(70),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	thumbKey := fmt.Sprintf(
+		"users/%d/thumb_%d.jpg",
+		id,
+		time.Now().Unix(),
+	)
+
+	err = s.storage.UploadBytes(
+		thumbKey,
+		thumbBuf.Bytes(),
+	)
+	if err != nil {
+		return nil, err
+	}
+	//-----------------------------------------------------------------------------
+	user.Photo = &photoKey
+	user.PhotoThumbnail = &thumbKey
+	user.UpdatedBy = &actor.UserID
+	user.UpdatedAt = time.Now()
+
+	if err := s.repo.Update(user); err != nil {
+		return nil, appErrors.Internal("gagal mengupdate foto user")
+	}
+
+	roles, permissions := s.buildUserRBAC(user.ID)
+	creator := s.buildCreator(user.CreatedBy)
+	histories, _ := s.authRepo.GetUserLoginHistories(user.ID, 10)
+
+	return dto.ToUserResponse(dto.UserResponseParams{
+		User:        user,
+		Roles:       roles,
+		Permissions: permissions,
+		Histories:   histories,
+		Creator:     creator,
+	}, true), nil
 }
 
 // ─── Private Helpers ───────────────────────────────────────────────────────────
@@ -613,4 +743,15 @@ func (s *service) hashPassword(password string) (string, error) {
 		return "", err
 	}
 	return string(hash), nil
+}
+
+type StorageService interface {
+	UploadBytes(
+		path string,
+		data []byte,
+	) error
+
+	DeleteFile(
+		path string,
+	) error
 }

@@ -5,7 +5,7 @@ definitions:
       confirm_password:
         type: string
       new_password:
-        minLength: 8
+        description: Validasi min length dipindah ke custom validator
         type: string
       old_password:
         type: string
@@ -29,7 +29,7 @@ definitions:
         minLength: 1
         type: string
       password:
-        minLength: 8
+        description: Validasi min length dipindah ke custom validator
         type: string
       username:
         maxLength: 150
@@ -678,11 +678,10 @@ paths:
       tags:
       - Users
   /users/{id}/change-password:
-    get:
+    put:
       consumes:
       - application/json
-      description: 'Get info needed for changing password (misal: apakah user punya
-        2FA?)'
+      description: Change password of a user by :id
       parameters:
       - description: User ID
         in: path
@@ -709,7 +708,30 @@ paths:
               type: object
       security:
       - BearerAuth: []
-      summary: Get change password info
+      summary: Change password
+      tags:
+      - Users
+  /users/{id}/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Reset password of a user by :id to default password
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Reset password
       tags:
       - Users
   /users/{id}/settings:

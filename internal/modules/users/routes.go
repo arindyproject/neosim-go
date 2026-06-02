@@ -25,6 +25,7 @@ func RegisterRoutes(e *echo.Echo, h *handlers.Handler, rbacRepo rbacContracts.RB
 	protected.DELETE("/:id", h.DeleteUserHandler)
 	protected.GET("/deleted", h.ListDeletedUsersHandler)
 	protected.PUT("/:id/change-password", h.ChangePasswordHandler)
+	protected.POST("/:id/reset-password", h.ResetPasswordHandler)
 	protected.GET("/:id/settings", h.GetSettingsHandler)
 	protected.PUT("/:id/settings", h.UpdateSettingsHandler)
 }
