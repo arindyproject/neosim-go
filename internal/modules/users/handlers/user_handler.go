@@ -412,16 +412,33 @@ func (h *Handler) UpdateSettingsHandler(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 	actor := buildAuthContext(c)
-	if err := h.service.UpdateSettings(id, &req, actor); err != nil {
+	user, err := h.service.UpdateSettings(id, &req, actor)
+	if err != nil {
+		if appErr, ok := err.(interface{ StatusCode() int }); ok {
+			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
+		}
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
-	return response.Response(c, http.StatusOK, true, "Settings berhasil diupdate", nil, nil)
+	return response.Response(c, http.StatusOK, true, "Settings berhasil diupdate", user, nil)
 }
 
 // ─── Settings ──────────────────────────────────────────────────────────────────────
 
-// ─── Password ──────────────────────────────────────────────────────────────────
-// ChangePasswordHandler handles PUT /api/v1/users/:id/change-password
+// ─── Password ──────────────────────────────────────────────────────────────────────
+// GetChangePasswordHandler godoc
+//
+//		@Summary		Get change password info
+//		@Description	Get info needed for changing password (misal: apakah user punya 2FA?)
+//		@Tags			Users
+//		@Accept			json
+//		@Produce		json
+//		@Security		BearerAuth
+//	 	@Param          id      path        int     true    "User ID"
+//	 	@Param			body	body		dto.ChangePasswordRequest	true	"Change Password Request"
+//		@Success		200		{object}	response.MyGoResponse{data=dto.UserResponse}
+//		@Router			/users/{id}/change-password [get]
+//
+// GetChangePasswordHandler handles GET /api/v1/users/:id/change-password
 // Siapa yang bisa: diri sendiri atau superadmin
 func (h *Handler) ChangePasswordHandler(c *echo.Context) error {
 	id, err := parseID(c)
@@ -438,11 +455,12 @@ func (h *Handler) ChangePasswordHandler(c *echo.Context) error {
 	}
 
 	actor := buildAuthContext(c)
-	if err := h.service.ChangePassword(id, &req, actor); err != nil {
+	user, err := h.service.ChangePassword(id, &req, actor)
+	if err != nil {
 		if appErr, ok := err.(interface{ StatusCode() int }); ok {
 			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
 		}
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
-	return response.Response(c, http.StatusOK, true, "Password berhasil diubah", nil, nil)
+	return response.Response(c, http.StatusOK, true, "Settings berhasil diupdate", user, nil)
 }

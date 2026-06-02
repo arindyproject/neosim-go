@@ -11,7 +11,7 @@ import (
 
 // SetupTestDB membuat koneksi DB untuk keperluan test
 func SetupTestDB() *gorm.DB {
-	cfg := config.LoadConfig("DEV")
+	cfg := config.LoadConfig()
 
 	db, err := cfg.ConnectDB()
 	if err != nil {

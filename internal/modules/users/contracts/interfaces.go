@@ -40,10 +40,10 @@ type Service interface {
 	DeleteUser(id int64, reason string, actor AuthContext) error
 
 	// Password
-	ChangePassword(id int64, req *dto.ChangePasswordRequest, actor AuthContext) error
+	ChangePassword(id int64, req *dto.ChangePasswordRequest, actor AuthContext) (*dto.UserResponse, error)
 	UpdateLastLogin(id int64) error
 
 	// Settings
 	GetSettings(id int64, actor AuthContext) ([]models.UserSetting, error)
-	UpdateSettings(id int64, req *dto.UpdateSettingsRequest, actor AuthContext) error
+	UpdateSettings(id int64, req *dto.UpdateSettingsRequest, actor AuthContext) (*dto.UserResponse, error)
 }

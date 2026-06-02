@@ -12,11 +12,16 @@ import (
 
 // Config holds all configuration for the application
 type Config struct {
+	EnvCode string
 	// Server
 	ServerPort string
 	LogLevel   string
 	Env        string
 	TimeZone   string
+
+	// Default
+	DefaultPageSize int
+	DefaultPassword string
 
 	// Database
 	DatabaseURL  string
@@ -73,7 +78,8 @@ type Config struct {
 }
 
 // LoadConfig loads configuration from environment variables
-func LoadConfig(env string) *Config {
+func LoadConfig() *Config {
+	var env string = "DEV" // default to DEV
 	var envFile string
 	switch env {
 	case "DEV":
@@ -90,11 +96,16 @@ func LoadConfig(env string) *Config {
 	}
 
 	return &Config{
+		EnvCode: env,
 		// ─── Server ────────────────────────────────────────────
 		ServerPort: getEnv("SERVER_PORT", "1323"),
 		LogLevel:   getEnv("LOG_LEVEL", "info"),
 		Env:        getEnv("ENV", "development"),
 		TimeZone:   getEnv("TimeZone", "Asia/Jakarta"),
+
+		// ─── Default ─────────────────────────────────────────────
+		DefaultPageSize: getEnvAsInt("DEFAULT_PAGE_SIZE", 10),
+		DefaultPassword: getEnv("DEFAULT_PASSWORD", "password123"),
 
 		// ─── Database ──────────────────────────────────────────
 		DatabaseURL:  getEnv("DATABASE_URL", ""),

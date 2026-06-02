@@ -46,7 +46,7 @@ import (
 
 func main() {
 	// 1. Load Configuration
-	cfg := config.LoadConfig("DEV")
+	cfg := config.LoadConfig()
 
 	// 2. Echo Instance
 	e := echo.New()

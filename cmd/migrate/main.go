@@ -18,7 +18,8 @@ import (
 )
 
 func main() {
-	env := flag.String("env", "DEV", "Environment (DEV atau PROD)")
+	cfg := config.LoadConfig()
+	env := flag.String("env", cfg.EnvCode, "Environment (DEV atau PROD)")
 	migrationType := flag.String("type", "gorm", "Tipe migrasi: gorm atau sql")
 	fresh := flag.Bool("fresh", false, "Drop semua tabel sebelum migrasi")
 	flag.Parse()
@@ -36,7 +37,6 @@ func main() {
 	log.Printf("🚀 Memulai migrasi untuk environment: %s", *env)
 
 	// Load config & connect DB
-	cfg := config.LoadConfig(*env)
 
 	db, err := cfg.ConnectDB()
 	if err != nil {

@@ -496,45 +496,103 @@ func (s *service) GetSettings(id int64, actor userContracts.AuthContext) ([]mode
 	return s.repo.GetSettings(id)
 }
 
-func (s *service) UpdateSettings(id int64, req *dto.UpdateSettingsRequest, actor userContracts.AuthContext) error {
+func (s *service) UpdateSettings(id int64, req *dto.UpdateSettingsRequest, actor userContracts.AuthContext) (*dto.UserResponse, error) {
 	can, err := s.canUpdateUser(actor, id)
 	if err != nil {
-		return appErrors.Internal("gagal cek akses")
+		return nil, appErrors.Internal("gagal cek akses")
 	}
 	if !can {
-		return appErrors.Wrap(http.StatusForbidden,
+		return nil, appErrors.Wrap(http.StatusForbidden,
 			"Akses ditolak. Anda Tidak bisa mengubah data ini.", nil)
-	}
-	return s.repo.UpdateSettings(id, req.Settings)
-} // ─── Settings ────────────────────────────────────────────────────────────────
-
-// ─── Password ──────────────────────────────────────────────────────────────────
-
-func (s *service) ChangePassword(id int64, req *dto.ChangePasswordRequest, actor userContracts.AuthContext) error {
-	if !actor.IsSuperadmin && actor.UserID != id {
-		return appErrors.Wrap(http.StatusForbidden, "Akses ditolak. Hanya bisa mengubah password sendiri.", nil)
 	}
 
 	user, err := s.repo.GetByID(id)
 	if err != nil || user == nil {
-		return appErrors.NotFound("user tidak ditemukan")
+		return nil, appErrors.NotFound("user tidak ditemukan")
+	}
+
+	if err := s.repo.UpdateSettings(id, req.Settings); err != nil {
+		return nil, appErrors.Internal("gagal mengupdate settings user")
+	}
+
+	// Refresh data user setelah update settings
+	user, err = s.repo.GetByID(id)
+	if err != nil || user == nil {
+		return nil, appErrors.NotFound("user tidak ditemukan setelah update settings")
+	}
+
+	roles, permissions := s.buildUserRBAC(user.ID)
+	creator := s.buildCreator(user.CreatedBy)
+	histories, _ := s.authRepo.GetUserLoginHistories(user.ID, 10)
+
+	return dto.ToUserResponse(dto.UserResponseParams{
+		User:        user,
+		Roles:       roles,
+		Permissions: permissions,
+		Histories:   histories,
+		Creator:     creator,
+	}, true), nil
+} // ─── Settings ────────────────────────────────────────────────────────────────
+
+// ─── Password ──────────────────────────────────────────────────────────────────
+func (s *service) ChangePassword(id int64, req *dto.ChangePasswordRequest, actor userContracts.AuthContext) (*dto.UserResponse, error) {
+	if !actor.IsSuperadmin && actor.UserID != id {
+		return nil, appErrors.Wrap(http.StatusForbidden, "Akses ditolak. Hanya bisa mengubah password sendiri.", nil)
+	}
+
+	user, err := s.repo.GetByID(id)
+	if err != nil || user == nil {
+		return nil, appErrors.NotFound("user tidak ditemukan")
 	}
 	if !s.verifyPassword(req.OldPassword, user.Password) {
-		return appErrors.BadRequest("password lama tidak sesuai")
+		return nil, appErrors.BadRequest("password lama tidak sesuai")
 	}
 
 	hashed, err := s.hashPassword(req.NewPassword)
 	if err != nil {
-		return appErrors.Internal("gagal memproses password")
+		return nil, appErrors.Internal("gagal memproses password")
 	}
 
 	now := time.Now()
 	user.Password = hashed
 	user.PasswordChangedAt = &now
 
+	if err := s.repo.Update(user); err != nil {
+		return nil, appErrors.Internal("gagal mengupdate password")
+	}
+
+	roles, permissions := s.buildUserRBAC(user.ID)
+	creator := s.buildCreator(user.CreatedBy)
+	histories, _ := s.authRepo.GetUserLoginHistories(user.ID, 10)
+
+	return dto.ToUserResponse(dto.UserResponseParams{
+		User:        user,
+		Roles:       roles,
+		Permissions: permissions,
+		Histories:   histories,
+		Creator:     creator,
+	}, true), nil
+} // ─── Password ────────────────────────────────────────────────────────────────
+
+// ─── Reset Password ────────────────────────────────────────────────────────────
+func (s *service) ResetPassword(id int64, newPassword string) error {
+	user, err := s.repo.GetByID(id)
+	if err != nil || user == nil {
+		return appErrors.NotFound("user tidak ditemukan")
+	}
+
+	hashed, err := s.hashPassword(newPassword)
+	if err != nil {
+		return appErrors.Internal("gagal memproses password")
+	}
+
+	user.Password = hashed
+	user.PasswordChangedAt = func() *time.Time { t := time.Now(); return &t }()
+
 	return s.repo.Update(user)
 }
 
+// ─── Private Helpers ───────────────────────────────────────────────────────────
 func (s *service) UpdateLastLogin(id int64) error {
 	user, err := s.repo.GetByID(id)
 	if err != nil || user == nil {
@@ -544,8 +602,6 @@ func (s *service) UpdateLastLogin(id int64) error {
 	user.LastLoginAt = &now
 	return s.repo.Update(user)
 }
-
-// ─── Private Helpers ───────────────────────────────────────────────────────────
 
 func (s *service) verifyPassword(password, hash string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil

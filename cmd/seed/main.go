@@ -16,7 +16,8 @@ import (
 )
 
 func main() {
-	env := flag.String("env", "DEV", "Environment (DEV atau PROD)")
+	cfg := config.LoadConfig()
+	env := flag.String("env", cfg.EnvCode, "Environment (DEV atau PROD)")
 	fresh := flag.Bool("fresh", false, "Hapus semua data lalu seed ulang")
 	flag.Parse()
 
@@ -30,8 +31,6 @@ func main() {
 	}
 
 	log.Printf("🚀 Menjalankan seeder untuk environment: %s", *env)
-
-	cfg := config.LoadConfig(*env)
 
 	db, err := cfg.ConnectDB()
 	if err != nil {
