@@ -2,6 +2,7 @@ package errors
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 
 	"neosim_go/internal/shared/response"
@@ -11,7 +12,6 @@ import (
 
 // ─── App Error ─────────────────────────────────────────────────────────────────
 
-// AppError adalah standard error dengan HTTP status code
 type AppError struct {
 	Code    int
 	Message string
@@ -20,7 +20,7 @@ type AppError struct {
 
 func (e *AppError) Error() string   { return e.Message }
 func (e *AppError) Unwrap() error   { return e.Err }
-func (e *AppError) StatusCode() int { return e.Code } // implementasi echo.HTTPStatusCoder
+func (e *AppError) StatusCode() int { return e.Code }
 
 // ─── Constructor Shortcuts ─────────────────────────────────────────────────────
 
@@ -52,15 +52,12 @@ func Internal(message string) *AppError {
 	return &AppError{Code: http.StatusInternalServerError, Message: message}
 }
 
-// Wrap membungkus error asli dengan AppError
 func Wrap(code int, message string, err error) *AppError {
 	return &AppError{Code: code, Message: message, Err: err}
 }
 
 // ─── Global Error Handler ──────────────────────────────────────────────────────
 
-// Handler adalah global error handler untuk Echo v5
-// Daftarkan di main.go: e.HTTPErrorHandler = errors.Handler
 func Handler(c *echo.Context, err error) {
 	// Cek apakah response sudah dikirim
 	if resp, uErr := echo.UnwrapResponse(c.Response()); uErr == nil {
@@ -69,7 +66,7 @@ func Handler(c *echo.Context, err error) {
 		}
 	}
 
-	// Ambil HTTP status code dari error chain (menggunakan echo.HTTPStatusCoder)
+	// Ambil HTTP status code dari error chain
 	code := http.StatusInternalServerError
 	var sc echo.HTTPStatusCoder
 	if errors.As(err, &sc) {
@@ -78,34 +75,73 @@ func Handler(c *echo.Context, err error) {
 		}
 	}
 
-	// Ambil pesan yang sesuai
+	logger := c.Logger()
+	req := c.Request()
+	reqID := req.Header.Get(echo.HeaderXRequestID)
+	if reqID == "" {
+		reqID = "no-request-id"
+	}
+
+	// PERBAIKAN 1: Ambil context dari request.
+	// JANGAN pernah melewatkan nil ke fungsi yang butuh context.Context
+	ctx := req.Context()
+
+	// Fokus logging pada Server Error (5xx)
+	if code >= 500 {
+		var appErr *AppError
+		if errors.As(err, &appErr) && appErr.Err != nil {
+			// PERBAIKAN 2: Gunakan ErrorContext dan lewati ctx.
+			// Langsung gunakan variadic args (slog.String) tanpa membungkusnya
+			// di dalam []any{...} untuk menghindari warning redundant type.
+			logger.ErrorContext(ctx, "INTERNAL_SERVER_ERROR",
+				slog.String("request_id", reqID),
+				slog.String("url", req.URL.Path),
+				slog.String("method", req.Method),
+				slog.String("public_message", appErr.Message),
+				slog.String("internal_error", appErr.Err.Error()),
+			)
+		} else {
+			logger.ErrorContext(ctx, "UNHANDLED_ERROR",
+				slog.String("request_id", reqID),
+				slog.String("url", req.URL.Path),
+				slog.String("method", req.Method),
+				slog.String("error", err.Error()),
+			)
+		}
+	}
+
 	message := resolveMessage(err, code)
 
-	// HEAD request tidak boleh ada body
-	if c.Request().Method == http.MethodHead {
+	if req.Method == http.MethodHead {
 		if cErr := c.NoContent(code); cErr != nil {
-			c.Logger().Error("failed to send no content", "error", errors.Join(err, cErr))
+			// Gunakan slog.Any, pastikan tidak menulis any(errors.Join(...))
+			logger.ErrorContext(ctx, "failed to send no content",
+				slog.Any("error", errors.Join(err, cErr)),
+			)
 		}
 		return
 	}
 
 	// Kirim JSON response
+	// Catatan: Jika response.Response Anda memiliki parameter slice/map di belakang,
+	// pastikan Anda tidak menulis tipe eksplisit di dalamnya.
+	// Contoh SALAH: response.Response(c, code, false, message, nil, []string{string("err")})
+	// Contoh BENAR: response.Response(c, code, false, message, nil, []string{"err"})
 	if cErr := response.Response(c, code, false, message, nil, nil); cErr != nil {
-		c.Logger().Error("failed to send error response", "error", errors.Join(err, cErr))
+		logger.ErrorContext(ctx, "failed to send error response",
+			slog.Any("error", errors.Join(err, cErr)),
+		)
 	}
 }
 
 // ─── Helper ────────────────────────────────────────────────────────────────────
 
-// resolveMessage mengambil pesan error yang sesuai dari error chain
 func resolveMessage(err error, code int) string {
-	// 1. AppError — pesan dari aplikasi kita
 	var appErr *AppError
 	if errors.As(err, &appErr) {
 		return appErr.Message
 	}
 
-	// 2. Echo HTTPError — Di v5, Message sudah bertipe string
 	var httpErr *echo.HTTPError
 	if errors.As(err, &httpErr) {
 		if httpErr.Message != "" {
@@ -113,11 +149,9 @@ func resolveMessage(err error, code int) string {
 		}
 	}
 
-	// 3. Fallback berdasarkan status code
 	return defaultMessage(code)
 }
 
-// defaultMessage mengembalikan pesan default berdasarkan HTTP status code
 func defaultMessage(code int) string {
 	switch code {
 	case http.StatusBadRequest:

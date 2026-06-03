@@ -19,6 +19,7 @@ import (
 	userContracts "neosim_go/internal/modules/users/contracts"
 	userDto "neosim_go/internal/modules/users/dto"
 	userModels "neosim_go/internal/modules/users/models"
+	"neosim_go/internal/shared/types"
 	"neosim_go/internal/shared/utils"
 
 	"github.com/redis/go-redis/v9"
@@ -581,8 +582,8 @@ func (s *authService) buildTokenResponse(accessToken, refreshToken string, user 
 			Histories:      histories,
 			LastLoginAt:    user.LastLoginAt,
 			Creator:        creatorDTO,
-			CreatedAt:      user.CreatedAt,
-			UpdatedAt:      user.UpdatedAt,
+			CreatedAt:      types.CustomTime(user.CreatedAt),
+			UpdatedAt:      types.CustomTime(user.UpdatedAt),
 		},
 	}
 }

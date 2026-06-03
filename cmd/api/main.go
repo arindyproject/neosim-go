@@ -22,12 +22,14 @@ package main
 //	@description				Masukkan token dengan format: Bearer {token}
 import (
 	"log"
+
 	"net/http"
 
 	"neosim_go/config"
 	"neosim_go/internal/apps"
 
 	appErrors "neosim_go/internal/shared/errors"
+	"neosim_go/internal/shared/logger"
 	"neosim_go/internal/shared/utils"
 
 	echoSwagger "github.com/swaggo/echo-swagger/v2"
@@ -48,18 +50,23 @@ import (
 )
 
 func main() {
+
 	// 1. Load Configuration
 	cfg := config.LoadConfig()
 
 	// 2. Echo Instance
 	e := echo.New()
-
-	e.HTTPErrorHandler = appErrors.Handler // global error handler khusus AppError
+	e.Logger = logger.InitLogger(cfg.LogLevel) // Inisialisasi logger terstruktur (JSON) ke Console dan File
+	e.HTTPErrorHandler = appErrors.Handler     // global error handler khusus AppError
 
 	// 3. Global Middleware
 	e.Use(middleware.RequestLogger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORSWithConfig(cfg.CORS))
+
+	e.Use(middleware.RequestID())           // Harus paling atas agar ID tersedia
+	e.Use(middleware.Recover())             // Menangkap panic agar tidak crash
+	e.Use(logger.RequestLoggerMiddleware()) // Middleware logging custom kita
 
 	// 4. Health Check
 	e.GET("/", func(c *echo.Context) error {

@@ -6,6 +6,7 @@ import (
 	authModels "neosim_go/internal/modules/auth/models"
 	rbacDto "neosim_go/internal/modules/rbac/dto"
 	"neosim_go/internal/modules/users/models"
+	"neosim_go/internal/shared/types"
 )
 
 // ─── User Response (detail) ────────────────────────────────────────────────────
@@ -31,8 +32,8 @@ type UserResponse struct {
 	Permissions       []rbacDto.PermissionResponse `json:"permissions"` // ← object lengkap, deduplicated
 	Histories         []authModels.LoginHistory    `json:"histories"`
 	Creator           *models.UserCreator          `json:"creator"`
-	CreatedAt         time.Time                    `json:"created_at"`
-	UpdatedAt         time.Time                    `json:"updated_at"`
+	CreatedAt         types.CustomTime             `json:"created_at"`
+	UpdatedAt         types.CustomTime             `json:"updated_at"`
 }
 
 // ─── User Simple Response (list) ──────────────────────────────────────────────
@@ -49,8 +50,8 @@ type UserSimpleResponse struct {
 	IsStaff        bool                         `json:"is_staff"`
 	IsVerified     bool                         `json:"is_verified"`
 	Roles          []rbacDto.RoleSimpleResponse `json:"roles"`
-	CreatedAt      time.Time                    `json:"created_at"`
-	UpdatedAt      time.Time                    `json:"updated_at"`
+	CreatedAt      types.CustomTime             `json:"created_at"`
+	UpdatedAt      types.CustomTime             `json:"updated_at"`
 }
 
 // ─── Builders ──────────────────────────────────────────────────────────────────
@@ -70,8 +71,8 @@ type UserSimpleResponseParams struct {
 }
 
 type LoginHistoryResponse struct {
-	CreatedAt time.Time `json:"created_at"`
-	Status    string    `json:"status"`
+	CreatedAt types.CustomTime `json:"created_at"`
+	Status    string           `json:"status"`
 }
 
 // ToUserResponse mengubah User + RBAC data menjadi UserResponse lengkap
@@ -110,8 +111,8 @@ func ToUserResponse(p UserResponseParams, is_allow bool) *UserResponse {
 			IsStaff:        p.User.IsStaff,
 			IsVerified:     p.User.IsVerified,
 			Roles:          roles,
-			CreatedAt:      p.User.CreatedAt,
-			UpdatedAt:      p.User.UpdatedAt,
+			CreatedAt:      types.CustomTime(p.User.CreatedAt),
+			UpdatedAt:      types.CustomTime(p.User.UpdatedAt),
 			Creator:        p.Creator,
 			LastLoginAt:    p.User.LastLoginAt,
 			Histories:      result,
@@ -147,8 +148,8 @@ func ToUserResponse(p UserResponseParams, is_allow bool) *UserResponse {
 		Permissions:       permissions,
 		Histories:         histories,
 		Creator:           p.Creator,
-		CreatedAt:         p.User.CreatedAt,
-		UpdatedAt:         p.User.UpdatedAt,
+		CreatedAt:         types.CustomTime(p.User.CreatedAt),
+		UpdatedAt:         types.CustomTime(p.User.UpdatedAt),
 	}
 }
 
@@ -168,8 +169,8 @@ func ToUserSimpleResponse(u UserSimpleResponseParams) *UserSimpleResponse {
 		IsActive:       u.User.IsActive,
 		IsStaff:        u.User.IsStaff,
 		IsVerified:     u.User.IsVerified,
-		CreatedAt:      u.User.CreatedAt,
-		UpdatedAt:      u.User.UpdatedAt,
+		CreatedAt:      types.CustomTime(u.User.CreatedAt),
+		UpdatedAt:      types.CustomTime(u.User.UpdatedAt),
 		Roles:          roles,
 	}
 }
