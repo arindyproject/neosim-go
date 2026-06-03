@@ -1,11 +1,11 @@
 package services
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"time"
 
@@ -20,28 +20,31 @@ import (
 	"neosim_go/internal/modules/users/models"
 
 	appErrors "neosim_go/internal/shared/errors"
+	"neosim_go/internal/shared/storage"
 
-	"github.com/disintegration/imaging"
 	"golang.org/x/crypto/bcrypt"
 )
 
 // ─── Service ───────────────────────────────────────────────────────────────────
 
 type service struct {
-	repo     userContracts.Repository
-	rbacRepo rbacContracts.RBACRepository
-	authRepo authContracts.AuthRepository
+	repo           userContracts.Repository
+	rbacRepo       rbacContracts.RBACRepository
+	authRepo       authContracts.AuthRepository
+	storageService storage.ImageStorage
 }
 
 func NewUserService(
 	repo userContracts.Repository,
 	rbacRepo rbacContracts.RBACRepository,
 	authRepo authContracts.AuthRepository,
+	storageService storage.ImageStorage,
 ) userContracts.Service {
 	return &service{
-		repo:     repo,
-		rbacRepo: rbacRepo,
-		authRepo: authRepo,
+		repo:           repo,
+		rbacRepo:       rbacRepo,
+		authRepo:       authRepo,
+		storageService: storageService,
 	}
 }
 
@@ -617,12 +620,7 @@ func (s *service) ResetPassword(id int64, actor userContracts.AuthContext) error
 }
 
 // ─── Upload Foto ───────────────────────────────────────────────────────────────
-func (s *service) UploadPhoto(
-	id int64,
-	filename string,
-	reader io.Reader,
-	actor userContracts.AuthContext,
-) (*dto.UserResponse, error) {
+func (s *service) UploadPhoto(id int64, filename string, reader io.Reader, actor userContracts.AuthContext) (*dto.UserResponse, error) {
 	can, err := s.canUpdateUser(actor, id)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -639,75 +637,124 @@ func (s *service) UploadPhoto(
 
 	//lakukan update foto di sini, misal:
 	//-----------------------------------------------------------------------------
-	oldPhoto := user.Photo
-	oldThumb := user.PhotoThumbnail
+	// ─── UPDATE FOTO DI SINI ───────────────────────────────────────────────────
 
-	// baca file ke memory
-	data, err := io.ReadAll(reader)
-	if err != nil {
-		return nil, err
+	// 1. Simpan URL foto lama untuk dihapus nanti jika upload sukses
+	var oldPhoto, oldThumbnail string
+	if user.Photo != nil {
+		oldPhoto = *user.Photo
+	}
+	if user.PhotoThumbnail != nil {
+		oldThumbnail = *user.PhotoThumbnail
 	}
 
-	// upload original
-	photoKey := fmt.Sprintf(
-		"users/%d/%d_%s",
-		id,
-		time.Now().Unix(),
-		filename,
-	)
-
-	err = s.storage.UploadBytes(photoKey, data)
-	if err != nil {
-		return nil, err
+	// 2. Konversi io.Reader ke multipart.File (aman untuk di-assert)
+	multipartFile, ok := reader.(multipart.File)
+	if !ok {
+		multipartFile = nopCloser{reader}
 	}
 
-	// generate thumbnail
-	img, err := imaging.Decode(bytes.NewReader(data))
-	if err != nil {
-		return nil, err
+	// 3. Buat FileHeader buatan (Gunakan header.Size asli jika dikirim dari handler)
+	fileHeader := &multipart.FileHeader{
+		Filename: filename,
+		Size:     0,
 	}
 
-	thumb := imaging.Resize(
-		img,
-		300,
-		0,
-		imaging.Lanczos,
-	)
-
-	var thumbBuf bytes.Buffer
-
-	err = imaging.Encode(
-		&thumbBuf,
-		thumb,
-		imaging.JPEG,
-		imaging.JPEGQuality(70),
-	)
+	// 4. Jalankan upload foto original + thumbnail otomatis
+	origURL, thumbURL, err := s.storageService.UploadImageWithThumbnail(multipartFile, fileHeader, "users")
 	if err != nil {
-		return nil, err
+		return nil, appErrors.BadRequest(fmt.Sprintf("gagal mengunggah foto: %v", err))
 	}
 
-	thumbKey := fmt.Sprintf(
-		"users/%d/thumb_%d.jpg",
-		id,
-		time.Now().Unix(),
-	)
+	// 5. Pasang URL baru ke struct user
+	user.Photo = &origURL
+	user.PhotoThumbnail = &thumbURL
 
-	err = s.storage.UploadBytes(
-		thumbKey,
-		thumbBuf.Bytes(),
-	)
-	if err != nil {
-		return nil, err
+	// NYALAKAN NIL SAFETY CHECK UNTUK ACTOR
+	// Menghindari panic jika context actor dikirim kosong/nil dari handler
+	if actor != (userContracts.AuthContext{}) {
+		userID := actor.UserID // Menggunakan getter jika interface, atau cek nil pointer jika struct
+		user.UpdatedBy = &userID
 	}
+	user.UpdatedAt = time.Now()
+
+	// ─── END UPDATE FOTO ───────────────────────────────────────────────────────
+
+	// 6. Simpan Perubahan ke Database
+	if err := s.repo.Update(user); err != nil {
+		// ROLLBACK FISIK: Hapus file baru di storage jika DB gagal menyimpan data
+		_ = s.storageService.DeleteImageMultiple(origURL, thumbURL)
+		return nil, appErrors.Internal("gagal mengupdate foto user")
+	}
+
+	// 7. HAPUS FOTO LAMA DARI STORAGE (Asynchronous / Background Process)
+	go func(urls ...string) {
+		if len(urls) > 0 {
+			_ = s.storageService.DeleteImageMultiple(urls...)
+		}
+	}(oldPhoto, oldThumbnail)
 	//-----------------------------------------------------------------------------
-	user.Photo = &photoKey
-	user.PhotoThumbnail = &thumbKey
-	user.UpdatedBy = &actor.UserID
+
+	// CATATAN: BLOK KODE DI BAWAH INI YANG SEBELUMNYA DUPLIKAT SUDAH DIHAPUS
+	// (s.repo.Update(user) yang kedua dibuang)
+
+	roles, permissions := s.buildUserRBAC(user.ID)
+	creator := s.buildCreator(user.CreatedBy)
+	histories, _ := s.authRepo.GetUserLoginHistories(user.ID, 10)
+
+	return dto.ToUserResponse(dto.UserResponseParams{
+		User:        user,
+		Roles:       roles,
+		Permissions: permissions,
+		Histories:   histories,
+		Creator:     creator,
+	}, true), nil
+}
+
+// ─── Delete Photo ──────────────────────────────────────────────────────────────
+func (s *service) DeletePhoto(id int64, actor userContracts.AuthContext) (*dto.UserResponse, error) {
+	can, err := s.canUpdateUser(actor, id)
+	if err != nil {
+		return nil, appErrors.Internal("gagal cek akses")
+	}
+	if !can {
+		return nil, appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda Tidak bisa mengubah data ini.", nil)
+	}
+
+	user, err := s.repo.GetByID(id)
+	if err != nil || user == nil {
+		return nil, appErrors.NotFound("user tidak ditemukan")
+	}
+
+	// Simpan URL foto lama untuk dihapus nanti jika update sukses
+	var oldPhoto, oldThumbnail string
+	if user.Photo != nil {
+		oldPhoto = *user.Photo
+	}
+	if user.PhotoThumbnail != nil {
+		oldThumbnail = *user.PhotoThumbnail
+	}
+
+	user.Photo = nil
+	user.PhotoThumbnail = nil
+
+	if actor != (userContracts.AuthContext{}) {
+		userID := actor.UserID
+		user.UpdatedBy = &userID
+	}
 	user.UpdatedAt = time.Now()
 
 	if err := s.repo.Update(user); err != nil {
-		return nil, appErrors.Internal("gagal mengupdate foto user")
+		return nil, appErrors.Internal("gagal menghapus foto user")
 	}
+
+	// Hapus file dari storage secara asynchronous
+	go func(urls ...string) {
+		if len(urls) > 0 {
+			_ = s.storageService.DeleteImageMultiple(urls...)
+		}
+	}(oldPhoto, oldThumbnail)
 
 	roles, permissions := s.buildUserRBAC(user.ID)
 	creator := s.buildCreator(user.CreatedBy)
@@ -745,13 +792,21 @@ func (s *service) hashPassword(password string) (string, error) {
 	return string(hash), nil
 }
 
-type StorageService interface {
-	UploadBytes(
-		path string,
-		data []byte,
-	) error
-
-	DeleteFile(
-		path string,
-	) error
+// Helper struct ditaruh di luar fungsi (di bawah/atas file) jika reader bukan multipart.File
+type nopCloser struct {
+	io.Reader
 }
+
+// Read implements [multipart.File].
+// Subtle: this method shadows the method (Reader).Read of nopCloser.Reader.
+func (nopCloser) Read(p []byte) (n int, err error) {
+	panic("unimplemented")
+}
+
+// Seek implements [multipart.File].
+func (n nopCloser) Seek(offset int64, whence int) (int64, error) {
+	panic("unimplemented")
+}
+
+func (nopCloser) Close() error                                  { return nil }
+func (nopCloser) ReadAt(p []byte, off int64) (n int, err error) { return 0, io.EOF }

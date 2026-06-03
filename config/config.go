@@ -14,6 +14,7 @@ import (
 type Config struct {
 	EnvCode string
 	// Server
+	BaseURL    string
 	ServerPort string
 	LogLevel   string
 	Env        string
@@ -98,6 +99,7 @@ func LoadConfig() *Config {
 	return &Config{
 		EnvCode: env,
 		// ─── Server ────────────────────────────────────────────
+		BaseURL:    getEnv("BASE_URL", "http://localhost:1323"),
 		ServerPort: getEnv("SERVER_PORT", "1323"),
 		LogLevel:   getEnv("LOG_LEVEL", "info"),
 		Env:        getEnv("ENV", "development"),

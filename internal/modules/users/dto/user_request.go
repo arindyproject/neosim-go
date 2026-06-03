@@ -40,11 +40,6 @@ type DeleteUserRequest struct {
 	Reason string `json:"reason" validate:"required,max=500"`
 }
 
-// UploadPhotoRequest request untuk upload foto user
-type UploadPhotoRequest struct {
-	Photo string `json:"photo" validate:"required"`
-}
-
 // ─── Filters          ──────────────────────────────────────────────────────────
 type UserFilter struct {
 	Name         string `query:"name"`

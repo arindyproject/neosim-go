@@ -7,6 +7,7 @@ import (
 	"neosim_go/internal/modules/users/handlers"
 	"neosim_go/internal/modules/users/repositories"
 	"neosim_go/internal/modules/users/services"
+	"neosim_go/internal/shared/storage"
 	"neosim_go/internal/shared/utils"
 
 	"github.com/labstack/echo/v5"
@@ -15,27 +16,38 @@ import (
 
 // Module represents the users module
 type Module struct {
-	db         *gorm.DB
-	handler    *handlers.Handler
-	service    contracts.Service
-	repo       contracts.Repository
-	rbacRepo   rbacContracts.RBACRepository
-	jwtManager *utils.JWTManager
+	db             *gorm.DB
+	handler        *handlers.Handler
+	service        contracts.Service
+	repo           contracts.Repository
+	rbacRepo       rbacContracts.RBACRepository
+	storageService storage.ImageStorage
+	jwtManager     *utils.JWTManager
 }
 
 // NewModule membuat instance module dan wire semua layer
-func NewModule(db *gorm.DB, jwtManager *utils.JWTManager, rbacRepo rbacContracts.RBACRepository, authRepo authContracts.AuthRepository) *Module {
+// Menambahkan authRepo ke parameter agar bisa disuntikkan ke NewUserService
+func NewModule(
+	db *gorm.DB,
+	jwtManager *utils.JWTManager,
+	rbacRepo rbacContracts.RBACRepository,
+	authRepo authContracts.AuthRepository,
+	storageService storage.ImageStorage,
+) *Module {
 	repo := repositories.NewRepository(db)
-	svc := services.NewUserService(repo, rbacRepo, authRepo) // ← hanya repo + rbacRepo
+
+	// Pastikan NewUserService di internal/modules/users/services menerima 4 parameter ini:
+	svc := services.NewUserService(repo, rbacRepo, authRepo, storageService)
 	handler := handlers.NewHandler(svc)
 
 	return &Module{
-		db:         db,
-		handler:    handler,
-		service:    svc,
-		repo:       repo,
-		rbacRepo:   rbacRepo,
-		jwtManager: jwtManager,
+		db:             db,
+		handler:        handler,
+		service:        svc,
+		repo:           repo,
+		rbacRepo:       rbacRepo,
+		jwtManager:     jwtManager,
+		storageService: storageService,
 	}
 }
 

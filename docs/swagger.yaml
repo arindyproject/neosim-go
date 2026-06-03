@@ -711,6 +711,66 @@ paths:
       summary: Change password
       tags:
       - Users
+  /users/{id}/photo:
+    delete:
+      consumes:
+      - application/json
+      description: Delete user photo by :id (set to default avatar)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Delete user photo
+      tags:
+      - Users
+    put:
+      consumes:
+      - multipart/form-data
+      description: Upload or update user photo by :id
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Photo file (jpg, jpeg, png, webp, heic)
+        in: formData
+        name: photo
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Upload user photo
+      tags:
+      - Users
   /users/{id}/reset-password:
     post:
       consumes:

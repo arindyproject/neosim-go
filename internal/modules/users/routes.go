@@ -28,4 +28,7 @@ func RegisterRoutes(e *echo.Echo, h *handlers.Handler, rbacRepo rbacContracts.RB
 	protected.POST("/:id/reset-password", h.ResetPasswordHandler)
 	protected.GET("/:id/settings", h.GetSettingsHandler)
 	protected.PUT("/:id/settings", h.UpdateSettingsHandler)
+	protected.PUT("/:id/photo", h.UploadPhoto)
+	protected.DELETE("/:id/photo", h.DeletePhoto)
+	// ─── End Protected ─────────────────────────────────────────
 }

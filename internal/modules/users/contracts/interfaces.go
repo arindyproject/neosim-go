@@ -51,4 +51,5 @@ type Service interface {
 
 	//Photo
 	UploadPhoto(id int64, filename string, reader io.Reader, actor AuthContext) (*dto.UserResponse, error)
+	DeletePhoto(id int64, actor AuthContext) (*dto.UserResponse, error)
 }

@@ -11,6 +11,7 @@ import (
 	rbacRepositories "neosim_go/internal/modules/rbac/repositories"
 	"neosim_go/internal/modules/users/migrations"
 	"neosim_go/internal/modules/users/models"
+	"neosim_go/internal/shared/storage"
 	"neosim_go/internal/shared/utils"
 
 	"github.com/labstack/echo/v5"
@@ -18,10 +19,11 @@ import (
 )
 
 type registryModule struct {
-	db       *gorm.DB
-	cfg      *config.Config
-	rbacRepo rbacContracts.RBACRepository
-	authRepo authContracts.AuthRepository
+	db             *gorm.DB
+	cfg            *config.Config
+	rbacRepo       rbacContracts.RBACRepository
+	authRepo       authContracts.AuthRepository
+	storageService storage.ImageStorage
 }
 
 func init() {
@@ -38,6 +40,19 @@ func (r *registryModule) SetDB(db *gorm.DB) {
 
 func (r *registryModule) SetConfig(cfg *config.Config) {
 	r.cfg = cfg
+
+	// ─── INISIALISASI STORAGE DI SINI ──────────────────────────────────────────
+	// Sesuaikan properti cfg dengan field yang ada pada struct config.Config Anda
+	storageCfg := storage.LocalImageConfig{
+		BasePath:   "./uploads",                // atau ambil dari env jika ada: cfg.StorageBasePath
+		BaseURL:    r.cfg.BaseURL + "/uploads", // atau ambil dari env jika ada: cfg.StorageBaseURL
+		MaxSizeMB:  5,
+		ThumbnailW: 150,
+		Quality:    70,
+	}
+
+	// Assign ke properti storageService milik registryModule
+	r.storageService = storage.NewLocalImageStorage(storageCfg)
 }
 
 // ─── Routes ────────────────────────────────────────────────────────────────────
@@ -50,7 +65,7 @@ func (r *registryModule) InitRoutes(e *echo.Echo) {
 		r.cfg.JWTRefreshTokenExpDays,
 	)
 	// ← hapus r.authRepo, NewModule hanya butuh 3 argumen
-	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo).InitRoutes(e)
+	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo, r.storageService).InitRoutes(e)
 }
 
 // ─── Migration ─────────────────────────────────────────────────────────────────

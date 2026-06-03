@@ -497,10 +497,24 @@ func (h *Handler) ResetPasswordHandler(c *echo.Context) error {
 } // ─── Password ──────────────────────────────────────────────────────────────────
 
 // ─── Upload Photo	 ───────────────────────────────────────────────────────────────
+// UploadPhotoHandler godoc
+//
+// @Summary Upload user photo
+// @Description Upload or update user photo by :id
+// @Tags Users
+// @Accept multipart/form-data
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "User ID"
+// @Param photo formData file true "Photo file (jpg, jpeg, png, webp, heic)"
+// @Success 200 {object} response.MyGoResponse{data=dto.UserResponse}
+// @Router /users/{id}/photo [put]
+//
+// UploadPhotoHandler handles PUT /api/v1/users/:id/photo
+// Siapa yang bisa: diri sendiri atau superadmin
 // PUT /users/:id/photo
 func (h *Handler) UploadPhoto(c *echo.Context) error {
-
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	id, err := parseID(c)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
@@ -526,4 +540,37 @@ func (h *Handler) UploadPhoto(c *echo.Context) error {
 	}
 
 	return response.Response(c, http.StatusOK, true, "Foto berhasil diperbarui", result, nil)
-}
+} // ─── Upload Photo	 ───────────────────────────────────────────────────────────────
+
+// ─── Delete Photo	 ───────────────────────────────────────────────────────────────────
+// DeletePhotoHandler godoc
+//
+// @Summary Delete user photo
+// @Description Delete user photo by :id (set to default avatar)
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "User ID"
+// @Success 200 {object} response.MyGoResponse{data=dto.UserResponse}
+// @Router /users/{id}/photo [delete]
+//
+// DeletePhotoHandler handles DELETE /api/v1/users/:id/photo
+// Siapa yang bisa: diri sendiri atau superadmin
+func (h *Handler) DeletePhoto(c *echo.Context) error {
+	id, err := parseID(c)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
+	}
+
+	actor := buildAuthContext(c)
+	result, err := h.service.DeletePhoto(id, actor)
+	if err != nil {
+		if appErr, ok := err.(interface{ StatusCode() int }); ok {
+			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
+		}
+		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
+	}
+
+	return response.Response(c, http.StatusOK, true, "Foto berhasil dihapus", result, nil)
+} // ─── Delete Photo	 ─────────────────────────────────────────────────────────────────

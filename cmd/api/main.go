@@ -28,10 +28,13 @@ import (
 	"neosim_go/internal/apps"
 
 	appErrors "neosim_go/internal/shared/errors"
+	"neosim_go/internal/shared/utils"
 
 	echoSwagger "github.com/swaggo/echo-swagger/v2"
 	// Import docs yang di-generate swag
 	_ "neosim_go/docs"
+
+	authMiddlewares "neosim_go/internal/modules/auth/middlewares"
 
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
@@ -94,6 +97,23 @@ func main() {
 		log.Printf("-------------------------------------")
 		log.Printf("%-7s %s", r.Method, r.Path)
 	}
+
+	// ─── Upload File ─────────────────────────────────────────────────────────────
+	// Argumen pertama "/uploads" adalah path di URL browser.
+	// Argumen kedua "./uploads" adalah folder fisik di penyimpanan server Anda.
+	// Inisialisasi jwtManager terlebih dahulu (pastikan variabel cfg sudah ada)
+	jwtManager := utils.NewJWTManager(
+		cfg.JWTSecret,
+		cfg.JWTIssuer,
+		cfg.JWTAccessTokenExpMinutes,
+		cfg.JWTRefreshTokenExpDays,
+	)
+	// Buat instance middleware JWT Anda
+	jwtMiddleware := authMiddlewares.JWTMiddleware(jwtManager, db)
+	// Daftarkan static folder dengan proteksi JWT
+	// Pengguna wajib mengirimkan Header "Authorization: Bearer <token>" saat membuka link foto
+	e.Static("/uploads", "./uploads", jwtMiddleware)
+	// ─────────────────────────────────────────────────────────────────────────────
 
 	// 9. Start Server
 	if err := e.Start(":" + cfg.ServerPort); err != nil {
