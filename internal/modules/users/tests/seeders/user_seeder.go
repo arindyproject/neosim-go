@@ -59,7 +59,7 @@ func (s *UserSeeder) Fresh() error {
 // ─── Seeder Methods ────────────────────────────────────────────────────────────
 
 func (s *UserSeeder) seedSuperuser() error {
-	user := factories.MakeSuperuser()
+	user := factories.MakeSuperadminUser()
 
 	// Skip jika sudah ada
 	var count int64
@@ -81,7 +81,7 @@ func (s *UserSeeder) seedStaff() error {
 	staffCount := 3
 
 	for i := 1; i <= staffCount; i++ {
-		user := factories.MakeStaff(i)
+		user := factories.MakeStaffsUser(i)
 
 		// Skip jika sudah ada
 		var count int64

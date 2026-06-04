@@ -44,6 +44,9 @@ clean:
 test-auth:
 	@go test -json ./internal/modules/auth/tests | gotestfmt
 
+test-users:
+	@go test -json ./internal/modules/users/tests | gotestfmt
+
 test:
 	@go test -json ./internal/modules/.../tests | gotestfmt
 

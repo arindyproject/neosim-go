@@ -32,7 +32,22 @@ func getActorID(c *echo.Context) *int64 {
 }
 
 // ─── Permission Handlers ───────────────────────────────────────────────────────
-
+// ListPermissions handles GET /permissions
+//
+// ListPermissions godoc
+//
+//	@Summary		List permissions
+//	@Description	Get a paginated list of permissions
+//	@Tags			Permissions
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			page		query		int	false	"Page number (default: 1)"
+//	@Param			page_size	query		int	false	"Page size (default: 10, max: 100)"
+//	@Success		200			{object}	response.MyGoResponse{data=[]dto.PermissionResponse}
+//	@Router			/permissions [get]
+//
+// GetPermission handles GET /permissions/{id}
 func (h *RBACHandler) ListPermissions(c *echo.Context) error {
 	page, pageSize := 1, 10
 	if p := c.QueryParam("page"); p != "" {
@@ -53,6 +68,20 @@ func (h *RBACHandler) ListPermissions(c *echo.Context) error {
 	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data permission", items, total, page, pageSize)
 }
 
+// GetPermission handles GET /permissions/{id}
+// GetPermission godoc
+//
+//	@Summary		Get permission by ID
+//	@Description	Get a permission by its ID
+//	@Tags			Permissions
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path	int	true	"Permission ID"
+//	@Success		200	{object}	response.MyGoResponse{data=dto.PermissionResponse}
+//	@Router			/permissions/{id} [get]
+//
+// UpdatePermission handles PUT /permissions/{id}
 func (h *RBACHandler) GetPermission(c *echo.Context) error {
 	id, err := parseID(c)
 	if err != nil {

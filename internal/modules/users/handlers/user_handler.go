@@ -76,15 +76,15 @@ func (h *Handler) CreateUserHandler(c *echo.Context) error {
 // ─── GetUserHandler ────────────────────────────────────────────────────────────────
 // GetUserHandler godoc
 //
-//		@Summary		Get user
-//		@Description	Get user by :id
-//		@Tags			Users
-//		@Accept			json
-//		@Produce		json
-//		@Security		BearerAuth
-//	 	@Param          id      path        int     true    "User ID"
-//		@Success		200		{object}	response.MyGoResponse{data=dto.UserResponse}
-//		@Router			/users/{id} [get]
+//	@Summary		Get user
+//	@Description	Get user by :id
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		int	true	"User ID"
+//	@Success		200	{object}	response.MyGoResponse{data=dto.UserResponse}
+//	@Router			/users/{id} [get]
 //
 // GetUserHandler handles GET /api/v1/users/:id
 func (h *Handler) GetUserHandler(c *echo.Context) error {
@@ -109,15 +109,15 @@ func (h *Handler) GetUserHandler(c *echo.Context) error {
 // ─── By Username ───────────────────────────────────────────────────────────────────
 // GetByUsernameHandler godoc
 //
-//		@Summary		Get user
-//		@Description	Get user by :username
-//		@Tags			Users
-//		@Accept			json
-//		@Produce		json
-//		@Security		BearerAuth
-//	 	@Param          username      path        string     true    "Username"
-//		@Success		200		{object}	response.MyGoResponse{data=dto.UserResponse}
-//		@Router			/users/username/{username} [get]
+//	@Summary		Get user
+//	@Description	Get user by :username
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			username	path		string	true	"Username"
+//	@Success		200			{object}	response.MyGoResponse{data=dto.UserResponse}
+//	@Router			/users/username/{username} [get]
 //
 // GetByUsernameHandler handles GET /api/v1/users/username/:username
 func (h *Handler) GetByUsernameHandler(c *echo.Context) error {
@@ -138,22 +138,22 @@ func (h *Handler) GetByUsernameHandler(c *echo.Context) error {
 // ─── ListUsersHandler ──────────────────────────────────────────────────────────────
 // ListUsersHandler godoc
 //
-//		@Summary		Get list of users
-//		@Description	Get paginated list of users
-//		@Tags			Users
-//		@Accept			json
-//		@Produce		json
-//		@Security		BearerAuth
-//	 	@Param          page        query       int     false    "Page number"
-//	 	@Param          page_size   query       int     false    "Page size"
-//	 	@Param          name        query       string  false    "Filter by name (partial match)"
-//	 	@Param          username    query       string  false    "Filter by username (partial match)"
-//	 	@Param          email       query       string  false    "Filter by email (partial match)"
-//	 	@Param          is_superadmin query     bool    false    "Filter by superadmin status"
-//	 	@Param          is_active   query       bool    false    "Filter by active status"
-//	 	@Param          is_staff    query       bool    false    "Filter by staff status"
-//		@Success		200		{object}	response.MyGoResponse{data=[]dto.UserSimpleResponse}
-//		@Router			/users [get]
+//	@Summary		Get list of users
+//	@Description	Get paginated list of users
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			page			query		int		false	"Page number"
+//	@Param			page_size		query		int		false	"Page size"
+//	@Param			name			query		string	false	"Filter by name (partial match)"
+//	@Param			username		query		string	false	"Filter by username (partial match)"
+//	@Param			email			query		string	false	"Filter by email (partial match)"
+//	@Param			is_superadmin	query		bool	false	"Filter by superadmin status"
+//	@Param			is_active		query		bool	false	"Filter by active status"
+//	@Param			is_staff		query		bool	false	"Filter by staff status"
+//	@Success		200				{object}	response.MyGoResponse{data=[]dto.UserSimpleResponse}
+//	@Router			/users [get]
 //
 // ListUsersHandler handles GET /api/v1/users
 // Siapa yang bisa: semua yang login (data dirinya sendiri disaring di service)
@@ -214,16 +214,16 @@ func (h *Handler) ListUsersHandler(c *echo.Context) error {
 // ─── UpdateUserHandler ─────────────────────────────────────────────────────────────
 // UpdateUserHandler godoc
 //
-//		@Summary		Update user
-//		@Description	Update user by :id
-//		@Tags			Users
-//		@Accept			json
-//		@Produce		json
-//		@Security		BearerAuth
-//	 	@Param          id      path        int     true    "User ID"
-//	 	@Param			body	body		dto.UpdateUserRequest	true	"Update User Request"
-//		@Success		200		{object}	response.MyGoResponse{data=dto.UserResponse}
-//		@Router			/users/{id} [put]
+//	@Summary		Update user
+//	@Description	Update user by :id
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		int						true	"User ID"
+//	@Param			body	body		dto.UpdateUserRequest	true	"Update User Request"
+//	@Success		200		{object}	response.MyGoResponse{data=dto.UserResponse}
+//	@Router			/users/{id} [put]
 //
 // UpdateUserHandler handles PUT /api/v1/users/:id
 //
@@ -260,16 +260,16 @@ func (h *Handler) UpdateUserHandler(c *echo.Context) error {
 // ─── DeleteUserHandler ─────────────────────────────────────────────────────────────
 // DeleteUserHandler godoc
 //
-//		@Summary		Delete user
-//		@Description	Delete user by :id
-//		@Tags			Users
-//		@Accept			json
-//		@Produce		json
-//		@Security		BearerAuth
-//	 	@Param          id      path        int     true    "User ID"
-//	 	@Param			body	body		dto.DeleteUserRequest	true	"Delete User Request"
-//		@Success		200		{object}	response.MyGoResponse
-//		@Router			/users/{id} [delete]
+//	@Summary		Delete user
+//	@Description	Delete user by :id
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		int						true	"User ID"
+//	@Param			body	body		dto.DeleteUserRequest	true	"Delete User Request"
+//	@Success		200		{object}	response.MyGoResponse
+//	@Router			/users/{id} [delete]
 //
 // DeleteUserHandler handles DELETE /api/v1/users/:id
 // Siapa yang bisa: superadmin
@@ -305,19 +305,19 @@ func (h *Handler) DeleteUserHandler(c *echo.Context) error {
 // ─── ListDeletedUsersHandler ───────────────────────────────────────────────────────
 // ListDeletedUsersHandler godoc
 //
-//		@Summary		Get list of deleted users
-//		@Description	Get paginated list of soft-deleted users
-//		@Tags			Users
-//		@Accept			json
-//		@Produce		json
-//		@Security		BearerAuth
-//	 	@Param          page        query       int     false    "Page number"
-//	 	@Param          page_size   query       int     false    "Page size"
-//	 	@Param          name        query       string  false    "Filter by name (partial match)"
-//	 	@Param          username    query       string  false    "Filter by username (partial match)"
-//	 	@Param          email       query       string  false    "Filter by email (partial match)"
-//		@Success		200		{object}	response.MyGoResponse{data=[]dto.UserSimpleResponse}
-//		@Router			/users/deleted [get]
+//	@Summary		Get list of deleted users
+//	@Description	Get paginated list of soft-deleted users
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			page		query		int		false	"Page number"
+//	@Param			page_size	query		int		false	"Page size"
+//	@Param			name		query		string	false	"Filter by name (partial match)"
+//	@Param			username	query		string	false	"Filter by username (partial match)"
+//	@Param			email		query		string	false	"Filter by email (partial match)"
+//	@Success		200			{object}	response.MyGoResponse{data=[]dto.UserSimpleResponse}
+//	@Router			/users/deleted [get]
 //
 // ListDeletedUsersHandler handles GET /api/v1/users/deleted
 // Siapa yang bisa: superadmin
@@ -359,15 +359,15 @@ func (h *Handler) ListDeletedUsersHandler(c *echo.Context) error {
 // ─── Settings ──────────────────────────────────────────────────────────────────────
 // GetSettingsHandler godoc
 //
-//		@Summary		Get user settings
-//		@Description	Get settings of a user by :id
-//		@Tags			Users
-//		@Accept			json
-//		@Produce		json
-//		@Security		BearerAuth
-//	 	@Param          id      path        int     true    "User ID"
-//		@Success		200		{object}	response.MyGoResponse{data=[]models.UserSetting}
-//		@Router			/users/{id}/settings [get]
+//	@Summary		Get user settings
+//	@Description	Get settings of a user by :id
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		int	true	"User ID"
+//	@Success		200	{object}	response.MyGoResponse{data=[]models.UserSetting}
+//	@Router			/users/{id}/settings [get]
 //
 // GetSettingsHandler handles GET /api/v1/users/:id/settings
 // Siapa yang bisa: diri sendiri atau superadmin
@@ -386,16 +386,16 @@ func (h *Handler) GetSettingsHandler(c *echo.Context) error {
 
 // UpdateSettingsHandler godoc
 //
-//		@Summary		Update user settings
-//		@Description	Update settings of a user by :id
-//		@Tags			Users
-//		@Accept			json
-//		@Produce		json
-//		@Security		BearerAuth
-//	 	@Param          id      path        int     true    "User ID"
-//	 	@Param			body	body		dto.UpdateSettingsRequest	true	"Update Settings Request"
-//		@Success		200		{object}	response.MyGoResponse
-//		@Router			/users/{id}/settings [put]
+//	@Summary		Update user settings
+//	@Description	Update settings of a user by :id
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		int							true	"User ID"
+//	@Param			body	body		dto.UpdateSettingsRequest	true	"Update Settings Request"
+//	@Success		200		{object}	response.MyGoResponse
+//	@Router			/users/{id}/settings [put]
 //
 // UpdateSettingsHandler handles PUT /api/v1/users/:id/settings
 // Siapa yang bisa: diri sendiri atau superadmin
@@ -425,16 +425,16 @@ func (h *Handler) UpdateSettingsHandler(c *echo.Context) error {
 // ─── Password ──────────────────────────────────────────────────────────────────────
 // ChangePasswordHandler godoc
 //
-//		@Summary		Change password
-//		@Description	Change password of a user by :id
-//		@Tags			Users
-//		@Accept			json
-//		@Produce		json
-//		@Security		BearerAuth
-//	 	@Param          id      path        int     true    "User ID"
-//	 	@Param			body	body		dto.ChangePasswordRequest	true	"Change Password Request"
-//		@Success		200		{object}	response.MyGoResponse{data=dto.UserResponse}
-//		@Router			/users/{id}/change-password [put]
+//	@Summary		Change password
+//	@Description	Change password of a user by :id
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		int							true	"User ID"
+//	@Param			body	body		dto.ChangePasswordRequest	true	"Change Password Request"
+//	@Success		200		{object}	response.MyGoResponse{data=dto.UserResponse}
+//	@Router			/users/{id}/change-password [put]
 //
 // GetChangePasswordHandler handles GET /api/v1/users/:id/change-password
 // Siapa yang bisa: diri sendiri atau superadmin
@@ -469,15 +469,15 @@ func (h *Handler) ChangePasswordHandler(c *echo.Context) error {
 
 // ResetPasswordHandler godoc
 //
-//		@Summary		Reset password
-//		@Description	Reset password of a user by :id to default password
-//		@Tags			Users
-//		@Accept			json
-//		@Produce		json
-//		@Security		BearerAuth
-//	 	@Param          id      path        int     true    "User ID"
-//		@Success		200		{object}	response.MyGoResponse
-//		@Router			/users/{id}/reset-password [post]
+//	@Summary		Reset password
+//	@Description	Reset password of a user by :id to default password
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		int	true	"User ID"
+//	@Success		200	{object}	response.MyGoResponse
+//	@Router			/users/{id}/reset-password [post]
 //
 // ResetPasswordHandler handles POST /api/v1/users/:id/reset-password
 // Siapa yang bisa: superadmin
@@ -499,16 +499,16 @@ func (h *Handler) ResetPasswordHandler(c *echo.Context) error {
 // ─── Upload Photo	 ───────────────────────────────────────────────────────────────
 // UploadPhotoHandler godoc
 //
-// @Summary Upload user photo
-// @Description Upload or update user photo by :id
-// @Tags Users
-// @Accept multipart/form-data
-// @Produce json
-// @Security BearerAuth
-// @Param id path int true "User ID"
-// @Param photo formData file true "Photo file (jpg, jpeg, png, webp, heic)"
-// @Success 200 {object} response.MyGoResponse{data=dto.UserResponse}
-// @Router /users/{id}/photo [put]
+//	@Summary		Upload user photo
+//	@Description	Upload or update user photo by :id
+//	@Tags			Users
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		int		true	"User ID"
+//	@Param			photo	formData	file	true	"Photo file (jpg, jpeg, png, webp, heic)"
+//	@Success		200		{object}	response.MyGoResponse{data=dto.UserResponse}
+//	@Router			/users/{id}/photo [put]
 //
 // UploadPhotoHandler handles PUT /api/v1/users/:id/photo
 // Siapa yang bisa: diri sendiri atau superadmin
@@ -545,15 +545,15 @@ func (h *Handler) UploadPhoto(c *echo.Context) error {
 // ─── Delete Photo	 ───────────────────────────────────────────────────────────────────
 // DeletePhotoHandler godoc
 //
-// @Summary Delete user photo
-// @Description Delete user photo by :id (set to default avatar)
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param id path int true "User ID"
-// @Success 200 {object} response.MyGoResponse{data=dto.UserResponse}
-// @Router /users/{id}/photo [delete]
+//	@Summary		Delete user photo
+//	@Description	Delete user photo by :id (set to default avatar)
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		int	true	"User ID"
+//	@Success		200	{object}	response.MyGoResponse{data=dto.UserResponse}
+//	@Router			/users/{id}/photo [delete]
 //
 // DeletePhotoHandler handles DELETE /api/v1/users/:id/photo
 // Siapa yang bisa: diri sendiri atau superadmin
