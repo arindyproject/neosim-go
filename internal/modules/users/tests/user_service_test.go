@@ -1,7 +1,10 @@
 package tests
 
 import (
+	"fmt"
 	"net/http"
+	"os"
+	"strings"
 	"testing"
 
 	"golang.org/x/crypto/bcrypt"
@@ -19,6 +22,22 @@ import (
 )
 
 // ─── Suite ─────────────────────────────────────────────────────────────────────
+
+func TestMain(m *testing.M) {
+	fmt.Println("\033[34m" + strings.Repeat("─", 55) + "\033[0m")
+	fmt.Println("\033[35m  User Service Test Suite\033[0m")
+	fmt.Println("\033[34m" + strings.Repeat("─", 55) + "\033[0m")
+
+	code := m.Run()
+
+	if code == 0 {
+		fmt.Println("\n\033[32m✓  PASS\033[0m  neosim_go/internal/modules/users")
+	} else {
+		fmt.Println("\n\033[31m✗  FAIL\033[0m  neosim_go/internal/modules/users")
+	}
+
+	os.Exit(code)
+}
 
 type UserServiceTestSuite struct {
 	suite.Suite
@@ -158,6 +177,7 @@ func (s *UserServiceTestSuite) TestCreateUser_Forbidden() {
 	}
 
 	s.rbacRepo.On("HasPermission", s.regularActor.UserID, rbacModels.PermUsersCreate).Return(false, nil)
+	s.rbacRepo.On("HasPermission", s.regularActor.UserID, rbacModels.PermUsersManage).Return(false, nil)
 	s.rbacRepo.On("GetUserRoles", s.regularActor.UserID).Return([]rbacModels.Role{}, nil)
 
 	result, err := s.service.CreateUser(req, s.regularActor)
@@ -241,6 +261,7 @@ func (s *UserServiceTestSuite) TestGetUserByID_LimitedView_NoPermission() {
 
 	s.repo.On("GetByID", int64(5)).Return(user, nil)
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermUsersRead).Return(false, nil)
+	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermUsersManage).Return(false, nil)
 	s.stubRBAC(int64(5), false)
 	s.stubHistories(int64(5))
 	s.stubCreator(int64(1))
@@ -373,6 +394,8 @@ func (s *UserServiceTestSuite) TestUpdateUser_Forbidden() {
 	req := &dto.UpdateUserRequest{}
 
 	s.rbacRepo.On("HasPermission", s.regularActor.UserID, rbacModels.PermUsersUpdate).Return(false, nil)
+	s.rbacRepo.On("HasPermission", s.regularActor.UserID, rbacModels.PermUsersManage).Return(false, nil)
+	s.rbacRepo.On("GetUserRoles", s.regularActor.UserID).Return([]rbacModels.Role{}, nil)
 
 	result, err := s.service.UpdateUser(99, req, s.regularActor)
 
@@ -553,6 +576,8 @@ func (s *UserServiceTestSuite) TestGetSettings_Success_Self() {
 func (s *UserServiceTestSuite) TestGetSettings_Forbidden() {
 	// actor != target, tidak punya permission
 	s.rbacRepo.On("HasPermission", s.regularActor.UserID, rbacModels.PermUsersUpdate).Return(false, nil)
+	s.rbacRepo.On("HasPermission", s.regularActor.UserID, rbacModels.PermUsersManage).Return(false, nil)
+	s.rbacRepo.On("GetUserRoles", s.regularActor.UserID).Return([]rbacModels.Role{}, nil)
 
 	result, err := s.service.GetSettings(99, s.regularActor)
 
@@ -643,6 +668,8 @@ func (s *UserServiceTestSuite) TestUploadPhoto_RollbackOnDBError() {
 func (s *UserServiceTestSuite) TestUploadPhoto_Forbidden() {
 	mockFile := &mocks.MockMultipartFile{}
 	s.rbacRepo.On("HasPermission", s.regularActor.UserID, rbacModels.PermUsersUpdate).Return(false, nil)
+	s.rbacRepo.On("HasPermission", s.regularActor.UserID, rbacModels.PermUsersManage).Return(false, nil)
+	s.rbacRepo.On("GetUserRoles", s.regularActor.UserID).Return([]rbacModels.Role{}, nil)
 
 	result, err := s.service.UploadPhoto(99, "photo.jpg", mockFile, s.regularActor)
 
@@ -695,6 +722,8 @@ func (s *UserServiceTestSuite) TestDeletePhoto_NoPhoto_StillSuccess() {
 
 func (s *UserServiceTestSuite) TestDeletePhoto_Forbidden() {
 	s.rbacRepo.On("HasPermission", s.regularActor.UserID, rbacModels.PermUsersUpdate).Return(false, nil)
+	s.rbacRepo.On("HasPermission", s.regularActor.UserID, rbacModels.PermUsersManage).Return(false, nil)
+	s.rbacRepo.On("GetUserRoles", s.regularActor.UserID).Return([]rbacModels.Role{}, nil)
 
 	result, err := s.service.DeletePhoto(99, s.regularActor)
 

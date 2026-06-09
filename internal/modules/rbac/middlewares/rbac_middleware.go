@@ -86,6 +86,117 @@ func RequireRole(repo contracts.RBACRepository, roleName string) echo.Middleware
 	}
 }
 
+// RequireSuperadmin memastikan user adalah superadmin
+func RequireSuperadmin() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c *echo.Context) error {
+			// 1. Langsung izinkan jika user adalah superadmin
+			if IsSuperadmin(c) {
+				return next(c)
+			}
+
+			// 2. Cek apakah user sudah terautentikasi (punya userID di context)
+			// Ini berguna untuk membedakan response antara yang belum login (401)
+			// dan yang sudah login tapi bukan superadmin (403).
+			_, ok := GetUserIDFromContext(c)
+			if !ok {
+				return response.Response(c, http.StatusUnauthorized, false, "Autentikasi diperlukan", nil, nil)
+			}
+
+			// 3. Jika sudah login tapi bukan superadmin, tolak akses
+			return response.Response(c, http.StatusForbidden, false,
+				"Akses ditolak. Hak akses superadmin diperlukan.", nil, nil)
+		}
+	}
+}
+
+// RequireSelf memastikan user yang sedang login hanya bisa mengakses data miliknya sendiri.
+func RequireSelf() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c *echo.Context) error {
+			_, ok := GetUserIDFromContext(c)
+			if !ok {
+				return response.Response(c, http.StatusUnauthorized, false, "Autentikasi diperlukan", nil, nil)
+			}
+
+			if IsSelf(c) {
+				return next(c)
+			}
+
+			return response.Response(c, http.StatusForbidden, false,
+				"Akses ditolak. Anda hanya dapat mengakses data Anda sendiri.", nil, nil)
+		}
+	}
+}
+
+// RequireSelfOrPermission mengizinkan akses jika user adalah pemilik data (self)
+// ATAU user memiliki permission tertentu (misal: admin yang mengedit user lain).
+func RequireSelfOrPermission(repo contracts.RBACRepository, permission string) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c *echo.Context) error {
+			if IsSuperadmin(c) {
+				return next(c)
+			}
+
+			userID, ok := GetUserIDFromContext(c)
+			if !ok {
+				return response.Response(c, http.StatusUnauthorized, false, "Autentikasi diperlukan", nil, nil)
+			}
+
+			// Izinkan jika ini adalah data milik user itu sendiri
+			if IsSelf(c) {
+				return next(c)
+			}
+
+			// Jika bukan data sendiri, cek apakah punya permission
+			has, err := repo.HasPermission(userID, permission)
+			if err != nil {
+				return response.Response(c, http.StatusInternalServerError, false, "Gagal cek permission", nil, nil)
+			}
+			if has {
+				return next(c)
+			}
+
+			return response.Response(c, http.StatusForbidden, false,
+				"Akses ditolak. Anda hanya dapat mengakses data sendiri atau memerlukan permission '"+permission+"'.", nil, nil)
+		}
+	}
+}
+
+// RequireSelfOrRole mengizinkan akses jika user adalah pemilik data (self)
+// ATAU user memiliki role tertentu.
+func RequireSelfOrRole(repo contracts.RBACRepository, roleName string) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c *echo.Context) error {
+			if IsSuperadmin(c) {
+				return next(c)
+			}
+
+			userID, ok := GetUserIDFromContext(c)
+			if !ok {
+				return response.Response(c, http.StatusUnauthorized, false, "Autentikasi diperlukan", nil, nil)
+			}
+
+			// Izinkan jika ini adalah data milik user itu sendiri
+			if IsSelf(c) {
+				return next(c)
+			}
+
+			// Jika bukan data sendiri, cek apakah punya role
+			has, err := HasRole(repo, userID, roleName)
+			if err != nil {
+				return response.Response(c, http.StatusInternalServerError, false, "Gagal cek role", nil, nil)
+			}
+			if has {
+				return next(c)
+			}
+
+			return response.Response(c, http.StatusForbidden, false,
+				"Akses ditolak. Anda hanya dapat mengakses data sendiri atau memerlukan role '"+roleName+"'.", nil, nil)
+		}
+	}
+}
+
 // ─── Context Helpers ───────────────────────────────────────────────────────────
 
 func IsSuperadmin(c *echo.Context) bool {

@@ -4,252 +4,477 @@ Backend REST API berbasis Go menggunakan Echo v5 dan GORM.
 
 ---
 
-## Tech Stack
+## Ringkasan
 
-- **Language**: Go
-- **Framework**: Echo v5
-- **ORM**: GORM
-- **Database**: PostgreSQL
-- **Auth**: JWT
+Neosim Go adalah backend API microservice dengan modul: `auth`, `users`, dan `rbac`.
+Aplikasi menyediakan autentikasi JWT, manajemen user, serta role dan permission untuk kontrol akses.
 
 ---
 
-## Struktur Folder
+## Fitur Utama
+
+- Auth: Login, register, logout, refresh token, forgot password, reset password.
+- User management: CRUD user, change password, settings, upload foto profil.
+- RBAC: Permission CRUD, role CRUD, assign/revoke permissions ke role, assign/revoke role ke user, direct permission.
+- Protected routes dengan JWT dan middleware role/permission.
+- Swagger API documentation (di environment `development`).
+- PostgreSQL + Redis untuk session/login limit.
+
+---
+
+## Struktur Folder Utama
 
 ```
-neosim_go/
+neosim-go/
 ├── cmd/
-│   ├── api/
-│   │   └── main.go              # Entry point server
-│   ├── migrate/
-│   │   └── main.go              # Entry point migrasi
-│   └── seed/
-│       └── main.go              # Entry point seeder
-│
-├── config/
-│   ├── config.go                # Konfigurasi aplikasi
-│   └── database.go              # Konfigurasi database
-│
-└── internal/
-    ├── apps/
-    │   ├── apps.go              # Entry point registrasi module
-    │   └── registry.go          # Registry module (routes + migration)
-    │
-    └── modules/
-        └── users/
-            ├── contracts/       # Interface Service & Repository
-            ├── dto/             # Request & Response structs
-            │   ├── user_request.go
-            │   └── user_response.go
-            ├── handlers/        # HTTP handlers
-            │   └── user_handler.go
-            ├── migrations/      # File migrasi SQL
-            │   ├── migrate.go
-            │   └── 001_create_users_table.sql
-            ├── models/          # GORM models
-            │   └── users.go
-            ├── repositories/    # Database queries
-            │   └── user_repository.go
-            ├── services/        # Business logic
-            │   └── user_service.go
-            ├── tests/
-            │   ├── factories/   # Data generator untuk test
-            │   │   └── user_factory.go
-            │   ├── seeders/     # Seeder ke database
-            │   │   └── user_seeder.go
-            │   └── helpers/     # Helper untuk test
-            │       └── db_helper.go
-            ├── module.go        # Wire semua layer
-            ├── register.go      # Auto-register ke registry
-            └── routes.go        # Definisi routes
+│   ├── api/        # entry point server
+│   ├── migrate/    # entry point migrasi DB
+│   └── seed/       # entry point seeder
+├── config/         # konfigurasi environment, database, Redis
+├── internal/       # domain aplikasi dan modul
+│   ├── apps/       # registry module, inisialisasi route/module
+│   ├── modules/
+│   │   ├── auth/   # autentikasi JWT, auth routes
+│   │   ├── users/  # user CRUD, settings, upload foto
+   │   │   └── rbac/   # role-based access control
+│   └── shared/     # utilities, middleware, response, errors
+├── docs/           # generated Swagger docs
+└── config/.env.dev  # contoh environment dev
 ```
 
 ---
 
-## Cara Menjalankan
-
-### Prasyarat
+## Prasyarat
 
 - Go 1.21+
 - PostgreSQL
+- Redis
 - Make
 
-### Clone & Setup
+---
+
+## Setup
+
+1. Clone repository:
 
 ```bash
 git clone <repo-url>
-cd neosim_go
-cp .env.example .env   # Sesuaikan konfigurasi database
+cd neosim-go
+```
+
+2. Install dependency:
+
+```bash
 go mod tidy
 ```
 
-### Jalankan Server
+3. Salin environment dev:
+
+```bash
+cp config/.env.dev .env
+```
+
+4. Sesuaikan `.env` jika diperlukan.
+
+---
+
+## Menjalankan Aplikasi
+
+### Jalankan server
 
 ```bash
 make run
-# atau
+```
+
+atau:
+
+```bash
 go run ./cmd/api/main.go
+```
+
+### Swagger UI (development only)
+
+Saat `ENV=development`, Swagger tersedia di:
+
+```
+http://localhost:1323/swagger/index.html
 ```
 
 ---
 
 ## Perintah Make
 
-### 🚀 Server
+| Perintah                  | Deskripsi                        |
+| ------------------------- | -------------------------------- |
+| `make run`                | Jalankan API server              |
+| `make build`              | Build binary ke `bin/api`        |
+| `make clean`              | Hapus build artifacts            |
+| `make test`               | Jalankan semua tests             |
+| `make migrate-dev`        | GORM migrate database untuk DEV  |
+| `make migrate-prod`       | GORM migrate database untuk PROD |
+| `make migrate-sql`        | SQL migration untuk DEV          |
+| `make migrate-sql-prod`   | SQL migration untuk PROD         |
+| `make seed`               | Jalankan seeder DEV              |
+| `make seed-prod`          | Jalankan seeder PROD             |
+| `make migrate-seed`       | Migrate + seed DEV               |
+| `make migrate-fresh-seed` | Fresh migrate + seed DEV         |
 
-| Perintah     | Deskripsi                 |
-| ------------ | ------------------------- |
-| `make run`   | Jalankan API server       |
-| `make build` | Build binary ke `bin/api` |
-| `make clean` | Hapus build artifacts     |
-| `make test`  | Jalankan semua tests      |
-
----
-
-### 🗄️ Migrasi
-
-| Perintah                | Deskripsi                  |
-| ----------------------- | -------------------------- |
-| `make migrate-dev`      | GORM auto-migration (DEV)  |
-| `make migrate-prod`     | GORM auto-migration (PROD) |
-| `make migrate-sql`      | SQL migration (DEV)        |
-| `make migrate-sql-prod` | SQL migration (PROD)       |
-
-#### Fresh Migration (Drop All + Re-migrate)
-
-> ⚠️ **Hati-hati** — Semua data akan hilang!
-
-| Perintah                      | Deskripsi                       | Konfirmasi                    |
-| ----------------------------- | ------------------------------- | ----------------------------- |
-| `make migrate-fresh-dev`      | Drop + migrate ulang (DEV)      | `yes/no`                      |
-| `make migrate-fresh-dev-sql`  | Drop + SQL migrate ulang (DEV)  | `yes/no`                      |
-| `make migrate-fresh-prod`     | Drop + migrate ulang (PROD)     | Ketik `PRODUCTION` + `yes/no` |
-| `make migrate-fresh-prod-sql` | Drop + SQL migrate ulang (PROD) | Ketik `PRODUCTION` + `yes/no` |
+> ⚠️ `migrate-fresh-*` akan menghapus data lama sebelum deploy ulang.
 
 ---
 
-### 🌱 Seeder
+## Konfigurasi Environment
 
-| Perintah                  | Deskripsi                                      |
-| ------------------------- | ---------------------------------------------- |
-| `make seed`               | Jalankan seeder DEV (skip jika data sudah ada) |
-| `make seed-prod`          | Jalankan seeder PROD                           |
-| `make seed-fresh`         | Hapus semua data lalu seed ulang (DEV)         |
-| `make migrate-seed`       | Migrate + seed sekaligus (DEV)                 |
-| `make migrate-fresh-seed` | Fresh migrate + seed (DEV)                     |
+Gunakan `config/.env.dev` sebagai contoh. Variabel penting:
 
-#### Data yang di-seed
-
-| Tipe         | Jumlah | Username                        | Password      |
-| ------------ | ------ | ------------------------------- | ------------- |
-| Superuser    | 1      | `superadmin`                    | `password123` |
-| Staff        | 3      | `staff_1`, `staff_2`, `staff_3` | `password123` |
-| Regular User | 10     | random `user_XXXXX`             | `password123` |
+| Variabel                       | Default                 | Deskripsi                               |
+| ------------------------------ | ----------------------- | --------------------------------------- |
+| `BASE_URL`                     | `http://localhost:1323` | URL base aplikasi                       |
+| `SERVER_PORT`                  | `1323`                  | Port server                             |
+| `ENV`                          | `development`           | Environment                             |
+| `LOG_LEVEL`                    | `debug`                 | Level logging                           |
+| `DATABASE_URL`                 | `postgres://...`        | DSN PostgreSQL                          |
+| `DB_HOST`                      | `localhost`             | Host DB                                 |
+| `DB_PORT`                      | `5432`                  | Port DB                                 |
+| `DB_USER`                      | `postgres`              | Username DB                             |
+| `DB_PASSWORD`                  |                         | Password DB                             |
+| `DB_NAME`                      | `neosim`                | Nama database                           |
+| `DB_SSL_MODE`                  | `disable`               | SSL mode postgres                       |
+| `REDIS_HOST`                   | `localhost`             | Host Redis                              |
+| `REDIS_PORT`                   | `6379`                  | Port Redis                              |
+| `JWT_SECRET`                   |                         | Secret JWT                              |
+| `JWT_ISSUER`                   | `neosim`                | Issuer JWT                              |
+| `JWT_ACCESS_TOKEN_EXP_MINUTES` | `15`                    | Expired access token dalam menit        |
+| `JWT_REFRESH_TOKEN_EXP_DAYS`   | `7`                     | Expired refresh token dalam hari        |
+| `PASSWORD_MIN_LENGTH`          | `6`                     | Minimum panjang password                |
+| `IS_REGISTRATION_ACTIVE`       | `true`                  | Aktifkan registrasi user                |
+| `AUTO_ACTIVE_USER`             | `true`                  | Aktifkan user langsung setelah register |
 
 ---
 
-## API Endpoints
+## Arsitektur
 
-### Users
+Aplikasi dibangun sebagai modul: `auth`, `users`, dan `rbac`.
+Setiap modul memiliki lapisan:
 
-| Method   | Endpoint                            | Deskripsi                   |
-| -------- | ----------------------------------- | --------------------------- |
-| `GET`    | `/api/v1/users`                     | List semua user (paginated) |
-| `GET`    | `/api/v1/users/:id`                 | Detail user by ID           |
-| `GET`    | `/api/v1/users/username/:username`  | Detail user by username     |
-| `POST`   | `/api/v1/users`                     | Buat user baru              |
-| `PUT`    | `/api/v1/users/:id`                 | Update user                 |
-| `DELETE` | `/api/v1/users/:id`                 | Hapus user                  |
-| `PUT`    | `/api/v1/users/:id/change-password` | Ganti password              |
-| `GET`    | `/api/v1/users/:id/settings`        | Ambil settings user         |
-| `PUT`    | `/api/v1/users/:id/settings`        | Update settings user        |
+- `contracts` untuk interface service/repository
+- `dto` untuk request/response
+- `handlers` untuk HTTP handler
+- `services` untuk business logic
+- `repositories` untuk akses database
+- `migrations` untuk skrip DB
+- `middlewares` untuk proteksi route
 
-### Query Params (List)
+Modul terdaftar lewat `internal/apps/apps.go` dan blank import di `cmd/api/main.go`.
 
-| Param       | Default | Deskripsi                         |
-| ----------- | ------- | --------------------------------- |
-| `page`      | `1`     | Nomor halaman                     |
-| `page_size` | `10`    | Jumlah data per halaman (max 100) |
+---
 
-### Contoh Response
+## Auth
 
-**Success:**
+### Endpoint Auth
+
+| Method | Endpoint                       | Deskripsi                                                      |
+| ------ | ------------------------------ | -------------------------------------------------------------- |
+| `POST` | `/api/v1/auth/login`           | Login menggunakan `identifier` (username/email) dan `password` |
+| `POST` | `/api/v1/auth/register`        | Register user baru                                             |
+| `POST` | `/api/v1/auth/refresh`         | Refresh access token dengan refresh token                      |
+| `POST` | `/api/v1/auth/forgot-password` | Minta reset password                                           |
+| `POST` | `/api/v1/auth/reset-password`  | Reset password menggunakan token                               |
+| `POST` | `/api/v1/auth/logout`          | Logout dari session saat ini                                   |
+| `POST` | `/api/v1/auth/logout-all`      | Logout dari semua device                                       |
+
+### Request Body
+
+#### Login
 
 ```json
 {
-    "status": true,
-    "message": "Berhasil mengambil data user",
-    "data": { ... }
+  "identifier": "user@example.com",
+  "password": "secret123"
 }
 ```
 
-**Paginated:**
+#### Register
 
 ```json
 {
-    "status": true,
-    "message": "Berhasil mengambil data user",
-    "data": {
-        "items": [ ... ],
-        "pagination": {
-            "total_items": 100,
-            "total_pages": 10,
-            "current_page": 1,
-            "per_page": 10,
-            "next_page": 2,
-            "prev_page": null
-        }
-    }
+  "username": "johndoe",
+  "email": "john@example.com",
+  "password": "password123",
+  "name": "John Doe"
 }
 ```
 
-**Validation Error:**
+#### Refresh Token
 
 ```json
 {
-  "status": false,
-  "message": "Validasi gagal",
-  "errors": [
-    { "field": "email", "message": "email harus berupa email yang valid" },
-    { "field": "password", "message": "password minimal 8 karakter" }
-  ]
+  "refresh_token": "<refresh_token>"
+}
+```
+
+#### Logout
+
+```json
+{
+  "refresh_token": "<refresh_token>"
+}
+```
+
+#### Forgot Password
+
+```json
+{
+  "identifier": "user@example.com"
+}
+```
+
+#### Reset Password
+
+```json
+{
+  "token": "<reset_token>",
+  "new_password": "newPassword123",
+  "confirm_password": "newPassword123"
+}
+```
+
+### Response Token
+
+Respons sukses login/refresh mengembalikan:
+
+```json
+{
+  "access_token": "...",
+  "refresh_token": "...",
+  "token_type": "Bearer",
+  "expires_in": 900,
+  "user": {
+    "id": 1,
+    "username": "johndoe",
+    "email": "john@example.com",
+    "name": "John Doe",
+    "is_superadmin": false,
+    "is_staff": false,
+    "is_verified": true
+  }
 }
 ```
 
 ---
 
-## Menambah Module Baru
+## Users
 
-Cukup 2 langkah saat ingin tambah module baru (misal `roles`):
+### Endpoint Users
 
-**1.** Buat `internal/modules/roles/register.go`:
+| Method   | Endpoint                            | Deskripsi                       |
+| -------- | ----------------------------------- | ------------------------------- |
+| `GET`    | `/api/v1/users`                     | List semua user                 |
+| `GET`    | `/api/v1/users/:id`                 | Ambil user berdasarkan ID       |
+| `GET`    | `/api/v1/users/username/:username`  | Ambil user berdasarkan username |
+| `POST`   | `/api/v1/users`                     | Buat user baru                  |
+| `PUT`    | `/api/v1/users/:id`                 | Update user                     |
+| `DELETE` | `/api/v1/users/:id`                 | Hapus user                      |
+| `GET`    | `/api/v1/users/deleted`             | List user yang dihapus          |
+| `PUT`    | `/api/v1/users/:id/change-password` | Ganti password user             |
+| `POST`   | `/api/v1/users/:id/reset-password`  | Reset password user             |
+| `GET`    | `/api/v1/users/:id/settings`        | Ambil settings user             |
+| `PUT`    | `/api/v1/users/:id/settings`        | Update settings user            |
+| `PUT`    | `/api/v1/users/:id/photo`           | Upload foto profil              |
+| `DELETE` | `/api/v1/users/:id/photo`           | Hapus foto profil               |
 
-```go
-package roles
+> Semua endpoint user membutuhkan header `Authorization: Bearer <access_token>`.
 
-import (
-    "database/sql"
-    "neosim_go/internal/apps"
-    "neosim_go/internal/modules/roles/models"
-    "github.com/labstack/echo/v5"
-    "gorm.io/gorm"
-)
+### Catatan User
 
-type module struct{ db *gorm.DB }
+- `username`, `email`, dan `password` divalidasi.
+- `password` default minimal 8 karakter untuk register.
+- User bisa mengakses foto dari folder `/uploads` jika token JWT valid.
 
-func init() { apps.Register(&module{}) }
+---
 
-func (m *module) SetDB(db *gorm.DB)          { m.db = db }
-func (m *module) InitRoutes(e *echo.Echo)     { NewModule(m.db).InitRoutes(e) }
-func (m *module) Models() []interface{}       { return []interface{}{&models.Role{}} }
-func (m *module) SeedData(db *gorm.DB) error  { return nil }
-func (m *module) MigrateSQL(sqlDB *sql.DB) error { return nil }
+## RBAC (Role & Permission)
+
+RBAC berfungsi sebagai kontrol akses: pengguna boleh melakukan aksi hanya jika:
+
+1. Memiliki role yang benar,
+2. Memiliki permission yang dibutuhkan, atau
+3. Berstatus `superadmin`.
+
+### Konsep Utama
+
+- Permission: tindakan spesifik yang dapat diberikan ke role.
+- Role: grup hak akses. Role bisa memiliki banyak permission.
+- User role: relasi user ke role.
+- Direct permission: hak akses langsung ke user (jika ada) — saat ini tersedia endpoint untuk assign direct permission.
+- Superadmin: akses penuh ke semua route RBAC dan bypass cek permission/role.
+
+### Endpoint RBAC
+
+#### Permissions
+
+| Method   | Endpoint                       | Deskripsi         |
+| -------- | ------------------------------ | ----------------- |
+| `GET`    | `/api/v1/rbac/permissions`     | List permission   |
+| `POST`   | `/api/v1/rbac/permissions`     | Buat permission   |
+| `GET`    | `/api/v1/rbac/permissions/:id` | Ambil permission  |
+| `PUT`    | `/api/v1/rbac/permissions/:id` | Update permission |
+| `DELETE` | `/api/v1/rbac/permissions/:id` | Hapus permission  |
+
+#### Roles
+
+| Method   | Endpoint                 | Deskripsi   |
+| -------- | ------------------------ | ----------- |
+| `GET`    | `/api/v1/rbac/roles`     | List role   |
+| `POST`   | `/api/v1/rbac/roles`     | Buat role   |
+| `GET`    | `/api/v1/rbac/roles/:id` | Ambil role  |
+| `PUT`    | `/api/v1/rbac/roles/:id` | Update role |
+| `DELETE` | `/api/v1/rbac/roles/:id` | Hapus role  |
+
+#### Role ↔ Permission
+
+| Method   | Endpoint                             | Deskripsi                           |
+| -------- | ------------------------------------ | ----------------------------------- |
+| `POST`   | `/api/v1/rbac/roles/:id/permissions` | Assign permission ke role           |
+| `PUT`    | `/api/v1/rbac/roles/:id/permissions` | Sync permission role (replace list) |
+| `DELETE` | `/api/v1/rbac/roles/:id/permissions` | Revoke permission dari role         |
+
+#### User ↔ Role
+
+| Method   | Endpoint                            | Deskripsi           |
+| -------- | ----------------------------------- | ------------------- |
+| `GET`    | `/api/v1/rbac/users/:user_id/roles` | List roles user     |
+| `POST`   | `/api/v1/rbac/users/:user_id/roles` | Assign role ke user |
+| `PUT`    | `/api/v1/rbac/users/:user_id/roles` | Sync roles user     |
+| `DELETE` | `/api/v1/rbac/users/:user_id/roles` | Revoke role user    |
+
+#### User Permissions
+
+| Method | Endpoint                                  | Deskripsi                        |
+| ------ | ----------------------------------------- | -------------------------------- |
+| `GET`  | `/api/v1/rbac/users/:user_id/permissions` | List semua permissions user      |
+| `POST` | `/api/v1/rbac/users/:user_id/permissions` | Assign direct permission ke user |
+
+> Semua endpoint RBAC membutuhkan JWT dan umumnya `superadmin` atau permission khusus.
+
+### Request Payload RBAC
+
+#### Create Permission
+
+```json
+{
+  "name": "manage_users",
+  "display_name": "Manage Users",
+  "description": "Mengatur user dan role",
+  "resource": "users",
+  "action": "manage"
+}
 ```
 
-**2.** Tambah blank import di `internal/apps/apps.go` dan `cmd/migrate/main.go`:
+#### Update Permission
 
-```go
-_ "neosim_go/internal/modules/roles"
+```json
+{
+  "display_name": "Kelola Pengguna",
+  "description": "Akses untuk mengelola user"
+}
 ```
 
-Tidak ada file lain yang perlu diubah.
+#### Create Role
+
+```json
+{
+  "name": "admin",
+  "display_name": "Administrator",
+  "description": "Role dengan hak akses administratif"
+}
+```
+
+#### Assign Permissions ke Role
+
+```json
+{
+  "permission_ids": [1, 2, 3]
+}
+```
+
+#### Assign Roles ke User
+
+```json
+{
+  "role_ids": [1, 2]
+}
+```
+
+#### Assign Direct Permission ke User
+
+```json
+{
+  "permission_id": 1,
+  "is_granted": true
+}
+```
+
+---
+
+## Middleware Authorization Rules
+
+Akses RBAC dijaga dengan middleware berikut:
+
+- `RequirePermission(repo, permission)`: pastikan user punya permission tertentu.
+- `RequireAnyPermission(repo, permissions...)`: pastikan user punya salah satu permission.
+- `RequireRole(repo, roleName)`: pastikan user punya role tertentu.
+- `RequireSuperadmin()`: hanya superadmin.
+- `RequireSelf()`: hanya pemilik data saja.
+- `RequireSelfOrPermission(repo, permission)`: pemilik data atau pemilik permission.
+- `RequireSelfOrRole(repo, roleName)`: pemilik data atau pemilik role.
+
+> Superadmin otomatis melewati semua pengecekan permission/role.
+
+---
+
+## Token & Headers
+
+Semua endpoint privat memerlukan header:
+
+```
+Authorization: Bearer <access_token>
+```
+
+Jika token tidak valid atau expired, server mengembalikan status `401 Unauthorized`.
+
+---
+
+## Cara Menambah Module Baru
+
+1. Buat file `internal/modules/<module>/register.go` dengan struktur module.
+2. Tambahkan blank import di `cmd/api/main.go` dan `cmd/migrate/main.go`.
+3. Buat route, handler, service, repository, dto, dan migration sesuai kebutuhan.
+
+> Modul baru akan otomatis didaftarkan oleh mekanisme registry di `internal/apps`.
+
+---
+
+## Contoh Alur RBAC
+
+1. Buat permission.
+2. Buat role.
+3. Assign permission ke role.
+4. Assign role ke user.
+5. User login, lalu akses endpoint berdasarkan permission/role.
+
+Contoh: jika route membutuhkan permission `manage_users`, maka user harus memiliki role yang memuat permission tersebut atau menjadi `superadmin`.
+
+---
+
+## Catatan
+
+- Jika Anda ingin membuka akses static file `/uploads`, pastikan server memeriksa JWT.
+- Untuk debugging, route terdaftar dicetak di console saat server start.
+- Gunakan `config/.env.dev` untuk environment development.
+
+---
+
+## Lisensi
+
+MIT

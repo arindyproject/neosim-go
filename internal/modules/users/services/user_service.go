@@ -57,6 +57,9 @@ func (s *service) canCreateUser(actor userContracts.AuthContext) (bool, error) {
 	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermUsersCreate); err != nil || has {
 		return has, err
 	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermUsersManage); err != nil || has {
+		return has, err
+	}
 	return rbacMiddlewares.HasAnyRole(s.rbacRepo, actor.UserID, "admin", "superadmin", "hrd")
 }
 
@@ -67,7 +70,13 @@ func (s *service) canUpdateUser(actor userContracts.AuthContext, targetUserID in
 	if actor.UserID == targetUserID {
 		return true, nil
 	}
-	return rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermUsersUpdate)
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermUsersUpdate); err != nil || has {
+		return has, err
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermUsersManage); err != nil || has {
+		return has, err
+	}
+	return rbacMiddlewares.HasAnyRole(s.rbacRepo, actor.UserID, "admin", "superadmin", "hrd")
 }
 
 func (s *service) canDeleteUser(actor userContracts.AuthContext) (bool, error) {
@@ -81,7 +90,13 @@ func (s *service) canReadUser(actor userContracts.AuthContext, targetUserID int6
 	if actor.UserID == targetUserID {
 		return true, nil
 	}
-	return rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermUsersRead)
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermUsersRead); err != nil || has {
+		return has, err
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermUsersManage); err != nil || has {
+		return has, err
+	}
+	return false, nil
 }
 
 // ─── RBAC Data Builder ─────────────────────────────────────────────────────────

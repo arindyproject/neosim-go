@@ -6,6 +6,10 @@ import (
 	"neosim_go/internal/modules/rbac/handlers"
 	"neosim_go/internal/modules/rbac/repositories"
 	"neosim_go/internal/modules/rbac/services"
+
+	// PERBAIKAN: Import interface (contracts), BUKAN implementasi konkret (repositories).
+	// Ini mencegah circular dependency jika module users juga membutuhkan rbac.
+	userContracts "neosim_go/internal/modules/users/contracts"
 	"neosim_go/internal/shared/utils"
 
 	"github.com/labstack/echo/v5"
@@ -15,14 +19,18 @@ import (
 // Module mewakili rbac module
 type Module struct {
 	db         *gorm.DB
-	repo       contracts.RBACRepository
+	rbacRepo   contracts.RBACRepository
 	handler    *handlers.RBACHandler
 	jwtManager *utils.JWTManager
 }
 
-func NewModule(db *gorm.DB, cfg *config.Config) *Module {
-	repo := repositories.NewRBACRepository(db)
-	svc := services.NewRBACService(repo)
+// NewModule sekarang menerima userRepo sebagai interface (Dependency Injection).
+func NewModule(db *gorm.DB, cfg *config.Config, userRepo userContracts.Repository) *Module {
+	rbacRepo := repositories.NewRBACRepository(db)
+
+	// Langsung gunakan userRepo yang di-inject, tidak perlu instantiate di sini
+	svc := services.NewRBACService(rbacRepo, userRepo)
+
 	handler := handlers.NewRBACHandler(svc)
 	jwtManager := utils.NewJWTManager(
 		cfg.JWTSecret,
@@ -33,16 +41,16 @@ func NewModule(db *gorm.DB, cfg *config.Config) *Module {
 
 	return &Module{
 		db:         db,
-		repo:       repo,
+		rbacRepo:   rbacRepo,
 		handler:    handler,
 		jwtManager: jwtManager,
 	}
 }
 
 func (m *Module) InitRoutes(e *echo.Echo) {
-	RegisterRoutes(e, m.handler, m.repo, m.jwtManager, m.db) // ← tambah m.db
+	RegisterRoutes(e, m.handler, m.rbacRepo, m.jwtManager, m.db) // ← tambah m.db
 }
 
 func (m *Module) GetRepository() contracts.RBACRepository {
-	return m.repo
+	return m.rbacRepo
 }

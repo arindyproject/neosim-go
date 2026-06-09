@@ -47,6 +47,9 @@ test-auth:
 test-users:
 	@go test -json ./internal/modules/users/tests | gotestfmt
 
+test-rbac:
+	@go test -json ./internal/modules/rbac/tests | gotestfmt
+
 test:
 	@go test -json ./internal/modules/.../tests | gotestfmt
 

@@ -7,6 +7,9 @@ import (
 	"neosim_go/internal/apps"
 	"neosim_go/internal/modules/rbac/models"
 
+	// Tambahkan import untuk package konkret user repository
+	userRepo "neosim_go/internal/modules/users/repositories"
+
 	"github.com/labstack/echo/v5"
 	"gorm.io/gorm"
 )
@@ -24,7 +27,11 @@ func (r *registryModule) SetDB(db *gorm.DB)            { r.db = db }
 func (r *registryModule) SetConfig(cfg *config.Config) { r.cfg = cfg }
 
 func (r *registryModule) InitRoutes(e *echo.Echo) {
-	NewModule(r.db, r.cfg).InitRoutes(e)
+	// Inisialisasi userRepo di sini, lalu inject ke NewModule
+	uRepo := userRepo.NewRepository(r.db)
+
+	// Panggil NewModule dengan parameter tambahan uRepo
+	NewModule(r.db, r.cfg, uRepo).InitRoutes(e)
 }
 
 func (r *registryModule) Models() []interface{} {
