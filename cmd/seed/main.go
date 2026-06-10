@@ -10,6 +10,8 @@ import (
 	// import seeder di sini
 	// =====================================================================
 	// Menggunakan alias untuk membedakan kedua paket seeders
+
+	artikelSeed "neosim_go/internal/modules/artikel/tests/seeders"
 	rbacSeed "neosim_go/internal/modules/rbac/tests/seeders"
 	userSeed "neosim_go/internal/modules/users/tests/seeders"
 	// =====================================================================
@@ -66,6 +68,17 @@ func main() {
 	} else {
 		if err := rbacSeeder.Run(); err != nil {
 			log.Fatal("Gagal seed RBAC:", err)
+		}
+	}
+	// =====================================================================
+	artikelSeeder := artikelSeed.NewArtikelSeeder(db)
+	if *fresh {
+		if err := artikelSeeder.Fresh(); err != nil {
+			log.Fatal("Gagal fresh seed artikelSeeder:", err)
+		}
+	} else {
+		if err := artikelSeeder.Run(); err != nil {
+			log.Fatal("Gagal seed artikelSeeder:", err)
 		}
 	}
 	// =====================================================================

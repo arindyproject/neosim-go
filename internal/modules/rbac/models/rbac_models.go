@@ -113,4 +113,11 @@ const (
 	PermPermissionsUpdate = "permissions:update"
 	PermPermissionsDelete = "permissions:delete"
 	PermPermissionsManage = "permissions:manage"
+
+	// Any
+	PermAnyRead   = "any:read"
+	PermAnyCreate = "any:create"
+	PermAnyUpdate = "any:update"
+	PermAnyDelete = "any:delete"
+	PermAnyManage = "any:manage"
 )

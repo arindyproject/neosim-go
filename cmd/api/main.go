@@ -43,6 +43,7 @@ import (
 
 	// =============== Modules ===============
 	// input module baru di sini saat ada, misal:
+	_ "neosim_go/internal/modules/artikel"
 	_ "neosim_go/internal/modules/auth"
 	_ "neosim_go/internal/modules/rbac"
 	_ "neosim_go/internal/modules/users"

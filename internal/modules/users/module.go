@@ -37,7 +37,11 @@ func NewModule(
 	repo := repositories.NewRepository(db)
 
 	// Pastikan NewUserService di internal/modules/users/services menerima 4 parameter ini:
-	svc := services.NewUserService(repo, rbacRepo, authRepo, storageService)
+	svc := services.NewUserService(
+		repo,
+		rbacRepo,
+		authRepo,
+		storageService)
 	handler := handlers.NewHandler(svc)
 
 	return &Module{
