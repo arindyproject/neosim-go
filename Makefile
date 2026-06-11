@@ -50,8 +50,11 @@ test-users:
 test-rbac:
 	@go test -json ./internal/modules/rbac/tests | gotestfmt
 
+test-artikel:
+	@go test -json ./internal/modules/artikel/tests
+
 test:
-	@go test -json ./internal/modules/.../tests | gotestfmt
+	@go test -json ./internal/modules/.../tests 
 
 # Create new migration file (example)
 create-migration:

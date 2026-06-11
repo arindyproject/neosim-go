@@ -10,7 +10,6 @@ import (
 	"neosim_go/internal/shared/validator"
 
 	rbacMiddlewares "neosim_go/internal/modules/rbac/middlewares"
-	userContracts "neosim_go/internal/modules/users/contracts"
 
 	"github.com/labstack/echo/v5"
 )
@@ -26,10 +25,10 @@ func NewArtikelHandler(service contracts.Service) *ArtikelHandler {
 }
 
 // buildAuthContext membuat AuthContext dari JWT claims di context
-func buildAuthContext(c *echo.Context) userContracts.AuthContext {
+func buildAuthContext(c *echo.Context) contracts.AuthContext {
 	userID, _ := rbacMiddlewares.GetUserIDFromContext(c)
 	isSuperadmin := rbacMiddlewares.IsSuperadmin(c)
-	return userContracts.AuthContext{
+	return contracts.AuthContext{
 		UserID:       userID,
 		IsSuperadmin: isSuperadmin,
 	}
@@ -79,7 +78,8 @@ func (h *ArtikelHandler) List(c *echo.Context) error {
 		}
 	}
 
-	items, total, err := h.service.List(page, pageSize)
+	actor := buildAuthContext(c)
+	items, total, err := h.service.List(page, pageSize, actor)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
 	}
@@ -107,7 +107,8 @@ func (h *ArtikelHandler) GetByID(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 
-	item, err := h.service.GetByID(id)
+	actor := buildAuthContext(c)
+	item, err := h.service.GetByID(id, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -139,7 +140,8 @@ func (h *ArtikelHandler) Create(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 
-	item, err := h.service.Create(&req, getActorID(c))
+	actor := buildAuthContext(c)
+	item, err := h.service.Create(&req, getActorID(c), actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
@@ -178,7 +180,8 @@ func (h *ArtikelHandler) Update(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 
-	item, err := h.service.Update(id, &req, getActorID(c))
+	actor := buildAuthContext(c)
+	item, err := h.service.Update(id, &req, getActorID(c), actor)
 	if err != nil {
 		status := http.StatusBadRequest
 		if err.Error() == "artikel tidak ditemukan" {
@@ -210,7 +213,8 @@ func (h *ArtikelHandler) Delete(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 
-	if err := h.service.Delete(id); err != nil {
+	actor := buildAuthContext(c)
+	if err := h.service.Delete(id, actor); err != nil {
 		status := http.StatusInternalServerError
 		if err.Error() == "artikel tidak ditemukan" {
 			status = http.StatusNotFound

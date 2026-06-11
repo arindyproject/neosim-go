@@ -48,7 +48,6 @@ func main() {
 	fmt.Printf("\n🚀 Membuat module: %s\n", cfg.ModuleName)
 	fmt.Printf("   Path: %s\n\n", basePath)
 
-	// Generate semua file
 	files := buildFileList(cfg, basePath)
 	for _, f := range files {
 		if err := generateFile(f.path, f.tmpl, cfg); err != nil {
@@ -57,7 +56,6 @@ func main() {
 		fmt.Printf("   ✅ %s\n", f.path)
 	}
 
-	// Print instruksi selanjutnya
 	printNextSteps(cfg)
 }
 
@@ -91,18 +89,15 @@ func buildFileList(cfg ModuleConfig, base string) []fileEntry {
 // ─── Generator ─────────────────────────────────────────────────────────────────
 
 func generateFile(path, tmplStr string, cfg ModuleConfig) error {
-	// Buat direktori jika belum ada
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		return err
 	}
 
-	// Skip jika file sudah ada
 	if _, err := os.Stat(path); err == nil {
 		fmt.Printf("   ⏭️  Skip (sudah ada): %s\n", path)
 		return nil
 	}
 
-	// Parse & execute template
 	tmpl, err := template.New(path).Parse(tmplStr)
 	if err != nil {
 		return err
@@ -119,7 +114,6 @@ func generateFile(path, tmplStr string, cfg ModuleConfig) error {
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
-// toPascalCase: "login_history" → "LoginHistory"
 func toPascalCase(s string) string {
 	parts := strings.Split(s, "_")
 	var result strings.Builder
@@ -134,7 +128,6 @@ func toPascalCase(s string) string {
 	return result.String()
 }
 
-// toPackageName: "login_history" → "loginhistory" (valid Go package name)
 func toPackageName(s string) string {
 	return strings.ReplaceAll(s, "_", "")
 }
@@ -180,6 +173,12 @@ import (
 	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/models"
 )
 
+// AuthContext berisi informasi user yang sedang login untuk authorization
+type AuthContext struct {
+	UserID       int64
+	IsSuperadmin bool
+}
+
 // Repository defines database operations
 type Repository interface {
 	Create(m *models.{{.ModuleTitle}}) error
@@ -191,15 +190,12 @@ type Repository interface {
 
 // Service defines business logic operations
 type Service interface {
-	Create(req *dto.Create{{.ModuleTitle}}Request, createdBy *int64) (*dto.{{.ModuleTitle}}Response, error)
-	GetByID(id int64) (*dto.{{.ModuleTitle}}Response, error)
-	List(page, pageSize int) ([]dto.{{.ModuleTitle}}Response, int64, error)
-	Update(id int64, req *dto.Update{{.ModuleTitle}}Request, updatedBy *int64) (*dto.{{.ModuleTitle}}Response, error)
-	Delete(id int64) error
+	Create(req *dto.Create{{.ModuleTitle}}Request, createdBy *int64, actor AuthContext) (*dto.{{.ModuleTitle}}Response, error)
+	GetByID(id int64 , actor AuthContext) (*dto.{{.ModuleTitle}}Response, error)
+	List(page, pageSize int, actor AuthContext) ([]dto.{{.ModuleTitle}}Response, int64, error)
+	Update(id int64, req *dto.Update{{.ModuleTitle}}Request, updatedBy *int64, actor AuthContext) (*dto.{{.ModuleTitle}}Response, error)
+	Delete(id int64, actor AuthContext) error
 }
-
-// Ensure interfaces are used
-//var _ Repository = (*struct{ *gorm.DB })(nil)
 `
 
 var tmplRequest = `package dto
@@ -227,13 +223,13 @@ import (
 
 // {{.ModuleTitle}}Response response untuk single {{.ModuleName}}
 type {{.ModuleTitle}}Response struct {
-	ID          int64      ` + "`" + `json:"id"` + "`" + `
-	Name        string     ` + "`" + `json:"name"` + "`" + `
-	Description *string    ` + "`" + `json:"description"` + "`" + `
-	CreatedBy   *int64     ` + "`" + `json:"created_by"` + "`" + `
-	UpdatedBy   *int64     ` + "`" + `json:"updated_by"` + "`" + `
-	CreatedAt   time.Time  ` + "`" + `json:"created_at"` + "`" + `
-	UpdatedAt   time.Time  ` + "`" + `json:"updated_at"` + "`" + `
+	ID          int64     ` + "`" + `json:"id"` + "`" + `
+	Name        string    ` + "`" + `json:"name"` + "`" + `
+	Description *string   ` + "`" + `json:"description"` + "`" + `
+	CreatedBy   *int64    ` + "`" + `json:"created_by"` + "`" + `
+	UpdatedBy   *int64    ` + "`" + `json:"updated_by"` + "`" + `
+	CreatedAt   time.Time ` + "`" + `json:"created_at"` + "`" + `
+	UpdatedAt   time.Time ` + "`" + `json:"updated_at"` + "`" + `
 }
 
 // To{{.ModuleTitle}}Response mengubah model menjadi response
@@ -276,6 +272,7 @@ type {{.ModuleTitle}} struct {
 	UpdatedBy   *int64         ` + "`" + `gorm:"column:updated_by" json:"updated_by"` + "`" + `
 	CreatedAt   time.Time      ` + "`" + `gorm:"column:created_at;type:timestamptz;not null;default:NOW()" json:"created_at"` + "`" + `
 	UpdatedAt   time.Time      ` + "`" + `gorm:"column:updated_at;type:timestamptz;not null;default:NOW()" json:"updated_at"` + "`" + `
+	DeletedAt   gorm.DeletedAt ` + "`" + `gorm:"column:deleted_at;type:timestamptz" json:"deleted_at"` + "`" + `
 }
 
 func ({{.ModuleTitle}}) TableName() string {
@@ -309,7 +306,7 @@ func (r *repository) Create(m *models.{{.ModuleTitle}}) error {
 
 func (r *repository) GetByID(id int64) (*models.{{.ModuleTitle}}, error) {
 	var m models.{{.ModuleTitle}}
-	result := r.db.Where("id = ?", id).First(&m)
+	result := r.db.Where("id = ? AND deleted_at IS NULL", id).First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -319,17 +316,14 @@ func (r *repository) GetByID(id int64) (*models.{{.ModuleTitle}}, error) {
 func (r *repository) List(page, pageSize int) ([]models.{{.ModuleTitle}}, int64, error) {
 	var items []models.{{.ModuleTitle}}
 	var total int64
-
 	offset := (page - 1) * pageSize
 
-	if err := r.db.Model(&models.{{.ModuleTitle}}{}).Count(&total).Error; err != nil {
+	if err := r.db.Model(&models.{{.ModuleTitle}}{}).Where("deleted_at IS NULL").Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
-
-	if err := r.db.Offset(offset).Limit(pageSize).Find(&items).Error; err != nil {
+	if err := r.db.Where("deleted_at IS NULL").Offset(offset).Limit(pageSize).Find(&items).Error; err != nil {
 		return nil, 0, err
 	}
-
 	return items, total, nil
 }
 
@@ -347,37 +341,134 @@ var tmplService = `package services
 import (
 	"errors"
 	"time"
+	"net/http"
 
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/contracts"
+	{{.ModuleName}}Contracts "{{.ProjectModule}}/internal/modules/{{.ModuleName}}/contracts"
 	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/dto"
 	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/models"
+
+	//RBAC AUTH----------------------------------------
+	authContracts "neosim_go/internal/modules/auth/contracts"
+	rbacContracts "neosim_go/internal/modules/rbac/contracts"
+	rbacMiddlewares "neosim_go/internal/modules/rbac/middlewares"
+	rbacModels "neosim_go/internal/modules/rbac/models"
+	appErrors "neosim_go/internal/shared/errors"
 )
 
+// ─── Init ───────────────────────────────────────────────────────────────────────
 type service struct {
-	repo contracts.Repository
+	repo {{.ModuleName}}Contracts.Repository
+	rbacRepo rbacContracts.RBACRepository	//RBAC
+	authRepo authContracts.AuthRepository	//AUTH
 }
 
 // New{{.ModuleTitle}}Service membuat instance service baru
-func New{{.ModuleTitle}}Service(repo contracts.Repository) contracts.Service {
-	return &service{repo: repo}
+func New{{.ModuleTitle}}Service(
+	repo {{.ModuleName}}Contracts.Repository,
+	rbacRepo rbacContracts.RBACRepository,	//RBAC
+	authRepo authContracts.AuthRepository,	//AUTH
+) {{.ModuleName}}Contracts.Service {
+	return &service{
+		repo: repo,
+		rbacRepo: rbacRepo,	//RBAC
+		authRepo: authRepo,	//AUTH
+	}
 }
 
-func (s *service) Create(req *dto.Create{{.ModuleTitle}}Request, createdBy *int64) (*dto.{{.ModuleTitle}}Response, error) {
+
+// ─── Permission ─────────────────────────────────────────────────────────────────
+func (s *service) canRead{{.ModuleTitle}}(actor {{.ModuleName}}Contracts.AuthContext) (bool, error) {
+	if actor.IsSuperadmin {
+		return true, nil
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyRead); err != nil || has {
+		return has, err
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
+		return has, err
+	}
+	return false, nil
+}
+
+func (s *service) canCreate{{.ModuleTitle}}(actor {{.ModuleName}}Contracts.AuthContext) (bool, error) {
+	if actor.IsSuperadmin {
+		return true, nil
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyCreate); err != nil || has {
+		return has, err
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
+		return has, err
+	}
+	return false, nil
+}
+
+func (s *service) canUpdate{{.ModuleTitle}}(actor {{.ModuleName}}Contracts.AuthContext) (bool, error) {
+	if actor.IsSuperadmin {
+		return true, nil
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyUpdate); err != nil || has {
+		return has, err
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
+		return has, err
+	}
+	return false, nil
+}
+
+func (s *service) canDelete{{.ModuleTitle}}(actor {{.ModuleName}}Contracts.AuthContext) (bool, error) {
+	if actor.IsSuperadmin {
+		return true, nil
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyDelete); err != nil || has {
+		return has, err
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
+		return has, err
+	}
+	return false, nil
+}
+
+// ─── Service ────────────────────────────────────────────────────────────────────
+
+// ------------ Create ------------------------------------------------------------
+func (s *service) Create(req *dto.Create{{.ModuleTitle}}Request, createdBy *int64, actor {{.ModuleName}}Contracts.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
+	// ─── Permission ─────────────────────────────────────────────────────────────
+	can, err := s.canCreate{{.ModuleTitle}}(actor)
+	if err != nil {
+		return nil, appErrors.Internal("gagal cek akses")
+	}
+	if !can {
+		return nil, appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda tidak memiliki hak akses untuk membuat {{.ModuleTitle}} baru.", nil)
+	}
+
+	// ─── Logic ──────────────────────────────────────────────────────────────────
 	m := &models.{{.ModuleTitle}}{
 		Name:        req.Name,
 		Description: req.Description,
 		CreatedBy:   createdBy,
 		UpdatedBy:   createdBy,
 	}
-
 	if err := s.repo.Create(m); err != nil {
 		return nil, err
 	}
-
 	return dto.To{{.ModuleTitle}}Response(m), nil
 }
 
-func (s *service) GetByID(id int64) (*dto.{{.ModuleTitle}}Response, error) {
+// ------------ GetByID -----------------------------------------------------------
+func (s *service) GetByID(id int64, actor {{.ModuleName}}Contracts.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
+	// ─── Permission ─────────────────────────────────────────────────────────────
+	can, err := s.canRead{{.ModuleTitle}}(actor)
+	if err != nil {
+		return nil, appErrors.Internal("gagal cek akses")
+	}
+	if !can {
+		return nil, appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda tidak memiliki hak akses untuk Melihat {{.ModuleTitle}}.", nil)
+	}
+
+	// ─── Logic ──────────────────────────────────────────────────────────────────
 	m, err := s.repo.GetByID(id)
 	if err != nil {
 		return nil, err
@@ -388,23 +479,45 @@ func (s *service) GetByID(id int64) (*dto.{{.ModuleTitle}}Response, error) {
 	return dto.To{{.ModuleTitle}}Response(m), nil
 }
 
-func (s *service) List(page, pageSize int) ([]dto.{{.ModuleTitle}}Response, int64, error) {
+// ------------ List --------------------------------------------------------------
+func (s *service) List(page, pageSize int, actor {{.ModuleName}}Contracts.AuthContext) ([]dto.{{.ModuleTitle}}Response, int64, error) {
+	// ─── Permission ─────────────────────────────────────────────────────────────
+	can, err := s.canRead{{.ModuleTitle}}(actor)
+	if err != nil {
+		return nil, 0, appErrors.Internal("gagal cek akses")
+	}
+	if !can {
+		return nil, 0, appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda tidak memiliki hak akses untuk melihat daftar {{.ModuleTitle}}.", nil)
+	}
+
+	// ─── Logic ──────────────────────────────────────────────────────────────────
 	if page < 1 {
 		page = 1
 	}
 	if pageSize < 1 || pageSize > 100 {
 		pageSize = 10
 	}
-
 	items, total, err := s.repo.List(page, pageSize)
 	if err != nil {
 		return nil, 0, err
 	}
-
 	return dto.To{{.ModuleTitle}}ListResponse(items), total, nil
 }
 
-func (s *service) Update(id int64, req *dto.Update{{.ModuleTitle}}Request, updatedBy *int64) (*dto.{{.ModuleTitle}}Response, error) {
+// ------------ Update ------------------------------------------------------------
+func (s *service) Update(id int64, req *dto.Update{{.ModuleTitle}}Request, updatedBy *int64, actor {{.ModuleName}}Contracts.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
+	// ─── Permission ─────────────────────────────────────────────────────────────
+	can, err := s.canUpdate{{.ModuleTitle}}(actor)
+	if err != nil {
+		return nil, appErrors.Internal("gagal cek akses")
+	}
+	if !can {
+		return nil, appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda tidak memiliki hak akses untuk mengubah {{.ModuleTitle}}.", nil)
+	}
+
+	// ─── Logic ──────────────────────────────────────────────────────────────────
 	m, err := s.repo.GetByID(id)
 	if err != nil {
 		return nil, err
@@ -412,25 +525,34 @@ func (s *service) Update(id int64, req *dto.Update{{.ModuleTitle}}Request, updat
 	if m == nil {
 		return nil, errors.New("{{.ModuleName}} tidak ditemukan")
 	}
-
 	if req.Name != nil {
 		m.Name = *req.Name
 	}
 	if req.Description != nil {
 		m.Description = req.Description
 	}
-
 	m.UpdatedBy = updatedBy
 	m.UpdatedAt = time.Now()
 
 	if err := s.repo.Update(m); err != nil {
 		return nil, err
 	}
-
 	return dto.To{{.ModuleTitle}}Response(m), nil
 }
 
-func (s *service) Delete(id int64) error {
+// ------------ Delete ------------------------------------------------------------
+func (s *service) Delete(id int64, actor {{.ModuleName}}Contracts.AuthContext) error {
+	// ─── Permission ─────────────────────────────────────────────────────────────
+	can, err := s.canDelete{{.ModuleTitle}}(actor)
+	if err != nil {
+		return appErrors.Internal("gagal cek akses")
+	}
+	if !can {
+		return appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda tidak memiliki hak akses untuk menghapus {{.ModuleTitle}}.", nil)
+	}
+
+	// ─── Logic ──────────────────────────────────────────────────────────────────
 	m, err := s.repo.GetByID(id)
 	if err != nil {
 		return err
@@ -442,6 +564,7 @@ func (s *service) Delete(id int64) error {
 }
 `
 
+// ✅ Fix: c echo.Context (bukan *echo.Context), c.PathParam (bukan c.Param)
 var tmplHandler = `package handlers
 
 import (
@@ -452,6 +575,8 @@ import (
 	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/dto"
 	"{{.ProjectModule}}/internal/shared/response"
 	"{{.ProjectModule}}/internal/shared/validator"
+
+	rbacMiddlewares "{{.ProjectModule}}/internal/modules/rbac/middlewares"
 
 	"github.com/labstack/echo/v5"
 )
@@ -466,6 +591,18 @@ func New{{.ModuleTitle}}Handler(service contracts.Service) *{{.ModuleTitle}}Hand
 	return &{{.ModuleTitle}}Handler{service: service}
 }
 
+// buildAuthContext membuat AuthContext dari JWT claims di context
+func buildAuthContext(c *echo.Context) contracts.AuthContext {
+	userID, _ := rbacMiddlewares.GetUserIDFromContext(c)
+	isSuperadmin := rbacMiddlewares.IsSuperadmin(c)
+	return contracts.AuthContext{
+		UserID:       userID,
+		IsSuperadmin: isSuperadmin,
+	}
+}
+
+// ─── Private Helpers ───────────────────────────────────────────────────────────
+
 func parseID(c *echo.Context) (int64, error) {
 	return strconv.ParseInt(c.Param("id"), 10, 64)
 }
@@ -477,6 +614,22 @@ func getActorID(c *echo.Context) *int64 {
 	return nil
 }
 
+// ─── Handlers ──────────────────────────────────────────────────────────────────
+
+// ─── List ──────────────────────────────────────────────────────────────────────
+// {{.ModuleTitle}}Handler godoc
+//
+//	@Summary		Get list of users
+//	@Description	Get paginated list of users
+//	@Tags			{{.ModuleName}}
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			page			query		int		false	"Page number"
+//	@Param			page_size		query		int		false	"Page size"
+//	@Success		200				{object}	response.MyGoResponse{data=[]dto.{{.ModuleTitle}}Response}
+//	@Router			/{{.ModuleName}}s [get]
+//
 // List handles GET /api/v1/{{.ModuleName}}s
 func (h *{{.ModuleTitle}}Handler) List(c *echo.Context) error {
 	page, pageSize := 1, 10
@@ -492,7 +645,8 @@ func (h *{{.ModuleTitle}}Handler) List(c *echo.Context) error {
 		}
 	}
 
-	items, total, err := h.service.List(page, pageSize)
+	actor := buildAuthContext(c)
+	items, total, err := h.service.List(page, pageSize, actor)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
 	}
@@ -500,6 +654,19 @@ func (h *{{.ModuleTitle}}Handler) List(c *echo.Context) error {
 	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data", items, total, page, pageSize)
 }
 
+// ─── GetByID ───────────────────────────────────────────────────────────────────
+// {{.ModuleTitle}}Handler godoc
+//
+//	@Summary		Get {{.ModuleName}}
+//	@Description	Get {{.ModuleName}} by :id
+//	@Tags			{{.ModuleName}}
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		int	true	"{{.ModuleName}} ID"
+//	@Success		200	{object}	response.MyGoResponse{data=dto.{{.ModuleTitle}}Response}
+//	@Router			/{{.ModuleName}}s/{id} [get]
+//
 // GetByID handles GET /api/v1/{{.ModuleName}}s/:id
 func (h *{{.ModuleTitle}}Handler) GetByID(c *echo.Context) error {
 	id, err := parseID(c)
@@ -507,7 +674,8 @@ func (h *{{.ModuleTitle}}Handler) GetByID(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 
-	item, err := h.service.GetByID(id)
+	actor := buildAuthContext(c)
+	item, err := h.service.GetByID(id, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -515,6 +683,19 @@ func (h *{{.ModuleTitle}}Handler) GetByID(c *echo.Context) error {
 	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", item, nil)
 }
 
+// ─── Create ────────────────────────────────────────────────────────────────────
+// {{.ModuleTitle}}Handler godoc
+//
+//	@Summary		Create {{.ModuleName}}
+//	@Description	Create New {{.ModuleName}}
+//	@Tags			{{.ModuleName}}
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		dto.Create{{.ModuleTitle}}Request	true	"Login Request"
+//	@Success		200		{object}	response.MyGoResponse{data=dto.{{.ModuleTitle}}Response}
+//	@Router			/{{.ModuleName}}s [post]
+//
 // Create handles POST /api/v1/{{.ModuleName}}s
 func (h *{{.ModuleTitle}}Handler) Create(c *echo.Context) error {
 	var req dto.Create{{.ModuleTitle}}Request
@@ -526,7 +707,8 @@ func (h *{{.ModuleTitle}}Handler) Create(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 
-	item, err := h.service.Create(&req, getActorID(c))
+	actor := buildAuthContext(c)
+	item, err := h.service.Create(&req, getActorID(c), actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
@@ -534,6 +716,21 @@ func (h *{{.ModuleTitle}}Handler) Create(c *echo.Context) error {
 	return response.Response(c, http.StatusCreated, true, "Data berhasil dibuat", item, nil)
 }
 
+
+// ─── Update ────────────────────────────────────────────────────────────────────
+// {{.ModuleTitle}}Handler godoc
+//
+//	@Summary		Update {{.ModuleName}}
+//	@Description	Update {{.ModuleName}} by :id
+//	@Tags			{{.ModuleName}}
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		int						true	"{{.ModuleName}} ID"
+//	@Param			body	body		dto.Update{{.ModuleTitle}}Request	true	"Login Request"
+//	@Success		200		{object}	response.MyGoResponse{data=dto.{{.ModuleTitle}}Response}
+//	@Router			/{{.ModuleName}}s/{id} [put]
+//
 // Update handles PUT /api/v1/{{.ModuleName}}s/:id
 func (h *{{.ModuleTitle}}Handler) Update(c *echo.Context) error {
 	id, err := parseID(c)
@@ -550,7 +747,8 @@ func (h *{{.ModuleTitle}}Handler) Update(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 
-	item, err := h.service.Update(id, &req, getActorID(c))
+	actor := buildAuthContext(c)
+	item, err := h.service.Update(id, &req, getActorID(c), actor)
 	if err != nil {
 		status := http.StatusBadRequest
 		if err.Error() == "{{.ModuleName}} tidak ditemukan" {
@@ -562,6 +760,19 @@ func (h *{{.ModuleTitle}}Handler) Update(c *echo.Context) error {
 	return response.Response(c, http.StatusOK, true, "Data berhasil diupdate", item, nil)
 }
 
+// ─── Delete ────────────────────────────────────────────────────────────────────
+// {{.ModuleTitle}}Handler godoc
+//
+//	@Summary		Update {{.ModuleName}}
+//	@Description	Update {{.ModuleName}} by :id
+//	@Tags			{{.ModuleName}}
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		int						true	"{{.ModuleName}} ID"
+//	@Success		200		{object}	response.MyGoResponse{}
+//	@Router			/{{.ModuleName}}s/{id} [delete]
+//
 // Delete handles DELETE /api/v1/{{.ModuleName}}s/:id
 func (h *{{.ModuleTitle}}Handler) Delete(c *echo.Context) error {
 	id, err := parseID(c)
@@ -569,7 +780,8 @@ func (h *{{.ModuleTitle}}Handler) Delete(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 
-	if err := h.service.Delete(id); err != nil {
+	actor := buildAuthContext(c)
+	if err := h.service.Delete(id, actor); err != nil {
 		status := http.StatusInternalServerError
 		if err.Error() == "{{.ModuleName}} tidak ditemukan" {
 			status = http.StatusNotFound
@@ -618,20 +830,22 @@ func Drop{{.ModuleTitle}}Table(db *gorm.DB) error {
 }
 `
 
+// ✅ Fix: hapus trailing comma di SQL
 var tmplSQL = `-- Migration: Create {{.ModuleName}}s table
 -- Timestamp: {{.Timestamp}}
 
 CREATE TABLE IF NOT EXISTS {{.ModuleName}}s (
-    id          BIGSERIAL PRIMARY KEY,
+    id          BIGSERIAL    PRIMARY KEY,
     name        VARCHAR(255) NOT NULL,
     description TEXT,
     created_by  BIGINT,
     updated_by  BIGINT,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    deleted_at  TIMESTAMPTZ
 );
 
-
+CREATE INDEX IF NOT EXISTS idx_{{.ModuleName}}s_deleted_at ON {{.ModuleName}}s(deleted_at);
 `
 
 var tmplFactory = `package factories
@@ -669,12 +883,10 @@ func (f *{{.ModuleTitle}}Factory) Make() *models.{{.ModuleTitle}} {
 		name = v.(string)
 	}
 
-	m := &models.{{.ModuleTitle}}{
+	return &models.{{.ModuleTitle}}{
 		Name:        name,
 		Description: &desc,
 	}
-
-	return m
 }
 
 func (f *{{.ModuleTitle}}Factory) MakeMany(count int) []*models.{{.ModuleTitle}} {
@@ -733,7 +945,6 @@ func (s *{{.ModuleTitle}}Seeder) Fresh() error {
 	if err := s.db.Exec("ALTER SEQUENCE {{.ModuleName}}s_id_seq RESTART WITH 1").Error; err != nil {
 		log.Printf("Warning: Gagal reset sequence: %v", err)
 	}
-
 	return s.Run()
 }
 
@@ -794,12 +1005,18 @@ func TruncateTable(db *gorm.DB, tables ...string) {
 }
 `
 
+// ✅ Fix: tambah jwtManager ke Module
 var tmplModule = `package {{.PackageName}}
 
 import (
+	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/contracts"
 	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/handlers"
 	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/repositories"
 	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/services"
+	"{{.ProjectModule}}/internal/shared/utils"
+
+	authContracts "{{.ProjectModule}}/internal/modules/auth/contracts" //auth
+	rbacContracts "{{.ProjectModule}}/internal/modules/rbac/contracts" //rbac
 
 	"github.com/labstack/echo/v5"
 	"gorm.io/gorm"
@@ -807,39 +1024,60 @@ import (
 
 // Module mewakili {{.ModuleName}} module
 type Module struct {
-	db      *gorm.DB
-	handler *handlers.{{.ModuleTitle}}Handler
+	db         *gorm.DB
+	handler    *handlers.{{.ModuleTitle}}Handler
+	jwtManager *utils.JWTManager
+	repo       contracts.Repository
+	rbacRepo   rbacContracts.RBACRepository //RBAC
 }
 
 // NewModule membuat instance module baru dan wire semua layer
-func NewModule(db *gorm.DB) *Module {
+func NewModule(
+	db *gorm.DB, 
+	jwtManager *utils.JWTManager,
+	rbacRepo rbacContracts.RBACRepository, //RBAC
+	authRepo authContracts.AuthRepository, //AUTH
+) *Module {
 	repo := repositories.New{{.ModuleTitle}}Repository(db)
-	svc := services.New{{.ModuleTitle}}Service(repo)
+	svc := services.New{{.ModuleTitle}}Service(
+		repo,
+		rbacRepo,
+		authRepo,
+	)
 	handler := handlers.New{{.ModuleTitle}}Handler(svc)
 
 	return &Module{
-		db:      db,
-		handler: handler,
+		db:         db,
+		handler:    handler,
+		jwtManager: jwtManager,
+		repo:       repo,
+		rbacRepo:   rbacRepo, //RBAC
 	}
 }
 
 // InitRoutes mendaftarkan routes ke echo instance
 func (m *Module) InitRoutes(e *echo.Echo) {
-	RegisterRoutes(e, m.handler)
+	RegisterRoutes(e, m.handler, m.jwtManager, m.db)
 }
 `
 
+// ✅ Fix: tambah JWT middleware di routes
 var tmplRoutes = `package {{.PackageName}}
 
 import (
 	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/handlers"
+	authMiddlewares "{{.ProjectModule}}/internal/modules/auth/middlewares"
+	"{{.ProjectModule}}/internal/shared/utils"
 
 	"github.com/labstack/echo/v5"
+	"gorm.io/gorm"
+	
 )
 
 // RegisterRoutes mendaftarkan semua routes untuk module {{.ModuleName}}
-func RegisterRoutes(e *echo.Echo, h *handlers.{{.ModuleTitle}}Handler) {
-	g := e.Group("/api/v1/{{.ModuleName}}s")
+func RegisterRoutes(e *echo.Echo, h *handlers.{{.ModuleTitle}}Handler, jwtManager *utils.JWTManager, db *gorm.DB) {
+	jwt := authMiddlewares.JWTMiddleware(jwtManager, db)
+	g := e.Group("/api/v1/{{.ModuleName}}s", jwt)
 	g.GET("", h.List)
 	g.GET("/:id", h.GetByID)
 	g.POST("", h.Create)
@@ -848,21 +1086,32 @@ func RegisterRoutes(e *echo.Echo, h *handlers.{{.ModuleTitle}}Handler) {
 }
 `
 
+// ✅ Fix: tambah SetConfig dan build jwtManager dari config
 var tmplRegister = `package {{.PackageName}}
 
 import (
 	"database/sql"
 
+	"{{.ProjectModule}}/config"
 	"{{.ProjectModule}}/internal/apps"
 	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/migrations"
 	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/models"
+	"{{.ProjectModule}}/internal/shared/utils"
+
+	authContracts "{{.ProjectModule}}/internal/modules/auth/contracts"
+	authRepositories "{{.ProjectModule}}/internal/modules/auth/repositories"
+	rbacContracts "{{.ProjectModule}}/internal/modules/rbac/contracts"
+	rbacRepositories "{{.ProjectModule}}/internal/modules/rbac/repositories"
 
 	"github.com/labstack/echo/v5"
 	"gorm.io/gorm"
 )
 
 type registryModule struct {
-	db *gorm.DB
+	db  *gorm.DB
+	cfg *config.Config
+	rbacRepo rbacContracts.RBACRepository //RBAC
+	authRepo authContracts.AuthRepository //AUTH
 }
 
 // init dipanggil otomatis saat package di-import (blank import)
@@ -870,12 +1119,23 @@ func init() {
 	apps.Register(&registryModule{})
 }
 
-func (r *registryModule) SetDB(db *gorm.DB) {
-	r.db = db
+func (r *registryModule) SetDB(db *gorm.DB)            { 
+	r.db = db 
+	r.rbacRepo = rbacRepositories.NewRBACRepository(db) //RBAC
+	r.authRepo = authRepositories.NewAuthRepository(db) //AUTH
+}
+func (r *registryModule) SetConfig(cfg *config.Config) { 
+	r.cfg = cfg
 }
 
 func (r *registryModule) InitRoutes(e *echo.Echo) {
-	NewModule(r.db).InitRoutes(e)
+	jwtManager := utils.NewJWTManager(
+		r.cfg.JWTSecret,
+		r.cfg.JWTIssuer,
+		r.cfg.JWTAccessTokenExpMinutes,
+		r.cfg.JWTRefreshTokenExpDays,
+	)
+	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo).InitRoutes(e)
 }
 
 func (r *registryModule) Models() []interface{} {
@@ -885,7 +1145,7 @@ func (r *registryModule) Models() []interface{} {
 }
 
 func (r *registryModule) SeedData(db *gorm.DB) error {
-	return nil // Isi jika butuh default seed
+	return nil
 }
 
 func (r *registryModule) MigrateSQL(sqlDB *sql.DB) error {
