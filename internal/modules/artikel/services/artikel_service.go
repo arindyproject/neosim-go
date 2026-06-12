@@ -142,7 +142,7 @@ func (s *service) GetByID(id int64, actor artikelContracts.AuthContext) (*dto.Ar
 }
 
 // ------------ List --------------------------------------------------------------
-func (s *service) List(page, pageSize int, actor artikelContracts.AuthContext) ([]dto.ArtikelResponse, int64, error) {
+func (s *service) List(page, pageSize int,filter *dto.FilterArtikelRequest, actor artikelContracts.AuthContext) ([]dto.ArtikelResponse, int64, error) {
 	// ─── Permission ─────────────────────────────────────────────────────────────
 	can, err := s.canReadArtikel(actor)
 	if err != nil {
@@ -160,7 +160,7 @@ func (s *service) List(page, pageSize int, actor artikelContracts.AuthContext) (
 	if pageSize < 1 || pageSize > 100 {
 		pageSize = 10
 	}
-	items, total, err := s.repo.List(page, pageSize)
+	items, total, err := s.repo.List(page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}

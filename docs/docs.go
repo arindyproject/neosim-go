@@ -43,6 +43,12 @@ const docTemplate = `{
                 "summary": "Get list of users",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Filter by name (partial match)",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "description": "Page number",
                         "name": "page",

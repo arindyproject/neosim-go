@@ -11,3 +11,9 @@ type UpdateArtikelRequest struct {
 	Name        *string `json:"name" validate:"omitempty,min=1,max=255"`
 	Description *string `json:"description" validate:"omitempty,max=500"`
 }
+
+// FilterArtikelRequest request body untuk filter artikel
+type FilterArtikelRequest struct {
+	Name        string `query:"name"`
+}
+

@@ -15,7 +15,7 @@ type AuthContext struct {
 type Repository interface {
 	Create(m *models.Artikel) error
 	GetByID(id int64) (*models.Artikel, error)
-	List(page, pageSize int) ([]models.Artikel, int64, error)
+	List(page, pageSize int, filter *dto.FilterArtikelRequest) ([]models.Artikel, int64, error)
 	Update(m *models.Artikel) error
 	Delete(id int64) error
 }
@@ -24,7 +24,7 @@ type Repository interface {
 type Service interface {
 	Create(req *dto.CreateArtikelRequest, createdBy *int64, actor AuthContext) (*dto.ArtikelResponse, error)
 	GetByID(id int64 , actor AuthContext) (*dto.ArtikelResponse, error)
-	List(page, pageSize int, actor AuthContext) ([]dto.ArtikelResponse, int64, error)
+	List(page, pageSize int,filter *dto.FilterArtikelRequest, actor AuthContext) ([]dto.ArtikelResponse, int64, error)
 	Update(id int64, req *dto.UpdateArtikelRequest, updatedBy *int64, actor AuthContext) (*dto.ArtikelResponse, error)
 	Delete(id int64, actor AuthContext) error
 }

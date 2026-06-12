@@ -58,6 +58,7 @@ func getActorID(c *echo.Context) *int64 {
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
+//	@Param			name			query		string	false	"Filter by name (partial match)"
 //	@Param			page			query		int		false	"Page number"
 //	@Param			page_size		query		int		false	"Page size"
 //	@Success		200				{object}	response.MyGoResponse{data=[]dto.ArtikelResponse}
@@ -66,6 +67,11 @@ func getActorID(c *echo.Context) *int64 {
 // List handles GET /api/v1/artikels
 func (h *ArtikelHandler) List(c *echo.Context) error {
 	page, pageSize := 1, 10
+
+	// Mengambil query parameter untuk filter
+	filter := dto.FilterArtikelRequest{
+		Name:     c.QueryParam("name"),
+	}
 
 	if p := c.QueryParam("page"); p != "" {
 		if v, err := strconv.Atoi(p); err == nil && v > 0 {
@@ -79,7 +85,7 @@ func (h *ArtikelHandler) List(c *echo.Context) error {
 	}
 
 	actor := buildAuthContext(c)
-	items, total, err := h.service.List(page, pageSize, actor)
+	items, total, err := h.service.List(page, pageSize,&filter, actor)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
 	}

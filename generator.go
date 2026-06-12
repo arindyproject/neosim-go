@@ -68,18 +68,29 @@ type fileEntry struct {
 
 func buildFileList(cfg ModuleConfig, base string) []fileEntry {
 	return []fileEntry{
+		//contracts---------------------------------------------------------------
 		{filepath.Join(base, "contracts", "interfaces.go"), tmplContracts},
+		//dto---------------------------------------------------------------------
 		{filepath.Join(base, "dto", fmt.Sprintf("%s_request.go", cfg.ModuleName)), tmplRequest},
 		{filepath.Join(base, "dto", fmt.Sprintf("%s_response.go", cfg.ModuleName)), tmplResponse},
+		//models------------------------------------------------------------------
 		{filepath.Join(base, "models", fmt.Sprintf("%s.go", cfg.ModuleName)), tmplModel},
+		//repositories------------------------------------------------------------
 		{filepath.Join(base, "repositories", fmt.Sprintf("%s_repository.go", cfg.ModuleName)), tmplRepository},
+		//services----------------------------------------------------------------
 		{filepath.Join(base, "services", fmt.Sprintf("%s_service.go", cfg.ModuleName)), tmplService},
+		//handlers----------------------------------------------------------------
 		{filepath.Join(base, "handlers", fmt.Sprintf("%s_handler.go", cfg.ModuleName)), tmplHandler},
+		//migrations--------------------------------------------------------------
 		{filepath.Join(base, "migrations", fmt.Sprintf("%s_migrate.go", cfg.ModuleName)), tmplMigration},
 		{filepath.Join(base, "migrations", fmt.Sprintf("001_create_%s_table.sql", cfg.ModuleName)), tmplSQL},
+		//tests-------------------------------------------------------------------
 		{filepath.Join(base, "tests", "factories", fmt.Sprintf("%s_factory.go", cfg.ModuleName)), tmplFactory},
 		{filepath.Join(base, "tests", "seeders", fmt.Sprintf("%s_seeder.go", cfg.ModuleName)), tmplSeeder},
 		{filepath.Join(base, "tests", "helpers", "db_helper.go"), tmplDBHelper},
+		{filepath.Join(base, "tests", "mocks", fmt.Sprintf("%s_repository_mock.go", cfg.ModuleName)), tmplModuleServiceMock},
+		{filepath.Join(base, "tests", fmt.Sprintf("%s_service_test.go", cfg.ModuleName)), tmplModuleServiceTest},
+		//main--------------------------------------------------------------------
 		{filepath.Join(base, "module.go"), tmplModule},
 		{filepath.Join(base, "routes.go"), tmplRoutes},
 		{filepath.Join(base, "register.go"), tmplRegister},
@@ -166,6 +177,7 @@ func printNextSteps(cfg ModuleConfig) {
 
 // ─── Templates ─────────────────────────────────────────────────────────────────
 
+// Contracts-----------------------------------------------------------
 var tmplContracts = `package contracts
 
 import (
@@ -183,7 +195,7 @@ type AuthContext struct {
 type Repository interface {
 	Create(m *models.{{.ModuleTitle}}) error
 	GetByID(id int64) (*models.{{.ModuleTitle}}, error)
-	List(page, pageSize int) ([]models.{{.ModuleTitle}}, int64, error)
+	List(page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request) ([]models.{{.ModuleTitle}}, int64, error)
 	Update(m *models.{{.ModuleTitle}}) error
 	Delete(id int64) error
 }
@@ -192,12 +204,13 @@ type Repository interface {
 type Service interface {
 	Create(req *dto.Create{{.ModuleTitle}}Request, createdBy *int64, actor AuthContext) (*dto.{{.ModuleTitle}}Response, error)
 	GetByID(id int64 , actor AuthContext) (*dto.{{.ModuleTitle}}Response, error)
-	List(page, pageSize int, actor AuthContext) ([]dto.{{.ModuleTitle}}Response, int64, error)
+	List(page, pageSize int,filter *dto.Filter{{.ModuleTitle}}Request, actor AuthContext) ([]dto.{{.ModuleTitle}}Response, int64, error)
 	Update(id int64, req *dto.Update{{.ModuleTitle}}Request, updatedBy *int64, actor AuthContext) (*dto.{{.ModuleTitle}}Response, error)
 	Delete(id int64, actor AuthContext) error
 }
 `
 
+// Request-------------------------------------------------------------
 var tmplRequest = `package dto
 
 // Create{{.ModuleTitle}}Request request body untuk membuat {{.ModuleName}} baru
@@ -211,8 +224,15 @@ type Update{{.ModuleTitle}}Request struct {
 	Name        *string ` + "`" + `json:"name" validate:"omitempty,min=1,max=255"` + "`" + `
 	Description *string ` + "`" + `json:"description" validate:"omitempty,max=500"` + "`" + `
 }
+
+// Filter{{.ModuleTitle}}Request request body untuk filter {{.ModuleName}}
+type Filter{{.ModuleTitle}}Request struct {
+	Name        string ` + "`" + `query:"name"` + "`" + `
+}
+
 `
 
+// Response------------------------------------------------------------
 var tmplResponse = `package dto
 
 import (
@@ -255,6 +275,7 @@ func To{{.ModuleTitle}}ListResponse(items []models.{{.ModuleTitle}}) []{{.Module
 }
 `
 
+// Model---------------------------------------------------------------
 var tmplModel = `package models
 
 import (
@@ -280,6 +301,7 @@ func ({{.ModuleTitle}}) TableName() string {
 }
 `
 
+// Repository----------------------------------------------------------
 var tmplRepository = `package repositories
 
 import (
@@ -287,6 +309,7 @@ import (
 
 	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/contracts"
 	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/models"
+	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/dto"
 
 	"gorm.io/gorm"
 )
@@ -313,17 +336,30 @@ func (r *repository) GetByID(id int64) (*models.{{.ModuleTitle}}, error) {
 	return &m, result.Error
 }
 
-func (r *repository) List(page, pageSize int) ([]models.{{.ModuleTitle}}, int64, error) {
+func (r *repository) List(page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request) ([]models.{{.ModuleTitle}}, int64, error) {
 	var items []models.{{.ModuleTitle}}
 	var total int64
-	offset := (page - 1) * pageSize
 
-	if err := r.db.Model(&models.{{.ModuleTitle}}{}).Where("deleted_at IS NULL").Count(&total).Error; err != nil {
+	//------------------------------------------------------------
+	// 1. Inisialisasi basis query & pastikan record yang di-soft delete tidak ikut terbawa
+	query := r.db.Model(&models.{{.ModuleTitle}}{}).Where("deleted_at IS NULL")
+
+	// 2. Filter Teks (Menggunakan ILIKE untuk case-insensitive)
+	if filter.Name != "" {
+		query = query.Where("name ILIKE ?", "%"+filter.Name+"%")
+	}
+	
+	// 3. Hitung total data berdasarkan filter yang aktif
+	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
-	if err := r.db.Where("deleted_at IS NULL").Offset(offset).Limit(pageSize).Find(&items).Error; err != nil {
+
+	// 5. Ambil data dengan paginasi dan sorting
+	offset := (page - 1) * pageSize
+	if err := query.Offset(offset).Limit(pageSize).Order("created_at DESC").Find(&items).Error; err != nil {
 		return nil, 0, err
 	}
+
 	return items, total, nil
 }
 
@@ -336,6 +372,7 @@ func (r *repository) Delete(id int64) error {
 }
 `
 
+// Service-------------------------------------------------------------
 var tmplService = `package services
 
 import (
@@ -480,7 +517,7 @@ func (s *service) GetByID(id int64, actor {{.ModuleName}}Contracts.AuthContext) 
 }
 
 // ------------ List --------------------------------------------------------------
-func (s *service) List(page, pageSize int, actor {{.ModuleName}}Contracts.AuthContext) ([]dto.{{.ModuleTitle}}Response, int64, error) {
+func (s *service) List(page, pageSize int,filter *dto.Filter{{.ModuleTitle}}Request, actor {{.ModuleName}}Contracts.AuthContext) ([]dto.{{.ModuleTitle}}Response, int64, error) {
 	// ─── Permission ─────────────────────────────────────────────────────────────
 	can, err := s.canRead{{.ModuleTitle}}(actor)
 	if err != nil {
@@ -498,7 +535,7 @@ func (s *service) List(page, pageSize int, actor {{.ModuleName}}Contracts.AuthCo
 	if pageSize < 1 || pageSize > 100 {
 		pageSize = 10
 	}
-	items, total, err := s.repo.List(page, pageSize)
+	items, total, err := s.repo.List(page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -564,7 +601,7 @@ func (s *service) Delete(id int64, actor {{.ModuleName}}Contracts.AuthContext) e
 }
 `
 
-// ✅ Fix: c echo.Context (bukan *echo.Context), c.PathParam (bukan c.Param)
+// Handler-------------------------------------------------------------
 var tmplHandler = `package handlers
 
 import (
@@ -625,6 +662,7 @@ func getActorID(c *echo.Context) *int64 {
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
+//	@Param			name			query		string	false	"Filter by name (partial match)"
 //	@Param			page			query		int		false	"Page number"
 //	@Param			page_size		query		int		false	"Page size"
 //	@Success		200				{object}	response.MyGoResponse{data=[]dto.{{.ModuleTitle}}Response}
@@ -633,6 +671,11 @@ func getActorID(c *echo.Context) *int64 {
 // List handles GET /api/v1/{{.ModuleName}}s
 func (h *{{.ModuleTitle}}Handler) List(c *echo.Context) error {
 	page, pageSize := 1, 10
+
+	// Mengambil query parameter untuk filter
+	filter := dto.Filter{{.ModuleTitle}}Request{
+		Name:     c.QueryParam("name"),
+	}
 
 	if p := c.QueryParam("page"); p != "" {
 		if v, err := strconv.Atoi(p); err == nil && v > 0 {
@@ -646,7 +689,7 @@ func (h *{{.ModuleTitle}}Handler) List(c *echo.Context) error {
 	}
 
 	actor := buildAuthContext(c)
-	items, total, err := h.service.List(page, pageSize, actor)
+	items, total, err := h.service.List(page, pageSize,&filter, actor)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
 	}
@@ -793,6 +836,7 @@ func (h *{{.ModuleTitle}}Handler) Delete(c *echo.Context) error {
 }
 `
 
+// Migration-----------------------------------------------------------
 var tmplMigration = `package migrations
 
 import (
@@ -830,7 +874,7 @@ func Drop{{.ModuleTitle}}Table(db *gorm.DB) error {
 }
 `
 
-// ✅ Fix: hapus trailing comma di SQL
+// Sql-----------------------------------------------------------------
 var tmplSQL = `-- Migration: Create {{.ModuleName}}s table
 -- Timestamp: {{.Timestamp}}
 
@@ -848,6 +892,7 @@ CREATE TABLE IF NOT EXISTS {{.ModuleName}}s (
 CREATE INDEX IF NOT EXISTS idx_{{.ModuleName}}s_deleted_at ON {{.ModuleName}}s(deleted_at);
 `
 
+// Factories-----------------------------------------------------------
 var tmplFactory = `package factories
 
 import (
@@ -898,6 +943,7 @@ func (f *{{.ModuleTitle}}Factory) MakeMany(count int) []*models.{{.ModuleTitle}}
 }
 `
 
+// Seeders-------------------------------------------------------------
 var tmplSeeder = `package seeders
 
 import (
@@ -967,6 +1013,7 @@ func (s *{{.ModuleTitle}}Seeder) seedDefault(name string) error {
 }
 `
 
+// Helpers-------------------------------------------------------------
 var tmplDBHelper = `package helpers
 
 import (
@@ -1005,7 +1052,7 @@ func TruncateTable(db *gorm.DB, tables ...string) {
 }
 `
 
-// ✅ Fix: tambah jwtManager ke Module
+// Module--------------------------------------------------------------
 var tmplModule = `package {{.PackageName}}
 
 import (
@@ -1061,7 +1108,7 @@ func (m *Module) InitRoutes(e *echo.Echo) {
 }
 `
 
-// ✅ Fix: tambah JWT middleware di routes
+// Route---------------------------------------------------------------
 var tmplRoutes = `package {{.PackageName}}
 
 import (
@@ -1086,7 +1133,7 @@ func RegisterRoutes(e *echo.Echo, h *handlers.{{.ModuleTitle}}Handler, jwtManage
 }
 `
 
-// ✅ Fix: tambah SetConfig dan build jwtManager dari config
+// Register------------------------------------------------------------
 var tmplRegister = `package {{.PackageName}}
 
 import (
@@ -1151,4 +1198,94 @@ func (r *registryModule) SeedData(db *gorm.DB) error {
 func (r *registryModule) MigrateSQL(sqlDB *sql.DB) error {
 	return migrations.Migrate{{.ModuleTitle}}WithSQL(sqlDB)
 }
+`
+
+// Tests---------------------------------------------------------------
+// -----Mocks----------------------------------------------------------
+// -----------Module Service Mock--------------------------------------
+var tmplModuleServiceMock = `
+package mocks
+
+import (
+	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/dto"
+	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/models"
+	"github.com/stretchr/testify/mock"
+)
+
+type {{.ModuleTitle}}RepositoryMock struct {
+	mock.Mock
+}
+
+func (m *{{.ModuleTitle}}RepositoryMock) Create(user *models.{{.ModuleTitle}}) error {
+	args := m.Called(user)
+	return args.Error(0)
+}
+
+func (m *{{.ModuleTitle}}RepositoryMock) GetByID(id int64) (*models.{{.ModuleTitle}}, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.{{.ModuleTitle}}), args.Error(1)
+}
+
+func (m *{{.ModuleTitle}}RepositoryMock) List(page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request) ([]models.{{.ModuleTitle}}, int64, error) {
+	args := m.Called(page, pageSize, filter)
+	return args.Get(0).([]models.{{.ModuleTitle}}), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *{{.ModuleTitle}}RepositoryMock) Update(item *models.{{.ModuleTitle}}) error {
+	args := m.Called(item)
+	return args.Error(0)
+}
+
+func (m *{{.ModuleTitle}}RepositoryMock) Delete(id int64, deletedBy int64, reason string) error {
+	args := m.Called(id, deletedBy, reason)
+	return args.Error(0)
+}
+`
+
+// -----Tests----------------------------------------------------------
+var tmplModuleServiceTest = `
+package tests
+
+import (
+	"fmt"
+	"net/http"
+	"os"
+	"strings"
+	"testing"
+
+	"golang.org/x/crypto/bcrypt"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
+
+
+	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/dto"
+	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/models"
+	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/services"
+	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/tests/factories"
+	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/tests/mocks"
+
+	{{.ModuleName}}Contracts "{{.ProjectModule}}/internal/modules/{{.ModuleName}}/contracts"	
+)
+
+// ─── Suite ─────────────────────────────────────────────────────────────────────
+func TestMain(m *testing.M) {
+	fmt.Println("\033[34m" + strings.Repeat("─", 55) + "\033[0m")
+	fmt.Println("\033[35m  {{.ModuleTitle}} Service Test Suite\033[0m")
+	fmt.Println("\033[34m" + strings.Repeat("─", 55) + "\033[0m")
+
+	code := m.Run()
+
+	if code == 0 {
+		fmt.Println("\n\033[32m✓  PASS\033[0m  {{.ProjectModule}}/internal/modules/{{.ModuleName}}")
+	} else {
+		fmt.Println("\n\033[31m✗  FAIL\033[0m  {{.ProjectModule}}/internal/modules/{{.ModuleName}}")
+	}
+
+	os.Exit(code)
+}
+
+
 `

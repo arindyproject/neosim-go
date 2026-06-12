@@ -5,6 +5,7 @@ import (
 
 	"neosim_go/internal/modules/artikel/contracts"
 	"neosim_go/internal/modules/artikel/models"
+	"neosim_go/internal/modules/artikel/dto"
 
 	"gorm.io/gorm"
 )
@@ -31,17 +32,30 @@ func (r *repository) GetByID(id int64) (*models.Artikel, error) {
 	return &m, result.Error
 }
 
-func (r *repository) List(page, pageSize int) ([]models.Artikel, int64, error) {
+func (r *repository) List(page, pageSize int, filter *dto.FilterArtikelRequest) ([]models.Artikel, int64, error) {
 	var items []models.Artikel
 	var total int64
-	offset := (page - 1) * pageSize
 
-	if err := r.db.Model(&models.Artikel{}).Where("deleted_at IS NULL").Count(&total).Error; err != nil {
+	//------------------------------------------------------------
+	// 1. Inisialisasi basis query & pastikan record yang di-soft delete tidak ikut terbawa
+	query := r.db.Model(&models.Artikel{}).Where("deleted_at IS NULL")
+
+	// 2. Filter Teks (Menggunakan ILIKE untuk case-insensitive)
+	if filter.Name != "" {
+		query = query.Where("name ILIKE ?", "%"+filter.Name+"%")
+	}
+	
+	// 3. Hitung total data berdasarkan filter yang aktif
+	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
-	if err := r.db.Where("deleted_at IS NULL").Offset(offset).Limit(pageSize).Find(&items).Error; err != nil {
+
+	// 5. Ambil data dengan paginasi dan sorting
+	offset := (page - 1) * pageSize
+	if err := query.Offset(offset).Limit(pageSize).Order("created_at DESC").Find(&items).Error; err != nil {
 		return nil, 0, err
 	}
+
 	return items, total, nil
 }
 

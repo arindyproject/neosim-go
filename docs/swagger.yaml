@@ -483,6 +483,10 @@ paths:
       - application/json
       description: Get paginated list of users
       parameters:
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
       - description: Page number
         in: query
         name: page
