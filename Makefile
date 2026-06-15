@@ -1,78 +1,49 @@
 # Makefile for Neosim Go Project
 
-#.PHONY: build run migrate migrate-dev migrate-prod clean test
 .PHONY: build run migrate migrate-dev migrate-prod migrate-sql migrate-sql-prod \
         clean create-migration db-stats migrate-fresh-dev migrate-fresh-dev-sql \
         migrate-fresh-prod migrate-fresh-prod-sql seed seed-prod seed-fresh \
-        migrate-seed migrate-fresh-seed gen-jwt-dev gen-jwt-prod test test-auth
+        migrate-seed migrate-fresh-seed gen-jwt-dev gen-jwt-prod test test-auth \
+        test-users test-rbac swagger-install swagger-gen swagger swagger-fmt \
+        run-api gen-module help
 
-# Build the API
-build:
+# ─── Build & Run ───────────────────────────────────────────────────────────────
+
+build: ## Build the API binary
 	go build -o bin/api ./cmd/api
 
-# Run the API
-run:
+run: ## Run the API locally
 	go run ./cmd/api/main.go
 
+# ─── Migrations ────────────────────────────────────────────────────────────────
 
-
-# Run migrations using GORM auto-migration (development)
-migrate-dev:
+migrate-dev: ## Run GORM auto-migration for DEV
 	@echo "Running GORM auto-migration (development)..."
 	go run ./cmd/migrate/main.go -env=DEV -type=gorm
 
-# Run migrations using GORM auto-migration (production)
-migrate-prod:
+migrate-prod: ## Run GORM auto-migration for PROD
 	@echo "Running GORM auto-migration (production)..."
 	go run ./cmd/migrate/main.go -env=PROD -type=gorm
 
-# Run manual SQL migrations (development)
-migrate-sql:
+migrate-sql: ## Run SQL-based migrations for DEV
 	@echo "Running SQL-based migrations (development)..."
 	go run ./cmd/migrate/main.go -env=DEV -type=sql
 
-# Run manual SQL migrations (production)
-migrate-sql-prod:
+migrate-sql-prod: ## Run SQL-based migrations for PROD
 	@echo "Running SQL-based migrations (production)..."
 	go run ./cmd/migrate/main.go -env=PROD -type=sql
 
-# Clean build artifacts
-clean:
-	rm -rf bin/
-
-# Run tests
-test-auth:
-	@go test -json ./internal/modules/auth/tests | gotestfmt
-
-test-users:
-	@go test -json ./internal/modules/users/tests | gotestfmt
-
-test-rbac:
-	@go test -json ./internal/modules/rbac/tests | gotestfmt
-
-test-artikel:
-	@go test -json ./internal/modules/artikel/tests
-
-test:
-	@go test -json ./internal/modules/.../tests 
-
-# Create new migration file (example)
-create-migration:
+create-migration: ## Create a new migration file
 	@echo "Creating new migration file..."
 	@read -p "Enter migration name: " name; \
 	touch internal/module/$$name/migrations/$$(date +%Y%m%d%H%M%S)_$$name.go
 
-# Show database stats
-db-stats:
+db-stats: ## Show database connection stats
 	go run -c 'package main; import ("fmt"; "neosim_go/config"); func main() { cfg := config.LoadConfig("DEV"); db, _ := cfg.ConnectDB(); defer config.CloseDB(db); stats, _ := config.GetDBStats(db); fmt.Printf("%+v\n", stats) }'
 
+# ─── Fresh Migrations (Drop All + Re-migrate) ─────────────────────────────────
 
-
-# ============================================================
-# Fresh Migrations (Drop All + Re-migrate)
-# ============================================================
-
-migrate-fresh-dev:
+migrate-fresh-dev: ## Drop all tables and re-migrate (DEV)
 	@echo "⚠️  WARNING: This will DROP ALL TABLES on DEV and re-migrate!"
 	@read -p "Are you sure? (yes/no): " confirm; \
 	if [ "$$confirm" = "yes" ]; then \
@@ -82,7 +53,7 @@ migrate-fresh-dev:
 		echo "❌ Aborted."; \
 	fi
 
-migrate-fresh-dev-sql:
+migrate-fresh-dev-sql: ## Drop all tables and re-migrate SQL (DEV)
 	@echo "⚠️  WARNING: This will DROP ALL TABLES on DEV and re-migrate!"
 	@read -p "Are you sure? (yes/no): " confirm; \
 	if [ "$$confirm" = "yes" ]; then \
@@ -92,7 +63,7 @@ migrate-fresh-dev-sql:
 		echo "❌ Aborted."; \
 	fi
 
-migrate-fresh-prod:
+migrate-fresh-prod: ## Drop all tables and re-migrate (PROD) - DANGER
 	@echo "🚨 DANGER: This will DROP ALL TABLES on PRODUCTION!"
 	@echo "🚨 This action is IRREVERSIBLE!"
 	@read -p "Type 'PRODUCTION' to confirm: " confirm; \
@@ -108,7 +79,7 @@ migrate-fresh-prod:
 		echo "❌ Aborted. You must type 'PRODUCTION' exactly."; \
 	fi
 
-migrate-fresh-prod-sql:
+migrate-fresh-prod-sql: ## Drop all tables and re-migrate SQL (PROD) - DANGER
 	@echo "🚨 DANGER: This will DROP ALL TABLES on PRODUCTION!"
 	@echo "🚨 This action is IRREVERSIBLE!"
 	@read -p "Type 'PRODUCTION' to confirm: " confirm; \
@@ -124,21 +95,17 @@ migrate-fresh-prod-sql:
 		echo "❌ Aborted. You must type 'PRODUCTION' exactly."; \
 	fi
 
-
 # ─── Seeder ────────────────────────────────────────────────────────────────────
 
-# Jalankan seeder (skip jika data sudah ada)
-seed:
+seed: ## Run seeder (DEV)
 	@echo "🌱 Menjalankan seeder..."
 	go run ./cmd/seed/main.go -env=DEV
 
-# Jalankan seeder di production
-seed-prod:
+seed-prod: ## Run seeder (PROD)
 	@echo "🌱 Menjalankan seeder (PROD)..."
 	go run ./cmd/seed/main.go -env=PROD
 
-# Fresh seed: hapus semua data lalu seed ulang (DEV only)
-seed-fresh:
+seed-fresh: ## Delete all data and re-seed (DEV)
 	@echo "⚠️  WARNING: Ini akan menghapus semua data dan seed ulang!"
 	@read -p "Are you sure? (yes/no): " confirm; \
 	if [ "$$confirm" = "yes" ]; then \
@@ -148,14 +115,12 @@ seed-fresh:
 		echo "❌ Aborted."; \
 	fi
 
-# Migrate + seed sekaligus (DEV)
-migrate-seed:
+migrate-seed: ## Migrate and seed (DEV)
 	@echo "🔄 Migrate + seed (DEV)..."
 	go run ./cmd/migrate/main.go -env=DEV -type=gorm
 	go run ./cmd/seed/main.go -env=DEV
 
-# Fresh migrate + seed (DEV)
-migrate-fresh-seed:
+migrate-fresh-seed: ## Fresh migrate and seed (DEV)
 	@echo "⚠️  WARNING: Drop semua tabel, migrate ulang, dan seed!"
 	@read -p "Are you sure? (yes/no): " confirm; \
 	if [ "$$confirm" = "yes" ]; then \
@@ -166,51 +131,40 @@ migrate-fresh-seed:
 		echo "❌ Aborted."; \
 	fi
 
+# ─── JWT Secret Generation ─────────────────────────────────────────────────────
 
-
-# Tambahkan ke baris .PHONY di bagian atas:
-# .PHONY: ... gen-jwt-dev gen-jwt-prod
-
-# ─── JWT Secret Generation ──────────────────────────────────────────────────
-
-# Generate dan update JWT_SECRET di config/.env.dev
-gen-jwt-dev:
+gen-jwt-dev: ## Generate and update JWT_SECRET for DEV
 	@echo "Generating JWT Secret for DEV..."
 	@NEW_SECRET=$$(openssl rand -base64 32 | head -c 32); \
 	if [ -f config/.env.dev ]; then \
 		sed -i "s|^JWT_SECRET=.*|JWT_SECRET=$$NEW_SECRET|" config/.env.dev; \
 		echo "✅ JWT_SECRET berhasil diupdate di config/.env.dev"; \
-    else \
-        echo "❌ File config/.env.dev tidak ditemukan!"; \
-        echo "Secret baru Anda: $$NEW_SECRET"; \
-    fi
+	else \
+		echo "❌ File config/.env.dev tidak ditemukan!"; \
+		echo "Secret baru Anda: $$NEW_SECRET"; \
+	fi
 
-# Generate dan update JWT_SECRET di config/.env.prod
-gen-jwt-prod:
+gen-jwt-prod: ## Generate and update JWT_SECRET for PROD
 	@echo "Generating JWT Secret for PROD..."
-    @NEW_SECRET=$$(openssl rand -base64 48 | head -c 48); \
-    if [ -f config/.env.prod ]; then \
-        sed -i "s|^JWT_SECRET=.*|JWT_SECRET=$$NEW_SECRET|" config/.env.prod; \
-        echo "✅ JWT_SECRET berhasil diupdate di config/.env.prod"; \
-    else \
-        echo "❌ File config/.env.prod tidak ditemukan!"; \
-        echo "Secret baru Anda: $$NEW_SECRET"; \
-    fi
-
+	@NEW_SECRET=$$(openssl rand -base64 48 | head -c 48); \
+	if [ -f config/.env.prod ]; then \
+		sed -i "s|^JWT_SECRET=.*|JWT_SECRET=$$NEW_SECRET|" config/.env.prod; \
+		echo "✅ JWT_SECRET berhasil diupdate di config/.env.prod"; \
+	else \
+		echo "❌ File config/.env.prod tidak ditemukan!"; \
+		echo "Secret baru Anda: $$NEW_SECRET"; \
+	fi
 
 # ─── Swagger ───────────────────────────────────────────────────────────────────
 
-# Install swag CLI
-swagger-install:
+swagger-install: ## Install swag CLI
 	@echo "📦 Installing swag CLI..."
 	go install github.com/swaggo/swag/cmd/swag@latest
 	@echo "✅ swag installed. Pastikan $(go env GOPATH)/bin ada di PATH."
 
-# Generate swagger docs dari anotasi handler
-# Ambil path binari secara dinamis
 GO_BIN := $(shell go env GOPATH)/bin
 
-swagger-gen:
+swagger-gen: ## Generate swagger docs from annotations
 	@echo "📝 Generating Swagger docs..."
 	$(GO_BIN)/swag init \
 		--generalInfo cmd/api/main.go \
@@ -219,19 +173,14 @@ swagger-gen:
 		--parseInternal
 	@echo "✅ Swagger docs generated di folder docs/"
 
-# Shortcut: generate + run
-swagger:
+swagger: ## Generate swagger docs and run API
 	@make swagger-gen
 	@make run
 
-# Format komentar swagger (opsional)
-swagger-fmt:
+swagger-fmt: ## Format swagger comments
 	swag fmt
 
-
-
-# Run the API and generate OpenAPI
-run-api:
+run-api: ## Generate Swagger docs and run the API
 	@echo "📝 Generating Swagger docs..."
 	$(GO_BIN)/swag init \
 		--generalInfo cmd/api/main.go \
@@ -240,3 +189,51 @@ run-api:
 		--parseInternal
 	@echo "✅ Swagger docs generated di folder docs/"
 	go run ./cmd/api/main.go
+
+# ─── Code Generator ────────────────────────────────────────────────────────────
+
+gen-module: ## Generate a new module (usage: make gen-module name=artikel add=kategori)
+	@echo "🚀 Generating new module..."
+	@if [ -z "$(name)" ]; then \
+		echo "❌ Error: 'name' is required. Usage: make gen-module name=artikel [add=kategori]"; \
+		exit 1; \
+	fi
+	@if [ -z "$(add)" ]; then \
+		echo "📦 Creating main module: $(name)"; \
+		go run generator.go -name=$(name); \
+	else \
+		echo "📦 Creating sub-module: $(name)/$(add)"; \
+		go run generator.go -name=$(name) -add=$(add); \
+	fi
+
+# ─── Testing ───────────────────────────────────────────────────────────────────
+
+test-auth: ## Run tests for auth module
+	@go test -json ./internal/modules/auth/tests | gotestfmt
+
+test-users: ## Run tests for users module
+	@go test -json ./internal/modules/users/tests | gotestfmt
+
+test-rbac: ## Run tests for rbac module
+	@go test -json ./internal/modules/rbac/tests | gotestfmt
+
+test: ## Run all tests
+	@go test -json ./internal/modules/.../tests | gotestfmt
+	@go test -json ./internal/modules/.../.../tests | gotestfmt
+
+# ─── Utilities ─────────────────────────────────────────────────────────────────
+
+clean: ## Clean build artifacts
+	rm -rf bin/
+
+# ─── Help ──────────────────────────────────────────────────────────────────────
+
+help: ## Display this help message
+	@echo "📚 Available commands in Makefile:"
+	@echo ""
+	@grep -E '^[a-zA-Z_-]+: ## ' $(MAKEFILE_LIST) | awk -F': ## ' '{printf "\033[36m%-22s\033[0m %s\n", $$1, $$2}' | sort
+	@echo ""
+	@echo "💡 Examples:"
+	@echo "   make gen-module name=artikel"
+	@echo "   make gen-module name=artikel add=kategori"
+	@echo "   make help"

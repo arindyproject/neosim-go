@@ -23,14 +23,14 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/artikels": {
+        "/api/v1/artikel": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get paginated list of users",
+                "description": "Get paginated list of Artikel",
                 "consumes": [
                     "application/json"
                 ],
@@ -38,9 +38,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "artikel"
+                    "artikel/artikel"
                 ],
-                "summary": "Get list of users",
+                "summary": "Get list of Artikel",
                 "parameters": [
                     {
                         "type": "string",
@@ -91,7 +91,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Create New artikel",
+                "description": "Create New Artikel",
                 "consumes": [
                     "application/json"
                 ],
@@ -99,12 +99,12 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "artikel"
+                    "artikel/artikel"
                 ],
-                "summary": "Create artikel",
+                "summary": "Create Artikel",
                 "parameters": [
                     {
-                        "description": "Login Request",
+                        "description": "Create Request",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -135,14 +135,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/artikels/{id}": {
+        "/api/v1/artikel/kategori": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get artikel by :id",
+                "description": "Get paginated list of ArtikelKategori",
                 "consumes": [
                     "application/json"
                 ],
@@ -150,13 +150,265 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "artikel"
+                    "artikel/kategori"
                 ],
-                "summary": "Get artikel",
+                "summary": "Get list of ArtikelKategori",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by name (partial match)",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.ArtikelKategoriResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create New ArtikelKategori",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "artikel/kategori"
+                ],
+                "summary": "Create ArtikelKategori",
+                "parameters": [
+                    {
+                        "description": "Create Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateArtikelKategoriRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ArtikelKategoriResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/artikel/kategori/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get ArtikelKategori by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "artikel/kategori"
+                ],
+                "summary": "Get ArtikelKategori",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "artikel ID",
+                        "description": "ArtikelKategori ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ArtikelKategoriResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update ArtikelKategori by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "artikel/kategori"
+                ],
+                "summary": "Update ArtikelKategori",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ArtikelKategori ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateArtikelKategoriRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ArtikelKategoriResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete ArtikelKategori by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "artikel/kategori"
+                ],
+                "summary": "Delete ArtikelKategori",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ArtikelKategori ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.MyGoResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/artikel/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get Artikel by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "artikel/artikel"
+                ],
+                "summary": "Get Artikel",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Artikel ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -189,7 +441,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Update artikel by :id",
+                "description": "Update Artikel by :id",
                 "consumes": [
                     "application/json"
                 ],
@@ -197,19 +449,19 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "artikel"
+                    "artikel/artikel"
                 ],
-                "summary": "Update artikel",
+                "summary": "Update Artikel",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "artikel ID",
+                        "description": "Artikel ID",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "Login Request",
+                        "description": "Update Request",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -245,7 +497,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Update artikel by :id",
+                "description": "Delete Artikel by :id",
                 "consumes": [
                     "application/json"
                 ],
@@ -253,13 +505,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "artikel"
+                    "artikel/artikel"
                 ],
-                "summary": "Update artikel",
+                "summary": "Delete Artikel",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "artikel ID",
+                        "description": "Artikel ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -2214,6 +2466,32 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "dto.ArtikelKategoriResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "type": "integer"
+                }
+            }
+        },
         "dto.ArtikelResponse": {
             "type": "object",
             "properties": {
@@ -2302,6 +2580,23 @@ const docTemplate = `{
                 },
                 "old_password": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.CreateArtikelKategoriRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
                 }
             }
         },
@@ -2637,6 +2932,20 @@ const docTemplate = `{
                 },
                 "user": {
                     "$ref": "#/definitions/dto.UserResponse"
+                }
+            }
+        },
+        "dto.UpdateArtikelKategoriRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
                 }
             }
         },

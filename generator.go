@@ -15,37 +15,69 @@ import (
 // ─── Config ────────────────────────────────────────────────────────────────────
 
 type ModuleConfig struct {
-	ModuleName    string // contoh: roles
-	ModuleTitle   string // contoh: Role (PascalCase singular)
-	ModulePlural  string // contoh: Roles (PascalCase plural)
-	PackageName   string // contoh: roles
+	MainModule    string // contoh: artikel
+	SubModule     string // contoh: kategori (atau artikel jika tidak ada -add)
+	ModuleName    string // snake_case dari SubModule, untuk nama file & tabel
+	ModuleTitle   string // PascalCase gabungan, contoh: ArtikelKategori atau Artikel
+	ModulePlural  string // contoh: ArtikelKategoris
+	PackageName   string // contoh: kategori
 	ProjectModule string // contoh: neosim_go
 	Timestamp     string // contoh: 20240507120000
+	URLPrefix     string // contoh: /api/v1/artikel atau /api/v1/artikel/kategori
+	TableName     string // contoh: artikels atau artikel_kategoris
 }
 
 // ─── Main ──────────────────────────────────────────────────────────────────────
 
 func main() {
-	name := flag.String("name", "", "Nama module (snake_case, contoh: login_history)")
+	name := flag.String("name", "", "Nama module utama (snake_case, contoh: artikel)")
+	add := flag.String("add", "", "Nama sub-module (snake_case, contoh: kategori)")
 	project := flag.String("project", "neosim_go", "Nama Go module project (dari go.mod)")
 	flag.Parse()
 
 	if *name == "" {
-		log.Fatal("❌ Nama module wajib diisi. Contoh: go run ./cmd/gen/main.go -name=roles")
+		log.Fatal("❌ Nama module utama wajib diisi. Contoh: go run ./cmd/gen/main.go -name=artikel")
+	}
+
+	subModule := *name
+	if *add != "" {
+		subModule = *add
+	}
+
+	mainPascal := toPascalCase(*name)
+	subPascal := toPascalCase(subModule)
+
+	entityTitle := mainPascal
+	if *add != "" {
+		entityTitle = mainPascal + subPascal
+	}
+
+	urlPrefix := fmt.Sprintf("/api/v1/%s", *name)
+	if *add != "" {
+		urlPrefix = fmt.Sprintf("/api/v1/%s/%s", *name, *add)
+	}
+
+	tableName := *name + "s"
+	if *add != "" {
+		tableName = *name + "_" + *add + "s"
 	}
 
 	cfg := ModuleConfig{
-		ModuleName:    *name,
-		ModuleTitle:   toPascalCase(*name),
-		ModulePlural:  toPascalCase(*name) + "s",
-		PackageName:   toPackageName(*name),
+		MainModule:    *name,
+		SubModule:     subModule,
+		ModuleName:    subModule,
+		ModuleTitle:   entityTitle,
+		ModulePlural:  entityTitle + "s",
+		PackageName:   toPackageName(subModule),
 		ProjectModule: *project,
 		Timestamp:     time.Now().Format("20060102150405"),
+		URLPrefix:     urlPrefix,
+		TableName:     tableName,
 	}
 
-	basePath := filepath.Join("internal", "modules", cfg.ModuleName)
+	basePath := filepath.Join("internal", "modules", cfg.MainModule, cfg.SubModule)
 
-	fmt.Printf("\n🚀 Membuat module: %s\n", cfg.ModuleName)
+	fmt.Printf("\n🚀 Membuat module: %s/%s\n", cfg.MainModule, cfg.SubModule)
 	fmt.Printf("   Path: %s\n\n", basePath)
 
 	files := buildFileList(cfg, basePath)
@@ -83,12 +115,14 @@ func buildFileList(cfg ModuleConfig, base string) []fileEntry {
 		{filepath.Join(base, "handlers", fmt.Sprintf("%s_handler.go", cfg.ModuleName)), tmplHandler},
 		//migrations--------------------------------------------------------------
 		{filepath.Join(base, "migrations", fmt.Sprintf("%s_migrate.go", cfg.ModuleName)), tmplMigration},
-		{filepath.Join(base, "migrations", fmt.Sprintf("001_create_%s_table.sql", cfg.ModuleName)), tmplSQL},
+		{filepath.Join(base, "migrations", fmt.Sprintf("001_create_%s_table.sql", cfg.TableName)), tmplSQL},
 		//tests-------------------------------------------------------------------
 		{filepath.Join(base, "tests", "factories", fmt.Sprintf("%s_factory.go", cfg.ModuleName)), tmplFactory},
 		{filepath.Join(base, "tests", "seeders", fmt.Sprintf("%s_seeder.go", cfg.ModuleName)), tmplSeeder},
 		{filepath.Join(base, "tests", "helpers", "db_helper.go"), tmplDBHelper},
 		{filepath.Join(base, "tests", "mocks", fmt.Sprintf("%s_repository_mock.go", cfg.ModuleName)), tmplModuleServiceMock},
+		{filepath.Join(base, "tests", "mocks", "rbac_repository_mock.go"), tmplRBACMock},
+		{filepath.Join(base, "tests", "mocks", "auth_repository_mock.go"), tmplAuthMock},
 		{filepath.Join(base, "tests", fmt.Sprintf("%s_service_test.go", cfg.ModuleName)), tmplModuleServiceTest},
 		//main--------------------------------------------------------------------
 		{filepath.Join(base, "module.go"), tmplModule},
@@ -148,18 +182,18 @@ func toPackageName(s string) string {
 func printNextSteps(cfg ModuleConfig) {
 	fmt.Printf(`
 ────────────────────────────────────────────────────────
-✅ Module '%s' berhasil dibuat!
+✅ Module '%s/%s' berhasil dibuat!
 
 📋 Langkah selanjutnya:
 
 1. Tambahkan blank import di internal/apps/apps.go:
-   _ "%s/internal/modules/%s"
+   _ "%s/internal/modules/%s/%s"
 
 2. Tambahkan blank import di cmd/migrate/main.go:
-   _ "%s/internal/modules/%s"
+   _ "%s/internal/modules/%s/%s"
 
 3. Edit model di:
-   internal/modules/%s/models/%s.go
+   internal/modules/%s/%s/models/%s.go
 
 4. Jalankan migrasi:
    make migrate-dev
@@ -168,10 +202,10 @@ func printNextSteps(cfg ModuleConfig) {
    make seed
 ────────────────────────────────────────────────────────
 `,
-		cfg.ModuleName,
-		cfg.ProjectModule, cfg.ModuleName,
-		cfg.ProjectModule, cfg.ModuleName,
-		cfg.ModuleName, cfg.ModuleName,
+		cfg.MainModule, cfg.SubModule,
+		cfg.ProjectModule, cfg.MainModule, cfg.SubModule,
+		cfg.ProjectModule, cfg.MainModule, cfg.SubModule,
+		cfg.MainModule, cfg.SubModule, cfg.ModuleName,
 	)
 }
 
@@ -181,8 +215,8 @@ func printNextSteps(cfg ModuleConfig) {
 var tmplContracts = `package contracts
 
 import (
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/dto"
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/models"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
 )
 
 // AuthContext berisi informasi user yang sedang login untuk authorization
@@ -213,19 +247,19 @@ type Service interface {
 // Request-------------------------------------------------------------
 var tmplRequest = `package dto
 
-// Create{{.ModuleTitle}}Request request body untuk membuat {{.ModuleName}} baru
+// Create{{.ModuleTitle}}Request request body untuk membuat {{.ModuleTitle}} baru
 type Create{{.ModuleTitle}}Request struct {
 	Name        string  ` + "`" + `json:"name" validate:"required,min=1,max=255"` + "`" + `
 	Description *string ` + "`" + `json:"description" validate:"omitempty,max=500"` + "`" + `
 }
 
-// Update{{.ModuleTitle}}Request request body untuk update {{.ModuleName}}
+// Update{{.ModuleTitle}}Request request body untuk update {{.ModuleTitle}}
 type Update{{.ModuleTitle}}Request struct {
 	Name        *string ` + "`" + `json:"name" validate:"omitempty,min=1,max=255"` + "`" + `
 	Description *string ` + "`" + `json:"description" validate:"omitempty,max=500"` + "`" + `
 }
 
-// Filter{{.ModuleTitle}}Request request body untuk filter {{.ModuleName}}
+// Filter{{.ModuleTitle}}Request request body untuk filter {{.ModuleTitle}}
 type Filter{{.ModuleTitle}}Request struct {
 	Name        string ` + "`" + `query:"name"` + "`" + `
 }
@@ -238,10 +272,10 @@ var tmplResponse = `package dto
 import (
 	"time"
 
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/models"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
 )
 
-// {{.ModuleTitle}}Response response untuk single {{.ModuleName}}
+// {{.ModuleTitle}}Response response untuk single {{.ModuleTitle}}
 type {{.ModuleTitle}}Response struct {
 	ID          int64     ` + "`" + `json:"id"` + "`" + `
 	Name        string    ` + "`" + `json:"name"` + "`" + `
@@ -284,7 +318,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// {{.ModuleTitle}} represents the {{.ModuleName}}s table in database
+// {{.ModuleTitle}} represents the {{.TableName}} table in database
 type {{.ModuleTitle}} struct {
 	ID          int64          ` + "`" + `gorm:"primaryKey;autoIncrement;column:id" json:"id"` + "`" + `
 	Name        string         ` + "`" + `gorm:"column:name;type:varchar(255);not null" json:"name"` + "`" + `
@@ -297,7 +331,7 @@ type {{.ModuleTitle}} struct {
 }
 
 func ({{.ModuleTitle}}) TableName() string {
-	return "{{.ModuleName}}s"
+	return "{{.TableName}}"
 }
 `
 
@@ -307,9 +341,9 @@ var tmplRepository = `package repositories
 import (
 	"errors"
 
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/contracts"
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/models"
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/dto"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/contracts"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
 
 	"gorm.io/gorm"
 )
@@ -380,16 +414,16 @@ import (
 	"time"
 	"net/http"
 
-	{{.ModuleName}}Contracts "{{.ProjectModule}}/internal/modules/{{.ModuleName}}/contracts"
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/dto"
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/models"
+	{{.ModuleName}}Contracts "{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/contracts"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
 
 	//RBAC AUTH----------------------------------------
-	authContracts "neosim_go/internal/modules/auth/contracts"
-	rbacContracts "neosim_go/internal/modules/rbac/contracts"
-	rbacMiddlewares "neosim_go/internal/modules/rbac/middlewares"
-	rbacModels "neosim_go/internal/modules/rbac/models"
-	appErrors "neosim_go/internal/shared/errors"
+	authContracts "{{.ProjectModule}}/internal/modules/auth/contracts"
+	rbacContracts "{{.ProjectModule}}/internal/modules/rbac/contracts"
+	rbacMiddlewares "{{.ProjectModule}}/internal/modules/rbac/middlewares"
+	rbacModels "{{.ProjectModule}}/internal/modules/rbac/models"
+	appErrors "{{.ProjectModule}}/internal/shared/errors"
 )
 
 // ─── Init ───────────────────────────────────────────────────────────────────────
@@ -511,7 +545,7 @@ func (s *service) GetByID(id int64, actor {{.ModuleName}}Contracts.AuthContext) 
 		return nil, err
 	}
 	if m == nil {
-		return nil, errors.New("{{.ModuleName}} tidak ditemukan")
+		return nil, errors.New("{{.ModuleTitle}} tidak ditemukan")
 	}
 	return dto.To{{.ModuleTitle}}Response(m), nil
 }
@@ -560,7 +594,7 @@ func (s *service) Update(id int64, req *dto.Update{{.ModuleTitle}}Request, updat
 		return nil, err
 	}
 	if m == nil {
-		return nil, errors.New("{{.ModuleName}} tidak ditemukan")
+		return nil, errors.New("{{.ModuleTitle}} tidak ditemukan")
 	}
 	if req.Name != nil {
 		m.Name = *req.Name
@@ -595,7 +629,7 @@ func (s *service) Delete(id int64, actor {{.ModuleName}}Contracts.AuthContext) e
 		return err
 	}
 	if m == nil {
-		return errors.New("{{.ModuleName}} tidak ditemukan")
+		return errors.New("{{.ModuleTitle}} tidak ditemukan")
 	}
 	return s.repo.Delete(id)
 }
@@ -608,8 +642,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/contracts"
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/dto"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/contracts"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
 	"{{.ProjectModule}}/internal/shared/response"
 	"{{.ProjectModule}}/internal/shared/validator"
 
@@ -656,9 +690,9 @@ func getActorID(c *echo.Context) *int64 {
 // ─── List ──────────────────────────────────────────────────────────────────────
 // {{.ModuleTitle}}Handler godoc
 //
-//	@Summary		Get list of users
-//	@Description	Get paginated list of users
-//	@Tags			{{.ModuleName}}
+//	@Summary		Get list of {{.ModuleTitle}}
+//	@Description	Get paginated list of {{.ModuleTitle}}
+//	@Tags			{{.MainModule}}/{{.SubModule}}
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
@@ -666,9 +700,9 @@ func getActorID(c *echo.Context) *int64 {
 //	@Param			page			query		int		false	"Page number"
 //	@Param			page_size		query		int		false	"Page size"
 //	@Success		200				{object}	response.MyGoResponse{data=[]dto.{{.ModuleTitle}}Response}
-//	@Router			/{{.ModuleName}}s [get]
+//	@Router			{{.URLPrefix}} [get]
 //
-// List handles GET /api/v1/{{.ModuleName}}s
+// List handles GET {{.URLPrefix}}
 func (h *{{.ModuleTitle}}Handler) List(c *echo.Context) error {
 	page, pageSize := 1, 10
 
@@ -700,17 +734,17 @@ func (h *{{.ModuleTitle}}Handler) List(c *echo.Context) error {
 // ─── GetByID ───────────────────────────────────────────────────────────────────
 // {{.ModuleTitle}}Handler godoc
 //
-//	@Summary		Get {{.ModuleName}}
-//	@Description	Get {{.ModuleName}} by :id
-//	@Tags			{{.ModuleName}}
+//	@Summary		Get {{.ModuleTitle}}
+//	@Description	Get {{.ModuleTitle}} by :id
+//	@Tags			{{.MainModule}}/{{.SubModule}}
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			id	path		int	true	"{{.ModuleName}} ID"
+//	@Param			id	path		int	true	"{{.ModuleTitle}} ID"
 //	@Success		200	{object}	response.MyGoResponse{data=dto.{{.ModuleTitle}}Response}
-//	@Router			/{{.ModuleName}}s/{id} [get]
+//	@Router			{{.URLPrefix}}/{id} [get]
 //
-// GetByID handles GET /api/v1/{{.ModuleName}}s/:id
+// GetByID handles GET {{.URLPrefix}}/:id
 func (h *{{.ModuleTitle}}Handler) GetByID(c *echo.Context) error {
 	id, err := parseID(c)
 	if err != nil {
@@ -729,17 +763,17 @@ func (h *{{.ModuleTitle}}Handler) GetByID(c *echo.Context) error {
 // ─── Create ────────────────────────────────────────────────────────────────────
 // {{.ModuleTitle}}Handler godoc
 //
-//	@Summary		Create {{.ModuleName}}
-//	@Description	Create New {{.ModuleName}}
-//	@Tags			{{.ModuleName}}
+//	@Summary		Create {{.ModuleTitle}}
+//	@Description	Create New {{.ModuleTitle}}
+//	@Tags			{{.MainModule}}/{{.SubModule}}
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			body	body		dto.Create{{.ModuleTitle}}Request	true	"Login Request"
+//	@Param			body	body		dto.Create{{.ModuleTitle}}Request	true	"Create Request"
 //	@Success		200		{object}	response.MyGoResponse{data=dto.{{.ModuleTitle}}Response}
-//	@Router			/{{.ModuleName}}s [post]
+//	@Router			{{.URLPrefix}} [post]
 //
-// Create handles POST /api/v1/{{.ModuleName}}s
+// Create handles POST {{.URLPrefix}}
 func (h *{{.ModuleTitle}}Handler) Create(c *echo.Context) error {
 	var req dto.Create{{.ModuleTitle}}Request
 	if err := c.Bind(&req); err != nil {
@@ -763,18 +797,18 @@ func (h *{{.ModuleTitle}}Handler) Create(c *echo.Context) error {
 // ─── Update ────────────────────────────────────────────────────────────────────
 // {{.ModuleTitle}}Handler godoc
 //
-//	@Summary		Update {{.ModuleName}}
-//	@Description	Update {{.ModuleName}} by :id
-//	@Tags			{{.ModuleName}}
+//	@Summary		Update {{.ModuleTitle}}
+//	@Description	Update {{.ModuleTitle}} by :id
+//	@Tags			{{.MainModule}}/{{.SubModule}}
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			id		path		int						true	"{{.ModuleName}} ID"
-//	@Param			body	body		dto.Update{{.ModuleTitle}}Request	true	"Login Request"
+//	@Param			id		path		int						true	"{{.ModuleTitle}} ID"
+//	@Param			body	body		dto.Update{{.ModuleTitle}}Request	true	"Update Request"
 //	@Success		200		{object}	response.MyGoResponse{data=dto.{{.ModuleTitle}}Response}
-//	@Router			/{{.ModuleName}}s/{id} [put]
+//	@Router			{{.URLPrefix}}/{id} [put]
 //
-// Update handles PUT /api/v1/{{.ModuleName}}s/:id
+// Update handles PUT {{.URLPrefix}}/:id
 func (h *{{.ModuleTitle}}Handler) Update(c *echo.Context) error {
 	id, err := parseID(c)
 	if err != nil {
@@ -794,7 +828,7 @@ func (h *{{.ModuleTitle}}Handler) Update(c *echo.Context) error {
 	item, err := h.service.Update(id, &req, getActorID(c), actor)
 	if err != nil {
 		status := http.StatusBadRequest
-		if err.Error() == "{{.ModuleName}} tidak ditemukan" {
+		if err.Error() == "{{.ModuleTitle}} tidak ditemukan" {
 			status = http.StatusNotFound
 		}
 		return response.Response(c, status, false, err.Error(), nil, nil)
@@ -806,17 +840,17 @@ func (h *{{.ModuleTitle}}Handler) Update(c *echo.Context) error {
 // ─── Delete ────────────────────────────────────────────────────────────────────
 // {{.ModuleTitle}}Handler godoc
 //
-//	@Summary		Update {{.ModuleName}}
-//	@Description	Update {{.ModuleName}} by :id
-//	@Tags			{{.ModuleName}}
+//	@Summary		Delete {{.ModuleTitle}}
+//	@Description	Delete {{.ModuleTitle}} by :id
+//	@Tags			{{.MainModule}}/{{.SubModule}}
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			id		path		int						true	"{{.ModuleName}} ID"
+//	@Param			id		path		int						true	"{{.ModuleTitle}} ID"
 //	@Success		200		{object}	response.MyGoResponse{}
-//	@Router			/{{.ModuleName}}s/{id} [delete]
+//	@Router			{{.URLPrefix}}/{id} [delete]
 //
-// Delete handles DELETE /api/v1/{{.ModuleName}}s/:id
+// Delete handles DELETE {{.URLPrefix}}/:id
 func (h *{{.ModuleTitle}}Handler) Delete(c *echo.Context) error {
 	id, err := parseID(c)
 	if err != nil {
@@ -826,7 +860,7 @@ func (h *{{.ModuleTitle}}Handler) Delete(c *echo.Context) error {
 	actor := buildAuthContext(c)
 	if err := h.service.Delete(id, actor); err != nil {
 		status := http.StatusInternalServerError
-		if err.Error() == "{{.ModuleName}} tidak ditemukan" {
+		if err.Error() == "{{.ModuleTitle}} tidak ditemukan" {
 			status = http.StatusNotFound
 		}
 		return response.Response(c, status, false, err.Error(), nil, nil)
@@ -844,12 +878,12 @@ import (
 	_ "embed"
 	"log"
 
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/models"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
 
 	"gorm.io/gorm"
 )
 
-//go:embed 001_create_{{.ModuleName}}_table.sql
+//go:embed 001_create_{{.TableName}}_table.sql
 var {{.PackageName}}SQL string
 
 // Migrate{{.ModuleTitle}} menjalankan GORM auto-migration
@@ -861,10 +895,10 @@ func Migrate{{.ModuleTitle}}(db *gorm.DB) error {
 func Migrate{{.ModuleTitle}}WithSQL(sqlDB *sql.DB) error {
 	_, err := sqlDB.Exec({{.PackageName}}SQL)
 	if err != nil {
-		log.Printf("Error creating {{.ModuleName}}s table: %v", err)
+		log.Printf("Error creating {{.TableName}} table: %v", err)
 		return err
 	}
-	log.Println("{{.ModuleTitle}}s table migrated successfully")
+	log.Println("{{.TableName}} table migrated successfully")
 	return nil
 }
 
@@ -875,10 +909,10 @@ func Drop{{.ModuleTitle}}Table(db *gorm.DB) error {
 `
 
 // Sql-----------------------------------------------------------------
-var tmplSQL = `-- Migration: Create {{.ModuleName}}s table
+var tmplSQL = `-- Migration: Create {{.TableName}} table
 -- Timestamp: {{.Timestamp}}
 
-CREATE TABLE IF NOT EXISTS {{.ModuleName}}s (
+CREATE TABLE IF NOT EXISTS {{.TableName}} (
     id          BIGSERIAL    PRIMARY KEY,
     name        VARCHAR(255) NOT NULL,
     description TEXT,
@@ -889,7 +923,7 @@ CREATE TABLE IF NOT EXISTS {{.ModuleName}}s (
     deleted_at  TIMESTAMPTZ
 );
 
-CREATE INDEX IF NOT EXISTS idx_{{.ModuleName}}s_deleted_at ON {{.ModuleName}}s(deleted_at);
+CREATE INDEX IF NOT EXISTS idx_{{.TableName}}_deleted_at ON {{.TableName}}(deleted_at);
 `
 
 // Factories-----------------------------------------------------------
@@ -900,12 +934,12 @@ import (
 	"math/rand"
 	"time"
 
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/models"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
 )
 
 var rng = rand.New(rand.NewSource(time.Now().UnixNano()))
 
-// {{.ModuleTitle}}Factory membuat data {{.ModuleName}} untuk testing/seeding
+// {{.ModuleTitle}}Factory membuat data {{.ModuleTitle}} untuk testing/seeding
 type {{.ModuleTitle}}Factory struct {
 	overrides map[string]interface{}
 }
@@ -922,7 +956,7 @@ func (f *{{.ModuleTitle}}Factory) With(field string, value interface{}) *{{.Modu
 func (f *{{.ModuleTitle}}Factory) Make() *models.{{.ModuleTitle}} {
 	idx := rng.Intn(999999)
 	name := fmt.Sprintf("{{.ModuleTitle}} %d", idx)
-	desc := fmt.Sprintf("Deskripsi {{.ModuleName}} %d", idx)
+	desc := fmt.Sprintf("Deskripsi {{.ModuleTitle}} %d", idx)
 
 	if v, ok := f.overrides["name"]; ok {
 		name = v.(string)
@@ -949,13 +983,13 @@ var tmplSeeder = `package seeders
 import (
 	"log"
 
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/models"
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/tests/factories"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/tests/factories"
 
 	"gorm.io/gorm"
 )
 
-// {{.ModuleTitle}}Seeder mengelola seeding data {{.ModuleName}}
+// {{.ModuleTitle}}Seeder mengelola seeding data {{.ModuleTitle}}
 type {{.ModuleTitle}}Seeder struct {
 	db *gorm.DB
 }
@@ -966,29 +1000,29 @@ func New{{.ModuleTitle}}Seeder(db *gorm.DB) *{{.ModuleTitle}}Seeder {
 
 // Run menjalankan seeder
 func (s *{{.ModuleTitle}}Seeder) Run() error {
-	log.Println("🌱 Seeding {{.ModuleName}}s...")
+	log.Println("🌱 Seeding {{.TableName}}...")
 
 	items := factories.New{{.ModuleTitle}}Factory().MakeMany(10)
 	for _, item := range items {
 		if err := s.db.Create(item).Error; err != nil {
-			log.Printf("   ⚠️  Gagal membuat {{.ModuleName}}: %v", err)
+			log.Printf("   ⚠️  Gagal membuat {{.ModuleTitle}}: %v", err)
 			continue
 		}
 		log.Printf("   ✅ {{.ModuleTitle}} '%s' dibuat.", item.Name)
 	}
 
-	log.Println("✅ {{.ModuleTitle}}s seeding selesai!")
+	log.Println("✅ {{.TableName}} seeding selesai!")
 	return nil
 }
 
 // Fresh menghapus semua data lalu seed ulang
 func (s *{{.ModuleTitle}}Seeder) Fresh() error {
-	log.Println("🗑️  Menghapus semua data {{.ModuleName}}s...")
+	log.Println("🗑️  Menghapus semua data {{.TableName}}...")
 
-	if err := s.db.Exec("DELETE FROM {{.ModuleName}}s").Error; err != nil {
+	if err := s.db.Exec("DELETE FROM {{.TableName}}").Error; err != nil {
 		return err
 	}
-	if err := s.db.Exec("ALTER SEQUENCE {{.ModuleName}}s_id_seq RESTART WITH 1").Error; err != nil {
+	if err := s.db.Exec("ALTER SEQUENCE {{.TableName}}_id_seq RESTART WITH 1").Error; err != nil {
 		log.Printf("Warning: Gagal reset sequence: %v", err)
 	}
 	return s.Run()
@@ -1020,7 +1054,7 @@ import (
 	"log"
 
 	"{{.ProjectModule}}/config"
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/models"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
 
 	"gorm.io/gorm"
 )
@@ -1056,10 +1090,10 @@ func TruncateTable(db *gorm.DB, tables ...string) {
 var tmplModule = `package {{.PackageName}}
 
 import (
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/contracts"
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/handlers"
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/repositories"
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/services"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/contracts"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/handlers"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/repositories"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/services"
 	"{{.ProjectModule}}/internal/shared/utils"
 
 	authContracts "{{.ProjectModule}}/internal/modules/auth/contracts" //auth
@@ -1069,7 +1103,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// Module mewakili {{.ModuleName}} module
+// Module mewakili {{.MainModule}}/{{.SubModule}} module
 type Module struct {
 	db         *gorm.DB
 	handler    *handlers.{{.ModuleTitle}}Handler
@@ -1112,7 +1146,7 @@ func (m *Module) InitRoutes(e *echo.Echo) {
 var tmplRoutes = `package {{.PackageName}}
 
 import (
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/handlers"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/handlers"
 	authMiddlewares "{{.ProjectModule}}/internal/modules/auth/middlewares"
 	"{{.ProjectModule}}/internal/shared/utils"
 
@@ -1121,10 +1155,10 @@ import (
 	
 )
 
-// RegisterRoutes mendaftarkan semua routes untuk module {{.ModuleName}}
+// RegisterRoutes mendaftarkan semua routes untuk module {{.MainModule}}/{{.SubModule}}
 func RegisterRoutes(e *echo.Echo, h *handlers.{{.ModuleTitle}}Handler, jwtManager *utils.JWTManager, db *gorm.DB) {
 	jwt := authMiddlewares.JWTMiddleware(jwtManager, db)
-	g := e.Group("/api/v1/{{.ModuleName}}s", jwt)
+	g := e.Group("{{.URLPrefix}}", jwt)
 	g.GET("", h.List)
 	g.GET("/:id", h.GetByID)
 	g.POST("", h.Create)
@@ -1141,8 +1175,8 @@ import (
 
 	"{{.ProjectModule}}/config"
 	"{{.ProjectModule}}/internal/apps"
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/migrations"
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/models"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/migrations"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
 	"{{.ProjectModule}}/internal/shared/utils"
 
 	authContracts "{{.ProjectModule}}/internal/modules/auth/contracts"
@@ -1203,21 +1237,22 @@ func (r *registryModule) MigrateSQL(sqlDB *sql.DB) error {
 // Tests---------------------------------------------------------------
 // -----Mocks----------------------------------------------------------
 // -----------Module Service Mock--------------------------------------
-var tmplModuleServiceMock = `
-package mocks
+
+var tmplModuleServiceMock = `package mocks
 
 import (
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/dto"
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/models"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
 	"github.com/stretchr/testify/mock"
 )
 
+// {{.ModuleTitle}}RepositoryMock is a mock implementation of contracts.Repository
 type {{.ModuleTitle}}RepositoryMock struct {
 	mock.Mock
 }
 
-func (m *{{.ModuleTitle}}RepositoryMock) Create(user *models.{{.ModuleTitle}}) error {
-	args := m.Called(user)
+func (m *{{.ModuleTitle}}RepositoryMock) Create(item *models.{{.ModuleTitle}}) error {
+	args := m.Called(item)
 	return args.Error(0)
 }
 
@@ -1239,15 +1274,234 @@ func (m *{{.ModuleTitle}}RepositoryMock) Update(item *models.{{.ModuleTitle}}) e
 	return args.Error(0)
 }
 
-func (m *{{.ModuleTitle}}RepositoryMock) Delete(id int64, deletedBy int64, reason string) error {
-	args := m.Called(id, deletedBy, reason)
+func (m *{{.ModuleTitle}}RepositoryMock) Delete(id int64) error {
+	args := m.Called(id)
 	return args.Error(0)
 }
 `
 
-// -----Tests----------------------------------------------------------
-var tmplModuleServiceTest = `
-package tests
+var tmplRBACMock = `package mocks
+
+import (
+	rbacModels "{{.ProjectModule}}/internal/modules/rbac/models"
+	"github.com/stretchr/testify/mock"
+)
+
+// RBACRepositoryMock is a mock implementation of rbacContracts.RBACRepository
+type RBACRepositoryMock struct {
+	mock.Mock
+}
+
+func (m *RBACRepositoryMock) IsSuperadmin(userID int64) (bool, error) {
+	args := m.Called(userID)
+	return args.Bool(0), args.Error(1)
+}
+
+func (m *RBACRepositoryMock) CreatePermission(p *rbacModels.Permission) error {
+	args := m.Called(p)
+	return args.Error(0)
+}
+
+func (m *RBACRepositoryMock) GetPermissionByID(id int64) (*rbacModels.Permission, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*rbacModels.Permission), args.Error(1)
+}
+
+func (m *RBACRepositoryMock) GetPermissionByName(name string) (*rbacModels.Permission, error) {
+	args := m.Called(name)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*rbacModels.Permission), args.Error(1)
+}
+
+func (m *RBACRepositoryMock) ListPermissions(page, pageSize int) ([]rbacModels.Permission, int64, error) {
+	args := m.Called(page, pageSize)
+	return args.Get(0).([]rbacModels.Permission), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *RBACRepositoryMock) UpdatePermission(p *rbacModels.Permission) error {
+	args := m.Called(p)
+	return args.Error(0)
+}
+
+func (m *RBACRepositoryMock) DeletePermission(id int64) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+
+func (m *RBACRepositoryMock) CreateRole(r *rbacModels.Role) error {
+	args := m.Called(r)
+	return args.Error(0)
+}
+
+func (m *RBACRepositoryMock) GetRoleByID(id int64) (*rbacModels.Role, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*rbacModels.Role), args.Error(1)
+}
+
+func (m *RBACRepositoryMock) GetRoleByName(name string) (*rbacModels.Role, error) {
+	args := m.Called(name)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*rbacModels.Role), args.Error(1)
+}
+
+func (m *RBACRepositoryMock) ListRoles(page, pageSize int) ([]rbacModels.Role, int64, error) {
+	args := m.Called(page, pageSize)
+	return args.Get(0).([]rbacModels.Role), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *RBACRepositoryMock) UpdateRole(r *rbacModels.Role) error {
+	args := m.Called(r)
+	return args.Error(0)
+}
+
+func (m *RBACRepositoryMock) DeleteRole(id int64) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+
+func (m *RBACRepositoryMock) GetUsersRoles(userIDs []int64) (map[int64][]rbacModels.Role, error) {
+	args := m.Called(userIDs)
+	return args.Get(0).(map[int64][]rbacModels.Role), args.Error(1)
+}
+
+func (m *RBACRepositoryMock) AssignPermissionsToRole(roleID int64, permissionIDs []int64) error {
+	args := m.Called(roleID, permissionIDs)
+	return args.Error(0)
+}
+
+func (m *RBACRepositoryMock) RevokePermissionsFromRole(roleID int64, permissionIDs []int64) error {
+	args := m.Called(roleID, permissionIDs)
+	return args.Error(0)
+}
+
+func (m *RBACRepositoryMock) GetRolePermissions(roleID int64) ([]rbacModels.Permission, error) {
+	args := m.Called(roleID)
+	return args.Get(0).([]rbacModels.Permission), args.Error(1)
+}
+
+func (m *RBACRepositoryMock) SyncRolePermissions(roleID int64, permissionIDs []int64) error {
+	args := m.Called(roleID, permissionIDs)
+	return args.Error(0)
+}
+
+func (m *RBACRepositoryMock) AssignRolesToUser(userID int64, roleIDs []int64, assignedBy *int64) error {
+	args := m.Called(userID, roleIDs, assignedBy)
+	return args.Error(0)
+}
+
+func (m *RBACRepositoryMock) RevokeRolesFromUser(userID int64, roleIDs []int64) error {
+	args := m.Called(userID, roleIDs)
+	return args.Error(0)
+}
+
+func (m *RBACRepositoryMock) GetUserRoles(userID int64) ([]rbacModels.Role, error) {
+	args := m.Called(userID)
+	return args.Get(0).([]rbacModels.Role), args.Error(1)
+}
+
+func (m *RBACRepositoryMock) SyncUserRoles(userID int64, roleIDs []int64, assignedBy *int64) error {
+	args := m.Called(userID, roleIDs, assignedBy)
+	return args.Error(0)
+}
+
+func (m *RBACRepositoryMock) AssignDirectPermission(userID, permissionID int64, isGranted bool, assignedBy *int64) error {
+	args := m.Called(userID, permissionID, isGranted, assignedBy)
+	return args.Error(0)
+}
+
+func (m *RBACRepositoryMock) RevokeDirectPermission(userID, permissionID int64) error {
+	args := m.Called(userID, permissionID)
+	return args.Error(0)
+}
+
+func (m *RBACRepositoryMock) GetUserDirectPermissions(userID int64) ([]rbacModels.UserPermission, error) {
+	args := m.Called(userID)
+	return args.Get(0).([]rbacModels.UserPermission), args.Error(1)
+}
+
+func (m *RBACRepositoryMock) GetUserAllPermissions(userID int64) ([]string, error) {
+	args := m.Called(userID)
+	return args.Get(0).([]string), args.Error(1)
+}
+
+func (m *RBACRepositoryMock) HasPermission(userID int64, permission string) (bool, error) {
+	args := m.Called(userID, permission)
+	return args.Bool(0), args.Error(1)
+}
+`
+
+var tmplAuthMock = `package mocks
+
+import (
+	authModels "{{.ProjectModule}}/internal/modules/auth/models"
+	"github.com/stretchr/testify/mock"
+)
+
+// AuthRepositoryMock is a mock implementation of authContracts.AuthRepository
+type AuthRepositoryMock struct {
+	mock.Mock
+}
+
+func (m *AuthRepositoryMock) SaveToken(token *authModels.AuthToken) error {
+	args := m.Called(token)
+	return args.Error(0)
+}
+
+func (m *AuthRepositoryMock) GetTokenByJTI(jti string) (*authModels.AuthToken, error) {
+	args := m.Called(jti)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*authModels.AuthToken), args.Error(1)
+}
+
+func (m *AuthRepositoryMock) BlacklistToken(jti string) error {
+	args := m.Called(jti)
+	return args.Error(0)
+}
+
+func (m *AuthRepositoryMock) BlacklistAllUserTokens(userID int64) error {
+	args := m.Called(userID)
+	return args.Error(0)
+}
+
+func (m *AuthRepositoryMock) CountActiveTokens(userID int64) (int64, error) {
+	args := m.Called(userID)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *AuthRepositoryMock) SaveLoginHistory(history *authModels.LoginHistory) error {
+	args := m.Called(history)
+	return args.Error(0)
+}
+
+func (m *AuthRepositoryMock) GetUserLoginHistories(userID int64, limit int) ([]authModels.LoginHistory, error) {
+	args := m.Called(userID, limit)
+	return args.Get(0).([]authModels.LoginHistory), args.Error(1)
+}
+
+func (m *AuthRepositoryMock) SavePasswordHistory(history *authModels.PasswordHistory) error {
+	args := m.Called(history)
+	return args.Error(0)
+}
+
+func (m *AuthRepositoryMock) GetPasswordHistories(userID int64, limit int) ([]authModels.PasswordHistory, error) {
+	args := m.Called(userID, limit)
+	return args.Get(0).([]authModels.PasswordHistory), args.Error(1)
+}
+`
+
+var tmplModuleServiceTest = `package tests
 
 import (
 	"fmt"
@@ -1256,21 +1510,20 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/crypto/bcrypt"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/services"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/tests/factories"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/tests/mocks"
 
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/dto"
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/models"
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/services"
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/tests/factories"
-	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/tests/mocks"
-
-	{{.ModuleName}}Contracts "{{.ProjectModule}}/internal/modules/{{.ModuleName}}/contracts"	
+	{{.ModuleName}}Contracts "{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/contracts"
+	rbacModels "{{.ProjectModule}}/internal/modules/rbac/models"
+	appErrors "{{.ProjectModule}}/internal/shared/errors"
 )
 
-// ─── Suite ─────────────────────────────────────────────────────────────────────
 func TestMain(m *testing.M) {
 	fmt.Println("\033[34m" + strings.Repeat("─", 55) + "\033[0m")
 	fmt.Println("\033[35m  {{.ModuleTitle}} Service Test Suite\033[0m")
@@ -1279,13 +1532,430 @@ func TestMain(m *testing.M) {
 	code := m.Run()
 
 	if code == 0 {
-		fmt.Println("\n\033[32m✓  PASS\033[0m  {{.ProjectModule}}/internal/modules/{{.ModuleName}}")
+		fmt.Println("\n\033[32m✓  PASS\033[0m  {{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}")
 	} else {
-		fmt.Println("\n\033[31m✗  FAIL\033[0m  {{.ProjectModule}}/internal/modules/{{.ModuleName}}")
+		fmt.Println("\n\033[31m✗  FAIL\033[0m  {{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}")
 	}
 
 	os.Exit(code)
 }
 
+type {{.ModuleTitle}}ServiceTestSuite struct {
+	suite.Suite
+	repo     *mocks.{{.ModuleTitle}}RepositoryMock
+	rbacRepo *mocks.RBACRepositoryMock
+	authRepo *mocks.AuthRepositoryMock
+	svc      {{.ModuleName}}Contracts.Service
+}
 
+func (s *{{.ModuleTitle}}ServiceTestSuite) SetupTest() {
+	s.repo     = new(mocks.{{.ModuleTitle}}RepositoryMock)
+	s.rbacRepo = new(mocks.RBACRepositoryMock)
+	s.authRepo = new(mocks.AuthRepositoryMock)
+	s.svc = services.New{{.ModuleTitle}}Service(s.repo, s.rbacRepo, s.authRepo)
+}
+
+func Test{{.ModuleTitle}}Service(t *testing.T) {
+	suite.Run(t, new({{.ModuleTitle}}ServiceTestSuite))
+}
+
+func superadminActor() {{.ModuleName}}Contracts.AuthContext {
+	return {{.ModuleName}}Contracts.AuthContext{UserID: 1, IsSuperadmin: true}
+}
+
+func regularActor() {{.ModuleName}}Contracts.AuthContext {
+	return {{.ModuleName}}Contracts.AuthContext{UserID: 2, IsSuperadmin: false}
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) mockHasPermission(perm string, result bool) {
+	s.rbacRepo.On("HasPermission", regularActor().UserID, perm, mock.Anything).Return(result, nil).Maybe()
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) mockNoPermissions() {
+	s.rbacRepo.On("HasPermission", regularActor().UserID, mock.Anything, mock.Anything).Return(false, nil)
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Create_Superadmin_Success() {
+	req := &dto.Create{{.ModuleTitle}}Request{
+		Name: "Test {{.ModuleTitle}}",
+	}
+	actor := superadminActor()
+
+	s.repo.On("Create", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(nil)
+
+	result, err := s.svc.Create(req, &actor.UserID, actor)
+
+	s.NoError(err)
+	s.NotNil(result)
+	s.Equal(req.Name, result.Name)
+	s.repo.AssertExpectations(s.T())
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Create_WithPermission_Success() {
+	req := &dto.Create{{.ModuleTitle}}Request{
+		Name: "Test {{.ModuleTitle}}",
+	}
+	actor := regularActor()
+
+	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(true, nil)
+	s.repo.On("Create", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(nil)
+
+	result, err := s.svc.Create(req, &actor.UserID, actor)
+
+	s.NoError(err)
+	s.NotNil(result)
+	s.repo.AssertExpectations(s.T())
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Create_WithManagePermission_Success() {
+	req := &dto.Create{{.ModuleTitle}}Request{Name: "Test"}
+	actor := regularActor()
+
+	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(false, nil)
+	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyManage).Return(true, nil)
+	s.repo.On("Create", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(nil)
+
+	result, err := s.svc.Create(req, &actor.UserID, actor)
+
+	s.NoError(err)
+	s.NotNil(result)
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Create_Forbidden() {
+	req := &dto.Create{{.ModuleTitle}}Request{Name: "Test"}
+	actor := regularActor()
+	s.mockNoPermissions()
+
+	result, err := s.svc.Create(req, &actor.UserID, actor)
+
+	s.Nil(result)
+	s.Error(err)
+	var appErr *appErrors.AppError
+	s.ErrorAs(err, &appErr)
+	s.Equal(http.StatusForbidden, appErr.Code)
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Create_RepoError() {
+	req := &dto.Create{{.ModuleTitle}}Request{Name: "Test"}
+	actor := superadminActor()
+
+	s.repo.On("Create", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(fmt.Errorf("db error"))
+
+	result, err := s.svc.Create(req, &actor.UserID, actor)
+
+	s.Nil(result)
+	s.Error(err)
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_GetByID_Superadmin_Success() {
+	actor := superadminActor()
+	item := factories.New{{.ModuleTitle}}Factory().Make()
+	item.ID = 1
+
+	s.repo.On("GetByID", int64(1)).Return(item, nil)
+
+	result, err := s.svc.GetByID(1, actor)
+
+	s.NoError(err)
+	s.NotNil(result)
+	s.Equal(item.ID, result.ID)
+	s.Equal(item.Name, result.Name)
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_GetByID_WithPermission_Success() {
+	actor := regularActor()
+	item := factories.New{{.ModuleTitle}}Factory().Make()
+	item.ID = 1
+
+	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyRead).Return(true, nil)
+	s.repo.On("GetByID", int64(1)).Return(item, nil)
+
+	result, err := s.svc.GetByID(1, actor)
+
+	s.NoError(err)
+	s.NotNil(result)
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_GetByID_Forbidden() {
+	actor := regularActor()
+	s.mockNoPermissions()
+
+	result, err := s.svc.GetByID(1, actor)
+
+	s.Nil(result)
+	s.Error(err)
+	var appErr *appErrors.AppError
+	s.ErrorAs(err, &appErr)
+	s.Equal(http.StatusForbidden, appErr.Code)
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_GetByID_NotFound() {
+	actor := superadminActor()
+
+	s.repo.On("GetByID", int64(999)).Return(nil, nil)
+
+	result, err := s.svc.GetByID(999, actor)
+
+	s.Nil(result)
+	s.Error(err)
+	s.Contains(err.Error(), "tidak ditemukan")
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_GetByID_RepoError() {
+	actor := superadminActor()
+
+	s.repo.On("GetByID", int64(1)).Return(nil, fmt.Errorf("db error"))
+
+	result, err := s.svc.GetByID(1, actor)
+
+	s.Nil(result)
+	s.Error(err)
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_List_Superadmin_Success() {
+	actor := superadminActor()
+	filter := &dto.Filter{{.ModuleTitle}}Request{}
+	items := []models.{{.ModuleTitle}}{
+		*factories.New{{.ModuleTitle}}Factory().Make(),
+		*factories.New{{.ModuleTitle}}Factory().Make(),
+	}
+
+	s.repo.On("List", 1, 10, filter).Return(items, int64(2), nil)
+
+	result, total, err := s.svc.List(1, 10, filter, actor)
+
+	s.NoError(err)
+	s.Equal(int64(2), total)
+	s.Len(result, 2)
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_List_WithPermission_Success() {
+	actor := regularActor()
+	filter := &dto.Filter{{.ModuleTitle}}Request{}
+	items := []models.{{.ModuleTitle}}{*factories.New{{.ModuleTitle}}Factory().Make()}
+
+	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyRead).Return(true, nil)
+	s.repo.On("List", 1, 10, filter).Return(items, int64(1), nil)
+
+	result, total, err := s.svc.List(1, 10, filter, actor)
+
+	s.NoError(err)
+	s.Equal(int64(1), total)
+	s.Len(result, 1)
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_List_Forbidden() {
+	actor := regularActor()
+	filter := &dto.Filter{{.ModuleTitle}}Request{}
+	s.mockNoPermissions()
+
+	result, total, err := s.svc.List(1, 10, filter, actor)
+
+	s.Nil(result)
+	s.Equal(int64(0), total)
+	s.Error(err)
+	var appErr *appErrors.AppError
+	s.ErrorAs(err, &appErr)
+	s.Equal(http.StatusForbidden, appErr.Code)
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_List_DefaultPagination() {
+	actor := superadminActor()
+	filter := &dto.Filter{{.ModuleTitle}}Request{}
+
+	s.repo.On("List", 1, 10, filter).Return([]models.{{.ModuleTitle}}{}, int64(0), nil)
+
+	result, total, err := s.svc.List(0, 0, filter, actor)
+
+	s.NoError(err)
+	s.Equal(int64(0), total)
+	s.Empty(result)
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_List_PageSizeCapped() {
+	actor := superadminActor()
+	filter := &dto.Filter{{.ModuleTitle}}Request{}
+
+	s.repo.On("List", 1, 10, filter).Return([]models.{{.ModuleTitle}}{}, int64(0), nil)
+
+	_, _, err := s.svc.List(1, 999, filter, actor)
+
+	s.NoError(err)
+	s.repo.AssertCalled(s.T(), "List", 1, 10, filter)
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_List_WithNameFilter() {
+	actor := superadminActor()
+	filter := &dto.Filter{{.ModuleTitle}}Request{Name: "test"}
+	items := []models.{{.ModuleTitle}}{*factories.New{{.ModuleTitle}}Factory().Make()}
+
+	s.repo.On("List", 1, 10, filter).Return(items, int64(1), nil)
+
+	result, total, err := s.svc.List(1, 10, filter, actor)
+
+	s.NoError(err)
+	s.Equal(int64(1), total)
+	s.Len(result, 1)
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update_Superadmin_Success() {
+	actor := superadminActor()
+	existing := factories.New{{.ModuleTitle}}Factory().Make()
+	existing.ID = 1
+	newName := "Updated Name"
+	req := &dto.Update{{.ModuleTitle}}Request{Name: &newName}
+
+	s.repo.On("GetByID", int64(1)).Return(existing, nil)
+	s.repo.On("Update", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(nil)
+
+	result, err := s.svc.Update(1, req, &actor.UserID, actor)
+
+	s.NoError(err)
+	s.NotNil(result)
+	s.Equal(newName, result.Name)
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update_WithPermission_Success() {
+	actor := regularActor()
+	existing := factories.New{{.ModuleTitle}}Factory().Make()
+	existing.ID = 1
+	newName := "Updated"
+	req := &dto.Update{{.ModuleTitle}}Request{Name: &newName}
+
+	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyUpdate).Return(true, nil)
+	s.repo.On("GetByID", int64(1)).Return(existing, nil)
+	s.repo.On("Update", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(nil)
+
+	result, err := s.svc.Update(1, req, &actor.UserID, actor)
+
+	s.NoError(err)
+	s.NotNil(result)
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update_Forbidden() {
+	actor := regularActor()
+	req := &dto.Update{{.ModuleTitle}}Request{}
+	s.mockNoPermissions()
+
+	result, err := s.svc.Update(1, req, &actor.UserID, actor)
+
+	s.Nil(result)
+	s.Error(err)
+	var appErr *appErrors.AppError
+	s.ErrorAs(err, &appErr)
+	s.Equal(http.StatusForbidden, appErr.Code)
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update_NotFound() {
+	actor := superadminActor()
+	req := &dto.Update{{.ModuleTitle}}Request{}
+
+	s.repo.On("GetByID", int64(999)).Return(nil, nil)
+
+	result, err := s.svc.Update(999, req, &actor.UserID, actor)
+
+	s.Nil(result)
+	s.Error(err)
+	s.Contains(err.Error(), "tidak ditemukan")
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update_PartialFields() {
+	actor := superadminActor()
+	existing := factories.New{{.ModuleTitle}}Factory().Make()
+	existing.ID = 1
+	originalName := existing.Name
+	newDesc := "New description"
+
+	req := &dto.Update{{.ModuleTitle}}Request{Description: &newDesc}
+
+	s.repo.On("GetByID", int64(1)).Return(existing, nil)
+	s.repo.On("Update", mock.MatchedBy(func(m *models.{{.ModuleTitle}}) bool {
+		return m.Name == originalName && *m.Description == newDesc
+	})).Return(nil)
+
+	result, err := s.svc.Update(1, req, &actor.UserID, actor)
+
+	s.NoError(err)
+	s.Equal(originalName, result.Name)
+	s.Equal(newDesc, *result.Description)
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update_RepoError() {
+	actor := superadminActor()
+	existing := factories.New{{.ModuleTitle}}Factory().Make()
+	existing.ID = 1
+	req := &dto.Update{{.ModuleTitle}}Request{}
+
+	s.repo.On("GetByID", int64(1)).Return(existing, nil)
+	s.repo.On("Update", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(fmt.Errorf("db error"))
+
+	result, err := s.svc.Update(1, req, &actor.UserID, actor)
+
+	s.Nil(result)
+	s.Error(err)
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Delete_Superadmin_Success() {
+	actor := superadminActor()
+	existing := factories.New{{.ModuleTitle}}Factory().Make()
+	existing.ID = 1
+
+	s.repo.On("GetByID", int64(1)).Return(existing, nil)
+	s.repo.On("Delete", int64(1)).Return(nil)
+
+	err := s.svc.Delete(1, actor)
+
+	s.NoError(err)
+	s.repo.AssertExpectations(s.T())
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Delete_WithPermission_Success() {
+	actor := regularActor()
+	existing := factories.New{{.ModuleTitle}}Factory().Make()
+	existing.ID = 1
+
+	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyDelete).Return(true, nil)
+	s.repo.On("GetByID", int64(1)).Return(existing, nil)
+	s.repo.On("Delete", int64(1)).Return(nil)
+
+	err := s.svc.Delete(1, actor)
+
+	s.NoError(err)
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Delete_Forbidden() {
+	actor := regularActor()
+	s.mockNoPermissions()
+
+	err := s.svc.Delete(1, actor)
+
+	s.Error(err)
+	var appErr *appErrors.AppError
+	s.ErrorAs(err, &appErr)
+	s.Equal(http.StatusForbidden, appErr.Code)
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Delete_NotFound() {
+	actor := superadminActor()
+
+	s.repo.On("GetByID", int64(999)).Return(nil, nil)
+
+	err := s.svc.Delete(999, actor)
+
+	s.Error(err)
+	s.Contains(err.Error(), "tidak ditemukan")
+}
+
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Delete_RepoError() {
+	actor := superadminActor()
+	existing := factories.New{{.ModuleTitle}}Factory().Make()
+	existing.ID = 1
+
+	s.repo.On("GetByID", int64(1)).Return(existing, nil)
+	s.repo.On("Delete", int64(1)).Return(fmt.Errorf("db error"))
+
+	err := s.svc.Delete(1, actor)
+
+	s.Error(err)
+}
 `
