@@ -1,0 +1,9 @@
+[
+    { "code": "31.01", "provinsi_code": "31", "name": "KOTA JAKARTA PUSAT" },
+    { "code": "31.02", "provinsi_code": "31", "name": "KOTA JAKARTA UTARA" },
+
+    
+    { "code": "35.01", "provinsi_code": "35", "name": "KABUPATEN NGAWI" },
+    { "code": "35.02", "provinsi_code": "35", "name": "KOTA SURABAYA" }
+
+]

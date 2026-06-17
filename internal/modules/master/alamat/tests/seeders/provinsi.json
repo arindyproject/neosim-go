@@ -1,0 +1,12 @@
+[
+    { "code": "31", "negara_code": "ID", "name": "DKI JAKARTA" },
+    { "code": "32", "negara_code": "ID", "name": "JAWA BARAT" },
+    { "code": "33", "negara_code": "ID", "name": "JAWA TENGAH" },
+    { "code": "34", "negara_code": "ID", "name": "DI YOGYAKARTA" },
+    { "code": "35", "negara_code": "ID", "name": "JAWA TIMUR" },
+    { "code": "36", "negara_code": "ID", "name": "BANTEN" },
+    { "code": "51", "negara_code": "ID", "name": "BALI" },
+    { "code": "12", "negara_code": "ID", "name": "SUMATERA UTARA" },
+    { "code": "73", "negara_code": "ID", "name": "SULAWESI SELATAN" },
+    { "code": "64", "negara_code": "ID", "name": "KALIMANTAN TIMUR" }
+]

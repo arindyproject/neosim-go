@@ -46,6 +46,10 @@ import (
 	_ "neosim_go/internal/modules/auth"
 	_ "neosim_go/internal/modules/rbac"
 	_ "neosim_go/internal/modules/users"
+
+	// Master----------------------------------
+	//-------Alamat----------------------------
+	_ "neosim_go/internal/modules/master/alamat"
 	// =============== Modules ===============
 )
 

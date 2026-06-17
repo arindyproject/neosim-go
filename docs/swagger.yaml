@@ -1,39 +1,5 @@
 basePath: /api/v1
 definitions:
-  dto.ArtikelKategoriResponse:
-    properties:
-      created_at:
-        type: string
-      created_by:
-        type: integer
-      description:
-        type: string
-      id:
-        type: integer
-      name:
-        type: string
-      updated_at:
-        type: string
-      updated_by:
-        type: integer
-    type: object
-  dto.ArtikelResponse:
-    properties:
-      created_at:
-        type: string
-      created_by:
-        type: integer
-      description:
-        type: string
-      id:
-        type: integer
-      name:
-        type: string
-      updated_at:
-        type: string
-      updated_by:
-        type: integer
-    type: object
   dto.AssignDirectPermissionRequest:
     properties:
       is_granted:
@@ -78,7 +44,61 @@ definitions:
     - new_password
     - old_password
     type: object
-  dto.CreateArtikelKategoriRequest:
+  dto.CreateKecamatanRequest:
+    properties:
+      code:
+        maxLength: 10
+        minLength: 1
+        type: string
+      kota_kabupaten_id:
+        type: integer
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - code
+    - kota_kabupaten_id
+    - name
+    type: object
+  dto.CreateKelurahanDesaRequest:
+    properties:
+      code:
+        maxLength: 15
+        minLength: 1
+        type: string
+      kecamatan_id:
+        type: integer
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+      postal_code:
+        maxLength: 10
+        type: string
+    required:
+    - code
+    - kecamatan_id
+    - name
+    type: object
+  dto.CreateKotaKabupatenRequest:
+    properties:
+      code:
+        maxLength: 10
+        minLength: 1
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+      provinsi_id:
+        type: integer
+    required:
+    - code
+    - name
+    - provinsi_id
+    type: object
+  dto.CreateMasterRequest:
     properties:
       description:
         maxLength: 500
@@ -90,8 +110,12 @@ definitions:
     required:
     - name
     type: object
-  dto.CreateArtikelRequest:
+  dto.CreateNegaraRequest:
     properties:
+      code:
+        maxLength: 5
+        minLength: 2
+        type: string
       description:
         maxLength: 500
         type: string
@@ -100,6 +124,7 @@ definitions:
         minLength: 1
         type: string
     required:
+    - code
     - name
     type: object
   dto.CreatePermissionRequest:
@@ -128,6 +153,23 @@ definitions:
     - display_name
     - name
     - resource
+    type: object
+  dto.CreateProvinsiRequest:
+    properties:
+      code:
+        maxLength: 10
+        minLength: 1
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+      negara_id:
+        type: integer
+    required:
+    - code
+    - name
+    - negara_id
     type: object
   dto.CreateRoleRequest:
     properties:
@@ -189,6 +231,136 @@ definitions:
     required:
     - identifier
     type: object
+  dto.KecamatanDetailResponse:
+    properties:
+      code:
+        type: string
+      id:
+        type: integer
+      kota_kabupaten_id:
+        type: integer
+      kota_kabupaten_name:
+        type: string
+      name:
+        type: string
+      negara_id:
+        type: integer
+      negara_name:
+        type: string
+      provinsi_id:
+        type: integer
+      provinsi_name:
+        type: string
+      total_desa:
+        type: integer
+    type: object
+  dto.KecamatanResponse:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: integer
+      id:
+        type: integer
+      kota_kabupaten_id:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: integer
+    type: object
+  dto.KelurahanDesaDetailResponse:
+    properties:
+      code:
+        type: string
+      id:
+        type: integer
+      kecamatan_id:
+        type: integer
+      kecamatan_name:
+        type: string
+      kota_kabupaten_id:
+        type: integer
+      kota_kabupaten_name:
+        type: string
+      name:
+        type: string
+      negara_id:
+        type: integer
+      negara_name:
+        type: string
+      postal_code:
+        type: string
+      provinsi_id:
+        type: integer
+      provinsi_name:
+        type: string
+    type: object
+  dto.KelurahanDesaResponse:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: integer
+      id:
+        type: integer
+      kecamatan_id:
+        type: integer
+      name:
+        type: string
+      postal_code:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: integer
+    type: object
+  dto.KotaKabupatenDetailResponse:
+    properties:
+      code:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      negara_id:
+        type: integer
+      negara_name:
+        type: string
+      provinsi_id:
+        type: integer
+      provinsi_name:
+        type: string
+      total_desa:
+        type: integer
+      total_kecamatan:
+        type: integer
+    type: object
+  dto.KotaKabupatenResponse:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: integer
+      id:
+        type: integer
+      name:
+        type: string
+      provinsi_id:
+        type: integer
+      updated_at:
+        type: string
+      updated_by:
+        type: integer
+    type: object
   dto.LoginRequest:
     properties:
       identifier:
@@ -207,6 +379,42 @@ definitions:
     required:
     - refresh_token
     type: object
+  dto.MasterResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: integer
+    type: object
+  dto.NegaraResponse:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: integer
+    type: object
   dto.PermissionResponse:
     properties:
       action:
@@ -221,6 +429,44 @@ definitions:
         type: string
       resource:
         type: string
+    type: object
+  dto.ProvinsiDetailResponse:
+    properties:
+      code:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      negara_id:
+        type: integer
+      negara_name:
+        type: string
+      total_desa:
+        type: integer
+      total_kecamatan:
+        type: integer
+      total_kota:
+        type: integer
+    type: object
+  dto.ProvinsiResponse:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: integer
+      id:
+        type: integer
+      name:
+        type: string
+      negara_id:
+        type: integer
+      updated_at:
+        type: string
+      updated_by:
+        type: integer
     type: object
   dto.RefreshTokenRequest:
     properties:
@@ -322,7 +568,49 @@ definitions:
       user:
         $ref: '#/definitions/dto.UserResponse'
     type: object
-  dto.UpdateArtikelKategoriRequest:
+  dto.UpdateKecamatanRequest:
+    properties:
+      code:
+        maxLength: 10
+        minLength: 1
+        type: string
+      kota_kabupaten_id:
+        type: integer
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    type: object
+  dto.UpdateKelurahanDesaRequest:
+    properties:
+      code:
+        maxLength: 15
+        minLength: 1
+        type: string
+      kecamatan_id:
+        type: integer
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+      postal_code:
+        maxLength: 10
+        type: string
+    type: object
+  dto.UpdateKotaKabupatenRequest:
+    properties:
+      code:
+        maxLength: 10
+        minLength: 1
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+      provinsi_id:
+        type: integer
+    type: object
+  dto.UpdateMasterRequest:
     properties:
       description:
         maxLength: 500
@@ -332,8 +620,12 @@ definitions:
         minLength: 1
         type: string
     type: object
-  dto.UpdateArtikelRequest:
+  dto.UpdateNegaraRequest:
     properties:
+      code:
+        maxLength: 5
+        minLength: 2
+        type: string
       description:
         maxLength: 500
         type: string
@@ -351,6 +643,19 @@ definitions:
         maxLength: 255
         minLength: 3
         type: string
+    type: object
+  dto.UpdateProvinsiRequest:
+    properties:
+      code:
+        maxLength: 10
+        minLength: 1
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+      negara_id:
+        type: integer
     type: object
   dto.UpdateSettingsRequest:
     properties:
@@ -516,11 +821,11 @@ info:
   title: Neosim API V1
   version: "1.0"
 paths:
-  /api/v1/artikel:
+  /api/v1/master:
     get:
       consumes:
       - application/json
-      description: Get paginated list of Artikel
+      description: Get paginated list of Master
       parameters:
       - description: Filter by name (partial match)
         in: query
@@ -545,25 +850,25 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/dto.ArtikelResponse'
+                    $ref: '#/definitions/dto.MasterResponse'
                   type: array
               type: object
       security:
       - BearerAuth: []
-      summary: Get list of Artikel
+      summary: Get list of Master
       tags:
-      - artikel/artikel
+      - master/master
     post:
       consumes:
       - application/json
-      description: Create New Artikel
+      description: Create New Master
       parameters:
       - description: Create Request
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateArtikelRequest'
+          $ref: '#/definitions/dto.CreateMasterRequest'
       produces:
       - application/json
       responses:
@@ -574,20 +879,20 @@ paths:
             - $ref: '#/definitions/response.MyGoResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/dto.ArtikelResponse'
+                  $ref: '#/definitions/dto.MasterResponse'
               type: object
       security:
       - BearerAuth: []
-      summary: Create Artikel
+      summary: Create Master
       tags:
-      - artikel/artikel
-  /api/v1/artikel/{id}:
+      - master/master
+  /api/v1/master/{id}:
     delete:
       consumes:
       - application/json
-      description: Delete Artikel by :id
+      description: Delete Master by :id
       parameters:
-      - description: Artikel ID
+      - description: Master ID
         in: path
         name: id
         required: true
@@ -601,15 +906,15 @@ paths:
             $ref: '#/definitions/response.MyGoResponse'
       security:
       - BearerAuth: []
-      summary: Delete Artikel
+      summary: Delete Master
       tags:
-      - artikel/artikel
+      - master/master
     get:
       consumes:
       - application/json
-      description: Get Artikel by :id
+      description: Get Master by :id
       parameters:
-      - description: Artikel ID
+      - description: Master ID
         in: path
         name: id
         required: true
@@ -624,19 +929,19 @@ paths:
             - $ref: '#/definitions/response.MyGoResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/dto.ArtikelResponse'
+                  $ref: '#/definitions/dto.MasterResponse'
               type: object
       security:
       - BearerAuth: []
-      summary: Get Artikel
+      summary: Get Master
       tags:
-      - artikel/artikel
+      - master/master
     put:
       consumes:
       - application/json
-      description: Update Artikel by :id
+      description: Update Master by :id
       parameters:
-      - description: Artikel ID
+      - description: Master ID
         in: path
         name: id
         required: true
@@ -646,7 +951,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.UpdateArtikelRequest'
+          $ref: '#/definitions/dto.UpdateMasterRequest'
       produces:
       - application/json
       responses:
@@ -657,161 +962,13 @@ paths:
             - $ref: '#/definitions/response.MyGoResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/dto.ArtikelResponse'
+                  $ref: '#/definitions/dto.MasterResponse'
               type: object
       security:
       - BearerAuth: []
-      summary: Update Artikel
+      summary: Update Master
       tags:
-      - artikel/artikel
-  /api/v1/artikel/kategori:
-    get:
-      consumes:
-      - application/json
-      description: Get paginated list of ArtikelKategori
-      parameters:
-      - description: Filter by name (partial match)
-        in: query
-        name: name
-        type: string
-      - description: Page number
-        in: query
-        name: page
-        type: integer
-      - description: Page size
-        in: query
-        name: page_size
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.MyGoResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/dto.ArtikelKategoriResponse'
-                  type: array
-              type: object
-      security:
-      - BearerAuth: []
-      summary: Get list of ArtikelKategori
-      tags:
-      - artikel/kategori
-    post:
-      consumes:
-      - application/json
-      description: Create New ArtikelKategori
-      parameters:
-      - description: Create Request
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/dto.CreateArtikelKategoriRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.MyGoResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.ArtikelKategoriResponse'
-              type: object
-      security:
-      - BearerAuth: []
-      summary: Create ArtikelKategori
-      tags:
-      - artikel/kategori
-  /api/v1/artikel/kategori/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete ArtikelKategori by :id
-      parameters:
-      - description: ArtikelKategori ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.MyGoResponse'
-      security:
-      - BearerAuth: []
-      summary: Delete ArtikelKategori
-      tags:
-      - artikel/kategori
-    get:
-      consumes:
-      - application/json
-      description: Get ArtikelKategori by :id
-      parameters:
-      - description: ArtikelKategori ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.MyGoResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.ArtikelKategoriResponse'
-              type: object
-      security:
-      - BearerAuth: []
-      summary: Get ArtikelKategori
-      tags:
-      - artikel/kategori
-    put:
-      consumes:
-      - application/json
-      description: Update ArtikelKategori by :id
-      parameters:
-      - description: ArtikelKategori ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Update Request
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/dto.UpdateArtikelKategoriRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.MyGoResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.ArtikelKategoriResponse'
-              type: object
-      security:
-      - BearerAuth: []
-      summary: Update ArtikelKategori
-      tags:
-      - artikel/kategori
+      - master/master
   /auth/forgot-password:
     post:
       consumes:
@@ -978,6 +1135,786 @@ paths:
       summary: Reset password
       tags:
       - Auth
+  /master/alamat/desa:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of Kelurahan/Desa
+      parameters:
+      - description: Filter by kecamatan_id
+        in: query
+        name: kecamatan_id
+        type: integer
+      - description: Filter by code
+        in: query
+        name: code
+        type: string
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Filter by postal code
+        in: query
+        name: postal_code
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.KelurahanDesaResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Kelurahan/Desa
+      tags:
+      - master/alamat/desa
+    post:
+      consumes:
+      - application/json
+      description: Create New Kelurahan/Desa
+      parameters:
+      - description: Create Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateKelurahanDesaRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KelurahanDesaResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create Kelurahan/Desa
+      tags:
+      - master/alamat/desa
+  /master/alamat/desa/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Kelurahan/Desa by :id
+      parameters:
+      - description: Kelurahan/Desa ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete Kelurahan/Desa
+      tags:
+      - master/alamat/desa
+    get:
+      consumes:
+      - application/json
+      description: Get Kelurahan/Desa detail by :id, termasuk jalur hierarki lengkap
+      parameters:
+      - description: Kelurahan/Desa ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KelurahanDesaDetailResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get Kelurahan/Desa
+      tags:
+      - master/alamat/desa
+    put:
+      consumes:
+      - application/json
+      description: Update Kelurahan/Desa by :id
+      parameters:
+      - description: Kelurahan/Desa ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateKelurahanDesaRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KelurahanDesaResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update Kelurahan/Desa
+      tags:
+      - master/alamat/desa
+  /master/alamat/kecamatan:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of Kecamatan
+      parameters:
+      - description: Filter by kota_kabupaten_id
+        in: query
+        name: kota_kabupaten_id
+        type: integer
+      - description: Filter by code
+        in: query
+        name: code
+        type: string
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.KecamatanResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Kecamatan
+      tags:
+      - master/alamat/kecamatan
+    post:
+      consumes:
+      - application/json
+      description: Create New Kecamatan
+      parameters:
+      - description: Create Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateKecamatanRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KecamatanResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create Kecamatan
+      tags:
+      - master/alamat/kecamatan
+  /master/alamat/kecamatan/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Kecamatan by :id
+      parameters:
+      - description: Kecamatan ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete Kecamatan
+      tags:
+      - master/alamat/kecamatan
+    get:
+      consumes:
+      - application/json
+      description: Get Kecamatan detail by :id, termasuk statistik turunan
+      parameters:
+      - description: Kecamatan ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KecamatanDetailResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get Kecamatan
+      tags:
+      - master/alamat/kecamatan
+    put:
+      consumes:
+      - application/json
+      description: Update Kecamatan by :id
+      parameters:
+      - description: Kecamatan ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateKecamatanRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KecamatanResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update Kecamatan
+      tags:
+      - master/alamat/kecamatan
+  /master/alamat/kota:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of Kota/Kabupaten
+      parameters:
+      - description: Filter by provinsi_id
+        in: query
+        name: provinsi_id
+        type: integer
+      - description: Filter by code
+        in: query
+        name: code
+        type: string
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.KotaKabupatenResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Kota/Kabupaten
+      tags:
+      - master/alamat/kota
+    post:
+      consumes:
+      - application/json
+      description: Create New Kota/Kabupaten
+      parameters:
+      - description: Create Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateKotaKabupatenRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KotaKabupatenResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create Kota/Kabupaten
+      tags:
+      - master/alamat/kota
+  /master/alamat/kota/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Kota/Kabupaten by :id
+      parameters:
+      - description: Kota/Kabupaten ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete Kota/Kabupaten
+      tags:
+      - master/alamat/kota
+    get:
+      consumes:
+      - application/json
+      description: Get Kota/Kabupaten detail by :id, termasuk statistik turunan
+      parameters:
+      - description: Kota/Kabupaten ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KotaKabupatenDetailResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get Kota/Kabupaten
+      tags:
+      - master/alamat/kota
+    put:
+      consumes:
+      - application/json
+      description: Update Kota/Kabupaten by :id
+      parameters:
+      - description: Kota/Kabupaten ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateKotaKabupatenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KotaKabupatenResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update Kota/Kabupaten
+      tags:
+      - master/alamat/kota
+  /master/alamat/negara:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of Negara
+      parameters:
+      - description: Filter by code
+        in: query
+        name: code
+        type: string
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.NegaraResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Negara
+      tags:
+      - master/alamat/negara
+    post:
+      consumes:
+      - application/json
+      description: Create New Negara
+      parameters:
+      - description: Create Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateNegaraRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.NegaraResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create Negara
+      tags:
+      - master/alamat/negara
+  /master/alamat/negara/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Negara by :id
+      parameters:
+      - description: Negara ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete Negara
+      tags:
+      - master/alamat/negara
+    get:
+      consumes:
+      - application/json
+      description: Get Negara by :id
+      parameters:
+      - description: Negara ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.NegaraResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get Negara
+      tags:
+      - master/alamat/negara
+    put:
+      consumes:
+      - application/json
+      description: Update Negara by :id
+      parameters:
+      - description: Negara ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateNegaraRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.NegaraResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update Negara
+      tags:
+      - master/alamat/negara
+  /master/alamat/provinsi:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of Provinsi
+      parameters:
+      - description: Filter by negara_id
+        in: query
+        name: negara_id
+        type: integer
+      - description: Filter by code
+        in: query
+        name: code
+        type: string
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.ProvinsiResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Provinsi
+      tags:
+      - master/alamat/provinsi
+    post:
+      consumes:
+      - application/json
+      description: Create New Provinsi
+      parameters:
+      - description: Create Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateProvinsiRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ProvinsiResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create Provinsi
+      tags:
+      - master/alamat/provinsi
+  /master/alamat/provinsi/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Provinsi by :id
+      parameters:
+      - description: Provinsi ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete Provinsi
+      tags:
+      - master/alamat/provinsi
+    get:
+      consumes:
+      - application/json
+      description: Get Provinsi detail by :id, termasuk statistik turunan
+      parameters:
+      - description: Provinsi ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ProvinsiDetailResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get Provinsi
+      tags:
+      - master/alamat/provinsi
+    put:
+      consumes:
+      - application/json
+      description: Update Provinsi by :id
+      parameters:
+      - description: Provinsi ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateProvinsiRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ProvinsiResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update Provinsi
+      tags:
+      - master/alamat/provinsi
   /rbac/permissions:
     get:
       consumes:
