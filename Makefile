@@ -217,6 +217,12 @@ test-users: ## Run tests for users module
 test-rbac: ## Run tests for rbac module
 	@go test -json ./internal/modules/rbac/tests | gotestfmt
 
+test-master: ## Run tests for master module
+	@go test -json ./internal/modules/master/.../tests | gotestfmt
+
+test-master-alamat: ## Run tests for master module
+	@go test -json ./internal/modules/master/alamat/tests | gotestfmt
+
 test: ## Run all tests
 	@go test -json ./internal/modules/.../tests | gotestfmt
 	@go test -json ./internal/modules/.../.../tests | gotestfmt

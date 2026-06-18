@@ -11,7 +11,7 @@ import (
 
 // SetupTestDB membuat koneksi DB untuk keperluan test
 func SetupTestDB() *gorm.DB {
-	cfg := config.LoadConfig("DEV")
+	cfg := config.LoadConfig()
 	db, err := cfg.ConnectDB()
 	if err != nil {
 		log.Fatal("Gagal koneksi DB untuk test:", err)
@@ -21,7 +21,13 @@ func SetupTestDB() *gorm.DB {
 
 // MigrateTestDB menjalankan migrasi untuk test DB
 func MigrateTestDB(db *gorm.DB) {
-	if err := db.AutoMigrate(&models.MasterAlamat{}); err != nil {
+	if err := db.AutoMigrate(
+		&models.MasterAlamatNegara{},
+		&models.MasterAlamatProvinsi{},
+		&models.MasterAlamatKotaKabupaten{},
+		&models.MasterAlamatKecamatan{},
+		&models.MasterAlamatKelurahanDesa{},
+	); err != nil {
 		log.Fatal("Gagal migrasi test DB:", err)
 	}
 }

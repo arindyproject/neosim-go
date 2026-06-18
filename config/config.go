@@ -69,6 +69,10 @@ type Config struct {
 	RedisPassword string
 	RedisDB       int
 
+	//Cache
+	CacheMasterAlamat       bool
+	CacheMasterAlamatTTLDay int
+
 	// SMTP
 	SMTPHost     string
 	SMTPPort     int
@@ -159,6 +163,10 @@ func LoadConfig() *Config {
 		RedisPort:     getEnv("REDIS_PORT", "6379"),
 		RedisPassword: getEnv("REDIS_PASSWORD", ""),
 		RedisDB:       getEnvAsInt("REDIS_DB", 0),
+
+		// ─── Cache ─────────────────────────────────────────────
+		CacheMasterAlamat:       getEnvAsBool("CACHE_MASTER_ALAMAT", false),
+		CacheMasterAlamatTTLDay: getEnvAsInt("CACHE_MASTER_ALAMAT_TTL_DAY", 7),
 
 		// ─── SMTP ──────────────────────────────────────────────
 		SMTPHost:     getEnv("SMTP_HOST", ""),
