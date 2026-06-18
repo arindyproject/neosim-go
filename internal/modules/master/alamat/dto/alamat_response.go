@@ -1,9 +1,8 @@
 package dto
 
 import (
-	"time"
-
 	"neosim_go/internal/modules/master/alamat/models"
+	"neosim_go/internal/shared/types"
 )
 
 // ProvinsiDetailResponse response detail provinsi dengan statistik turunan
@@ -71,63 +70,63 @@ type KelurahanDesaDetailResponse struct {
 
 // NegaraResponse response untuk single Negara
 type NegaraResponse struct {
-	ID          int64     `json:"id"`
-	Code        string    `json:"code"`
-	Name        string    `json:"name"`
-	Description *string   `json:"description"`
-	CreatedBy   *int64    `json:"created_by"`
-	UpdatedBy   *int64    `json:"updated_by"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID          int64            `json:"id"`
+	Code        string           `json:"code"`
+	Name        string           `json:"name"`
+	Description *string          `json:"description"`
+	CreatedBy   *int64           `json:"created_by"`
+	UpdatedBy   *int64           `json:"updated_by"`
+	CreatedAt   types.CustomTime `json:"created_at"`
+	UpdatedAt   types.CustomTime `json:"updated_at"`
 }
 
 // ProvinsiResponse response untuk single Provinsi
 type ProvinsiResponse struct {
-	ID        int64     `json:"id"`
-	NegaraID  int64     `json:"negara_id"`
-	Code      string    `json:"code"`
-	Name      string    `json:"name"`
-	CreatedBy *int64    `json:"created_by"`
-	UpdatedBy *int64    `json:"updated_by"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        int64            `json:"id"`
+	NegaraID  int64            `json:"negara_id"`
+	Code      string           `json:"code"`
+	Name      string           `json:"name"`
+	CreatedBy *int64           `json:"created_by"`
+	UpdatedBy *int64           `json:"updated_by"`
+	CreatedAt types.CustomTime `json:"created_at"`
+	UpdatedAt types.CustomTime `json:"updated_at"`
 }
 
 // KotaKabupatenResponse response untuk single Kota/Kabupaten
 type KotaKabupatenResponse struct {
-	ID         int64     `json:"id"`
-	ProvinsiID int64     `json:"provinsi_id"`
-	Code       string    `json:"code"`
-	Name       string    `json:"name"`
-	CreatedBy  *int64    `json:"created_by"`
-	UpdatedBy  *int64    `json:"updated_by"`
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
+	ID         int64            `json:"id"`
+	ProvinsiID int64            `json:"provinsi_id"`
+	Code       string           `json:"code"`
+	Name       string           `json:"name"`
+	CreatedBy  *int64           `json:"created_by"`
+	UpdatedBy  *int64           `json:"updated_by"`
+	CreatedAt  types.CustomTime `json:"created_at"`
+	UpdatedAt  types.CustomTime `json:"updated_at"`
 }
 
 // KecamatanResponse response untuk single Kecamatan
 type KecamatanResponse struct {
-	ID              int64     `json:"id"`
-	KotaKabupatenID int64     `json:"kota_kabupaten_id"`
-	Code            string    `json:"code"`
-	Name            string    `json:"name"`
-	CreatedBy       *int64    `json:"created_by"`
-	UpdatedBy       *int64    `json:"updated_by"`
-	CreatedAt       time.Time `json:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
+	ID              int64            `json:"id"`
+	KotaKabupatenID int64            `json:"kota_kabupaten_id"`
+	Code            string           `json:"code"`
+	Name            string           `json:"name"`
+	CreatedBy       *int64           `json:"created_by"`
+	UpdatedBy       *int64           `json:"updated_by"`
+	CreatedAt       types.CustomTime `json:"created_at"`
+	UpdatedAt       types.CustomTime `json:"updated_at"`
 }
 
 // KelurahanDesaResponse response untuk single Kelurahan/Desa
 type KelurahanDesaResponse struct {
-	ID          int64     `json:"id"`
-	KecamatanID int64     `json:"kecamatan_id"`
-	Code        string    `json:"code"`
-	Name        string    `json:"name"`
-	PostalCode  *string   `json:"postal_code"`
-	CreatedBy   *int64    `json:"created_by"`
-	UpdatedBy   *int64    `json:"updated_by"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID          int64            `json:"id"`
+	KecamatanID int64            `json:"kecamatan_id"`
+	Code        string           `json:"code"`
+	Name        string           `json:"name"`
+	PostalCode  *string          `json:"postal_code"`
+	CreatedBy   *int64           `json:"created_by"`
+	UpdatedBy   *int64           `json:"updated_by"`
+	CreatedAt   types.CustomTime `json:"created_at"`
+	UpdatedAt   types.CustomTime `json:"updated_at"`
 }
 
 // =====================================================================
@@ -146,8 +145,8 @@ func ToNegaraResponse(m *models.MasterAlamatNegara) *NegaraResponse {
 		Description: m.Description,
 		CreatedBy:   m.CreatedBy,
 		UpdatedBy:   m.UpdatedBy,
-		CreatedAt:   m.CreatedAt,
-		UpdatedAt:   m.UpdatedAt,
+		CreatedAt:   types.CustomTime(m.CreatedAt),
+		UpdatedAt:   types.CustomTime(m.UpdatedAt),
 	}
 }
 
@@ -176,8 +175,8 @@ func ToProvinsiResponse(m *models.MasterAlamatProvinsi) *ProvinsiResponse {
 		Name:      m.Name,
 		CreatedBy: m.CreatedBy,
 		UpdatedBy: m.UpdatedBy,
-		CreatedAt: m.CreatedAt,
-		UpdatedAt: m.UpdatedAt,
+		CreatedAt: types.CustomTime(m.CreatedAt),
+		UpdatedAt: types.CustomTime(m.UpdatedAt),
 	}
 }
 
@@ -206,8 +205,8 @@ func ToKotaKabupatenResponse(m *models.MasterAlamatKotaKabupaten) *KotaKabupaten
 		Name:       m.Name,
 		CreatedBy:  m.CreatedBy,
 		UpdatedBy:  m.UpdatedBy,
-		CreatedAt:  m.CreatedAt,
-		UpdatedAt:  m.UpdatedAt,
+		CreatedAt:  types.CustomTime(m.CreatedAt),
+		UpdatedAt:  types.CustomTime(m.UpdatedAt),
 	}
 }
 
@@ -236,8 +235,8 @@ func ToKecamatanResponse(m *models.MasterAlamatKecamatan) *KecamatanResponse {
 		Name:            m.Name,
 		CreatedBy:       m.CreatedBy,
 		UpdatedBy:       m.UpdatedBy,
-		CreatedAt:       m.CreatedAt,
-		UpdatedAt:       m.UpdatedAt,
+		CreatedAt:       types.CustomTime(m.CreatedAt),
+		UpdatedAt:       types.CustomTime(m.UpdatedAt),
 	}
 }
 
@@ -267,8 +266,8 @@ func ToKelurahanDesaResponse(m *models.MasterAlamatKelurahanDesa) *KelurahanDesa
 		PostalCode:  m.PostalCode,
 		CreatedBy:   m.CreatedBy,
 		UpdatedBy:   m.UpdatedBy,
-		CreatedAt:   m.CreatedAt,
-		UpdatedAt:   m.UpdatedAt,
+		CreatedAt:   types.CustomTime(m.CreatedAt),
+		UpdatedAt:   types.CustomTime(m.UpdatedAt),
 	}
 }
 
