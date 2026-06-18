@@ -18,6 +18,7 @@ import (
 
 	alamatContracts "neosim_go/internal/modules/master/alamat/contracts"
 	rbacModels "neosim_go/internal/modules/rbac/models"
+	"neosim_go/internal/shared/cache"
 	appErrors "neosim_go/internal/shared/errors"
 )
 
@@ -53,7 +54,8 @@ func (s *MasterAlamatServiceTestSuite) SetupTest() {
 	// Kita passing `nil` untuk redis.Client dan `false` untuk cacheEnabled.
 	// Tujuannya agar unit test tidak bergantung pada koneksi Redis yang sebenarnya
 	// dan fokus menguji logika bisnis, validasi, serta permission seperti semula.
-	s.svc = services.NewMasterAlamatService(s.repo, s.rbacRepo, s.authRepo, nil)
+	cacheManager := cache.NewManager(nil, false, 0)
+	s.svc = services.NewMasterAlamatService(s.repo, s.rbacRepo, s.authRepo, cacheManager)
 }
 
 func TestMasterAlamatService(t *testing.T) {
