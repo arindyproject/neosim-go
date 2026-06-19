@@ -109,14 +109,10 @@ func buildFileList(cfg ModuleConfig, base string) []fileEntry {
 		{filepath.Join(base, "models", fmt.Sprintf("%s.go", cfg.ModuleName)), tmplModel},
 		//repositories------------------------------------------------------------
 		{filepath.Join(base, "repositories", fmt.Sprintf("%s_repository.go", cfg.ModuleName)), tmplRepository},
-		{filepath.Join(base, "repositories", "repository.go"), tmplMainRepository},
 		//services----------------------------------------------------------------
 		{filepath.Join(base, "services", fmt.Sprintf("%s_service.go", cfg.ModuleName)), tmplService},
-		{filepath.Join(base, "services", "service.go"), tmplMainService},
-		{filepath.Join(base, "services", "permission.go"), tmplPermissionService},
 		//handlers----------------------------------------------------------------
 		{filepath.Join(base, "handlers", fmt.Sprintf("%s_handler.go", cfg.ModuleName)), tmplHandler},
-		{filepath.Join(base, "handlers", "handler.go"), tmplMainHandler},
 		//migrations--------------------------------------------------------------
 		{filepath.Join(base, "migrations", fmt.Sprintf("%s_migrate.go", cfg.ModuleName)), tmplMigration},
 		{filepath.Join(base, "migrations", fmt.Sprintf("001_create_%s_table.sql", cfg.TableName)), tmplSQL},
@@ -221,10 +217,13 @@ var tmplContracts = `package contracts
 import (
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
-	he "{{.ProjectModule}}/internal/shared/httputil"
 )
 
-
+// AuthContext berisi informasi user yang sedang login untuk authorization
+type AuthContext struct {
+	UserID       int64
+	IsSuperadmin bool
+}
 
 // Repository defines database operations
 type Repository interface {
@@ -237,11 +236,11 @@ type Repository interface {
 
 // Service defines business logic operations
 type Service interface {
-	Create(req *dto.Create{{.ModuleTitle}}Request, createdBy *int64, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error)
-	GetByID(id int64 , actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error)
-	List(page, pageSize int,filter *dto.Filter{{.ModuleTitle}}Request, actor he.AuthContext) ([]dto.{{.ModuleTitle}}Response, int64, error)
-	Update(id int64, req *dto.Update{{.ModuleTitle}}Request, updatedBy *int64, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error)
-	Delete(id int64, actor he.AuthContext) error
+	Create(req *dto.Create{{.ModuleTitle}}Request, createdBy *int64, actor AuthContext) (*dto.{{.ModuleTitle}}Response, error)
+	GetByID(id int64 , actor AuthContext) (*dto.{{.ModuleTitle}}Response, error)
+	List(page, pageSize int,filter *dto.Filter{{.ModuleTitle}}Request, actor AuthContext) ([]dto.{{.ModuleTitle}}Response, int64, error)
+	Update(id int64, req *dto.Update{{.ModuleTitle}}Request, updatedBy *int64, actor AuthContext) (*dto.{{.ModuleTitle}}Response, error)
+	Delete(id int64, actor AuthContext) error
 }
 `
 
@@ -337,10 +336,15 @@ func ({{.ModuleTitle}}) TableName() string {
 `
 
 // Repository----------------------------------------------------------
-var tmplMainRepository = `
-package repositories
+var tmplRepository = `package repositories
+
 import (
+	"errors"
+
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/contracts"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
+
 	"gorm.io/gorm"
 )
 
@@ -352,21 +356,6 @@ type repository struct {
 func New{{.ModuleTitle}}Repository(db *gorm.DB) contracts.Repository {
 	return &repository{db: db}
 }
-`
-
-var tmplRepository = `
-package repositories
-
-import (
-	"errors"
-
-	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
-	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
-
-	"gorm.io/gorm"
-)
-
-
 
 func (r *repository) Create(m *models.{{.ModuleTitle}}) error {
 	return r.db.Create(m).Error
@@ -418,16 +407,23 @@ func (r *repository) Delete(id int64) error {
 `
 
 // Service-------------------------------------------------------------
-var tmplMainService = `
-package services
+var tmplService = `package services
 
 import (
+	"errors"
+	"time"
+	"net/http"
 
 	{{.ModuleName}}Contracts "{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/contracts"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
 
 	//RBAC AUTH----------------------------------------
 	authContracts "{{.ProjectModule}}/internal/modules/auth/contracts"
 	rbacContracts "{{.ProjectModule}}/internal/modules/rbac/contracts"
+	rbacMiddlewares "{{.ProjectModule}}/internal/modules/rbac/middlewares"
+	rbacModels "{{.ProjectModule}}/internal/modules/rbac/models"
+	appErrors "{{.ProjectModule}}/internal/shared/errors"
 )
 
 // ─── Init ───────────────────────────────────────────────────────────────────────
@@ -449,19 +445,10 @@ func New{{.ModuleTitle}}Service(
 		authRepo: authRepo,	//AUTH
 	}
 }
-`
 
-var tmplPermissionService = `
-package services
-
-import (
-	rbacMiddlewares "{{.ProjectModule}}/internal/modules/rbac/middlewares"
-	rbacModels "{{.ProjectModule}}/internal/modules/rbac/models"
-	he "{{.ProjectModule}}/internal/shared/httputil"
-)
 
 // ─── Permission ─────────────────────────────────────────────────────────────────
-func (s *service) canRead{{.ModuleTitle}}(actor  he.AuthContext) (bool, error) {
+func (s *service) canRead{{.ModuleTitle}}(actor {{.ModuleName}}Contracts.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
 	}
@@ -474,7 +461,7 @@ func (s *service) canRead{{.ModuleTitle}}(actor  he.AuthContext) (bool, error) {
 	return false, nil
 }
 
-func (s *service) canCreate{{.ModuleTitle}}(actor  he.AuthContext) (bool, error) {
+func (s *service) canCreate{{.ModuleTitle}}(actor {{.ModuleName}}Contracts.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
 	}
@@ -487,7 +474,7 @@ func (s *service) canCreate{{.ModuleTitle}}(actor  he.AuthContext) (bool, error)
 	return false, nil
 }
 
-func (s *service) canUpdate{{.ModuleTitle}}(actor  he.AuthContext) (bool, error) {
+func (s *service) canUpdate{{.ModuleTitle}}(actor {{.ModuleName}}Contracts.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
 	}
@@ -500,7 +487,7 @@ func (s *service) canUpdate{{.ModuleTitle}}(actor  he.AuthContext) (bool, error)
 	return false, nil
 }
 
-func (s *service) canDelete{{.ModuleTitle}}(actor  he.AuthContext) (bool, error) {
+func (s *service) canDelete{{.ModuleTitle}}(actor {{.ModuleName}}Contracts.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
 	}
@@ -512,31 +499,11 @@ func (s *service) canDelete{{.ModuleTitle}}(actor  he.AuthContext) (bool, error)
 	}
 	return false, nil
 }
-`
-
-var tmplService = `
-package services
-
-import (
-	"errors"
-	"time"
-	"net/http"
-
-	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
-	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
-	appErrors "{{.ProjectModule}}/internal/shared/errors"
-	he "{{.ProjectModule}}/internal/shared/httputil"
-)
-
-
-
-
-
 
 // ─── Service ────────────────────────────────────────────────────────────────────
 
 // ------------ Create ------------------------------------------------------------
-func (s *service) Create(req *dto.Create{{.ModuleTitle}}Request, createdBy *int64, actor  he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
+func (s *service) Create(req *dto.Create{{.ModuleTitle}}Request, createdBy *int64, actor {{.ModuleName}}Contracts.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
 	// ─── Permission ─────────────────────────────────────────────────────────────
 	can, err := s.canCreate{{.ModuleTitle}}(actor)
 	if err != nil {
@@ -561,7 +528,7 @@ func (s *service) Create(req *dto.Create{{.ModuleTitle}}Request, createdBy *int6
 }
 
 // ------------ GetByID -----------------------------------------------------------
-func (s *service) GetByID(id int64, actor  he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
+func (s *service) GetByID(id int64, actor {{.ModuleName}}Contracts.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
 	// ─── Permission ─────────────────────────────────────────────────────────────
 	can, err := s.canRead{{.ModuleTitle}}(actor)
 	if err != nil {
@@ -584,7 +551,7 @@ func (s *service) GetByID(id int64, actor  he.AuthContext) (*dto.{{.ModuleTitle}
 }
 
 // ------------ List --------------------------------------------------------------
-func (s *service) List(page, pageSize int,filter *dto.Filter{{.ModuleTitle}}Request, actor  he.AuthContext) ([]dto.{{.ModuleTitle}}Response, int64, error) {
+func (s *service) List(page, pageSize int,filter *dto.Filter{{.ModuleTitle}}Request, actor {{.ModuleName}}Contracts.AuthContext) ([]dto.{{.ModuleTitle}}Response, int64, error) {
 	// ─── Permission ─────────────────────────────────────────────────────────────
 	can, err := s.canRead{{.ModuleTitle}}(actor)
 	if err != nil {
@@ -610,7 +577,7 @@ func (s *service) List(page, pageSize int,filter *dto.Filter{{.ModuleTitle}}Requ
 }
 
 // ------------ Update ------------------------------------------------------------
-func (s *service) Update(id int64, req *dto.Update{{.ModuleTitle}}Request, updatedBy *int64, actor  he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
+func (s *service) Update(id int64, req *dto.Update{{.ModuleTitle}}Request, updatedBy *int64, actor {{.ModuleName}}Contracts.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
 	// ─── Permission ─────────────────────────────────────────────────────────────
 	can, err := s.canUpdate{{.ModuleTitle}}(actor)
 	if err != nil {
@@ -645,7 +612,7 @@ func (s *service) Update(id int64, req *dto.Update{{.ModuleTitle}}Request, updat
 }
 
 // ------------ Delete ------------------------------------------------------------
-func (s *service) Delete(id int64, actor  he.AuthContext) error {
+func (s *service) Delete(id int64, actor {{.ModuleName}}Contracts.AuthContext) error {
 	// ─── Permission ─────────────────────────────────────────────────────────────
 	can, err := s.canDelete{{.ModuleTitle}}(actor)
 	if err != nil {
@@ -669,13 +636,21 @@ func (s *service) Delete(id int64, actor  he.AuthContext) error {
 `
 
 // Handler-------------------------------------------------------------
-var tmplMainHandler = `
-package handlers
+var tmplHandler = `package handlers
 
 import (
-	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/contracts"
-)
+	"net/http"
+	"strconv"
 
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/contracts"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
+	"{{.ProjectModule}}/internal/shared/response"
+	"{{.ProjectModule}}/internal/shared/validator"
+
+	rbacMiddlewares "{{.ProjectModule}}/internal/modules/rbac/middlewares"
+
+	"github.com/labstack/echo/v5"
+)
 
 // {{.ModuleTitle}}Handler defines HTTP handlers
 type {{.ModuleTitle}}Handler struct {
@@ -686,22 +661,29 @@ type {{.ModuleTitle}}Handler struct {
 func New{{.ModuleTitle}}Handler(service contracts.Service) *{{.ModuleTitle}}Handler {
 	return &{{.ModuleTitle}}Handler{service: service}
 }
-`
 
-var tmplHandler = `package handlers
+// buildAuthContext membuat AuthContext dari JWT claims di context
+func buildAuthContext(c *echo.Context) contracts.AuthContext {
+	userID, _ := rbacMiddlewares.GetUserIDFromContext(c)
+	isSuperadmin := rbacMiddlewares.IsSuperadmin(c)
+	return contracts.AuthContext{
+		UserID:       userID,
+		IsSuperadmin: isSuperadmin,
+	}
+}
 
-import (
-	"net/http"
-	"strconv"
+// ─── Private Helpers ───────────────────────────────────────────────────────────
 
-	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
-	"{{.ProjectModule}}/internal/shared/response"
-	"{{.ProjectModule}}/internal/shared/validator"
+func parseID(c *echo.Context) (int64, error) {
+	return strconv.ParseInt(c.Param("id"), 10, 64)
+}
 
-	he "{{.ProjectModule}}/internal/shared/httputil"
-
-	"github.com/labstack/echo/v5"
-)
+func getActorID(c *echo.Context) *int64 {
+	if userID, ok := c.Get("userID").(int64); ok {
+		return &userID
+	}
+	return nil
+}
 
 // ─── Handlers ──────────────────────────────────────────────────────────────────
 
@@ -740,7 +722,7 @@ func (h *{{.ModuleTitle}}Handler) List(c *echo.Context) error {
 		}
 	}
 
-	actor := he.BuildAuthContext(c)
+	actor := buildAuthContext(c)
 	items, total, err := h.service.List(page, pageSize,&filter, actor)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
@@ -764,12 +746,12 @@ func (h *{{.ModuleTitle}}Handler) List(c *echo.Context) error {
 //
 // GetByID handles GET {{.URLPrefix}}/:id
 func (h *{{.ModuleTitle}}Handler) GetByID(c *echo.Context) error {
-	id, err :=  he.ParseID(c)
+	id, err := parseID(c)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 
-	actor := he.BuildAuthContext(c)
+	actor := buildAuthContext(c)
 	item, err := h.service.GetByID(id, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
@@ -802,7 +784,7 @@ func (h *{{.ModuleTitle}}Handler) Create(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 
-	actor := he.BuildAuthContext(c)
+	actor := buildAuthContext(c)
 	item, err := h.service.Create(&req, getActorID(c), actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
@@ -828,7 +810,7 @@ func (h *{{.ModuleTitle}}Handler) Create(c *echo.Context) error {
 //
 // Update handles PUT {{.URLPrefix}}/:id
 func (h *{{.ModuleTitle}}Handler) Update(c *echo.Context) error {
-	id, err :=  he.ParseID(c)
+	id, err := parseID(c)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
@@ -842,7 +824,7 @@ func (h *{{.ModuleTitle}}Handler) Update(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 
-	actor := he.BuildAuthContext(c)
+	actor := buildAuthContext(c)
 	item, err := h.service.Update(id, &req, getActorID(c), actor)
 	if err != nil {
 		status := http.StatusBadRequest
@@ -870,12 +852,12 @@ func (h *{{.ModuleTitle}}Handler) Update(c *echo.Context) error {
 //
 // Delete handles DELETE {{.URLPrefix}}/:id
 func (h *{{.ModuleTitle}}Handler) Delete(c *echo.Context) error {
-	id, err :=  he.ParseID(c)
+	id, err := parseID(c)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 
-	actor := he.BuildAuthContext(c)
+	actor := buildAuthContext(c)
 	if err := h.service.Delete(id, actor); err != nil {
 		status := http.StatusInternalServerError
 		if err.Error() == "{{.ModuleTitle}} tidak ditemukan" {
@@ -1577,12 +1559,12 @@ func Test{{.ModuleTitle}}Service(t *testing.T) {
 	suite.Run(t, new({{.ModuleTitle}}ServiceTestSuite))
 }
 
-func superadminActor()  he.AuthContext {
-	return  he.AuthContext{UserID: 1, IsSuperadmin: true}
+func superadminActor() {{.ModuleName}}Contracts.AuthContext {
+	return {{.ModuleName}}Contracts.AuthContext{UserID: 1, IsSuperadmin: true}
 }
 
-func regularActor()  he.AuthContext {
-	return  he.AuthContext{UserID: 2, IsSuperadmin: false}
+func regularActor() {{.ModuleName}}Contracts.AuthContext {
+	return {{.ModuleName}}Contracts.AuthContext{UserID: 2, IsSuperadmin: false}
 }
 
 func (s *{{.ModuleTitle}}ServiceTestSuite) mockHasPermission(perm string, result bool) {

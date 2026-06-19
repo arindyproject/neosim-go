@@ -1,0 +1,1163 @@
+package main
+
+import (
+	"flag"
+	"fmt"
+	"log"
+	"os"
+	"path/filepath"
+	"strings"
+	"text/template"
+	"time"
+	"unicode"
+)
+
+// ─── Config ────────────────────────────────────────────────────────────────────
+
+type AddItemConfig struct {
+	MainModule    string // contoh: artikel
+	SubModule     string // contoh: kategori
+	ItemName      string // contoh: tag (snake_case)
+	ItemTitle     string // PascalCase dari ItemName, contoh: Tag
+	FullTitle     string // PascalCase gabungan: ArtikelKategoriTag (untuk uniqueness)
+	PackageName   string // package name folder sub, contoh: kategori
+	ProjectModule string
+	Timestamp     string
+	URLPrefix     string // contoh: /api/v1/artikel/kategori/tags
+	TableName     string // contoh: artikel_kategori_tags
+}
+
+func main() {
+	name := flag.String("name", "", "Nama module utama (snake_case, contoh: artikel)")
+	sub := flag.String("sub", "", "Nama sub-module / folder existing (contoh: kategori)")
+	add := flag.String("add", "", "Nama item/entity baru (snake_case, contoh: tag)")
+	project := flag.String("project", "neosim_go", "Nama Go module project")
+	flag.Parse()
+
+	if *name == "" || *sub == "" || *add == "" {
+		log.Fatal("❌ Semua flag wajib diisi. Contoh:\n   go run generator_add.go -name=artikel -sub=kategori -add=tag")
+	}
+
+	mainPascal := toPascalCase(*name)
+	subPascal := toPascalCase(*sub)
+	itemPascal := toPascalCase(*add)
+
+	cfg := AddItemConfig{
+		MainModule:    *name,
+		SubModule:     *sub,
+		ItemName:      *add,
+		ItemTitle:     itemPascal,
+		FullTitle:     mainPascal + subPascal + itemPascal,
+		PackageName:   toPackageName(*sub),
+		ProjectModule: *project,
+		Timestamp:     time.Now().Format("20060102150405"),
+		URLPrefix:     fmt.Sprintf("/api/v1/%s/%s/%ss", *name, *sub, *add),
+		TableName:     fmt.Sprintf("%s_%s_%ss", *name, *sub, *add),
+	}
+
+	basePath := filepath.Join("internal", "modules", cfg.MainModule, cfg.SubModule)
+
+	fmt.Printf("\n🚀 Menambahkan item: %s ke dalam %s/%s\n", cfg.ItemName, cfg.MainModule, cfg.SubModule)
+	fmt.Printf("   Path: %s\n\n", basePath)
+
+	files := buildFileList(cfg, basePath)
+	for _, f := range files {
+		if err := generateFile(f.path, f.tmpl, cfg); err != nil {
+			log.Fatalf("❌ Gagal generate %s: %v", f.path, err)
+		}
+		fmt.Printf("   ✅ %s\n", f.path)
+	}
+
+	printNextSteps(cfg, basePath)
+}
+
+// ─── File List ─────────────────────────────────────────────────────────────────
+
+type fileEntry struct {
+	path string
+	tmpl string
+}
+
+func buildFileList(cfg AddItemConfig, base string) []fileEntry {
+	ts := cfg.Timestamp
+	return []fileEntry{
+		// contracts
+		{filepath.Join(base, "contracts", fmt.Sprintf("%s_interfaces.go", cfg.ItemName)), tmplItemContracts},
+		// dto
+		{filepath.Join(base, "dto", fmt.Sprintf("%s_request.go", cfg.ItemName)), tmplItemRequest},
+		{filepath.Join(base, "dto", fmt.Sprintf("%s_response.go", cfg.ItemName)), tmplItemResponse},
+		// models
+		{filepath.Join(base, "models", fmt.Sprintf("%s.go", cfg.ItemName)), tmplItemModel},
+		// repositories
+		{filepath.Join(base, "repositories", fmt.Sprintf("%s_repository.go", cfg.ItemName)), tmplItemRepository},
+		// services
+		{filepath.Join(base, "services", fmt.Sprintf("%s_service.go", cfg.ItemName)), tmplItemService},
+		{filepath.Join(base, "services", fmt.Sprintf("%s_permission.go", cfg.ItemName)), tmplItemPermission},
+		// handlers
+		{filepath.Join(base, "handlers", fmt.Sprintf("%s_handler.go", cfg.ItemName)), tmplItemHandler},
+		// migrations
+		{filepath.Join(base, "migrations", fmt.Sprintf("%s_migrate.go", cfg.ItemName)), tmplItemMigration},
+		{filepath.Join(base, "migrations", fmt.Sprintf("%s_create_%s_table.sql", ts, cfg.TableName)), tmplItemSQL},
+		// tests
+		{filepath.Join(base, "tests", "mocks", fmt.Sprintf("%s_repository_mock.go", cfg.ItemName)), tmplItemRepositoryMock},
+		{filepath.Join(base, "tests", fmt.Sprintf("%s_service_test.go", cfg.ItemName)), tmplItemServiceTest},
+	}
+}
+
+// ─── Generator ─────────────────────────────────────────────────────────────────
+
+func generateFile(path, tmplStr string, cfg AddItemConfig) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		return err
+	}
+	if _, err := os.Stat(path); err == nil {
+		fmt.Printf("   ⏭️  Skip (sudah ada): %s\n", path)
+		return nil
+	}
+	tmpl, err := template.New(path).Parse(tmplStr)
+	if err != nil {
+		return err
+	}
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return tmpl.Execute(f, cfg)
+}
+
+// ─── Helpers ───────────────────────────────────────────────────────────────────
+
+func toPascalCase(s string) string {
+	parts := strings.Split(s, "_")
+	var result strings.Builder
+	for _, p := range parts {
+		if len(p) == 0 {
+			continue
+		}
+		runes := []rune(p)
+		runes[0] = unicode.ToUpper(runes[0])
+		result.WriteString(string(runes))
+	}
+	return result.String()
+}
+
+func toPackageName(s string) string {
+	return strings.ReplaceAll(s, "_", "")
+}
+
+// ─── Next Steps ────────────────────────────────────────────────────────────────
+
+func printNextSteps(cfg AddItemConfig, basePath string) {
+	fmt.Printf(`
+────────────────────────────────────────────────────────
+✅ Item '%s' berhasil ditambahkan ke %s/%s!
+
+📋 Update MANUAL diperlukan:
+
+1. %s/services/service.go
+   Tambahkan field baru di struct 'service':
+   ┌─────────────────────────────────────────────────────
+   │ %sRepo %sContracts.%sRepository
+   │ %sSvc  %sContracts.%sService
+   └─────────────────────────────────────────────────────
+   Tambahkan import:
+   │ %sContracts "%s/internal/modules/%s/%s/contracts"
+
+2. %s/services/service.go → fungsi New...Service(...)
+   Tambahkan parameter & assignment:
+   ┌─────────────────────────────────────────────────────
+   │ %sRepo %sContracts.%sRepository,
+   └─────────────────────────────────────────────────────
+
+3. %s/module.go → NewModule(...)
+   Tambahkan wiring:
+   ┌─────────────────────────────────────────────────────
+   │ %sRepo := repositories.New%sRepository(db)
+   │ // lalu inject ke service
+   └─────────────────────────────────────────────────────
+
+4. %s/routes.go → RegisterRoutes(...)
+   Tambahkan:
+   ┌─────────────────────────────────────────────────────
+   │ %sHandler := handlers.New%sHandler(svc.%sSvc)
+   │ g%s := e.Group("%s", jwt)
+   │ g%s.GET("", %sHandler.List)
+   │ g%s.GET("/:id", %sHandler.GetByID)
+   │ g%s.POST("", %sHandler.Create)
+   │ g%s.PUT("/:id", %sHandler.Update)
+   │ g%s.DELETE("/:id", %sHandler.Delete)
+   └─────────────────────────────────────────────────────
+
+5. %s/migrations/migrate.go (atau register.go)
+   Tambahkan: migrations.Migrate%sWithSQL(sqlDB)
+
+6. Tambahkan model ke register.go → Models():
+   &models.%s{},
+────────────────────────────────────────────────────────
+`,
+		cfg.ItemName, cfg.MainModule, cfg.SubModule,
+
+		// 1. service.go field
+		basePath,
+		cfg.ItemName, cfg.ItemName, cfg.ItemTitle,
+		cfg.ItemName, cfg.ItemName, cfg.ItemTitle,
+		cfg.ItemName, cfg.ProjectModule, cfg.MainModule, cfg.SubModule,
+
+		// 2. New...Service param
+		basePath,
+		cfg.ItemName, cfg.ItemName, cfg.ItemTitle,
+
+		// 3. module.go wiring
+		basePath,
+		cfg.ItemName, cfg.ItemTitle,
+
+		// 4. routes.go
+		basePath,
+		cfg.ItemName, cfg.ItemTitle, cfg.ItemName,
+		cfg.ItemName, cfg.URLPrefix,
+		cfg.ItemName, cfg.ItemName,
+		cfg.ItemName, cfg.ItemName,
+		cfg.ItemName, cfg.ItemName,
+		cfg.ItemName, cfg.ItemName,
+		cfg.ItemName, cfg.ItemName,
+
+		// 5. migration
+		basePath, cfg.ItemTitle,
+
+		// 6. register.go
+		cfg.ItemTitle,
+	)
+}
+
+// ─── Templates ─────────────────────────────────────────────────────────────────
+
+var tmplItemContracts = `package contracts
+
+import (
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
+	he "{{.ProjectModule}}/internal/shared/httputil"
+)
+
+// {{.ItemTitle}}Repository defines database operations for {{.ItemTitle}}
+type {{.ItemTitle}}Repository interface {
+	Create(m *models.{{.ItemTitle}}) error
+	GetByID(id int64) (*models.{{.ItemTitle}}, error)
+	List(page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request) ([]models.{{.ItemTitle}}, int64, error)
+	Update(m *models.{{.ItemTitle}}) error
+	Delete(id int64) error
+}
+
+// {{.ItemTitle}}Service defines business logic operations for {{.ItemTitle}}
+type {{.ItemTitle}}Service interface {
+	Create(req *dto.Create{{.ItemTitle}}Request, createdBy *int64, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error)
+	GetByID(id int64, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error)
+	List(page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request, actor he.AuthContext) ([]dto.{{.ItemTitle}}Response, int64, error)
+	Update(id int64, req *dto.Update{{.ItemTitle}}Request, updatedBy *int64, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error)
+	Delete(id int64, actor he.AuthContext) error
+}
+`
+
+var tmplItemRequest = `package dto
+
+// Create{{.ItemTitle}}Request request body untuk membuat {{.ItemTitle}} baru
+type Create{{.ItemTitle}}Request struct {
+	Name        string  ` + "`" + `json:"name" validate:"required,min=1,max=255"` + "`" + `
+	Description *string ` + "`" + `json:"description" validate:"omitempty,max=500"` + "`" + `
+}
+
+// Update{{.ItemTitle}}Request request body untuk update {{.ItemTitle}}
+type Update{{.ItemTitle}}Request struct {
+	Name        *string ` + "`" + `json:"name" validate:"omitempty,min=1,max=255"` + "`" + `
+	Description *string ` + "`" + `json:"description" validate:"omitempty,max=500"` + "`" + `
+}
+
+// Filter{{.ItemTitle}}Request request body untuk filter {{.ItemTitle}}
+type Filter{{.ItemTitle}}Request struct {
+	Name string ` + "`" + `query:"name"` + "`" + `
+}
+`
+
+var tmplItemResponse = `package dto
+
+import (
+	"time"
+
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
+)
+
+// {{.ItemTitle}}Response response untuk single {{.ItemTitle}}
+type {{.ItemTitle}}Response struct {
+	ID          int64     ` + "`" + `json:"id"` + "`" + `
+	Name        string    ` + "`" + `json:"name"` + "`" + `
+	Description *string   ` + "`" + `json:"description"` + "`" + `
+	CreatedBy   *int64    ` + "`" + `json:"created_by"` + "`" + `
+	UpdatedBy   *int64    ` + "`" + `json:"updated_by"` + "`" + `
+	CreatedAt   time.Time ` + "`" + `json:"created_at"` + "`" + `
+	UpdatedAt   time.Time ` + "`" + `json:"updated_at"` + "`" + `
+}
+
+// To{{.ItemTitle}}Response mengubah model menjadi response
+func To{{.ItemTitle}}Response(m *models.{{.ItemTitle}}) *{{.ItemTitle}}Response {
+	return &{{.ItemTitle}}Response{
+		ID:          m.ID,
+		Name:        m.Name,
+		Description: m.Description,
+		CreatedBy:   m.CreatedBy,
+		UpdatedBy:   m.UpdatedBy,
+		CreatedAt:   m.CreatedAt,
+		UpdatedAt:   m.UpdatedAt,
+	}
+}
+
+// To{{.ItemTitle}}ListResponse mengubah slice model menjadi slice response
+func To{{.ItemTitle}}ListResponse(items []models.{{.ItemTitle}}) []{{.ItemTitle}}Response {
+	var responses []{{.ItemTitle}}Response
+	for _, m := range items {
+		responses = append(responses, *To{{.ItemTitle}}Response(&m))
+	}
+	return responses
+}
+`
+
+var tmplItemModel = `package models
+
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
+
+// {{.ItemTitle}} represents the {{.TableName}} table in database
+type {{.ItemTitle}} struct {
+	ID          int64          ` + "`" + `gorm:"primaryKey;autoIncrement;column:id" json:"id"` + "`" + `
+	Name        string         ` + "`" + `gorm:"column:name;type:varchar(255);not null" json:"name"` + "`" + `
+	Description *string        ` + "`" + `gorm:"column:description;type:text" json:"description"` + "`" + `
+	CreatedBy   *int64         ` + "`" + `gorm:"column:created_by" json:"created_by"` + "`" + `
+	UpdatedBy   *int64         ` + "`" + `gorm:"column:updated_by" json:"updated_by"` + "`" + `
+	CreatedAt   time.Time      ` + "`" + `gorm:"column:created_at;type:timestamptz;not null;default:NOW()" json:"created_at"` + "`" + `
+	UpdatedAt   time.Time      ` + "`" + `gorm:"column:updated_at;type:timestamptz;not null;default:NOW()" json:"updated_at"` + "`" + `
+	DeletedAt   gorm.DeletedAt ` + "`" + `gorm:"column:deleted_at;type:timestamptz" json:"deleted_at"` + "`" + `
+}
+
+func ({{.ItemTitle}}) TableName() string {
+	return "{{.TableName}}"
+}
+`
+
+var tmplItemRepository = `package repositories
+
+import (
+	"errors"
+
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/contracts"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
+
+	"gorm.io/gorm"
+)
+
+type {{.ItemName}}Repository struct {
+	db *gorm.DB
+}
+
+// New{{.ItemTitle}}Repository membuat instance repository baru
+func New{{.ItemTitle}}Repository(db *gorm.DB) contracts.{{.ItemTitle}}Repository {
+	return &{{.ItemName}}Repository{db: db}
+}
+
+func (r *{{.ItemName}}Repository) Create(m *models.{{.ItemTitle}}) error {
+	return r.db.Create(m).Error
+}
+
+func (r *{{.ItemName}}Repository) GetByID(id int64) (*models.{{.ItemTitle}}, error) {
+	var m models.{{.ItemTitle}}
+	result := r.db.Where("id = ? AND deleted_at IS NULL", id).First(&m)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return &m, result.Error
+}
+
+func (r *{{.ItemName}}Repository) List(page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request) ([]models.{{.ItemTitle}}, int64, error) {
+	var items []models.{{.ItemTitle}}
+	var total int64
+
+	query := r.db.Model(&models.{{.ItemTitle}}{}).Where("deleted_at IS NULL")
+
+	if filter.Name != "" {
+		query = query.Where("name ILIKE ?", "%"+filter.Name+"%")
+	}
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * pageSize
+	if err := query.Offset(offset).Limit(pageSize).Order("created_at DESC").Find(&items).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return items, total, nil
+}
+
+func (r *{{.ItemName}}Repository) Update(m *models.{{.ItemTitle}}) error {
+	return r.db.Save(m).Error
+}
+
+func (r *{{.ItemName}}Repository) Delete(id int64) error {
+	return r.db.Where("id = ?", id).Delete(&models.{{.ItemTitle}}{}).Error
+}
+`
+
+var tmplItemService = `package services
+
+import (
+	"errors"
+	"net/http"
+	"time"
+
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/contracts"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
+	appErrors "{{.ProjectModule}}/internal/shared/errors"
+	he "{{.ProjectModule}}/internal/shared/httputil"
+)
+
+type {{.ItemName}}Service struct {
+	repo     contracts.{{.ItemTitle}}Repository
+	rbacRepo rbacContracts.RBACRepository
+	authRepo authContracts.AuthRepository
+}
+
+// New{{.ItemTitle}}Service membuat instance service baru
+func New{{.ItemTitle}}Service(
+	repo contracts.{{.ItemTitle}}Repository,
+	rbacRepo rbacContracts.RBACRepository,
+	authRepo authContracts.AuthRepository,
+) contracts.{{.ItemTitle}}Service {
+	return &{{.ItemName}}Service{
+		repo:     repo,
+		rbacRepo: rbacRepo,
+		authRepo: authRepo,
+	}
+}
+
+// ─── CRUD ───────────────────────────────────────────────────────────────────────
+
+func (s *{{.ItemName}}Service) Create(req *dto.Create{{.ItemTitle}}Request, createdBy *int64, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error) {
+	can, err := s.canCreate{{.ItemTitle}}(actor)
+	if err != nil {
+		return nil, appErrors.Internal("gagal cek akses")
+	}
+	if !can {
+		return nil, appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda tidak memiliki hak akses untuk membuat {{.ItemTitle}} baru.", nil)
+	}
+
+	m := &models.{{.ItemTitle}}{
+		Name:        req.Name,
+		Description: req.Description,
+		CreatedBy:   createdBy,
+		UpdatedBy:   createdBy,
+	}
+	if err := s.repo.Create(m); err != nil {
+		return nil, err
+	}
+	return dto.To{{.ItemTitle}}Response(m), nil
+}
+
+func (s *{{.ItemName}}Service) GetByID(id int64, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error) {
+	can, err := s.canRead{{.ItemTitle}}(actor)
+	if err != nil {
+		return nil, appErrors.Internal("gagal cek akses")
+	}
+	if !can {
+		return nil, appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda tidak memiliki hak akses untuk melihat {{.ItemTitle}}.", nil)
+	}
+
+	m, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if m == nil {
+		return nil, errors.New("{{.ItemTitle}} tidak ditemukan")
+	}
+	return dto.To{{.ItemTitle}}Response(m), nil
+}
+
+func (s *{{.ItemName}}Service) List(page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request, actor he.AuthContext) ([]dto.{{.ItemTitle}}Response, int64, error) {
+	can, err := s.canRead{{.ItemTitle}}(actor)
+	if err != nil {
+		return nil, 0, appErrors.Internal("gagal cek akses")
+	}
+	if !can {
+		return nil, 0, appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda tidak memiliki hak akses untuk melihat daftar {{.ItemTitle}}.", nil)
+	}
+
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 10
+	}
+
+	items, total, err := s.repo.List(page, pageSize, filter)
+	if err != nil {
+		return nil, 0, err
+	}
+	return dto.To{{.ItemTitle}}ListResponse(items), total, nil
+}
+
+func (s *{{.ItemName}}Service) Update(id int64, req *dto.Update{{.ItemTitle}}Request, updatedBy *int64, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error) {
+	can, err := s.canUpdate{{.ItemTitle}}(actor)
+	if err != nil {
+		return nil, appErrors.Internal("gagal cek akses")
+	}
+	if !can {
+		return nil, appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda tidak memiliki hak akses untuk mengubah {{.ItemTitle}}.", nil)
+	}
+
+	m, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if m == nil {
+		return nil, errors.New("{{.ItemTitle}} tidak ditemukan")
+	}
+	if req.Name != nil {
+		m.Name = *req.Name
+	}
+	if req.Description != nil {
+		m.Description = req.Description
+	}
+	m.UpdatedBy = updatedBy
+	m.UpdatedAt = time.Now()
+
+	if err := s.repo.Update(m); err != nil {
+		return nil, err
+	}
+	return dto.To{{.ItemTitle}}Response(m), nil
+}
+
+func (s *{{.ItemName}}Service) Delete(id int64, actor he.AuthContext) error {
+	can, err := s.canDelete{{.ItemTitle}}(actor)
+	if err != nil {
+		return appErrors.Internal("gagal cek akses")
+	}
+	if !can {
+		return appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda tidak memiliki hak akses untuk menghapus {{.ItemTitle}}.", nil)
+	}
+
+	m, err := s.repo.GetByID(id)
+	if err != nil {
+		return err
+	}
+	if m == nil {
+		return errors.New("{{.ItemTitle}} tidak ditemukan")
+	}
+	return s.repo.Delete(id)
+}
+`
+
+var tmplItemPermission = `package services
+
+import (
+	rbacMiddlewares "{{.ProjectModule}}/internal/modules/rbac/middlewares"
+	rbacModels "{{.ProjectModule}}/internal/modules/rbac/models"
+	he "{{.ProjectModule}}/internal/shared/httputil"
+)
+
+func (s *{{.ItemName}}Service) canRead{{.ItemTitle}}(actor he.AuthContext) (bool, error) {
+	if actor.IsSuperadmin {
+		return true, nil
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyRead); err != nil || has {
+		return has, err
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
+		return has, err
+	}
+	return false, nil
+}
+
+func (s *{{.ItemName}}Service) canCreate{{.ItemTitle}}(actor he.AuthContext) (bool, error) {
+	if actor.IsSuperadmin {
+		return true, nil
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyCreate); err != nil || has {
+		return has, err
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
+		return has, err
+	}
+	return false, nil
+}
+
+func (s *{{.ItemName}}Service) canUpdate{{.ItemTitle}}(actor he.AuthContext) (bool, error) {
+	if actor.IsSuperadmin {
+		return true, nil
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyUpdate); err != nil || has {
+		return has, err
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
+		return has, err
+	}
+	return false, nil
+}
+
+func (s *{{.ItemName}}Service) canDelete{{.ItemTitle}}(actor he.AuthContext) (bool, error) {
+	if actor.IsSuperadmin {
+		return true, nil
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyDelete); err != nil || has {
+		return has, err
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
+		return has, err
+	}
+	return false, nil
+}
+`
+
+var tmplItemHandler = `package handlers
+
+import (
+	"net/http"
+	"strconv"
+
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/contracts"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
+	"{{.ProjectModule}}/internal/shared/response"
+	"{{.ProjectModule}}/internal/shared/validator"
+	he "{{.ProjectModule}}/internal/shared/httputil"
+
+	"github.com/labstack/echo/v5"
+)
+
+// {{.ItemTitle}}Handler defines HTTP handlers for {{.ItemTitle}}
+type {{.ItemTitle}}Handler struct {
+	service contracts.{{.ItemTitle}}Service
+}
+
+// New{{.ItemTitle}}Handler membuat instance handler baru
+func New{{.ItemTitle}}Handler(service contracts.{{.ItemTitle}}Service) *{{.ItemTitle}}Handler {
+	return &{{.ItemTitle}}Handler{service: service}
+}
+
+// ─── List ──────────────────────────────────────────────────────────────────────
+// @Summary		Get list of {{.ItemTitle}}
+// @Description	Get paginated list of {{.ItemTitle}}
+// @Tags			{{.MainModule}}/{{.SubModule}}
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			name		query		string	false	"Filter by name"
+// @Param			page		query		int		false	"Page number"
+// @Param			page_size	query		int		false	"Page size"
+// @Success		200			{object}	response.MyGoResponse{data=[]dto.{{.ItemTitle}}Response}
+// @Router			{{.URLPrefix}} [get]
+func (h *{{.ItemTitle}}Handler) List(c *echo.Context) error {
+	page, pageSize := 1, 10
+	filter := dto.Filter{{.ItemTitle}}Request{
+		Name: c.QueryParam("name"),
+	}
+	if p := c.QueryParam("page"); p != "" {
+		if v, err := strconv.Atoi(p); err == nil && v > 0 {
+			page = v
+		}
+	}
+	if ps := c.QueryParam("page_size"); ps != "" {
+		if v, err := strconv.Atoi(ps); err == nil && v > 0 && v <= 100 {
+			pageSize = v
+		}
+	}
+
+	actor := he.BuildAuthContext(c)
+	items, total, err := h.service.List(page, pageSize, &filter, actor)
+	if err != nil {
+		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
+	}
+	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data", items, total, page, pageSize)
+}
+
+// ─── GetByID ───────────────────────────────────────────────────────────────────
+// @Summary		Get {{.ItemTitle}} by ID
+// @Tags			{{.MainModule}}/{{.SubModule}}
+// @Security		BearerAuth
+// @Param			id	path		int	true	"{{.ItemTitle}} ID"
+// @Success		200	{object}	response.MyGoResponse{data=dto.{{.ItemTitle}}Response}
+// @Router			{{.URLPrefix}}/{id} [get]
+func (h *{{.ItemTitle}}Handler) GetByID(c *echo.Context) error {
+	id, err := he.ParseID(c)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
+	}
+	actor := he.BuildAuthContext(c)
+	item, err := h.service.GetByID(id, actor)
+	if err != nil {
+		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", item, nil)
+}
+
+// ─── Create ────────────────────────────────────────────────────────────────────
+// @Summary		Create {{.ItemTitle}}
+// @Tags			{{.MainModule}}/{{.SubModule}}
+// @Security		BearerAuth
+// @Param			body	body		dto.Create{{.ItemTitle}}Request	true	"Create Request"
+// @Success		201		{object}	response.MyGoResponse{data=dto.{{.ItemTitle}}Response}
+// @Router			{{.URLPrefix}} [post]
+func (h *{{.ItemTitle}}Handler) Create(c *echo.Context) error {
+	var req dto.Create{{.ItemTitle}}Request
+	if err := c.Bind(&req); err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
+	}
+	if errs := validator.Validate(req); errs != nil {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
+	}
+	actor := he.BuildAuthContext(c)
+	item, err := h.service.Create(&req, getActorID(c), actor)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusCreated, true, "Data berhasil dibuat", item, nil)
+}
+
+// ─── Update ────────────────────────────────────────────────────────────────────
+// @Summary		Update {{.ItemTitle}}
+// @Tags			{{.MainModule}}/{{.SubModule}}
+// @Security		BearerAuth
+// @Param			id		path		int							true	"{{.ItemTitle}} ID"
+// @Param			body	body		dto.Update{{.ItemTitle}}Request	true	"Update Request"
+// @Success		200		{object}	response.MyGoResponse{data=dto.{{.ItemTitle}}Response}
+// @Router			{{.URLPrefix}}/{id} [put]
+func (h *{{.ItemTitle}}Handler) Update(c *echo.Context) error {
+	id, err := he.ParseID(c)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
+	}
+	var req dto.Update{{.ItemTitle}}Request
+	if err := c.Bind(&req); err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
+	}
+	if errs := validator.Validate(req); errs != nil {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
+	}
+	actor := he.BuildAuthContext(c)
+	item, err := h.service.Update(id, &req, getActorID(c), actor)
+	if err != nil {
+		status := http.StatusBadRequest
+		if err.Error() == "{{.ItemTitle}} tidak ditemukan" {
+			status = http.StatusNotFound
+		}
+		return response.Response(c, status, false, err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Data berhasil diupdate", item, nil)
+}
+
+// ─── Delete ────────────────────────────────────────────────────────────────────
+// @Summary		Delete {{.ItemTitle}}
+// @Tags			{{.MainModule}}/{{.SubModule}}
+// @Security		BearerAuth
+// @Param			id	path		int	true	"{{.ItemTitle}} ID"
+// @Success		200	{object}	response.MyGoResponse{}
+// @Router			{{.URLPrefix}}/{id} [delete]
+func (h *{{.ItemTitle}}Handler) Delete(c *echo.Context) error {
+	id, err := he.ParseID(c)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
+	}
+	actor := he.BuildAuthContext(c)
+	if err := h.service.Delete(id, actor); err != nil {
+		status := http.StatusInternalServerError
+		if err.Error() == "{{.ItemTitle}} tidak ditemukan" {
+			status = http.StatusNotFound
+		}
+		return response.Response(c, status, false, err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Data berhasil dihapus", nil, nil)
+}
+`
+
+var tmplItemMigration = `package migrations
+
+import (
+	"database/sql"
+	_ "embed"
+	"log"
+
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
+
+	"gorm.io/gorm"
+)
+
+//go:embed {{.Timestamp}}_create_{{.TableName}}_table.sql
+var {{.ItemName}}SQL string
+
+// Migrate{{.ItemTitle}} menjalankan GORM auto-migration
+func Migrate{{.ItemTitle}}(db *gorm.DB) error {
+	return db.Migrator().CreateTable(&models.{{.ItemTitle}}{})
+}
+
+// Migrate{{.ItemTitle}}WithSQL menjalankan migrasi via raw SQL
+func Migrate{{.ItemTitle}}WithSQL(sqlDB *sql.DB) error {
+	_, err := sqlDB.Exec({{.ItemName}}SQL)
+	if err != nil {
+		log.Printf("Error creating {{.TableName}} table: %v", err)
+		return err
+	}
+	log.Println("{{.TableName}} table migrated successfully")
+	return nil
+}
+
+// Drop{{.ItemTitle}}Table menghapus tabel (gunakan dengan hati-hati!)
+func Drop{{.ItemTitle}}Table(db *gorm.DB) error {
+	return db.Migrator().DropTable(&models.{{.ItemTitle}}{})
+}
+`
+
+var tmplItemSQL = `-- Migration: Create {{.TableName}} table
+-- Timestamp: {{.Timestamp}}
+
+CREATE TABLE IF NOT EXISTS {{.TableName}} (
+    id          BIGSERIAL    PRIMARY KEY,
+    name        VARCHAR(255) NOT NULL,
+    description TEXT,
+    created_by  BIGINT,
+    updated_by  BIGINT,
+    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    deleted_at  TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_{{.TableName}}_deleted_at ON {{.TableName}}(deleted_at);
+`
+
+var tmplItemRepositoryMock = `package mocks
+
+import (
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
+	"github.com/stretchr/testify/mock"
+)
+
+// {{.ItemTitle}}RepositoryMock is a mock implementation of contracts.{{.ItemTitle}}Repository
+type {{.ItemTitle}}RepositoryMock struct {
+	mock.Mock
+}
+
+func (m *{{.ItemTitle}}RepositoryMock) Create(item *models.{{.ItemTitle}}) error {
+	args := m.Called(item)
+	return args.Error(0)
+}
+
+func (m *{{.ItemTitle}}RepositoryMock) GetByID(id int64) (*models.{{.ItemTitle}}, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.{{.ItemTitle}}), args.Error(1)
+}
+
+func (m *{{.ItemTitle}}RepositoryMock) List(page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request) ([]models.{{.ItemTitle}}, int64, error) {
+	args := m.Called(page, pageSize, filter)
+	return args.Get(0).([]models.{{.ItemTitle}}), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *{{.ItemTitle}}RepositoryMock) Update(item *models.{{.ItemTitle}}) error {
+	args := m.Called(item)
+	return args.Error(0)
+}
+
+func (m *{{.ItemTitle}}RepositoryMock) Delete(id int64) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+`
+
+var tmplItemServiceTest = `package tests
+
+import (
+	"fmt"
+	"net/http"
+	"testing"
+
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
+
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/contracts"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/services"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/tests/mocks"
+
+	rbacModels "{{.ProjectModule}}/internal/modules/rbac/models"
+	appErrors "{{.ProjectModule}}/internal/shared/errors"
+	he "{{.ProjectModule}}/internal/shared/httputil"
+)
+
+type {{.ItemTitle}}ServiceTestSuite struct {
+	suite.Suite
+	repo     *mocks.{{.ItemTitle}}RepositoryMock
+	rbacRepo *mocks.RBACRepositoryMock
+	authRepo *mocks.AuthRepositoryMock
+	svc      contracts.{{.ItemTitle}}Service
+}
+
+func (s *{{.ItemTitle}}ServiceTestSuite) SetupTest() {
+	s.repo     = new(mocks.{{.ItemTitle}}RepositoryMock)
+	s.rbacRepo = new(mocks.RBACRepositoryMock)
+	s.authRepo = new(mocks.AuthRepositoryMock)
+	s.svc = services.New{{.ItemTitle}}Service(s.repo, s.rbacRepo, s.authRepo)
+}
+
+func Test{{.ItemTitle}}Service(t *testing.T) {
+	suite.Run(t, new({{.ItemTitle}}ServiceTestSuite))
+}
+
+func (s *{{.ItemTitle}}ServiceTestSuite) superadminActor() he.AuthContext {
+	return he.AuthContext{UserID: 1, IsSuperadmin: true}
+}
+
+func (s *{{.ItemTitle}}ServiceTestSuite) regularActor() he.AuthContext {
+	return he.AuthContext{UserID: 2, IsSuperadmin: false}
+}
+
+func (s *{{.ItemTitle}}ServiceTestSuite) mockNoPermissions() {
+	s.rbacRepo.On("HasPermission", int64(2), mock.Anything).Return(false, nil)
+}
+
+// ─── Create ─────────────────────────────────────────────────────────────────────
+
+func (s *{{.ItemTitle}}ServiceTestSuite) Test_Create_Superadmin_Success() {
+	actor := s.superadminActor()
+	req := &dto.Create{{.ItemTitle}}Request{Name: "Test {{.ItemTitle}}"}
+
+	s.repo.On("Create", mock.AnythingOfType("*models.{{.ItemTitle}}")).Return(nil)
+
+	result, err := s.svc.Create(req, &actor.UserID, actor)
+
+	s.NoError(err)
+	s.NotNil(result)
+	s.Equal(req.Name, result.Name)
+}
+
+func (s *{{.ItemTitle}}ServiceTestSuite) Test_Create_WithPermission_Success() {
+	actor := s.regularActor()
+	req := &dto.Create{{.ItemTitle}}Request{Name: "Test"}
+
+	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(true, nil)
+	s.repo.On("Create", mock.AnythingOfType("*models.{{.ItemTitle}}")).Return(nil)
+
+	result, err := s.svc.Create(req, &actor.UserID, actor)
+
+	s.NoError(err)
+	s.NotNil(result)
+}
+
+func (s *{{.ItemTitle}}ServiceTestSuite) Test_Create_Forbidden() {
+	actor := s.regularActor()
+	req := &dto.Create{{.ItemTitle}}Request{Name: "Test"}
+	s.mockNoPermissions()
+
+	result, err := s.svc.Create(req, &actor.UserID, actor)
+
+	s.Nil(result)
+	s.Error(err)
+	var appErr *appErrors.AppError
+	s.ErrorAs(err, &appErr)
+	s.Equal(http.StatusForbidden, appErr.Code)
+}
+
+func (s *{{.ItemTitle}}ServiceTestSuite) Test_Create_RepoError() {
+	actor := s.superadminActor()
+	req := &dto.Create{{.ItemTitle}}Request{Name: "Test"}
+
+	s.repo.On("Create", mock.AnythingOfType("*models.{{.ItemTitle}}")).Return(fmt.Errorf("db error"))
+
+	result, err := s.svc.Create(req, &actor.UserID, actor)
+
+	s.Nil(result)
+	s.Error(err)
+}
+
+// ─── GetByID ────────────────────────────────────────────────────────────────────
+
+func (s *{{.ItemTitle}}ServiceTestSuite) Test_GetByID_Superadmin_Success() {
+	actor := s.superadminActor()
+	item := &models.{{.ItemTitle}}{ID: 1, Name: "Test"}
+
+	s.repo.On("GetByID", int64(1)).Return(item, nil)
+
+	result, err := s.svc.GetByID(1, actor)
+
+	s.NoError(err)
+	s.NotNil(result)
+	s.Equal(int64(1), result.ID)
+}
+
+func (s *{{.ItemTitle}}ServiceTestSuite) Test_GetByID_NotFound() {
+	actor := s.superadminActor()
+
+	s.repo.On("GetByID", int64(999)).Return(nil, nil)
+
+	result, err := s.svc.GetByID(999, actor)
+
+	s.Nil(result)
+	s.Error(err)
+	s.Contains(err.Error(), "tidak ditemukan")
+}
+
+func (s *{{.ItemTitle}}ServiceTestSuite) Test_GetByID_Forbidden() {
+	actor := s.regularActor()
+	s.mockNoPermissions()
+
+	result, err := s.svc.GetByID(1, actor)
+
+	s.Nil(result)
+	s.Error(err)
+	var appErr *appErrors.AppError
+	s.ErrorAs(err, &appErr)
+	s.Equal(http.StatusForbidden, appErr.Code)
+}
+
+// ─── List ───────────────────────────────────────────────────────────────────────
+
+func (s *{{.ItemTitle}}ServiceTestSuite) Test_List_Superadmin_Success() {
+	actor := s.superadminActor()
+	filter := &dto.Filter{{.ItemTitle}}Request{}
+	items := []models.{{.ItemTitle}}{{ID: 1, Name: "A"}, {ID: 2, Name: "B"}}
+
+	s.repo.On("List", 1, 10, filter).Return(items, int64(2), nil)
+
+	result, total, err := s.svc.List(1, 10, filter, actor)
+
+	s.NoError(err)
+	s.Equal(int64(2), total)
+	s.Len(result, 2)
+}
+
+func (s *{{.ItemTitle}}ServiceTestSuite) Test_List_DefaultPagination() {
+	actor := s.superadminActor()
+	filter := &dto.Filter{{.ItemTitle}}Request{}
+
+	s.repo.On("List", 1, 10, filter).Return([]models.{{.ItemTitle}}{}, int64(0), nil)
+
+	_, _, err := s.svc.List(0, 999, filter, actor)
+
+	s.NoError(err)
+	s.repo.AssertCalled(s.T(), "List", 1, 10, filter)
+}
+
+func (s *{{.ItemTitle}}ServiceTestSuite) Test_List_Forbidden() {
+	actor := s.regularActor()
+	filter := &dto.Filter{{.ItemTitle}}Request{}
+	s.mockNoPermissions()
+
+	result, total, err := s.svc.List(1, 10, filter, actor)
+
+	s.Nil(result)
+	s.Equal(int64(0), total)
+	s.Error(err)
+}
+
+// ─── Update ─────────────────────────────────────────────────────────────────────
+
+func (s *{{.ItemTitle}}ServiceTestSuite) Test_Update_Superadmin_Success() {
+	actor := s.superadminActor()
+	existing := &models.{{.ItemTitle}}{ID: 1, Name: "Old"}
+	newName := "New Name"
+	req := &dto.Update{{.ItemTitle}}Request{Name: &newName}
+
+	s.repo.On("GetByID", int64(1)).Return(existing, nil)
+	s.repo.On("Update", mock.AnythingOfType("*models.{{.ItemTitle}}")).Return(nil)
+
+	result, err := s.svc.Update(1, req, &actor.UserID, actor)
+
+	s.NoError(err)
+	s.Equal(newName, result.Name)
+}
+
+func (s *{{.ItemTitle}}ServiceTestSuite) Test_Update_NotFound() {
+	actor := s.superadminActor()
+	req := &dto.Update{{.ItemTitle}}Request{}
+
+	s.repo.On("GetByID", int64(999)).Return(nil, nil)
+
+	result, err := s.svc.Update(999, req, &actor.UserID, actor)
+
+	s.Nil(result)
+	s.Error(err)
+	s.Contains(err.Error(), "tidak ditemukan")
+}
+
+func (s *{{.ItemTitle}}ServiceTestSuite) Test_Update_Forbidden() {
+	actor := s.regularActor()
+	req := &dto.Update{{.ItemTitle}}Request{}
+	s.mockNoPermissions()
+
+	result, err := s.svc.Update(1, req, &actor.UserID, actor)
+
+	s.Nil(result)
+	s.Error(err)
+	var appErr *appErrors.AppError
+	s.ErrorAs(err, &appErr)
+	s.Equal(http.StatusForbidden, appErr.Code)
+}
+
+// ─── Delete ─────────────────────────────────────────────────────────────────────
+
+func (s *{{.ItemTitle}}ServiceTestSuite) Test_Delete_Superadmin_Success() {
+	actor := s.superadminActor()
+	existing := &models.{{.ItemTitle}}{ID: 1, Name: "Test"}
+
+	s.repo.On("GetByID", int64(1)).Return(existing, nil)
+	s.repo.On("Delete", int64(1)).Return(nil)
+
+	err := s.svc.Delete(1, actor)
+
+	s.NoError(err)
+}
+
+func (s *{{.ItemTitle}}ServiceTestSuite) Test_Delete_NotFound() {
+	actor := s.superadminActor()
+
+	s.repo.On("GetByID", int64(999)).Return(nil, nil)
+
+	err := s.svc.Delete(999, actor)
+
+	s.Error(err)
+	s.Contains(err.Error(), "tidak ditemukan")
+}
+
+func (s *{{.ItemTitle}}ServiceTestSuite) Test_Delete_Forbidden() {
+	actor := s.regularActor()
+	s.mockNoPermissions()
+
+	err := s.svc.Delete(1, actor)
+
+	s.Error(err)
+	var appErr *appErrors.AppError
+	s.ErrorAs(err, &appErr)
+	s.Equal(http.StatusForbidden, appErr.Code)
+}
+
+func (s *{{.ItemTitle}}ServiceTestSuite) Test_Delete_RepoError() {
+	actor := s.superadminActor()
+	existing := &models.{{.ItemTitle}}{ID: 1, Name: "Test"}
+
+	s.repo.On("GetByID", int64(1)).Return(existing, nil)
+	s.repo.On("Delete", int64(1)).Return(fmt.Errorf("db error"))
+
+	err := s.svc.Delete(1, actor)
+
+	s.Error(err)
+}
+`
