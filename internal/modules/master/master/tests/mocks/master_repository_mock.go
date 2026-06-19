@@ -3,6 +3,7 @@ package mocks
 import (
 	"neosim_go/internal/modules/master/master/dto"
 	"neosim_go/internal/modules/master/master/models"
+
 	"github.com/stretchr/testify/mock"
 )
 
@@ -24,7 +25,7 @@ func (m *MasterRepositoryMock) GetByID(id int64) (*models.Master, error) {
 	return args.Get(0).(*models.Master), args.Error(1)
 }
 
-func (m *MasterRepositoryMock) List(page, pageSize int, filter *dto.FilterMasterRequest) ([]models.Master, int64, error) {
+func (m *MasterRepositoryMock) List(page, pageSize int, filter *dto.FilterMasterPekerjaanRequest) ([]models.Master, int64, error) {
 	args := m.Called(page, pageSize, filter)
 	return args.Get(0).([]models.Master), args.Get(1).(int64), args.Error(2)
 }

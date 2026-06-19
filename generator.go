@@ -803,7 +803,7 @@ func (h *{{.ModuleTitle}}Handler) Create(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.Create(&req, getActorID(c), actor)
+	item, err := h.service.Create(&req, he.GetActorID(c), actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
@@ -843,7 +843,7 @@ func (h *{{.ModuleTitle}}Handler) Update(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.Update(id, &req, getActorID(c), actor)
+	item, err := h.service.Update(id, &req, he.GetActorID(c), actor)
 	if err != nil {
 		status := http.StatusBadRequest
 		if err.Error() == "{{.ModuleTitle}} tidak ditemukan" {
@@ -1079,7 +1079,7 @@ import (
 
 // SetupTestDB membuat koneksi DB untuk keperluan test
 func SetupTestDB() *gorm.DB {
-	cfg := config.LoadConfig("DEV")
+	cfg := config.LoadConfig()
 	db, err := cfg.ConnectDB()
 	if err != nil {
 		log.Fatal("Gagal koneksi DB untuk test:", err)
@@ -1540,6 +1540,8 @@ import (
 	{{.ModuleName}}Contracts "{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/contracts"
 	rbacModels "{{.ProjectModule}}/internal/modules/rbac/models"
 	appErrors "{{.ProjectModule}}/internal/shared/errors"
+
+	he "{{.ProjectModule}}/internal/shared/httputil"
 )
 
 func TestMain(m *testing.M) {
