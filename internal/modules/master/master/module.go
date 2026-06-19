@@ -5,6 +5,7 @@ import (
 	"neosim_go/internal/modules/master/master/handlers"
 	"neosim_go/internal/modules/master/master/repositories"
 	"neosim_go/internal/modules/master/master/services"
+	"neosim_go/internal/shared/cache"
 	"neosim_go/internal/shared/utils"
 
 	authContracts "neosim_go/internal/modules/auth/contracts" //auth
@@ -16,34 +17,38 @@ import (
 
 // Module mewakili master/master module
 type Module struct {
-	db         *gorm.DB
-	handler    *handlers.MasterHandler
-	jwtManager *utils.JWTManager
-	repo       contracts.Repository
-	rbacRepo   rbacContracts.RBACRepository //RBAC
+	db           *gorm.DB
+	handler      *handlers.MasterHandler
+	jwtManager   *utils.JWTManager
+	repo         contracts.Repository
+	rbacRepo     rbacContracts.RBACRepository //RBAC
+	cacheManager *cache.Manager               // <--- Tambahkan field ini
 }
 
 // NewModule membuat instance module baru dan wire semua layer
 func NewModule(
-	db *gorm.DB, 
+	db *gorm.DB,
 	jwtManager *utils.JWTManager,
 	rbacRepo rbacContracts.RBACRepository, //RBAC
 	authRepo authContracts.AuthRepository, //AUTH
+	cacheManager *cache.Manager, // <--- Terima Cache Manager
 ) *Module {
 	repo := repositories.NewMasterRepository(db)
 	svc := services.NewMasterService(
 		repo,
 		rbacRepo,
 		authRepo,
+		cacheManager, // <--- Kirim Cache Manager
 	)
 	handler := handlers.NewMasterHandler(svc)
 
 	return &Module{
-		db:         db,
-		handler:    handler,
-		jwtManager: jwtManager,
-		repo:       repo,
-		rbacRepo:   rbacRepo, //RBAC
+		db:           db,
+		handler:      handler,
+		jwtManager:   jwtManager,
+		repo:         repo,
+		rbacRepo:     rbacRepo,     //RBAC
+		cacheManager: cacheManager, // <--- Simpan Cache Manager
 	}
 }
 

@@ -42,6 +42,11 @@ func (m *MasterAlamatRepositoryMock) DeleteNegara(id int64) error {
 	return args.Error(0)
 }
 
+func (m *MasterAlamatRepositoryMock) ExistsNegaraByCode(code string, excludeID *int64) (bool, error) {
+	args := m.Called(code, excludeID)
+	return args.Bool(0), args.Error(1)
+}
+
 // Provinsi ==========================================================================
 
 func (m *MasterAlamatRepositoryMock) CreateProvinsi(item *models.MasterAlamatProvinsi) error {
@@ -87,6 +92,11 @@ func (m *MasterAlamatRepositoryMock) CountDesaByProvinsiID(provinsiID int64) (in
 	return args.Get(0).(int64), args.Error(1)
 }
 
+func (m *MasterAlamatRepositoryMock) ExistsProvinsiByCode(code string, excludeID *int64) (bool, error) {
+	args := m.Called(code, excludeID)
+	return args.Bool(0), args.Error(1)
+}
+
 // Kota/Kabupaten =====================================================================
 
 func (m *MasterAlamatRepositoryMock) CreateKotaKabupaten(item *models.MasterAlamatKotaKabupaten) error {
@@ -127,6 +137,11 @@ func (m *MasterAlamatRepositoryMock) CountDesaByKotaID(kotaID int64) (int64, err
 	return args.Get(0).(int64), args.Error(1)
 }
 
+func (m *MasterAlamatRepositoryMock) ExistsKotaKabupatenByCode(code string, excludeID *int64) (bool, error) {
+	args := m.Called(code, excludeID)
+	return args.Bool(0), args.Error(1)
+}
+
 // Kecamatan ===========================================================================
 
 func (m *MasterAlamatRepositoryMock) CreateKecamatan(item *models.MasterAlamatKecamatan) error {
@@ -162,6 +177,11 @@ func (m *MasterAlamatRepositoryMock) CountDesaByKecamatanID(kecamatanID int64) (
 	return args.Get(0).(int64), args.Error(1)
 }
 
+func (m *MasterAlamatRepositoryMock) ExistsKecamatanByCode(code string, excludeID *int64) (bool, error) {
+	args := m.Called(code, excludeID)
+	return args.Bool(0), args.Error(1)
+}
+
 // Kelurahan/Desa ========================================================================
 
 func (m *MasterAlamatRepositoryMock) CreateKelurahanDesa(item *models.MasterAlamatKelurahanDesa) error {
@@ -190,4 +210,9 @@ func (m *MasterAlamatRepositoryMock) UpdateKelurahanDesa(item *models.MasterAlam
 func (m *MasterAlamatRepositoryMock) DeleteKelurahanDesa(id int64) error {
 	args := m.Called(id)
 	return args.Error(0)
+}
+
+func (m *MasterAlamatRepositoryMock) ExistsKelurahanDesaByCode(code string, excludeID *int64) (bool, error) {
+	args := m.Called(code, excludeID)
+	return args.Bool(0), args.Error(1)
 }

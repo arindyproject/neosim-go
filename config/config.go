@@ -70,8 +70,10 @@ type Config struct {
 	RedisDB       int
 
 	//Cache
-	CacheMasterAlamat       bool
-	CacheMasterAlamatTTLDay int
+	CacheMasterAlamat        bool
+	CacheMasterAlamatTTLDay  int
+	CacheMasterGeneral       bool
+	CacheMasterGeneralTTLDay int
 
 	// SMTP
 	SMTPHost     string
@@ -165,8 +167,10 @@ func LoadConfig() *Config {
 		RedisDB:       getEnvAsInt("REDIS_DB", 0),
 
 		// ─── Cache ─────────────────────────────────────────────
-		CacheMasterAlamat:       getEnvAsBool("CACHE_MASTER_ALAMAT", false),
-		CacheMasterAlamatTTLDay: getEnvAsInt("CACHE_MASTER_ALAMAT_TTL_DAY", 7),
+		CacheMasterAlamat:        getEnvAsBool("CACHE_MASTER_ALAMAT", false),
+		CacheMasterAlamatTTLDay:  getEnvAsInt("CACHE_MASTER_ALAMAT_TTL_DAY", 7),
+		CacheMasterGeneral:       getEnvAsBool("CACHE_MASTER_GENERAL", false),
+		CacheMasterGeneralTTLDay: getEnvAsInt("CACHE_MASTER_GENERAL_TTL_DAY", 7),
 
 		// ─── SMTP ──────────────────────────────────────────────
 		SMTPHost:     getEnv("SMTP_HOST", ""),

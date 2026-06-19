@@ -20,6 +20,7 @@ import (
 	rbacModels "neosim_go/internal/modules/rbac/models"
 	"neosim_go/internal/shared/cache"
 	appErrors "neosim_go/internal/shared/errors"
+	he "neosim_go/internal/shared/httputil"
 )
 
 func TestMain(m *testing.M) {
@@ -62,12 +63,12 @@ func TestMasterAlamatService(t *testing.T) {
 	suite.Run(t, new(MasterAlamatServiceTestSuite))
 }
 
-func superadminActor() alamatContracts.AuthContext {
-	return alamatContracts.AuthContext{UserID: 1, IsSuperadmin: true}
+func superadminActor() he.AuthContext {
+	return he.AuthContext{UserID: 1, IsSuperadmin: true}
 }
 
-func regularActor() alamatContracts.AuthContext {
-	return alamatContracts.AuthContext{UserID: 2, IsSuperadmin: false}
+func regularActor() he.AuthContext {
+	return he.AuthContext{UserID: 2, IsSuperadmin: false}
 }
 
 func (s *MasterAlamatServiceTestSuite) mockNoPermissions() {

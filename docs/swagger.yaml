@@ -98,18 +98,6 @@ definitions:
     - name
     - provinsi_id
     type: object
-  dto.CreateMasterRequest:
-    properties:
-      description:
-        maxLength: 500
-        type: string
-      name:
-        maxLength: 255
-        minLength: 1
-        type: string
-    required:
-    - name
-    type: object
   dto.CreateNegaraRequest:
     properties:
       code:
@@ -379,23 +367,6 @@ definitions:
     required:
     - refresh_token
     type: object
-  dto.MasterResponse:
-    properties:
-      created_at:
-        type: string
-      created_by:
-        type: integer
-      description:
-        type: string
-      id:
-        type: integer
-      name:
-        type: string
-      updated_at:
-        type: string
-      updated_by:
-        type: integer
-    type: object
   dto.NegaraResponse:
     properties:
       code:
@@ -610,16 +581,6 @@ definitions:
       provinsi_id:
         type: integer
     type: object
-  dto.UpdateMasterRequest:
-    properties:
-      description:
-        maxLength: 500
-        type: string
-      name:
-        maxLength: 255
-        minLength: 1
-        type: string
-    type: object
   dto.UpdateNegaraRequest:
     properties:
       code:
@@ -821,154 +782,6 @@ info:
   title: Neosim API V1
   version: "1.0"
 paths:
-  /api/v1/master:
-    get:
-      consumes:
-      - application/json
-      description: Get paginated list of Master
-      parameters:
-      - description: Filter by name (partial match)
-        in: query
-        name: name
-        type: string
-      - description: Page number
-        in: query
-        name: page
-        type: integer
-      - description: Page size
-        in: query
-        name: page_size
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.MyGoResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/dto.MasterResponse'
-                  type: array
-              type: object
-      security:
-      - BearerAuth: []
-      summary: Get list of Master
-      tags:
-      - master/master
-    post:
-      consumes:
-      - application/json
-      description: Create New Master
-      parameters:
-      - description: Create Request
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/dto.CreateMasterRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.MyGoResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.MasterResponse'
-              type: object
-      security:
-      - BearerAuth: []
-      summary: Create Master
-      tags:
-      - master/master
-  /api/v1/master/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete Master by :id
-      parameters:
-      - description: Master ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.MyGoResponse'
-      security:
-      - BearerAuth: []
-      summary: Delete Master
-      tags:
-      - master/master
-    get:
-      consumes:
-      - application/json
-      description: Get Master by :id
-      parameters:
-      - description: Master ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.MyGoResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.MasterResponse'
-              type: object
-      security:
-      - BearerAuth: []
-      summary: Get Master
-      tags:
-      - master/master
-    put:
-      consumes:
-      - application/json
-      description: Update Master by :id
-      parameters:
-      - description: Master ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Update Request
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/dto.UpdateMasterRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.MyGoResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.MasterResponse'
-              type: object
-      security:
-      - BearerAuth: []
-      summary: Update Master
-      tags:
-      - master/master
   /auth/forgot-password:
     post:
       consumes:

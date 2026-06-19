@@ -2,11 +2,13 @@ package master
 
 import (
 	"database/sql"
+	"log"
 
 	"neosim_go/config"
 	"neosim_go/internal/apps"
 	"neosim_go/internal/modules/master/master/migrations"
 	"neosim_go/internal/modules/master/master/models"
+	"neosim_go/internal/shared/cache"
 	"neosim_go/internal/shared/utils"
 
 	authContracts "neosim_go/internal/modules/auth/contracts"
@@ -19,10 +21,11 @@ import (
 )
 
 type registryModule struct {
-	db  *gorm.DB
-	cfg *config.Config
-	rbacRepo rbacContracts.RBACRepository //RBAC
-	authRepo authContracts.AuthRepository //AUTH
+	db           *gorm.DB
+	cfg          *config.Config
+	rbacRepo     rbacContracts.RBACRepository //RBAC
+	authRepo     authContracts.AuthRepository //AUTH
+	cacheManager *cache.Manager               // <--- Tambahkan field ini
 }
 
 // init dipanggil otomatis saat package di-import (blank import)
@@ -30,13 +33,27 @@ func init() {
 	apps.Register(&registryModule{})
 }
 
-func (r *registryModule) SetDB(db *gorm.DB)            { 
-	r.db = db 
+func (r *registryModule) SetDB(db *gorm.DB) {
+	r.db = db
 	r.rbacRepo = rbacRepositories.NewRBACRepository(db) //RBAC
 	r.authRepo = authRepositories.NewAuthRepository(db) //AUTH
 }
-func (r *registryModule) SetConfig(cfg *config.Config) { 
+func (r *registryModule) SetConfig(cfg *config.Config) {
 	r.cfg = cfg
+
+	// ─── Inisialisasi Cache Manager ─────────────────────────────────────────
+	if cfg.CacheMasterGeneral {
+		client, err := cfg.ConnectRedis()
+		if err != nil {
+			log.Printf("⚠️ Warning: Gagal koneksi ke Redis untuk cache Master Umum: %v", err)
+			r.cacheManager = cache.NewManager(nil, false, 0)
+		} else {
+			r.cacheManager = cache.NewManager(client, true, cfg.CacheMasterGeneralTTLDay)
+			log.Println("✅ Cache Manager untuk Master Umum berhasil diinisialisasi")
+		}
+	} else {
+		r.cacheManager = cache.NewManager(nil, false, 0)
+	}
 }
 
 func (r *registryModule) InitRoutes(e *echo.Echo) {
@@ -46,12 +63,15 @@ func (r *registryModule) InitRoutes(e *echo.Echo) {
 		r.cfg.JWTAccessTokenExpMinutes,
 		r.cfg.JWTRefreshTokenExpDays,
 	)
-	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo).InitRoutes(e)
+	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo, r.cacheManager).InitRoutes(e)
 }
 
 func (r *registryModule) Models() []interface{} {
 	return []interface{}{
-		&models.Master{},
+		&models.MasterPekerjaan{},
+		&models.MasterPendidikan{},
+		&models.MasterAgama{},
+		&models.MasterStatusPernikahan{},
 	}
 }
 
