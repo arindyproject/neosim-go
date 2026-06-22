@@ -16,8 +16,8 @@ import (
 	_ "neosim_go/internal/modules/users"
 
 	// Master---------------------------------------------------------------
-	//-------Alamat---------------------------------------------------------
 	_ "neosim_go/internal/modules/master/alamat"
+	_ "neosim_go/internal/modules/master/master"
 	// =====================================================================
 )
 

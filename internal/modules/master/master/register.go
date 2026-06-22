@@ -6,7 +6,6 @@ import (
 
 	"neosim_go/config"
 	"neosim_go/internal/apps"
-	"neosim_go/internal/modules/master/master/migrations"
 	"neosim_go/internal/modules/master/master/models"
 	"neosim_go/internal/shared/cache"
 	"neosim_go/internal/shared/utils"
@@ -80,5 +79,5 @@ func (r *registryModule) SeedData(db *gorm.DB) error {
 }
 
 func (r *registryModule) MigrateSQL(sqlDB *sql.DB) error {
-	return migrations.MigrateMasterWithSQL(sqlDB)
+	return nil
 }

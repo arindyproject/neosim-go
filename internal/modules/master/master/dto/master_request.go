@@ -95,3 +95,75 @@ type FilterMasterStatusPernikahanRequest struct {
 	Name         string `query:"name"`
 	KodeKemenkes string `query:"kode_kemenkes"`
 }
+
+// =========================================================================
+// 5. JenisKelamin
+// =========================================================================
+
+// CreateMasterJenisKelaminRequest request body untuk membuat Master Jenis Kelamin baru
+type CreateMasterJenisKelaminRequest struct {
+	Name         string  `json:"name" validate:"required,min=1,max=255"`
+	KodeKemenkes *string `json:"kode_kemenkes" validate:"omitempty,max=50"`
+	Description  *string `json:"description" validate:"omitempty,max=500"`
+}
+
+// UpdateMasterJenisKelaminRequest request body untuk update Master Jenis Kelamin
+type UpdateMasterJenisKelaminRequest struct {
+	Name         *string `json:"name" validate:"omitempty,min=1,max=255"`
+	KodeKemenkes *string `json:"kode_kemenkes" validate:"omitempty,max=50"`
+	Description  *string `json:"description" validate:"omitempty,max=500"`
+}
+
+// FilterMasterJenisKelaminRequest request body untuk filter Master Jenis Kelamin
+type FilterMasterJenisKelaminRequest struct {
+	Name         string `query:"name"`
+	KodeKemenkes string `query:"kode_kemenkes"`
+}
+
+// =========================================================================
+// 6. GolonganDarah
+// =========================================================================
+
+// CreateMasterGolonganDarahRequest request body untuk membuat Master Golongan Darah baru
+type CreateMasterGolonganDarahRequest struct {
+	Name         string  `json:"name" validate:"required,min=1,max=255"`
+	KodeKemenkes *string `json:"kode_kemenkes" validate:"omitempty,max=50"`
+	Description  *string `json:"description" validate:"omitempty,max=500"`
+}
+
+// UpdateMasterGolonganDarahRequest request body untuk update Master Golongan Darah
+type UpdateMasterGolonganDarahRequest struct {
+	Name         *string `json:"name" validate:"omitempty,min=1,max=255"`
+	KodeKemenkes *string `json:"kode_kemenkes" validate:"omitempty,max=50"`
+	Description  *string `json:"description" validate:"omitempty,max=500"`
+}
+
+// FilterMasterGolonganDarahRequest request body untuk filter Master Golongan Darah
+type FilterMasterGolonganDarahRequest struct {
+	Name         string `query:"name"`
+	KodeKemenkes string `query:"kode_kemenkes"`
+}
+
+// =========================================================================
+// 7. Suku
+// =========================================================================
+
+// CreateMasterSukuRequest request body untuk membuat Master Suku baru
+type CreateMasterSukuRequest struct {
+	Name         string  `json:"name" validate:"required,min=1,max=255"`
+	KodeKemenkes *string `json:"kode_kemenkes" validate:"omitempty,max=50"`
+	Description  *string `json:"description" validate:"omitempty,max=500"`
+}
+
+// UpdateMasterSukuRequest request body untuk update Master Suku
+type UpdateMasterSukuRequest struct {
+	Name         *string `json:"name" validate:"omitempty,min=1,max=255"`
+	KodeKemenkes *string `json:"kode_kemenkes" validate:"omitempty,max=50"`
+	Description  *string `json:"description" validate:"omitempty,max=500"`
+}
+
+// FilterMasterSukuRequest request body untuk filter Master Suku
+type FilterMasterSukuRequest struct {
+	Name         string `query:"name"`
+	KodeKemenkes string `query:"kode_kemenkes"`
+}

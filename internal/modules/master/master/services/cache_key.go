@@ -13,6 +13,9 @@ const (
 	cachePrefixPendidikanList       = "master_pendidikan:list:"
 	cachePrefixAgamaList            = "master_agama:list:"
 	cachePrefixStatusPernikahanList = "master_status_pernikahan:list:"
+	cachePrefixGolonganDarahList    = "master_golongan_darah:list:"
+	cachePrefixSukuList             = "master_suku:list:"
+	cachePrefixJenisKelaminList     = "master_jenis_kelamin:list:"
 )
 
 // ─── Cache Keys Generator ───────────────────────────────────────────────────────
@@ -57,3 +60,39 @@ func cacheKeyStatusPernikahanList(page, pageSize int, filter *dto.FilterMasterSt
 	}
 	return fmt.Sprintf("master_status_pernikahan:list:p%d:ps%d:f%s", page, pageSize, f)
 } // StatusPernikahan---------------------------------------------------------------
+
+// GolonganDarah---------------------------------------------------------------------
+func cacheKeyGolonganDarahDetail(id int64) string {
+	return fmt.Sprintf("master_golongan_darah:detail:%d", id)
+}
+func cacheKeyGolonganDarahList(page, pageSize int, filter *dto.FilterMasterGolonganDarahRequest) string {
+	f := ""
+	if filter != nil {
+		f = filter.Name
+	}
+	return fmt.Sprintf("master_golongan_darah:list:p%d:ps%d:f%s", page, pageSize, f)
+} // GolonganDarah---------------------------------------------------------------------
+
+// Suku--------------------------------------------------------------------------------
+func cacheKeySukuDetail(id int64) string {
+	return fmt.Sprintf("master_suku:detail:%d", id)
+}
+func cacheKeySukuList(page, pageSize int, filter *dto.FilterMasterSukuRequest) string {
+	f := ""
+	if filter != nil {
+		f = filter.Name
+	}
+	return fmt.Sprintf("master_suku:list:p%d:ps%d:f%s", page, pageSize, f)
+} // Suku------------------------------------------------------------------------------
+
+// JenisKelamin------------------------------------------------------------------------
+func cacheKeyJenisKelaminDetail(id int64) string {
+	return fmt.Sprintf("master_jenis_kelamin:detail:%d", id)
+}
+func cacheKeyJenisKelaminList(page, pageSize int, filter *dto.FilterMasterJenisKelaminRequest) string {
+	f := ""
+	if filter != nil {
+		f = filter.Name
+	}
+	return fmt.Sprintf("master_jenis_kelamin:list:p%d:ps%d:f%s", page, pageSize, f)
+} // JenisKelamin------------------------------------------------------------------------

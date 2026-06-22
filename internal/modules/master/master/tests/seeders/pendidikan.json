@@ -1,0 +1,50 @@
+[
+    {
+        "kode_kemenkes": "01",
+        "name": "Tidak Sekolah"
+    },
+    {
+        "kode_kemenkes": "02",
+        "name": "TK"
+    },
+    {
+        "kode_kemenkes": "03",
+        "name": "SD"
+    },
+    {
+        "kode_kemenkes": "04",
+        "name": "SMP"
+    },
+    {
+        "kode_kemenkes": "05",
+        "name": "SMA"
+    },
+    {
+        "kode_kemenkes": "06",
+        "name": "D1"
+    },
+    {
+        "kode_kemenkes": "07",
+        "name": "D2"
+    },
+    {
+        "kode_kemenkes": "08",
+        "name": "D3"
+    },
+    {
+        "kode_kemenkes": "09",
+        "name": "D4"
+    },
+    {
+        "kode_kemenkes": "10",
+        "name": "S1"
+    },
+    {
+        "kode_kemenkes": "11",
+        "name": "S2"
+    },
+    {
+        "kode_kemenkes": "12",
+        "name": "S3"
+    }
+]

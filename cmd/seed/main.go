@@ -15,9 +15,8 @@ import (
 	userSeed "neosim_go/internal/modules/users/tests/seeders"
 
 	// Master---------------------------------------------------------------
-	// ------Alamat---------------------------------------------------------
-
 	masterAlamat "neosim_go/internal/modules/master/alamat/tests/seeders"
+	masterMaster "neosim_go/internal/modules/master/master/tests/seeders"
 	// =====================================================================
 )
 
@@ -88,6 +87,18 @@ func main() {
 			log.Fatal("Gagal seed RBAC:", err)
 		}
 	} //------Alamat--------------------------------------------------------
+
+	//------Master--------------------------------------------------------
+	masterMasterSeeder := masterMaster.NewMasterSeeder(db)
+	if *fresh {
+		if err := masterMasterSeeder.Fresh(); err != nil {
+			log.Fatal("Gagal fresh seed RBAC:", err)
+		}
+	} else {
+		if err := masterMasterSeeder.Run(); err != nil {
+			log.Fatal("Gagal seed master:", err)
+		}
+	} //------Master--------------------------------------------------------
 
 	// =====================================================================
 

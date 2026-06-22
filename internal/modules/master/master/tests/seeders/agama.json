@@ -1,0 +1,26 @@
+[
+    {
+        "kode_kemenkes": "01",
+        "name": "Islam"
+    },
+    {
+        "kode_kemenkes": "02",
+        "name": "Kristen Protestan"
+    },
+    {
+        "kode_kemenkes": "03",
+        "name": "Kristen Katolik"
+    },
+    {
+        "kode_kemenkes": "04",
+        "name": "Hindu"
+    },
+    {
+        "kode_kemenkes": "05",
+        "name": "Buddha"
+    },
+    {
+        "kode_kemenkes": "06",
+        "name": "Kong Hu Cu"
+    }
+]

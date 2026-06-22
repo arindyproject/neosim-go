@@ -21,7 +21,12 @@ func SetupTestDB() *gorm.DB {
 
 // MigrateTestDB menjalankan migrasi untuk test DB
 func MigrateTestDB(db *gorm.DB) {
-	if err := db.AutoMigrate(&models.Master{}); err != nil {
+	if err := db.AutoMigrate(
+		&models.MasterPekerjaan{},
+		&models.MasterPendidikan{},
+		&models.MasterAgama{},
+		&models.MasterStatusPernikahan{},
+	); err != nil {
 		log.Fatal("Gagal migrasi test DB:", err)
 	}
 }

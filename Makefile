@@ -192,13 +192,15 @@ run-api: ## Generate Swagger docs and run the API
 
 # ─── Code Generator ────────────────────────────────────────────────────────────
 
-gen-module: ## Generate a new module (usage: make gen-module name=artikel add=kategori)
+gen-module: ## Generate a new module
 	@echo "🚀 Generating new module..."
 	@if [ -z "$(name)" ]; then \
-		echo "❌ Error: 'name' is required. Usage: make gen-module name=artikel [add=kategori]"; \
-		exit 1; \
+		echo "❌ Error: 'name' is required."; exit 1; \
 	fi
-	@if [ -z "$(add)" ]; then \
+	@if [ -n "$(sub)" ]; then \
+		echo "📦 Adding item: $(add) ke $(name)/$(sub)"; \
+		go run generator.go -name=$(name) -sub=$(sub) -add=$(add); \
+	elif [ -z "$(add)" ]; then \
 		echo "📦 Creating main module: $(name)"; \
 		go run generator.go -name=$(name); \
 	else \
@@ -219,6 +221,9 @@ test-rbac: ## Run tests for rbac module
 
 test-master: ## Run tests for master module
 	@go test -json ./internal/modules/master/.../tests | gotestfmt
+
+test-master-master: ## Run tests for master module
+	@go test -json ./internal/modules/master/master/tests | gotestfmt
 
 test-master-alamat: ## Run tests for master module
 	@go test -json ./internal/modules/master/alamat/tests | gotestfmt

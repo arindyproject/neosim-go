@@ -27,7 +27,7 @@ import (
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.NegaraResponse}
 //	@Router			/master/alamat/negara [get]
 //
-// ListNegara handles GET /api/v1/master/alamat/negara
+// ListNegara handles GET /api/v1/master/alamat/alamat/negara
 func (h *MasterAlamatHandler) ListNegara(c *echo.Context) error {
 	page, pageSize := he.ParsePagination(c)
 	filter := dto.FilterNegaraRequest{
@@ -56,7 +56,7 @@ func (h *MasterAlamatHandler) ListNegara(c *echo.Context) error {
 //	@Success		200	{object}	response.MyGoResponse{data=dto.NegaraResponse}
 //	@Router			/master/alamat/negara/{id} [get]
 //
-// GetByIDNegara handles GET /api/v1/master/alamat/negara/:id
+// GetByIDNegara handles GET /api/v1/master/alamat/alamat/negara/:id
 func (h *MasterAlamatHandler) GetByIDNegara(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
@@ -84,7 +84,7 @@ func (h *MasterAlamatHandler) GetByIDNegara(c *echo.Context) error {
 //	@Success		201		{object}	response.MyGoResponse{data=dto.NegaraResponse}
 //	@Router			/master/alamat/negara [post]
 //
-// CreateNegara handles POST /api/v1/master/alamat/negara
+// CreateNegara handles POST /api/v1/master/alamat/alamat/negara
 func (h *MasterAlamatHandler) CreateNegara(c *echo.Context) error {
 	var req dto.CreateNegaraRequest
 	if err := c.Bind(&req); err != nil {
@@ -117,7 +117,7 @@ func (h *MasterAlamatHandler) CreateNegara(c *echo.Context) error {
 //	@Success		200		{object}	response.MyGoResponse{data=dto.NegaraResponse}
 //	@Router			/master/alamat/negara/{id} [put]
 //
-// UpdateNegara handles PUT /api/v1/master/alamat/negara/:id
+// UpdateNegara handles PUT /api/v1/master/alamat/alamat/negara/:id
 func (h *MasterAlamatHandler) UpdateNegara(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
@@ -154,7 +154,7 @@ func (h *MasterAlamatHandler) UpdateNegara(c *echo.Context) error {
 //	@Success		200	{object}	response.MyGoResponse{}
 //	@Router			/master/alamat/negara/{id} [delete]
 //
-// DeleteNegara handles DELETE /api/v1/master/alamat/negara/:id
+// DeleteNegara handles DELETE /api/v1/master/alamat/alamat/negara/:id
 func (h *MasterAlamatHandler) DeleteNegara(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {

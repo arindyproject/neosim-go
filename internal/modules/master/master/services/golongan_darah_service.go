@@ -10,26 +10,26 @@ import (
 )
 
 // ─────────────── GetByID ─────────────────────────────────────────────────────────
-func (s *service) GetByIDPekerjaan(id int64) (*dto.MasterPekerjaanResponse, error) {
+func (s *service) GetByIDGolonganDarah(id int64) (*dto.MasterGolonganDarahResponse, error) {
 	ctx := context.Background()
-	cacheKey := cacheKeyPekerjaanDetail(id)
+	cacheKey := cacheKeyGolonganDarahDetail(id)
 
 	// 1. Cek Cache
-	var cachedRes dto.MasterPekerjaanResponse
+	var cachedRes dto.MasterGolonganDarahResponse
 	if s.cache.Get(ctx, cacheKey, &cachedRes) {
 		return &cachedRes, nil
 	}
 
 	// 2. Hit Database
-	m, err := s.repo.GetByIDPekerjaan(id)
+	m, err := s.repo.GetByIDGolonganDarah(id)
 	if err != nil {
 		return nil, err
 	}
 	if m == nil {
-		return nil, appErrors.NotFound("Pekerjaan tidak ditemukan")
+		return nil, appErrors.NotFound("GolonganDarah tidak ditemukan")
 	}
 
-	res := dto.ToMasterPekerjaanResponse(m)
+	res := dto.ToMasterGolonganDarahResponse(m)
 
 	// 3. Simpan ke Cache
 	s.cache.SetDefault(ctx, cacheKey, res)
@@ -37,18 +37,18 @@ func (s *service) GetByIDPekerjaan(id int64) (*dto.MasterPekerjaanResponse, erro
 }
 
 // ─────────────── List ────────────────────────────────────────────────────────────
-func (s *service) ListPekerjaan(page, pageSize int, filter *dto.FilterMasterPekerjaanRequest) ([]dto.MasterPekerjaanResponse, int64, error) {
+func (s *service) ListGolonganDarah(page, pageSize int, filter *dto.FilterMasterGolonganDarahRequest) ([]dto.MasterGolonganDarahResponse, int64, error) {
 	ctx := context.Background()
-	cacheKey := cacheKeyPekerjaanList(page, pageSize, filter)
+	cacheKey := cacheKeyGolonganDarahList(page, pageSize, filter)
 
 	// 1. Cek Cache
 	var cachedRes struct {
-		Items []dto.MasterPekerjaanResponse `json:"items"`
-		Total int64                         `json:"total"`
+		Items []dto.MasterGolonganDarahResponse `json:"items"`
+		Total int64                             `json:"total"`
 	}
 	if s.cache.Get(ctx, cacheKey, &cachedRes) {
 		if len(cachedRes.Items) == 0 {
-			return nil, 0, appErrors.NotFound("Pekerjaan tidak ditemukan")
+			return nil, 0, appErrors.NotFound("GolonganDarah tidak ditemukan")
 		}
 		return cachedRes.Items, cachedRes.Total, nil
 	}
@@ -61,27 +61,27 @@ func (s *service) ListPekerjaan(page, pageSize int, filter *dto.FilterMasterPeke
 		pageSize = 10
 	}
 
-	items, total, err := s.repo.ListPekerjaan(page, pageSize, filter)
+	items, total, err := s.repo.ListGolonganDarah(page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}
 	if len(items) == 0 {
-		return nil, 0, appErrors.NotFound("Pekerjaan tidak ditemukan")
+		return nil, 0, appErrors.NotFound("GolonganDarah tidak ditemukan")
 	}
 
-	res := dto.ToMasterPekerjaanListResponse(items)
+	res := dto.ToMasterGolonganDarahListResponse(items)
 
 	// 3. Simpan ke Cache
 	s.cache.SetDefault(ctx, cacheKey, struct {
-		Items []dto.MasterPekerjaanResponse `json:"items"`
-		Total int64                         `json:"total"`
+		Items []dto.MasterGolonganDarahResponse `json:"items"`
+		Total int64                             `json:"total"`
 	}{Items: res, Total: total})
 
 	return res, total, nil
 }
 
 // ─────────────── Create ──────────────────────────────────────────────────────────
-func (s *service) CreatePekerjaan(req *dto.CreateMasterPekerjaanRequest, actor he.AuthContext) (*dto.MasterPekerjaanResponse, error) {
+func (s *service) CreateGolonganDarah(req *dto.CreateMasterGolonganDarahRequest, actor he.AuthContext) (*dto.MasterGolonganDarahResponse, error) {
 	// Permission Check
 	can, err := s.canCreateMaster(actor)
 	if err != nil {
@@ -89,41 +89,41 @@ func (s *service) CreatePekerjaan(req *dto.CreateMasterPekerjaanRequest, actor h
 	}
 	if !can {
 		return nil, appErrors.Wrap(http.StatusForbidden,
-			"Akses ditolak. Anda tidak memiliki hak akses untuk membuat Pekerjaan baru.", nil)
+			"Akses ditolak. Anda tidak memiliki hak akses untuk membuat GolonganDarah baru.", nil)
 	}
 
 	// Check Duplicate Name
-	data, err := s.repo.GetByNamePekerjaan(req.Name)
+	data, err := s.repo.GetByNameGolonganDarah(req.Name)
 	if err != nil {
 		return nil, err
 	}
 	if data != nil {
-		return nil, appErrors.Wrap(http.StatusConflict, "Pekerjaan dengan nama ini sudah ada", nil)
+		return nil, appErrors.Wrap(http.StatusConflict, "GolonganDarah dengan nama ini sudah ada", nil)
 	}
 
 	// Logic
-	m := &models.MasterPekerjaan{
+	m := &models.MasterGolonganDarah{
 		KodeKemenkes: req.KodeKemenkes,
 		Name:         req.Name,
 		Description:  req.Description,
 		CreatedBy:    &actor.UserID,
 		UpdatedBy:    &actor.UserID,
 	}
-	if err := s.repo.CreatePekerjaan(m); err != nil {
+	if err := s.repo.CreateGolonganDarah(m); err != nil {
 		return nil, err
 	}
 
-	res := dto.ToMasterPekerjaanResponse(m)
+	res := dto.ToMasterGolonganDarahResponse(m)
 
 	// Invalidate Cache
-	s.cache.InvalidateList(context.Background(), cachePrefixPekerjaanList)
+	s.cache.InvalidateList(context.Background(), cachePrefixGolonganDarahList)
 
 	return res, nil
 
 }
 
 // ─────────────── Update ──────────────────────────────────────────────────────────
-func (s *service) UpdatePekerjaan(id int64, req *dto.UpdateMasterPekerjaanRequest, actor he.AuthContext) (*dto.MasterPekerjaanResponse, error) {
+func (s *service) UpdateGolonganDarah(id int64, req *dto.UpdateMasterGolonganDarahRequest, actor he.AuthContext) (*dto.MasterGolonganDarahResponse, error) {
 	// Permission Check
 	can, err := s.canUpdateMaster(actor)
 	if err != nil {
@@ -131,23 +131,23 @@ func (s *service) UpdatePekerjaan(id int64, req *dto.UpdateMasterPekerjaanReques
 	}
 	if !can {
 		return nil, appErrors.Wrap(http.StatusForbidden,
-			"Akses ditolak. Anda tidak memiliki hak akses untuk mengubah Pekerjaan.", nil)
+			"Akses ditolak. Anda tidak memiliki hak akses untuk mengubah GolonganDarah.", nil)
 	}
 
 	// Cek Keberadaan Data
-	existing, err := s.repo.GetByIDPekerjaan(id)
+	existing, err := s.repo.GetByIDGolonganDarah(id)
 	if err != nil || existing == nil {
-		return nil, appErrors.NotFound("Pekerjaan tidak ditemukan")
+		return nil, appErrors.NotFound("GolonganDarah tidak ditemukan")
 	}
 
 	// Check Duplicate Name (jika ada perubahan)
 	if req.Name != nil && *req.Name != existing.Name {
-		data, err := s.repo.GetByNamePekerjaan(*req.Name)
+		data, err := s.repo.GetByNameGolonganDarah(*req.Name)
 		if err != nil {
 			return nil, err
 		}
 		if data != nil {
-			return nil, appErrors.Wrap(http.StatusConflict, "Pekerjaan dengan nama ini sudah ada", nil)
+			return nil, appErrors.Wrap(http.StatusConflict, "GolonganDarah dengan nama ini sudah ada", nil)
 		}
 	}
 
@@ -163,22 +163,22 @@ func (s *service) UpdatePekerjaan(id int64, req *dto.UpdateMasterPekerjaanReques
 	}
 	existing.UpdatedBy = &actor.UserID
 
-	if err := s.repo.UpdatePekerjaan(existing); err != nil {
+	if err := s.repo.UpdateGolonganDarah(existing); err != nil {
 		return nil, err
 	}
 
-	res := dto.ToMasterPekerjaanResponse(existing)
+	res := dto.ToMasterGolonganDarahResponse(existing)
 
 	// Invalidate Cache
-	s.cache.InvalidateDetail(context.Background(), cacheKeyPekerjaanDetail(id))
-	s.cache.InvalidateList(context.Background(), cachePrefixPekerjaanList)
+	s.cache.InvalidateDetail(context.Background(), cacheKeyGolonganDarahDetail(id))
+	s.cache.InvalidateList(context.Background(), cachePrefixGolonganDarahList)
 
 	return res, nil
 
 }
 
 // ─────────────── Delete ──────────────────────────────────────────────────────────
-func (s *service) DeletePekerjaan(id int64, actor he.AuthContext) error {
+func (s *service) DeleteGolonganDarah(id int64, actor he.AuthContext) error {
 	// Permission Check
 	can, err := s.canDeleteMaster(actor)
 	if err != nil {
@@ -186,23 +186,23 @@ func (s *service) DeletePekerjaan(id int64, actor he.AuthContext) error {
 	}
 	if !can {
 		return appErrors.Wrap(http.StatusForbidden,
-			"Akses ditolak. Anda tidak memiliki hak akses untuk menghapus Pekerjaan.", nil)
+			"Akses ditolak. Anda tidak memiliki hak akses untuk menghapus GolonganDarah.", nil)
 	}
 
 	// Cek Keberadaan Data
-	existing, err := s.repo.GetByIDPekerjaan(id)
+	existing, err := s.repo.GetByIDGolonganDarah(id)
 	if err != nil || existing == nil {
-		return appErrors.NotFound("Pekerjaan tidak ditemukan")
+		return appErrors.NotFound("GolonganDarah tidak ditemukan")
 	}
 
 	// delete
-	err = s.repo.DeletePekerjaan(id)
+	err = s.repo.DeleteGolonganDarah(id)
 	if err != nil {
 		return err
 	}
 
 	// Invalidate Cache
-	s.cache.InvalidateList(context.Background(), cachePrefixPekerjaanList)
+	s.cache.InvalidateList(context.Background(), cachePrefixGolonganDarahList)
 
 	return nil
 }

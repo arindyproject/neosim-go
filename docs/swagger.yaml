@@ -98,6 +98,66 @@ definitions:
     - name
     - provinsi_id
     type: object
+  dto.CreateMasterAgamaRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      kode_kemenkes:
+        maxLength: 50
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
+  dto.CreateMasterPekerjaanRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      kode_kemenkes:
+        maxLength: 50
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
+  dto.CreateMasterPendidikanRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      kode_kemenkes:
+        maxLength: 50
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
+  dto.CreateMasterStatusPernikahanRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      kode_kemenkes:
+        maxLength: 50
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
   dto.CreateNegaraRequest:
     properties:
       code:
@@ -367,6 +427,82 @@ definitions:
     required:
     - refresh_token
     type: object
+  dto.MasterAgamaResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      kode_kemenkes:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: integer
+    type: object
+  dto.MasterPekerjaanResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      kode_kemenkes:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: integer
+    type: object
+  dto.MasterPendidikanResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      kode_kemenkes:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: integer
+    type: object
+  dto.MasterStatusPernikahanResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      kode_kemenkes:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: integer
+    type: object
   dto.NegaraResponse:
     properties:
       code:
@@ -580,6 +716,58 @@ definitions:
         type: string
       provinsi_id:
         type: integer
+    type: object
+  dto.UpdateMasterAgamaRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      kode_kemenkes:
+        maxLength: 50
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    type: object
+  dto.UpdateMasterPekerjaanRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      kode_kemenkes:
+        maxLength: 50
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    type: object
+  dto.UpdateMasterPendidikanRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      kode_kemenkes:
+        maxLength: 50
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    type: object
+  dto.UpdateMasterStatusPernikahanRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      kode_kemenkes:
+        maxLength: 50
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
     type: object
   dto.UpdateNegaraRequest:
     properties:
@@ -948,6 +1136,158 @@ paths:
       summary: Reset password
       tags:
       - Auth
+  /master/agama:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of Agama
+      parameters:
+      - description: Filter by kode_kemenkes
+        in: query
+        name: kode_kemenkes
+        type: string
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.MasterAgamaResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Agama
+      tags:
+      - master/agama
+    post:
+      consumes:
+      - application/json
+      description: Create new Agama
+      parameters:
+      - description: Agama Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateMasterAgamaRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MasterAgamaResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create Agama
+      tags:
+      - master/agama
+  /master/agama/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Agama by :id
+      parameters:
+      - description: Agama ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete Agama
+      tags:
+      - master/agama
+    get:
+      consumes:
+      - application/json
+      description: Get Agama detail by :id
+      parameters:
+      - description: Agama ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MasterAgamaResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get Agama
+      tags:
+      - master/agama
+    put:
+      consumes:
+      - application/json
+      description: Update Agama by :id
+      parameters:
+      - description: Agama ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateMasterAgamaRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MasterAgamaResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update Agama
+      tags:
+      - master/agama
   /master/alamat/desa:
     get:
       consumes:
@@ -1728,6 +2068,462 @@ paths:
       summary: Update Provinsi
       tags:
       - master/alamat/provinsi
+  /master/pekerjaan:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of Pekerjaan
+      parameters:
+      - description: Filter by kode_kemenkes
+        in: query
+        name: kode_kemenkes
+        type: string
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.MasterPekerjaanResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Pekerjaan
+      tags:
+      - master/pekerjaan
+    post:
+      consumes:
+      - application/json
+      description: Create new Pekerjaan
+      parameters:
+      - description: Pekerjaan data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateMasterPekerjaanRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MasterPekerjaanResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create Pekerjaan
+      tags:
+      - master/pekerjaan
+  /master/pekerjaan/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Pekerjaan by :id
+      parameters:
+      - description: Pekerjaan ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete Pekerjaan
+      tags:
+      - master/pekerjaan
+    get:
+      consumes:
+      - application/json
+      description: Get Pekerjaan detail by :id
+      parameters:
+      - description: Pekerjaan ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MasterPekerjaanResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get Pekerjaan
+      tags:
+      - master/pekerjaan
+    put:
+      consumes:
+      - application/json
+      description: Update Pekerjaan by :id
+      parameters:
+      - description: Pekerjaan ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateMasterPekerjaanRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MasterPekerjaanResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update Pekerjaan
+      tags:
+      - master/pekerjaan
+  /master/pendidikan:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of Pendidikan
+      parameters:
+      - description: Filter by kode_kemenkes
+        in: query
+        name: kode_kemenkes
+        type: string
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.MasterPendidikanResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Pendidikan
+      tags:
+      - master/pendidikan
+    post:
+      consumes:
+      - application/json
+      description: Create new Pendidikan
+      parameters:
+      - description: Pendidikan data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateMasterPendidikanRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MasterPendidikanResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create Pendidikan
+      tags:
+      - master/pendidikan
+  /master/pendidikan/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Pendidikan by :id
+      parameters:
+      - description: Pendidikan ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete Pendidikan
+      tags:
+      - master/pendidikan
+    get:
+      consumes:
+      - application/json
+      description: Get Pendidikan detail by :id
+      parameters:
+      - description: Pendidikan ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MasterPendidikanResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get Pendidikan
+      tags:
+      - master/pendidikan
+    put:
+      consumes:
+      - application/json
+      description: Update Pendidikan by :id
+      parameters:
+      - description: Pendidikan ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateMasterPendidikanRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MasterPendidikanResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update Pendidikan
+      tags:
+      - master/pendidikan
+  /master/status_pernikahan:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of StatusPernikahan
+      parameters:
+      - description: Filter by kode_kemenkes
+        in: query
+        name: kode_kemenkes
+        type: string
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.MasterStatusPernikahanResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of StatusPernikahan
+      tags:
+      - master/status_pernikahan
+    post:
+      consumes:
+      - application/json
+      description: Create new StatusPernikahan
+      parameters:
+      - description: StatusPernikahan data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateMasterStatusPernikahanRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MasterStatusPernikahanResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create StatusPernikahan
+      tags:
+      - master/status_pernikahan
+  /master/status_pernikahan/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete StatusPernikahan by :id
+      parameters:
+      - description: StatusPernikahan ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete StatusPernikahan
+      tags:
+      - master/status_pernikahan
+    get:
+      consumes:
+      - application/json
+      description: Get StatusPernikahan detail by :id
+      parameters:
+      - description: StatusPernikahan ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MasterStatusPernikahanResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get StatusPernikahan
+      tags:
+      - master/status_pernikahan
+    put:
+      consumes:
+      - application/json
+      description: Update StatusPernikahan by :id
+      parameters:
+      - description: StatusPernikahan ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateMasterStatusPernikahanRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MasterStatusPernikahanResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update StatusPernikahan
+      tags:
+      - master/status_pernikahan
   /rbac/permissions:
     get:
       consumes:

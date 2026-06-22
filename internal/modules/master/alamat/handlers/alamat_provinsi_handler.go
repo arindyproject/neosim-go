@@ -28,7 +28,7 @@ import (
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.ProvinsiResponse}
 //	@Router			/master/alamat/provinsi [get]
 //
-// ListProvinsi handles GET /api/v1/master/alamat/provinsi
+// ListProvinsi handles GET /api/v1/master/alamat/alamat/provinsi
 func (h *MasterAlamatHandler) ListProvinsi(c *echo.Context) error {
 	page, pageSize := he.ParsePagination(c)
 	negaraID := he.ParseOptionalInt64Query(c, "negara_id")
@@ -58,7 +58,7 @@ func (h *MasterAlamatHandler) ListProvinsi(c *echo.Context) error {
 //	@Success		200	{object}	response.MyGoResponse{data=dto.ProvinsiDetailResponse}
 //	@Router			/master/alamat/provinsi/{id} [get]
 //
-// GetByIDProvinsi handles GET /api/v1/master/alamat/provinsi/:id
+// GetByIDProvinsi handles GET /api/v1/master/alamat/alamat/provinsi/:id
 func (h *MasterAlamatHandler) GetByIDProvinsi(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
@@ -86,7 +86,7 @@ func (h *MasterAlamatHandler) GetByIDProvinsi(c *echo.Context) error {
 //	@Success		201		{object}	response.MyGoResponse{data=dto.ProvinsiResponse}
 //	@Router			/master/alamat/provinsi [post]
 //
-// CreateProvinsi handles POST /api/v1/master/alamat/provinsi
+// CreateProvinsi handles POST /api/v1/master/alamat/alamat/provinsi
 func (h *MasterAlamatHandler) CreateProvinsi(c *echo.Context) error {
 	var req dto.CreateProvinsiRequest
 	if err := c.Bind(&req); err != nil {
@@ -119,7 +119,7 @@ func (h *MasterAlamatHandler) CreateProvinsi(c *echo.Context) error {
 //	@Success		200		{object}	response.MyGoResponse{data=dto.ProvinsiResponse}
 //	@Router			/master/alamat/provinsi/{id} [put]
 //
-// UpdateProvinsi handles PUT /api/v1/master/alamat/provinsi/:id
+// UpdateProvinsi handles PUT /api/v1/master/alamat/alamat/provinsi/:id
 func (h *MasterAlamatHandler) UpdateProvinsi(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
@@ -156,7 +156,7 @@ func (h *MasterAlamatHandler) UpdateProvinsi(c *echo.Context) error {
 //	@Success		200	{object}	response.MyGoResponse{}
 //	@Router			/master/alamat/provinsi/{id} [delete]
 //
-// DeleteProvinsi handles DELETE /api/v1/master/alamat/provinsi/:id
+// DeleteProvinsi handles DELETE /api/v1/master/alamat/alamat/provinsi/:id
 func (h *MasterAlamatHandler) DeleteProvinsi(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {

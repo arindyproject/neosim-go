@@ -28,7 +28,7 @@ import (
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.KotaKabupatenResponse}
 //	@Router			/master/alamat/kota [get]
 //
-// ListKotaKabupaten handles GET /api/v1/master/kota
+// ListKotaKabupaten handles GET /api/v1/master/alamat/kota
 func (h *MasterAlamatHandler) ListKotaKabupaten(c *echo.Context) error {
 	page, pageSize := he.ParsePagination(c)
 	provinsiID := he.ParseOptionalInt64Query(c, "provinsi_id")
@@ -58,7 +58,7 @@ func (h *MasterAlamatHandler) ListKotaKabupaten(c *echo.Context) error {
 //	@Success		200	{object}	response.MyGoResponse{data=dto.KotaKabupatenDetailResponse}
 //	@Router			/master/alamat/kota/{id} [get]
 //
-// GetByIDKotaKabupaten handles GET /api/v1/master/kota/:id
+// GetByIDKotaKabupaten handles GET /api/v1/master/alamat/kota/:id
 func (h *MasterAlamatHandler) GetByIDKotaKabupaten(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
@@ -86,7 +86,7 @@ func (h *MasterAlamatHandler) GetByIDKotaKabupaten(c *echo.Context) error {
 //	@Success		201		{object}	response.MyGoResponse{data=dto.KotaKabupatenResponse}
 //	@Router			/master/alamat/kota [post]
 //
-// CreateKotaKabupaten handles POST /api/v1/master/kota
+// CreateKotaKabupaten handles POST /api/v1/master/alamat/kota
 func (h *MasterAlamatHandler) CreateKotaKabupaten(c *echo.Context) error {
 	var req dto.CreateKotaKabupatenRequest
 	if err := c.Bind(&req); err != nil {
@@ -119,7 +119,7 @@ func (h *MasterAlamatHandler) CreateKotaKabupaten(c *echo.Context) error {
 //	@Success		200		{object}	response.MyGoResponse{data=dto.KotaKabupatenResponse}
 //	@Router			/master/alamat/kota/{id} [put]
 //
-// UpdateKotaKabupaten handles PUT /api/v1/master/kota/:id
+// UpdateKotaKabupaten handles PUT /api/v1/master/alamat/kota/:id
 func (h *MasterAlamatHandler) UpdateKotaKabupaten(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
@@ -156,7 +156,7 @@ func (h *MasterAlamatHandler) UpdateKotaKabupaten(c *echo.Context) error {
 //	@Success		200	{object}	response.MyGoResponse{}
 //	@Router			/master/alamat/kota/{id} [delete]
 //
-// DeleteKotaKabupaten handles DELETE /api/v1/master/kota/:id
+// DeleteKotaKabupaten handles DELETE /api/v1/master/alamat/kota/:id
 func (h *MasterAlamatHandler) DeleteKotaKabupaten(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {

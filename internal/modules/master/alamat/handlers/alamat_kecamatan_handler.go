@@ -28,7 +28,7 @@ import (
 //	@Success		200					{object}	response.MyGoResponse{data=[]dto.KecamatanResponse}
 //	@Router			/master/alamat/kecamatan [get]
 //
-// ListKecamatan handles GET /api/v1/master/kecamatan
+// ListKecamatan handles GET /api/v1/master/alamat/kecamatan
 func (h *MasterAlamatHandler) ListKecamatan(c *echo.Context) error {
 	page, pageSize := he.ParsePagination(c)
 	kotaKabupatenID := he.ParseOptionalInt64Query(c, "kota_kabupaten_id")
@@ -58,7 +58,7 @@ func (h *MasterAlamatHandler) ListKecamatan(c *echo.Context) error {
 //	@Success		200	{object}	response.MyGoResponse{data=dto.KecamatanDetailResponse}
 //	@Router			/master/alamat/kecamatan/{id} [get]
 //
-// GetByIDKecamatan handles GET /api/v1/master/kecamatan/:id
+// GetByIDKecamatan handles GET /api/v1/master/alamat/kecamatan/:id
 func (h *MasterAlamatHandler) GetByIDKecamatan(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
@@ -86,7 +86,7 @@ func (h *MasterAlamatHandler) GetByIDKecamatan(c *echo.Context) error {
 //	@Success		201		{object}	response.MyGoResponse{data=dto.KecamatanResponse}
 //	@Router			/master/alamat/kecamatan [post]
 //
-// CreateKecamatan handles POST /api/v1/master/kecamatan
+// CreateKecamatan handles POST /api/v1/master/alamat/kecamatan
 func (h *MasterAlamatHandler) CreateKecamatan(c *echo.Context) error {
 	var req dto.CreateKecamatanRequest
 	if err := c.Bind(&req); err != nil {
@@ -119,7 +119,7 @@ func (h *MasterAlamatHandler) CreateKecamatan(c *echo.Context) error {
 //	@Success		200		{object}	response.MyGoResponse{data=dto.KecamatanResponse}
 //	@Router			/master/alamat/kecamatan/{id} [put]
 //
-// UpdateKecamatan handles PUT /api/v1/master/kecamatan/:id
+// UpdateKecamatan handles PUT /api/v1/master/alamat/kecamatan/:id
 func (h *MasterAlamatHandler) UpdateKecamatan(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
@@ -156,7 +156,7 @@ func (h *MasterAlamatHandler) UpdateKecamatan(c *echo.Context) error {
 //	@Success		200	{object}	response.MyGoResponse{}
 //	@Router			/master/alamat/kecamatan/{id} [delete]
 //
-// DeleteKecamatan handles DELETE /api/v1/master/kecamatan/:id
+// DeleteKecamatan handles DELETE /api/v1/master/alamat/kecamatan/:id
 func (h *MasterAlamatHandler) DeleteKecamatan(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {

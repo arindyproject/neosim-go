@@ -83,6 +83,10 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateNegara_Superadmin_Success() {
 	req := &dto.CreateNegaraRequest{Code: "ID", Name: "Indonesia"}
 	actor := superadminActor()
 
+	// TAMBAHKAN INI: Mock cek duplikat code.
+	// Return (false, nil) agar service lolos validasi awal dan lanjut ke tahap CreateNegara.
+	s.repo.On("ExistsNegaraByCode", req.Code, (*int64)(nil)).Return(false, nil)
+
 	s.repo.On("CreateNegara", mock.AnythingOfType("*models.MasterAlamatNegara")).Return(nil)
 
 	result, err := s.svc.CreateNegara(req, actor)
@@ -98,6 +102,11 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateNegara_WithPermission_Success(
 	actor := regularActor()
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermMasterCreate, mock.Anything).Return(true, nil)
+
+	// TAMBAHKAN INI: Mock cek duplikat code.
+	// Return (false, nil) agar service lolos validasi awal dan lanjut ke tahap CreateNegara.
+	s.repo.On("ExistsNegaraByCode", req.Code, (*int64)(nil)).Return(false, nil)
+
 	s.repo.On("CreateNegara", mock.AnythingOfType("*models.MasterAlamatNegara")).Return(nil)
 
 	result, err := s.svc.CreateNegara(req, actor)
@@ -112,6 +121,11 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateNegara_WithManagePermission_Su
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermMasterCreate, mock.Anything).Return(false, nil)
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermMasterManage, mock.Anything).Return(true, nil)
+
+	// TAMBAHKAN INI: Mock cek duplikat code.
+	// Return (false, nil) agar service lolos validasi awal dan lanjut ke tahap CreateNegara.
+	s.repo.On("ExistsNegaraByCode", req.Code, (*int64)(nil)).Return(false, nil)
+
 	s.repo.On("CreateNegara", mock.AnythingOfType("*models.MasterAlamatNegara")).Return(nil)
 
 	result, err := s.svc.CreateNegara(req, actor)
@@ -137,6 +151,10 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateNegara_Forbidden() {
 func (s *MasterAlamatServiceTestSuite) Test_CreateNegara_RepoError() {
 	req := &dto.CreateNegaraRequest{Code: "ID", Name: "Indonesia"}
 	actor := superadminActor()
+
+	// TAMBAHKAN INI: Mock cek duplikat code.
+	// Return (false, nil) agar service lolos validasi awal dan lanjut ke tahap CreateNegara.
+	s.repo.On("ExistsNegaraByCode", req.Code, (*int64)(nil)).Return(false, nil)
 
 	s.repo.On("CreateNegara", mock.AnythingOfType("*models.MasterAlamatNegara")).Return(fmt.Errorf("db error"))
 
@@ -372,6 +390,10 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateProvinsi_Superadmin_Success() 
 	negara := factories.NewNegaraFactory().Make()
 	negara.ID = 1
 
+	// TAMBAHKAN INI: Mock cek duplikat code.
+	// Return (false, nil) agar service lolos validasi awal dan lanjut ke tahap berikutnya.
+	s.repo.On("ExistsProvinsiByCode", req.Code, (*int64)(nil)).Return(false, nil)
+
 	s.repo.On("GetByIDNegara", int64(1)).Return(negara, nil)
 	s.repo.On("CreateProvinsi", mock.AnythingOfType("*models.MasterAlamatProvinsi")).Return(nil)
 
@@ -390,6 +412,11 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateProvinsi_WithPermission_Succes
 	negara.ID = 1
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermMasterCreate, mock.Anything).Return(true, nil)
+
+	// TAMBAHKAN INI: Mock cek duplikat code.
+	// Return (false, nil) agar service lolos validasi awal dan lanjut ke tahap berikutnya.
+	s.repo.On("ExistsProvinsiByCode", req.Code, (*int64)(nil)).Return(false, nil)
+
 	s.repo.On("GetByIDNegara", int64(1)).Return(negara, nil)
 	s.repo.On("CreateProvinsi", mock.AnythingOfType("*models.MasterAlamatProvinsi")).Return(nil)
 
@@ -417,6 +444,10 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateProvinsi_NegaraNotFound() {
 	req := &dto.CreateProvinsiRequest{NegaraID: 999, Code: "35", Name: "Jawa Timur"}
 	actor := superadminActor()
 
+	// TAMBAHKAN INI: Mock cek duplikat code.
+	// Return (false, nil) agar service lolos validasi awal dan lanjut mengecek Negara.
+	s.repo.On("ExistsProvinsiByCode", req.Code, (*int64)(nil)).Return(false, nil)
+
 	s.repo.On("GetByIDNegara", int64(999)).Return(nil, nil)
 
 	result, err := s.svc.CreateProvinsi(req, actor)
@@ -431,6 +462,10 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateProvinsi_RepoError() {
 	actor := superadminActor()
 	negara := factories.NewNegaraFactory().Make()
 	negara.ID = 1
+
+	// TAMBAHKAN INI: Mock cek duplikat code.
+	// Return (false, nil) agar service lolos validasi awal dan lanjut ke tahap CreateProvinsi.
+	s.repo.On("ExistsProvinsiByCode", req.Code, (*int64)(nil)).Return(false, nil)
 
 	s.repo.On("GetByIDNegara", int64(1)).Return(negara, nil)
 	s.repo.On("CreateProvinsi", mock.AnythingOfType("*models.MasterAlamatProvinsi")).Return(fmt.Errorf("db error"))
@@ -646,6 +681,10 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateKotaKabupaten_Superadmin_Succe
 	provinsi := factories.NewProvinsiFactory().Make()
 	provinsi.ID = 1
 
+	// TAMBAHKAN INI: Mock cek duplikat code.
+	// Return (false, nil) agar service lolos validasi awal dan lanjut ke tahap CreateKotaKabupaten.
+	s.repo.On("ExistsKotaKabupatenByCode", req.Code, (*int64)(nil)).Return(false, nil)
+
 	s.repo.On("GetByIDProvinsi", int64(1)).Return(provinsi, nil)
 	s.repo.On("CreateKotaKabupaten", mock.AnythingOfType("*models.MasterAlamatKotaKabupaten")).Return(nil)
 
@@ -674,6 +713,10 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateKotaKabupaten_ProvinsiNotFound
 	req := &dto.CreateKotaKabupatenRequest{ProvinsiID: 999, Code: "35.21", Name: "Surabaya"}
 	actor := superadminActor()
 
+	// TAMBAHKAN INI: Mock cek duplikat code.
+	// Return (false, nil) agar service lolos validasi awal dan lanjut mengecek Provinsi.
+	s.repo.On("ExistsKotaKabupatenByCode", req.Code, (*int64)(nil)).Return(false, nil)
+
 	s.repo.On("GetByIDProvinsi", int64(999)).Return(nil, nil)
 
 	result, err := s.svc.CreateKotaKabupaten(req, actor)
@@ -688,6 +731,10 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateKotaKabupaten_RepoError() {
 	actor := superadminActor()
 	provinsi := factories.NewProvinsiFactory().Make()
 	provinsi.ID = 1
+
+	// TAMBAHKAN INI: Mock cek duplikat code.
+	// Return (false, nil) agar service lolos validasi awal dan lanjut ke tahap CreateKotaKabupaten.
+	s.repo.On("ExistsKotaKabupatenByCode", req.Code, (*int64)(nil)).Return(false, nil)
 
 	s.repo.On("GetByIDProvinsi", int64(1)).Return(provinsi, nil)
 	s.repo.On("CreateKotaKabupaten", mock.AnythingOfType("*models.MasterAlamatKotaKabupaten")).Return(fmt.Errorf("db error"))
@@ -890,6 +937,10 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateKecamatan_Superadmin_Success()
 	kota := factories.NewKotaKabupatenFactory().Make()
 	kota.ID = 1
 
+	// TAMBAHKAN INI: Mock cek duplikat code.
+	// Return (false, nil) agar service lolos validasi awal dan lanjut ke tahap berikutnya.
+	s.repo.On("ExistsKecamatanByCode", req.Code, (*int64)(nil)).Return(false, nil)
+
 	s.repo.On("GetByIDKotaKabupaten", int64(1)).Return(kota, nil)
 	s.repo.On("CreateKecamatan", mock.AnythingOfType("*models.MasterAlamatKecamatan")).Return(nil)
 
@@ -918,6 +969,12 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateKecamatan_KotaNotFound() {
 	req := &dto.CreateKecamatanRequest{KotaKabupatenID: 999, Code: "35.21.01", Name: "Gubeng"}
 	actor := superadminActor()
 
+	// 1. TAMBAHKAN INI: Mock cek duplikat code.
+	// Return (false, nil) agar service melanjutkan ke proses validasi Kota/Kabupaten.
+	// Gunakan (*int64)(nil) karena parameter excludeID yang dikirim service adalah nil.
+	s.repo.On("ExistsKecamatanByCode", req.Code, (*int64)(nil)).Return(false, nil)
+
+	// 2. Mock GetByIDKotaKabupaten untuk mensimulasikan kota tidak ditemukan
 	s.repo.On("GetByIDKotaKabupaten", int64(999)).Return(nil, nil)
 
 	result, err := s.svc.CreateKecamatan(req, actor)
@@ -932,6 +989,10 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateKecamatan_RepoError() {
 	actor := superadminActor()
 	kota := factories.NewKotaKabupatenFactory().Make()
 	kota.ID = 1
+
+	// TAMBAHKAN INI: Mock cek duplikat code.
+	// Return (false, nil) agar service lolos validasi awal dan lanjut ke tahap berikutnya.
+	s.repo.On("ExistsKecamatanByCode", req.Code, (*int64)(nil)).Return(false, nil)
 
 	s.repo.On("GetByIDKotaKabupaten", int64(1)).Return(kota, nil)
 	s.repo.On("CreateKecamatan", mock.AnythingOfType("*models.MasterAlamatKecamatan")).Return(fmt.Errorf("db error"))
@@ -1137,6 +1198,10 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateKelurahanDesa_Superadmin_Succe
 	kecamatan := factories.NewKecamatanFactory().Make()
 	kecamatan.ID = 1
 
+	// TAMBAHKAN INI: Mock cek duplikat code.
+	// Return (false, nil) agar service lolos validasi awal dan lanjut ke tahap CreateKelurahanDesa.
+	s.repo.On("ExistsKelurahanDesaByCode", req.Code, (*int64)(nil)).Return(false, nil)
+
 	s.repo.On("GetByIDKecamatan", int64(1)).Return(kecamatan, nil)
 	s.repo.On("CreateKelurahanDesa", mock.AnythingOfType("*models.MasterAlamatKelurahanDesa")).Return(nil)
 
@@ -1165,6 +1230,10 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateKelurahanDesa_KecamatanNotFoun
 	req := &dto.CreateKelurahanDesaRequest{KecamatanID: 999, Code: "35.21.01.2001", Name: "Airlangga"}
 	actor := superadminActor()
 
+	// TAMBAHKAN INI: Mock cek duplikat code.
+	// Return (false, nil) agar service lolos validasi awal dan lanjut mengecek Kecamatan.
+	s.repo.On("ExistsKelurahanDesaByCode", req.Code, (*int64)(nil)).Return(false, nil)
+
 	s.repo.On("GetByIDKecamatan", int64(999)).Return(nil, nil)
 
 	result, err := s.svc.CreateKelurahanDesa(req, actor)
@@ -1179,6 +1248,10 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateKelurahanDesa_RepoError() {
 	actor := superadminActor()
 	kecamatan := factories.NewKecamatanFactory().Make()
 	kecamatan.ID = 1
+
+	// TAMBAHKAN INI: Mock cek duplikat code.
+	// Return (false, nil) agar service lolos validasi awal dan lanjut ke tahap CreateKelurahanDesa.
+	s.repo.On("ExistsKelurahanDesaByCode", req.Code, (*int64)(nil)).Return(false, nil)
 
 	s.repo.On("GetByIDKecamatan", int64(1)).Return(kecamatan, nil)
 	s.repo.On("CreateKelurahanDesa", mock.AnythingOfType("*models.MasterAlamatKelurahanDesa")).Return(fmt.Errorf("db error"))

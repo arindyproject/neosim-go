@@ -1,0 +1,18 @@
+[
+    {
+        "kode_kemenkes": "01",
+        "name": "Belum Menikah"
+    },
+    {
+        "kode_kemenkes": "02",
+        "name": "Menikah"
+    },
+    {
+        "kode_kemenkes": "03",
+        "name": "Cerai"
+    },
+    {
+        "kode_kemenkes": "04",
+        "name": "Cerai"
+    }
+]

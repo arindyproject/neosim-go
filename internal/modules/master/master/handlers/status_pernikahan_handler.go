@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"neosim_go/internal/modules/master/alamat/dto"
+	"neosim_go/internal/modules/master/master/dto"
 	he "neosim_go/internal/shared/httputil"
 	"neosim_go/internal/shared/response"
 	"neosim_go/internal/shared/validator"
@@ -10,36 +10,32 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
-// Kelurahan/Desa ========================================================================
 // ─────────────── List ─────────────────────────────────────────────────────────────
-// MasterAlamatHandler godoc
 //
-//	@Summary		Get list of Kelurahan/Desa
-//	@Description	Get paginated list of Kelurahan/Desa
-//	@Tags			master/alamat/desa
-//	@Accept			json
-//	@Produce		json
-//	@Security		BearerAuth
-//	@Param			kecamatan_id	query		int		false	"Filter by kecamatan_id"
-//	@Param			code			query		string	false	"Filter by code"
-//	@Param			name			query		string	false	"Filter by name (partial match)"
-//	@Param			postal_code		query		string	false	"Filter by postal code"
-//	@Param			page			query		int		false	"Page number"
-//	@Param			page_size		query		int		false	"Page size"
-//	@Success		200				{object}	response.MyGoResponse{data=[]dto.KelurahanDesaResponse}
-//	@Router			/master/alamat/desa [get]
+//	 MasterHandler godoc
 //
-// ListKelurahanDesa handles GET /api/v1/master/alamat/desa
-func (h *MasterAlamatHandler) ListKelurahanDesa(c *echo.Context) error {
+//		@Summary		Get list of StatusPernikahan
+//		@Description	Get paginated list of StatusPernikahan
+//		@Tags			master/status_pernikahan
+//		@Accept			json
+//		@Produce		json
+//		@Security		BearerAuth
+//		@Param			kode_kemenkes	query		string	false	"Filter by kode_kemenkes"
+//		@Param			name			query		string	false	"Filter by name (partial match)"
+//		@Param			page			query		int		false	"Page number"
+//		@Param			page_size		query		int		false	"Page size"
+//		@Success		200				{object}	response.MyGoResponse{data=[]dto.MasterStatusPernikahanResponse}
+//		@Router			/master/status_pernikahan [get]
+//
+// ListStatusPernikahan handles GET /api/v1/master/status_pernikahan
+func (h *MasterHandler) ListStatusPernikahan(c *echo.Context) error {
 	page, pageSize := he.ParsePagination(c)
-	kecamatanID := he.ParseOptionalInt64Query(c, "kecamatan_id")
-	filter := dto.FilterKelurahanDesaRequest{
-		Code:       c.QueryParam("code"),
-		Name:       c.QueryParam("name"),
-		PostalCode: c.QueryParam("postal_code"),
+	filter := dto.FilterMasterStatusPernikahanRequest{
+		KodeKemenkes: c.QueryParam("kode_kemenkes"),
+		Name:         c.QueryParam("name"),
 	}
 
-	items, total, err := h.service.ListKelurahanDesa(page, pageSize, kecamatanID, &filter)
+	items, total, err := h.service.ListStatusPernikahan(page, pageSize, &filter)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
 	}
@@ -48,26 +44,26 @@ func (h *MasterAlamatHandler) ListKelurahanDesa(c *echo.Context) error {
 } // ───────────── List ───────────────────────────────────────────────────────────
 
 // ─────────────── GetByID ────────────────────────────────────────────────────────
-// MasterAlamatHandler godoc
+// MasterHandler godoc
 //
-//	@Summary		Get Kelurahan/Desa
-//	@Description	Get Kelurahan/Desa detail by :id, termasuk jalur hierarki lengkap
-//	@Tags			master/alamat/desa
+//	@Summary		Get StatusPernikahan
+//	@Description	Get StatusPernikahan detail by :id
+//	@Tags			master/status_pernikahan
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			id	path		int	true	"Kelurahan/Desa ID"
-//	@Success		200	{object}	response.MyGoResponse{data=dto.KelurahanDesaDetailResponse}
-//	@Router			/master/alamat/desa/{id} [get]
+//	@Param			id	path		int	true	"StatusPernikahan ID"
+//	@Success		200	{object}	response.MyGoResponse{data=dto.MasterStatusPernikahanResponse}
+//	@Router			/master/status_pernikahan/{id}	[get]
 //
-// GetByIDKelurahanDesa handles GET /api/v1/master/alamat/desa/:id
-func (h *MasterAlamatHandler) GetByIDKelurahanDesa(c *echo.Context) error {
+// GetByIDStatusPernikahan handles GET /api/v1/master/status_pernikahan/:id
+func (h *MasterHandler) GetByIDStatusPernikahan(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 
-	item, err := h.service.GetByIDKelurahanDesa(id)
+	item, err := h.service.GetByIDStatusPernikahan(id)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -76,21 +72,21 @@ func (h *MasterAlamatHandler) GetByIDKelurahanDesa(c *echo.Context) error {
 } // ───────────── GetByID ────────────────────────────────────────────────────────
 
 // ─────────────── Create ─────────────────────────────────────────────────────────
-// MasterAlamatHandler godoc
+// MasterHandler godoc
 //
-//	@Summary		Create Kelurahan/Desa
-//	@Description	Create New Kelurahan/Desa
-//	@Tags			master/alamat/desa
-//	@Accept			json
-//	@Produce		json
-//	@Security		BearerAuth
-//	@Param			body	body		dto.CreateKelurahanDesaRequest	true	"Create Request"
-//	@Success		201		{object}	response.MyGoResponse{data=dto.KelurahanDesaResponse}
-//	@Router			/master/alamat/desa [post]
+//	@Summary	Create StatusPernikahan
+//	@Description	Create new StatusPernikahan
+//	@Tags		master/status_pernikahan
+//	@Accept		json
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param		body	body	dto.CreateMasterStatusPernikahanRequest	true	"StatusPernikahan data"
+//	@Success	201	{object}	response.MyGoResponse{data=dto.MasterStatusPernikahanResponse}
+//	@Router		/master/status_pernikahan				[post]
 //
-// CreateKelurahanDesa handles POST /api/v1/master/alamat/desa
-func (h *MasterAlamatHandler) CreateKelurahanDesa(c *echo.Context) error {
-	var req dto.CreateKelurahanDesaRequest
+// CreateStatusPernikahan handles POST /api/v1/master/status_pernikahan
+func (h *MasterHandler) CreateStatusPernikahan(c *echo.Context) error {
+	var req dto.CreateMasterStatusPernikahanRequest
 	if err := c.Bind(&req); err != nil {
 		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
 	}
@@ -99,7 +95,7 @@ func (h *MasterAlamatHandler) CreateKelurahanDesa(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.CreateKelurahanDesa(&req, actor)
+	item, err := h.service.CreateStatusPernikahan(&req, actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
@@ -108,27 +104,27 @@ func (h *MasterAlamatHandler) CreateKelurahanDesa(c *echo.Context) error {
 } // ───────────── Create ─────────────────────────────────────────────────────────
 
 // ─────────────── Update ─────────────────────────────────────────────────────────
-// MasterAlamatHandler godoc
+// MasterHandler godoc
 //
-//	@Summary		Update Kelurahan/Desa
-//	@Description	Update Kelurahan/Desa by :id
-//	@Tags			master/alamat/desa
-//	@Accept			json
-//	@Produce		json
-//	@Security		BearerAuth
-//	@Param			id		path		int								true	"Kelurahan/Desa ID"
-//	@Param			body	body		dto.UpdateKelurahanDesaRequest	true	"Update Request"
-//	@Success		200		{object}	response.MyGoResponse{data=dto.KelurahanDesaResponse}
-//	@Router			/master/alamat/desa/{id} [put]
+//	@Summary	Update StatusPernikahan
+//	@Description	Update StatusPernikahan by :id
+//	@Tags	master/status_pernikahan
+//	@Accept	json
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param		id		path		int			true	"StatusPernikahan ID"
+//	@Param	body	body	dto.UpdateMasterStatusPernikahanRequest	true	"Update Request"
+//	@Success	200	{object}	response.MyGoResponse{data=dto.MasterStatusPernikahanResponse}
+//	@Router		/master/status_pernikahan/{id}	[put]
 //
-// UpdateKelurahanDesa handles PUT /api/v1/master/alamat/desa/:id
-func (h *MasterAlamatHandler) UpdateKelurahanDesa(c *echo.Context) error {
+// UpdateStatusPernikahan handles PUT /api/v1/master/status_pernikahan/:id
+func (h *MasterHandler) UpdateStatusPernikahan(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 
-	var req dto.UpdateKelurahanDesaRequest
+	var req dto.UpdateMasterStatusPernikahanRequest
 	if err := c.Bind(&req); err != nil {
 		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
 	}
@@ -137,39 +133,39 @@ func (h *MasterAlamatHandler) UpdateKelurahanDesa(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.UpdateKelurahanDesa(id, &req, actor)
+	item, err := h.service.UpdateStatusPernikahan(id, &req, actor)
 	if err != nil {
-		return response.Response(c, he.NotFoundStatus(err, "Kelurahan/Desa tidak ditemukan"), false, err.Error(), nil, nil)
+		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
 
 	return response.Response(c, http.StatusOK, true, "Data berhasil diupdate", item, nil)
 } // ───────────── Update ─────────────────────────────────────────────────────────
 
 // ─────────────── Delete ─────────────────────────────────────────────────────────
-// MasterAlamatHandler godoc
+// MasterHandler godoc
 //
-//	@Summary		Delete Kelurahan/Desa
-//	@Description	Delete Kelurahan/Desa by :id
-//	@Tags			master/alamat/desa
-//	@Accept			json
-//	@Produce		json
-//	@Security		BearerAuth
-//	@Param			id	path		int	true	"Kelurahan/Desa ID"
-//	@Success		200	{object}	response.MyGoResponse{}
-//	@Router			/master/alamat/desa/{id} [delete]
+//	@Summary	Delete StatusPernikahan
+//	@Description	Delete StatusPernikahan by :id
+//	@Tags	master/status_pernikahan
+//	@Accept	json
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param		id	path	int	true	"StatusPernikahan ID"
+//	@Success	200	{object}	response.MyGoResponse
+//	@Router	/master/status_pernikahan/{id}	[delete]
 //
-// DeleteKelurahanDesa handles DELETE /api/v1/master/alamat/desa/:id
-func (h *MasterAlamatHandler) DeleteKelurahanDesa(c *echo.Context) error {
+// DeleteStatusPernikahan handles DELETE /api/v1/master/status_pernikahan/:id
+func (h *MasterHandler) DeleteStatusPernikahan(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 
 	actor := he.BuildAuthContext(c)
-	if err := h.service.DeleteKelurahanDesa(id, actor); err != nil {
-		return response.Response(c, he.NotFoundStatus(err, "Kelurahan/Desa tidak ditemukan"), false, err.Error(), nil, nil)
+	err = h.service.DeleteStatusPernikahan(id, actor)
+	if err != nil {
+		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
 
 	return response.Response(c, http.StatusOK, true, "Data berhasil dihapus", nil, nil)
 } // ───────────── Delete ─────────────────────────────────────────────────────────
-// Kelurahan/Desa ========================================================================

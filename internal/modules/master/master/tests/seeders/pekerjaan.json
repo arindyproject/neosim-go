@@ -1,0 +1,62 @@
+[
+    {
+        "kode_kemenkes": "01",
+        "name": "Tidak Bekerja"
+    },
+    {
+        "kode_kemenkes": "02",
+        "name": "Buruh Harian Lepas"
+    },
+    {
+        "kode_kemenkes": "03",
+        "name": "TNI/POLRI"
+    },
+    {
+        "kode_kemenkes": "04",
+        "name": "Pensiunan"
+    },
+    {
+        "kode_kemenkes": "05",
+        "name": "Wiraswasta"
+    },
+    {
+        "kode_kemenkes": "06",
+        "name": "Pelajar/Mahasiswa"
+    },
+    {
+        "kode_kemenkes": "07",
+        "name": "PNS"
+    },
+    {
+        "kode_kemenkes": "08",
+        "name": "Karyawan Swasta"
+    },
+    {
+        "kode_kemenkes": "09",
+        "name": "Karyawan BUMN"
+    },
+    {
+        "kode_kemenkes": "10",
+        "name": "Karyawan BUMD"
+    },
+    {
+        "kode_kemenkes": "11",
+        "name": "Karyawan Honorer"
+    },
+    {
+        "kode_kemenkes": "12",
+        "name": "Juru Masak / Koki"
+    },
+    {
+        "kode_kemenkes": "13",
+        "name": "Petani"
+    },
+    {
+        "kode_kemenkes": "14",
+        "name": "Nelayan"
+    },
+    {
+        "kode_kemenkes": "15",
+        "name": "Pedagang"
+    }
+]
