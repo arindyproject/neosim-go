@@ -189,3 +189,135 @@ func (f *StatusPernikahanFactory) MakeMany(count int) []*models.MasterStatusPern
 	}
 	return items
 }
+
+// =====================================================================
+// Suku
+// =====================================================================
+
+type SukuFactory struct {
+	overrides map[string]interface{}
+}
+
+func NewSukuFactory() *SukuFactory {
+	return &SukuFactory{overrides: make(map[string]interface{})}
+}
+
+func (f *SukuFactory) With(field string, value interface{}) *SukuFactory {
+	f.overrides[field] = value
+	return f
+}
+
+func (f *SukuFactory) Make() *models.MasterSuku {
+	id := rng.Intn(999999)
+	name := fmt.Sprintf("Suku %d", id)
+	desc := fmt.Sprintf("Deskripsi Suku %d", id)
+
+	if v, ok := f.overrides["name"]; ok {
+		name = v.(string)
+	}
+	if v, ok := f.overrides["description"]; ok {
+		desc = v.(string)
+	}
+
+	return &models.MasterSuku{
+		Name:        name,
+		Description: &desc,
+	}
+}
+
+func (f *SukuFactory) MakeMany(count int) []*models.MasterSuku {
+	items := make([]*models.MasterSuku, count)
+	for i := 0; i < count; i++ {
+		items[i] = NewSukuFactory().Make()
+	}
+	return items
+}
+
+// =====================================================================
+// Golongan Darah
+// =====================================================================
+
+type GolonganDarahFactory struct {
+	overrides map[string]interface{}
+}
+
+func NewGolonganDarahFactory() *GolonganDarahFactory {
+	return &GolonganDarahFactory{overrides: make(map[string]interface{})}
+}
+
+func (f *GolonganDarahFactory) With(field string, value interface{}) *GolonganDarahFactory {
+	f.overrides[field] = value
+	return f
+}
+
+func (f *GolonganDarahFactory) Make() *models.MasterGolonganDarah {
+	id := rng.Intn(999999)
+	name := fmt.Sprintf("Golongan Darah %d", id%10)
+	desc := fmt.Sprintf("Deskripsi Golongan Darah %d", id)
+
+	if v, ok := f.overrides["name"]; ok {
+		name = v.(string)
+	}
+	if v, ok := f.overrides["description"]; ok {
+		desc = v.(string)
+	}
+
+	return &models.MasterGolonganDarah{
+		Name:        name,
+		Description: &desc,
+	}
+}
+
+func (f *GolonganDarahFactory) MakeMany(count int) []*models.MasterGolonganDarah {
+	items := make([]*models.MasterGolonganDarah, count)
+	for i := 0; i < count; i++ {
+		items[i] = NewGolonganDarahFactory().Make()
+	}
+	return items
+}
+
+// =====================================================================
+// Jenis Kelamin
+// =====================================================================
+
+type JenisKelaminFactory struct {
+	overrides map[string]interface{}
+}
+
+func NewJenisKelaminFactory() *JenisKelaminFactory {
+	return &JenisKelaminFactory{overrides: make(map[string]interface{})}
+}
+
+func (f *JenisKelaminFactory) With(field string, value interface{}) *JenisKelaminFactory {
+	f.overrides[field] = value
+	return f
+}
+
+func (f *JenisKelaminFactory) Make() *models.MasterJenisKelamin {
+	id := rng.Intn(999999)
+	name := "Laki-laki"
+	if id%2 == 0 {
+		name = "Perempuan"
+	}
+	desc := fmt.Sprintf("Deskripsi Jenis Kelamin %d", id)
+
+	if v, ok := f.overrides["name"]; ok {
+		name = v.(string)
+	}
+	if v, ok := f.overrides["description"]; ok {
+		desc = v.(string)
+	}
+
+	return &models.MasterJenisKelamin{
+		Name:        name,
+		Description: &desc,
+	}
+}
+
+func (f *JenisKelaminFactory) MakeMany(count int) []*models.MasterJenisKelamin {
+	items := make([]*models.MasterJenisKelamin, count)
+	for i := 0; i < count; i++ {
+		items[i] = NewJenisKelaminFactory().Make()
+	}
+	return items
+}

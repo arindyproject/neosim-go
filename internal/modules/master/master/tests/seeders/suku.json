@@ -1,0 +1,50 @@
+[
+    {
+        "kode_kemenkes": "01",
+        "name": "Jawa"
+    },
+    {
+        "kode_kemenkes": "02",
+        "name": "Sunda"
+    },
+    {
+        "kode_kemenkes": "03",
+        "name": "Batak"
+    },
+    {
+        "kode_kemenkes": "04",
+        "name": "Madura"
+    },
+    {
+        "kode_kemenkes": "05",
+        "name": "Betawi"
+    },
+    {
+        "kode_kemenkes": "06",
+        "name": "Melayu"
+    },
+    {
+        "kode_kemenkes": "07",
+        "name": "Bugis"
+    },
+    {
+        "kode_kemenkes": "08",
+        "name": "Makassar"
+    },
+    {
+        "kode_kemenkes": "09",
+        "name": "Minang"
+    },
+    {
+        "kode_kemenkes": "10",
+        "name": "Dayak"
+    },
+    {
+        "kode_kemenkes": "11",
+        "name": "Tionghoa"
+    },
+    {
+        "kode_kemenkes": "12",
+        "name": "Tidak Menyebutkan"
+    }
+]

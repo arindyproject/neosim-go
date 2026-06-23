@@ -98,11 +98,35 @@ type Service interface {
 	DeleteAgama(id int64, actor he.AuthContext) error
 	//--------------------------------------------------------------
 
-	// StatusPernikahan-----------------------------------------------
+	// StatusPernikahan---------------------------------------------
 	GetByIDStatusPernikahan(id int64) (*dto.MasterStatusPernikahanResponse, error)
 	ListStatusPernikahan(page, pageSize int, filter *dto.FilterMasterStatusPernikahanRequest) ([]dto.MasterStatusPernikahanResponse, int64, error)
 	CreateStatusPernikahan(req *dto.CreateMasterStatusPernikahanRequest, actor he.AuthContext) (*dto.MasterStatusPernikahanResponse, error)
 	UpdateStatusPernikahan(id int64, req *dto.UpdateMasterStatusPernikahanRequest, actor he.AuthContext) (*dto.MasterStatusPernikahanResponse, error)
 	DeleteStatusPernikahan(id int64, actor he.AuthContext) error
+	//--------------------------------------------------------------
+
+	// JenisKelamin-------------------------------------------------
+	GetByIDJenisKelamin(id int64) (*dto.MasterJenisKelaminResponse, error)
+	ListJenisKelamin(page, pageSize int, filter *dto.FilterMasterJenisKelaminRequest) ([]dto.MasterJenisKelaminResponse, int64, error)
+	CreateJenisKelamin(req *dto.CreateMasterJenisKelaminRequest, actor he.AuthContext) (*dto.MasterJenisKelaminResponse, error)
+	UpdateJenisKelamin(id int64, req *dto.UpdateMasterJenisKelaminRequest, actor he.AuthContext) (*dto.MasterJenisKelaminResponse, error)
+	DeleteJenisKelamin(id int64, actor he.AuthContext) error
+	//--------------------------------------------------------------
+
+	// Suku---------------------------------------------------------
+	GetByIDSuku(id int64) (*dto.MasterSukuResponse, error)
+	ListSuku(page, pageSize int, filter *dto.FilterMasterSukuRequest) ([]dto.MasterSukuResponse, int64, error)
+	CreateSuku(req *dto.CreateMasterSukuRequest, actor he.AuthContext) (*dto.MasterSukuResponse, error)
+	UpdateSuku(id int64, req *dto.UpdateMasterSukuRequest, actor he.AuthContext) (*dto.MasterSukuResponse, error)
+	DeleteSuku(id int64, actor he.AuthContext) error
+	//--------------------------------------------------------------
+
+	// GolonganDarah------------------------------------------------
+	GetByIDGolonganDarah(id int64) (*dto.MasterGolonganDarahResponse, error)
+	ListGolonganDarah(page, pageSize int, filter *dto.FilterMasterGolonganDarahRequest) ([]dto.MasterGolonganDarahResponse, int64, error)
+	CreateGolonganDarah(req *dto.CreateMasterGolonganDarahRequest, actor he.AuthContext) (*dto.MasterGolonganDarahResponse, error)
+	UpdateGolonganDarah(id int64, req *dto.UpdateMasterGolonganDarahRequest, actor he.AuthContext) (*dto.MasterGolonganDarahResponse, error)
+	DeleteGolonganDarah(id int64, actor he.AuthContext) error
 	//--------------------------------------------------------------
 }

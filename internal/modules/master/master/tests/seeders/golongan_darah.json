@@ -1,0 +1,34 @@
+[
+    {
+        "kode_kemenkes": "01",
+        "name": "A+"
+    },
+    {
+        "kode_kemenkes": "02",
+        "name": "A-"
+    },
+    {
+        "kode_kemenkes": "03",
+        "name": "B+"
+    },
+    {
+        "kode_kemenkes": "04",
+        "name": "B-"
+    },
+    {
+        "kode_kemenkes": "05",
+        "name": "O+"
+    },
+    {
+        "kode_kemenkes": "06",
+        "name": "O-"
+    },
+    {
+        "kode_kemenkes": "07",
+        "name": "AB+"
+    },
+    {
+        "kode_kemenkes": "08",
+        "name": "AB-"
+    }
+]

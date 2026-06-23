@@ -50,6 +50,7 @@ import (
 	// Master----------------------------------
 	//-------Alamat----------------------------
 	_ "neosim_go/internal/modules/master/alamat"
+	_ "neosim_go/internal/modules/master/departemen"
 	_ "neosim_go/internal/modules/master/master"
 	// =============== Modules ===============
 )

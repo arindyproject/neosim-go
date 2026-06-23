@@ -71,6 +71,9 @@ func (r *registryModule) Models() []interface{} {
 		&models.MasterPendidikan{},
 		&models.MasterAgama{},
 		&models.MasterStatusPernikahan{},
+		&models.MasterSuku{},
+		&models.MasterGolonganDarah{},
+		&models.MasterJenisKelamin{},
 	}
 }
 

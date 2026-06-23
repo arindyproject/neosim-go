@@ -1,0 +1,14 @@
+[
+    {
+        "kode_kemenkes": "01",
+        "name": "Laki-laki"
+    },
+    {
+        "kode_kemenkes": "02",
+        "name": "Perempuan"
+    },
+    {
+        "kode_kemenkes": "03",
+        "name": "Tidak Disebutkan"
+    }
+]

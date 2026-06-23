@@ -23,6 +23,258 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/master/departemen": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get paginated list of MasterDepartemen",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/departemen"
+                ],
+                "summary": "Get list of MasterDepartemen",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by name (partial match)",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.MasterDepartemenResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create New MasterDepartemen",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/departemen"
+                ],
+                "summary": "Create MasterDepartemen",
+                "parameters": [
+                    {
+                        "description": "Create Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateMasterDepartemenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.MasterDepartemenResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/master/departemen/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get MasterDepartemen by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/departemen"
+                ],
+                "summary": "Get MasterDepartemen",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "MasterDepartemen ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.MasterDepartemenResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update MasterDepartemen by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/departemen"
+                ],
+                "summary": "Update MasterDepartemen",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "MasterDepartemen ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateMasterDepartemenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.MasterDepartemenResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete MasterDepartemen by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/departemen"
+                ],
+                "summary": "Delete MasterDepartemen",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "MasterDepartemen ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.MyGoResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/forgot-password": {
             "post": {
                 "description": "Mengirim email reset password. Selalu response 200 untuk keamanan.",
@@ -1871,6 +2123,522 @@ const docTemplate = `{
                 }
             }
         },
+        "/master/golongan_darah": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get paginated list of GolonganDarah",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/golongan_darah"
+                ],
+                "summary": "Get list of GolonganDarah",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by kode_kemenkes",
+                        "name": "kode_kemenkes",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by name (partial match)",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.MasterGolonganDarahResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create new GolonganDarah",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/golongan_darah"
+                ],
+                "summary": "Create GolonganDarah",
+                "parameters": [
+                    {
+                        "description": "GolonganDarah Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateMasterGolonganDarahRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.MasterGolonganDarahResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/master/golongan_darah/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get GolonganDarah detail by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/golongan_darah"
+                ],
+                "summary": "Get GolonganDarah",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "GolonganDarah ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.MasterGolonganDarahResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update GolonganDarah by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/golongan_darah"
+                ],
+                "summary": "Update GolonganDarah",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "GolonganDarah ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateMasterGolonganDarahRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.MasterGolonganDarahResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete GolonganDarah by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/golongan_darah"
+                ],
+                "summary": "Delete GolonganDarah",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "GolonganDarah ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.MyGoResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/master/jenis_kelamin": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get paginated list of JenisKelamin",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/jenis_kelamin"
+                ],
+                "summary": "Get list of JenisKelamin",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by kode_kemenkes",
+                        "name": "kode_kemenkes",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by name (partial match)",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.MasterJenisKelaminResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create new JenisKelamin",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/jenis_kelamin"
+                ],
+                "summary": "Create JenisKelamin",
+                "parameters": [
+                    {
+                        "description": "JenisKelamin Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateMasterJenisKelaminRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.MasterJenisKelaminResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/master/jenis_kelamin/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get JenisKelamin detail by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/jenis_kelamin"
+                ],
+                "summary": "Get JenisKelamin",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "JenisKelamin ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.MasterJenisKelaminResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update JenisKelamin by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/jenis_kelamin"
+                ],
+                "summary": "Update JenisKelamin",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "JenisKelamin ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateMasterJenisKelaminRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.MasterJenisKelaminResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete JenisKelamin by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/jenis_kelamin"
+                ],
+                "summary": "Delete JenisKelamin",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "JenisKelamin ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.MyGoResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/master/pekerjaan": {
             "get": {
                 "security": [
@@ -2630,6 +3398,264 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "StatusPernikahan ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.MyGoResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/master/suku": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get paginated list of Suku",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/suku"
+                ],
+                "summary": "Get list of Suku",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by kode_kemenkes",
+                        "name": "kode_kemenkes",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by name (partial match)",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.MasterSukuResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create new Suku",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/suku"
+                ],
+                "summary": "Create Suku",
+                "parameters": [
+                    {
+                        "description": "Suku Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateMasterSukuRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.MasterSukuResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/master/suku/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get Suku detail by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/suku"
+                ],
+                "summary": "Get Suku",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Suku ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.MasterSukuResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update Suku by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/suku"
+                ],
+                "summary": "Update Suku",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Suku ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateMasterSukuRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.MasterSukuResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete Suku by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/suku"
+                ],
+                "summary": "Delete Suku",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Suku ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -4473,6 +5499,65 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.CreateMasterDepartemenRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                }
+            }
+        },
+        "dto.CreateMasterGolonganDarahRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "kode_kemenkes": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                }
+            }
+        },
+        "dto.CreateMasterJenisKelaminRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "kode_kemenkes": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                }
+            }
+        },
         "dto.CreateMasterPekerjaanRequest": {
             "type": "object",
             "required": [
@@ -4516,6 +5601,27 @@ const docTemplate = `{
             }
         },
         "dto.CreateMasterStatusPernikahanRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "kode_kemenkes": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                }
+            }
+        },
+        "dto.CreateMasterSukuRequest": {
             "type": "object",
             "required": [
                 "name"
@@ -4955,6 +6061,90 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.MasterDepartemenResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.MasterGolonganDarahResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "kode_kemenkes": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.MasterJenisKelaminResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "kode_kemenkes": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "type": "integer"
+                }
+            }
+        },
         "dto.MasterPekerjaanResponse": {
             "type": "object",
             "properties": {
@@ -5014,6 +6204,35 @@ const docTemplate = `{
             }
         },
         "dto.MasterStatusPernikahanResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "kode_kemenkes": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.MasterSukuResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -5377,6 +6596,56 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.UpdateMasterDepartemenRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                }
+            }
+        },
+        "dto.UpdateMasterGolonganDarahRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "kode_kemenkes": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                }
+            }
+        },
+        "dto.UpdateMasterJenisKelaminRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "kode_kemenkes": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                }
+            }
+        },
         "dto.UpdateMasterPekerjaanRequest": {
             "type": "object",
             "properties": {
@@ -5414,6 +6683,24 @@ const docTemplate = `{
             }
         },
         "dto.UpdateMasterStatusPernikahanRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "kode_kemenkes": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                }
+            }
+        },
+        "dto.UpdateMasterSukuRequest": {
             "type": "object",
             "properties": {
                 "description": {

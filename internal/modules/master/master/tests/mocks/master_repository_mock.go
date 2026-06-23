@@ -162,3 +162,117 @@ func (m *MasterRepositoryMock) DeleteStatusPernikahan(id int64) error {
 	args := m.Called(id)
 	return args.Error(0)
 }
+
+// Suku ================================================================
+
+func (m *MasterRepositoryMock) CreateSuku(item *models.MasterSuku) error {
+	args := m.Called(item)
+	return args.Error(0)
+}
+
+func (m *MasterRepositoryMock) GetByIDSuku(id int64) (*models.MasterSuku, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.MasterSuku), args.Error(1)
+}
+
+func (m *MasterRepositoryMock) GetByNameSuku(name string) (*models.MasterSuku, error) {
+	args := m.Called(name)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.MasterSuku), args.Error(1)
+}
+
+func (m *MasterRepositoryMock) ListSuku(page, pageSize int, filter *dto.FilterMasterSukuRequest) ([]models.MasterSuku, int64, error) {
+	args := m.Called(page, pageSize, filter)
+	return args.Get(0).([]models.MasterSuku), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MasterRepositoryMock) UpdateSuku(item *models.MasterSuku) error {
+	args := m.Called(item)
+	return args.Error(0)
+}
+
+func (m *MasterRepositoryMock) DeleteSuku(id int64) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+
+// Golongan Darah ================================================================
+
+func (m *MasterRepositoryMock) CreateGolonganDarah(item *models.MasterGolonganDarah) error {
+	args := m.Called(item)
+	return args.Error(0)
+}
+
+func (m *MasterRepositoryMock) GetByIDGolonganDarah(id int64) (*models.MasterGolonganDarah, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.MasterGolonganDarah), args.Error(1)
+}
+
+func (m *MasterRepositoryMock) GetByNameGolonganDarah(name string) (*models.MasterGolonganDarah, error) {
+	args := m.Called(name)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.MasterGolonganDarah), args.Error(1)
+}
+
+func (m *MasterRepositoryMock) ListGolonganDarah(page, pageSize int, filter *dto.FilterMasterGolonganDarahRequest) ([]models.MasterGolonganDarah, int64, error) {
+	args := m.Called(page, pageSize, filter)
+	return args.Get(0).([]models.MasterGolonganDarah), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MasterRepositoryMock) UpdateGolonganDarah(item *models.MasterGolonganDarah) error {
+	args := m.Called(item)
+	return args.Error(0)
+}
+
+func (m *MasterRepositoryMock) DeleteGolonganDarah(id int64) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+
+// Jenis Kelamin ================================================================
+
+func (m *MasterRepositoryMock) CreateJenisKelamin(item *models.MasterJenisKelamin) error {
+	args := m.Called(item)
+	return args.Error(0)
+}
+
+func (m *MasterRepositoryMock) GetByIDJenisKelamin(id int64) (*models.MasterJenisKelamin, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.MasterJenisKelamin), args.Error(1)
+}
+
+func (m *MasterRepositoryMock) GetByNameJenisKelamin(name string) (*models.MasterJenisKelamin, error) {
+	args := m.Called(name)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.MasterJenisKelamin), args.Error(1)
+}
+
+func (m *MasterRepositoryMock) ListJenisKelamin(page, pageSize int, filter *dto.FilterMasterJenisKelaminRequest) ([]models.MasterJenisKelamin, int64, error) {
+	args := m.Called(page, pageSize, filter)
+	return args.Get(0).([]models.MasterJenisKelamin), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MasterRepositoryMock) UpdateJenisKelamin(item *models.MasterJenisKelamin) error {
+	args := m.Called(item)
+	return args.Error(0)
+}
+
+func (m *MasterRepositoryMock) DeleteJenisKelamin(id int64) error {
+	args := m.Called(id)
+	return args.Error(0)
+}

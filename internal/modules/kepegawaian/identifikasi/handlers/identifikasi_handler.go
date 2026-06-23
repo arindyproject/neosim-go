@@ -1,0 +1,164 @@
+package handlers
+
+import (
+	"net/http"
+	"strconv"
+
+	"neosim_go/internal/modules/kepegawaian/identifikasi/dto"
+	"neosim_go/internal/shared/response"
+	"neosim_go/internal/shared/validator"
+	he "neosim_go/internal/shared/httputil"
+
+	"github.com/labstack/echo/v5"
+)
+
+// ─── List ──────────────────────────────────────────────────────────────────────
+//
+//	@Summary		Get list of KepegawaianIdentifikasi
+//	@Description	Get paginated list of KepegawaianIdentifikasi
+//	@Tags			kepegawaian/identifikasi
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			name		query		string	false	"Filter by name (partial match)"
+//	@Param			page		query		int		false	"Page number"
+//	@Param			page_size	query		int		false	"Page size"
+//	@Success		200			{object}	response.MyGoResponse{data=[]dto.KepegawaianIdentifikasiResponse}
+//	@Router			/api/v1/kepegawaian/identifikasi [get]
+func (h *KepegawaianIdentifikasiHandler) List(c *echo.Context) error {
+	page, pageSize := 1, 10
+	filter := dto.FilterKepegawaianIdentifikasiRequest{
+		Name: c.QueryParam("name"),
+	}
+	if p := c.QueryParam("page"); p != "" {
+		if v, err := strconv.Atoi(p); err == nil && v > 0 {
+			page = v
+		}
+	}
+	if ps := c.QueryParam("page_size"); ps != "" {
+		if v, err := strconv.Atoi(ps); err == nil && v > 0 && v <= 100 {
+			pageSize = v
+		}
+	}
+
+	actor := he.BuildAuthContext(c)
+	items, total, err := h.service.List(page, pageSize, &filter, actor)
+	if err != nil {
+		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
+	}
+	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data", items, total, page, pageSize)
+}
+
+// ─── GetByID ───────────────────────────────────────────────────────────────────
+//
+//	@Summary		Get KepegawaianIdentifikasi
+//	@Description	Get KepegawaianIdentifikasi by :id
+//	@Tags			kepegawaian/identifikasi
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		int	true	"KepegawaianIdentifikasi ID"
+//	@Success		200	{object}	response.MyGoResponse{data=dto.KepegawaianIdentifikasiResponse}
+//	@Router			/api/v1/kepegawaian/identifikasi/{id} [get]
+func (h *KepegawaianIdentifikasiHandler) GetByID(c *echo.Context) error {
+	id, err := he.ParseID(c)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
+	}
+	actor := he.BuildAuthContext(c)
+	item, err := h.service.GetByID(id, actor)
+	if err != nil {
+		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", item, nil)
+}
+
+// ─── Create ────────────────────────────────────────────────────────────────────
+//
+//	@Summary		Create KepegawaianIdentifikasi
+//	@Description	Create New KepegawaianIdentifikasi
+//	@Tags			kepegawaian/identifikasi
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		dto.CreateKepegawaianIdentifikasiRequest	true	"Create Request"
+//	@Success		201		{object}	response.MyGoResponse{data=dto.KepegawaianIdentifikasiResponse}
+//	@Router			/api/v1/kepegawaian/identifikasi [post]
+func (h *KepegawaianIdentifikasiHandler) Create(c *echo.Context) error {
+	var req dto.CreateKepegawaianIdentifikasiRequest
+	if err := c.Bind(&req); err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
+	}
+	if errs := validator.Validate(req); errs != nil {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
+	}
+	actor := he.BuildAuthContext(c)
+	item, err := h.service.Create(&req, he.GetActorID(c), actor)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusCreated, true, "Data berhasil dibuat", item, nil)
+}
+
+// ─── Update ────────────────────────────────────────────────────────────────────
+//
+//	@Summary		Update KepegawaianIdentifikasi
+//	@Description	Update KepegawaianIdentifikasi by :id
+//	@Tags			kepegawaian/identifikasi
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		int						true	"KepegawaianIdentifikasi ID"
+//	@Param			body	body		dto.UpdateKepegawaianIdentifikasiRequest	true	"Update Request"
+//	@Success		200		{object}	response.MyGoResponse{data=dto.KepegawaianIdentifikasiResponse}
+//	@Router			/api/v1/kepegawaian/identifikasi/{id} [put]
+func (h *KepegawaianIdentifikasiHandler) Update(c *echo.Context) error {
+	id, err := he.ParseID(c)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
+	}
+	var req dto.UpdateKepegawaianIdentifikasiRequest
+	if err := c.Bind(&req); err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
+	}
+	if errs := validator.Validate(req); errs != nil {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
+	}
+	actor := he.BuildAuthContext(c)
+	item, err := h.service.Update(id, &req, he.GetActorID(c), actor)
+	if err != nil {
+		status := http.StatusBadRequest
+		if err.Error() == "KepegawaianIdentifikasi tidak ditemukan" {
+			status = http.StatusNotFound
+		}
+		return response.Response(c, status, false, err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Data berhasil diupdate", item, nil)
+}
+
+// ─── Delete ────────────────────────────────────────────────────────────────────
+//
+//	@Summary		Delete KepegawaianIdentifikasi
+//	@Description	Delete KepegawaianIdentifikasi by :id
+//	@Tags			kepegawaian/identifikasi
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		int	true	"KepegawaianIdentifikasi ID"
+//	@Success		200	{object}	response.MyGoResponse{}
+//	@Router			/api/v1/kepegawaian/identifikasi/{id} [delete]
+func (h *KepegawaianIdentifikasiHandler) Delete(c *echo.Context) error {
+	id, err := he.ParseID(c)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
+	}
+	actor := he.BuildAuthContext(c)
+	if err := h.service.Delete(id, actor); err != nil {
+		status := http.StatusInternalServerError
+		if err.Error() == "KepegawaianIdentifikasi tidak ditemukan" {
+			status = http.StatusNotFound
+		}
+		return response.Response(c, status, false, err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Data berhasil dihapus", nil, nil)
+}

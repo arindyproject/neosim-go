@@ -1,0 +1,72 @@
+[
+    {
+        "code": "RJ",
+        "name": "Rawat Jalan / Poliklinik",
+        "system_module": "rawat_jalan"
+    },
+    {
+        "code": "RI",
+        "name": "Rawat Inap",
+        "system_module": "rawat_inap"
+    },
+    {
+        "code": "IGD",
+        "name": "Instalasi Gawat Darurat",
+        "system_module": "igd"
+    },
+    {
+        "code": "OK",
+        "name": "Instalasi Bedah / Kamar Operasi",
+        "system_module": "bedah"
+    },
+    {
+        "code": "ICU",
+        "name": "Intensive Care Unit",
+        "system_module": "icu"
+    },
+    {
+        "code": "NICU",
+        "name": "Neonatal ICU",
+        "system_module": "icu (sub)"
+    },
+    {
+        "code": "LAB",
+        "name": "Laboratorium",
+        "system_module": "laboratorium"
+    },
+    {
+        "code": "RAD",
+        "name": "Radiologi",
+        "system_module": "radiologi"
+    },
+    {
+        "code": "FARM",
+        "name": "Farmasi / Apotek",
+        "system_module": "farmasi"
+    },
+    {
+        "code": "REHAB",
+        "name": "Rehabilitasi Medik",
+        "system_module": "rehab_medik"
+    },
+    {
+        "code": "HEMO",
+        "name": "Hemodialisa",
+        "system_module": "hemodialisa"
+    },
+    {
+        "code": "VK",
+        "name": "Kamar Bersalin",
+        "system_module": "kebidanan"
+    },
+    {
+        "code": "GIZI",
+        "name": "Instalasi Gizi",
+        "system_module": "gizi"
+    },
+    {
+        "code": "CSSD",
+        "name": "Sterilisasi",
+        "system_module": "cssd"
+    }
+]

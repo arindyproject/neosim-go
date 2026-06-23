@@ -113,6 +113,48 @@ definitions:
     required:
     - name
     type: object
+  dto.CreateMasterDepartemenRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
+  dto.CreateMasterGolonganDarahRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      kode_kemenkes:
+        maxLength: 50
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
+  dto.CreateMasterJenisKelaminRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      kode_kemenkes:
+        maxLength: 50
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
   dto.CreateMasterPekerjaanRequest:
     properties:
       description:
@@ -144,6 +186,21 @@ definitions:
     - name
     type: object
   dto.CreateMasterStatusPernikahanRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      kode_kemenkes:
+        maxLength: 50
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
+  dto.CreateMasterSukuRequest:
     properties:
       description:
         maxLength: 500
@@ -446,6 +503,61 @@ definitions:
       updated_by:
         type: integer
     type: object
+  dto.MasterDepartemenResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: integer
+    type: object
+  dto.MasterGolonganDarahResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      kode_kemenkes:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: integer
+    type: object
+  dto.MasterJenisKelaminResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      kode_kemenkes:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: integer
+    type: object
   dto.MasterPekerjaanResponse:
     properties:
       created_at:
@@ -485,6 +597,25 @@ definitions:
         type: integer
     type: object
   dto.MasterStatusPernikahanResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      kode_kemenkes:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: integer
+    type: object
+  dto.MasterSukuResponse:
     properties:
       created_at:
         type: string
@@ -730,6 +861,42 @@ definitions:
         minLength: 1
         type: string
     type: object
+  dto.UpdateMasterDepartemenRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    type: object
+  dto.UpdateMasterGolonganDarahRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      kode_kemenkes:
+        maxLength: 50
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    type: object
+  dto.UpdateMasterJenisKelaminRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      kode_kemenkes:
+        maxLength: 50
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    type: object
   dto.UpdateMasterPekerjaanRequest:
     properties:
       description:
@@ -757,6 +924,19 @@ definitions:
         type: string
     type: object
   dto.UpdateMasterStatusPernikahanRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      kode_kemenkes:
+        maxLength: 50
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    type: object
+  dto.UpdateMasterSukuRequest:
     properties:
       description:
         maxLength: 500
@@ -970,6 +1150,154 @@ info:
   title: Neosim API V1
   version: "1.0"
 paths:
+  /api/v1/master/departemen:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of MasterDepartemen
+      parameters:
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.MasterDepartemenResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of MasterDepartemen
+      tags:
+      - master/departemen
+    post:
+      consumes:
+      - application/json
+      description: Create New MasterDepartemen
+      parameters:
+      - description: Create Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateMasterDepartemenRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MasterDepartemenResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create MasterDepartemen
+      tags:
+      - master/departemen
+  /api/v1/master/departemen/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete MasterDepartemen by :id
+      parameters:
+      - description: MasterDepartemen ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete MasterDepartemen
+      tags:
+      - master/departemen
+    get:
+      consumes:
+      - application/json
+      description: Get MasterDepartemen by :id
+      parameters:
+      - description: MasterDepartemen ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MasterDepartemenResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get MasterDepartemen
+      tags:
+      - master/departemen
+    put:
+      consumes:
+      - application/json
+      description: Update MasterDepartemen by :id
+      parameters:
+      - description: MasterDepartemen ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateMasterDepartemenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MasterDepartemenResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update MasterDepartemen
+      tags:
+      - master/departemen
   /auth/forgot-password:
     post:
       consumes:
@@ -2068,6 +2396,310 @@ paths:
       summary: Update Provinsi
       tags:
       - master/alamat/provinsi
+  /master/golongan_darah:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of GolonganDarah
+      parameters:
+      - description: Filter by kode_kemenkes
+        in: query
+        name: kode_kemenkes
+        type: string
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.MasterGolonganDarahResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of GolonganDarah
+      tags:
+      - master/golongan_darah
+    post:
+      consumes:
+      - application/json
+      description: Create new GolonganDarah
+      parameters:
+      - description: GolonganDarah Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateMasterGolonganDarahRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MasterGolonganDarahResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create GolonganDarah
+      tags:
+      - master/golongan_darah
+  /master/golongan_darah/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete GolonganDarah by :id
+      parameters:
+      - description: GolonganDarah ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete GolonganDarah
+      tags:
+      - master/golongan_darah
+    get:
+      consumes:
+      - application/json
+      description: Get GolonganDarah detail by :id
+      parameters:
+      - description: GolonganDarah ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MasterGolonganDarahResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get GolonganDarah
+      tags:
+      - master/golongan_darah
+    put:
+      consumes:
+      - application/json
+      description: Update GolonganDarah by :id
+      parameters:
+      - description: GolonganDarah ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateMasterGolonganDarahRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MasterGolonganDarahResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update GolonganDarah
+      tags:
+      - master/golongan_darah
+  /master/jenis_kelamin:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of JenisKelamin
+      parameters:
+      - description: Filter by kode_kemenkes
+        in: query
+        name: kode_kemenkes
+        type: string
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.MasterJenisKelaminResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of JenisKelamin
+      tags:
+      - master/jenis_kelamin
+    post:
+      consumes:
+      - application/json
+      description: Create new JenisKelamin
+      parameters:
+      - description: JenisKelamin Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateMasterJenisKelaminRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MasterJenisKelaminResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create JenisKelamin
+      tags:
+      - master/jenis_kelamin
+  /master/jenis_kelamin/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete JenisKelamin by :id
+      parameters:
+      - description: JenisKelamin ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete JenisKelamin
+      tags:
+      - master/jenis_kelamin
+    get:
+      consumes:
+      - application/json
+      description: Get JenisKelamin detail by :id
+      parameters:
+      - description: JenisKelamin ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MasterJenisKelaminResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get JenisKelamin
+      tags:
+      - master/jenis_kelamin
+    put:
+      consumes:
+      - application/json
+      description: Update JenisKelamin by :id
+      parameters:
+      - description: JenisKelamin ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateMasterJenisKelaminRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MasterJenisKelaminResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update JenisKelamin
+      tags:
+      - master/jenis_kelamin
   /master/pekerjaan:
     get:
       consumes:
@@ -2524,6 +3156,158 @@ paths:
       summary: Update StatusPernikahan
       tags:
       - master/status_pernikahan
+  /master/suku:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of Suku
+      parameters:
+      - description: Filter by kode_kemenkes
+        in: query
+        name: kode_kemenkes
+        type: string
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.MasterSukuResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Suku
+      tags:
+      - master/suku
+    post:
+      consumes:
+      - application/json
+      description: Create new Suku
+      parameters:
+      - description: Suku Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateMasterSukuRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MasterSukuResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create Suku
+      tags:
+      - master/suku
+  /master/suku/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Suku by :id
+      parameters:
+      - description: Suku ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete Suku
+      tags:
+      - master/suku
+    get:
+      consumes:
+      - application/json
+      description: Get Suku detail by :id
+      parameters:
+      - description: Suku ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MasterSukuResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get Suku
+      tags:
+      - master/suku
+    put:
+      consumes:
+      - application/json
+      description: Update Suku by :id
+      parameters:
+      - description: Suku ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateMasterSukuRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MasterSukuResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update Suku
+      tags:
+      - master/suku
   /rbac/permissions:
     get:
       consumes:

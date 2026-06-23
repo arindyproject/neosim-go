@@ -17,6 +17,7 @@ import (
 
 	// Master---------------------------------------------------------------
 	_ "neosim_go/internal/modules/master/alamat"
+	_ "neosim_go/internal/modules/master/departemen"
 	_ "neosim_go/internal/modules/master/master"
 	// =====================================================================
 )
