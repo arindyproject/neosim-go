@@ -81,6 +81,44 @@ definitions:
     - kecamatan_id
     - name
     type: object
+  dto.CreateKepegawaianIdentifierRequest:
+    properties:
+      is_aktif:
+        type: boolean
+      is_primary:
+        type: boolean
+      nilai:
+        maxLength: 100
+        minLength: 1
+        type: string
+      pegawai_id:
+        type: integer
+      penerbit:
+        maxLength: 100
+        type: string
+      tanggal_expired:
+        type: string
+      tanggal_terbit:
+        type: string
+      tipe:
+        $ref: '#/definitions/models.IdentifierType'
+    required:
+    - nilai
+    - pegawai_id
+    - tipe
+    type: object
+  dto.CreateKepegawaianPegawaiRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
   dto.CreateKotaKabupatenRequest:
     properties:
       code:
@@ -336,6 +374,23 @@ definitions:
     required:
     - identifier
     type: object
+  dto.IdentifierMetaResponse:
+    properties:
+      code:
+        type: string
+      fhir_system:
+        type: string
+      has_expiry:
+        type: boolean
+      is_nakes:
+        type: boolean
+      is_required:
+        type: boolean
+      label:
+        type: string
+      penerbit:
+        type: string
+    type: object
   dto.KecamatanDetailResponse:
     properties:
       code:
@@ -420,6 +475,64 @@ definitions:
       name:
         type: string
       postal_code:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: integer
+    type: object
+  dto.KepegawaianIdentifierResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: integer
+      days_until_expired:
+        description: -1 jika tidak ada expired date
+        type: integer
+      id:
+        type: integer
+      is_aktif:
+        type: boolean
+      is_expired:
+        description: sudah lewat tanggal expired?
+        type: boolean
+      is_fhir_mappable:
+        description: bisa disync ke SATUSEHAT?
+        type: boolean
+      is_primary:
+        type: boolean
+      nilai:
+        type: string
+      pegawai_id:
+        type: integer
+      penerbit:
+        type: string
+      tanggal_expired:
+        type: string
+      tanggal_terbit:
+        type: string
+      tipe:
+        type: string
+      tipe_label:
+        description: 'label human-readable, ex: "Surat Tanda Registrasi"'
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: integer
+    type: object
+  dto.KepegawaianPegawaiResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      name:
         type: string
       updated_at:
         type: string
@@ -835,6 +948,36 @@ definitions:
         maxLength: 10
         type: string
     type: object
+  dto.UpdateKepegawaianIdentifierRequest:
+    properties:
+      is_aktif:
+        type: boolean
+      is_primary:
+        type: boolean
+      nilai:
+        maxLength: 100
+        minLength: 1
+        type: string
+      penerbit:
+        maxLength: 100
+        type: string
+      tanggal_expired:
+        type: string
+      tanggal_terbit:
+        type: string
+      tipe:
+        $ref: '#/definitions/models.IdentifierType'
+    type: object
+  dto.UpdateKepegawaianPegawaiRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    type: object
   dto.UpdateKotaKabupatenRequest:
     properties:
       code:
@@ -1088,6 +1231,32 @@ definitions:
       username:
         type: string
     type: object
+  models.IdentifierType:
+    enum:
+    - NIK
+    - IHS_NUMBER
+    - STR
+    - SIP
+    - NPA_IDI
+    - NPA_IAI
+    - NPA_IBI
+    - NPA_PPNI
+    - NPWP
+    - BPJS_KES
+    - BPJS_TK
+    type: string
+    x-enum-varnames:
+    - IdentifierNIK
+    - IdentifierIHS
+    - IdentifierSTR
+    - IdentifierSIP
+    - IdentifierNPAIDI
+    - IdentifierNPAIAI
+    - IdentifierNPAIBI
+    - IdentifierNPAPPNI
+    - IdentifierNPWP
+    - IdentifierBPJSKes
+    - IdentifierBPJSTK
   models.LoginHistory:
     properties:
       created_at:
@@ -1150,154 +1319,6 @@ info:
   title: Neosim API V1
   version: "1.0"
 paths:
-  /api/v1/master/departemen:
-    get:
-      consumes:
-      - application/json
-      description: Get paginated list of MasterDepartemen
-      parameters:
-      - description: Filter by name (partial match)
-        in: query
-        name: name
-        type: string
-      - description: Page number
-        in: query
-        name: page
-        type: integer
-      - description: Page size
-        in: query
-        name: page_size
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.MyGoResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/dto.MasterDepartemenResponse'
-                  type: array
-              type: object
-      security:
-      - BearerAuth: []
-      summary: Get list of MasterDepartemen
-      tags:
-      - master/departemen
-    post:
-      consumes:
-      - application/json
-      description: Create New MasterDepartemen
-      parameters:
-      - description: Create Request
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/dto.CreateMasterDepartemenRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.MyGoResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.MasterDepartemenResponse'
-              type: object
-      security:
-      - BearerAuth: []
-      summary: Create MasterDepartemen
-      tags:
-      - master/departemen
-  /api/v1/master/departemen/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete MasterDepartemen by :id
-      parameters:
-      - description: MasterDepartemen ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.MyGoResponse'
-      security:
-      - BearerAuth: []
-      summary: Delete MasterDepartemen
-      tags:
-      - master/departemen
-    get:
-      consumes:
-      - application/json
-      description: Get MasterDepartemen by :id
-      parameters:
-      - description: MasterDepartemen ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.MyGoResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.MasterDepartemenResponse'
-              type: object
-      security:
-      - BearerAuth: []
-      summary: Get MasterDepartemen
-      tags:
-      - master/departemen
-    put:
-      consumes:
-      - application/json
-      description: Update MasterDepartemen by :id
-      parameters:
-      - description: MasterDepartemen ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Update Request
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/dto.UpdateMasterDepartemenRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.MyGoResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.MasterDepartemenResponse'
-              type: object
-      security:
-      - BearerAuth: []
-      summary: Update MasterDepartemen
-      tags:
-      - master/departemen
   /auth/forgot-password:
     post:
       consumes:
@@ -1464,6 +1485,407 @@ paths:
       summary: Reset password
       tags:
       - Auth
+  /kepegawaian/identifier:
+    get:
+      consumes:
+      - application/json
+      description: Menampilkan daftar identifier pegawai dengan filter dan pagination
+      parameters:
+      - description: Filter by ID pegawai
+        in: query
+        name: kepegawaian_id
+        type: integer
+      - description: Filter by tipe (NIK, STR, SIP, dll)
+        in: query
+        name: tipe
+        type: string
+      - description: Filter by status aktif
+        in: query
+        name: is_aktif
+        type: boolean
+      - description: Filter identifier yang sudah expired
+        in: query
+        name: is_expired
+        type: boolean
+      - description: Filter identifier primary
+        in: query
+        name: is_primary
+        type: boolean
+      - description: 'Halaman (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Jumlah per halaman (default: 10, max: 100)'
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.KepegawaianIdentifierResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Daftar identifier pegawai
+      tags:
+      - kepegawaian/identifier
+    post:
+      consumes:
+      - application/json
+      description: Menambahkan identifier baru untuk pegawai (NIK, STR, SIP, dll)
+      parameters:
+      - description: Data identifier
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateKepegawaianIdentifierRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KepegawaianIdentifierResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Tambah identifier pegawai
+      tags:
+      - kepegawaian/identifier
+  /kepegawaian/identifier/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Menghapus identifier pegawai berdasarkan ID (soft delete)
+      parameters:
+      - description: ID identifier
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Hapus identifier pegawai
+      tags:
+      - kepegawaian/identifier
+    get:
+      consumes:
+      - application/json
+      description: Menampilkan detail satu identifier pegawai berdasarkan ID
+      parameters:
+      - description: ID identifier
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KepegawaianIdentifierResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Detail identifier pegawai
+      tags:
+      - kepegawaian/identifier
+    put:
+      consumes:
+      - application/json
+      description: Memperbarui data identifier pegawai berdasarkan ID
+      parameters:
+      - description: ID identifier
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Data yang diperbarui
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateKepegawaianIdentifierRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KepegawaianIdentifierResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update identifier pegawai
+      tags:
+      - kepegawaian/identifier
+  /kepegawaian/identifier/{pegawai_id}/pegawai:
+    get:
+      consumes:
+      - application/json
+      description: Menampilkan semua identifier yang dimiliki oleh pegawai tertentu
+      parameters:
+      - description: ID pegawai
+        in: path
+        name: pegawai_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.KepegawaianIdentifierResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Daftar identifier milik satu pegawai
+      tags:
+      - kepegawaian/identifier
+  /kepegawaian/identifier/expiring-soon:
+    get:
+      consumes:
+      - application/json
+      description: Menampilkan daftar identifier (STR/SIP) yang akan expired dalam
+        N hari ke depan
+      parameters:
+      - description: 'Jumlah hari ke depan (default: 30)'
+        in: query
+        name: days
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.KepegawaianIdentifierResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Identifier yang akan segera expired
+      tags:
+      - kepegawaian/identifier
+  /kepegawaian/identifier/types:
+    get:
+      consumes:
+      - application/json
+      description: Menampilkan semua tipe identifier yang tersedia untuk dropdown
+        UI
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.IdentifierMetaResponse'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Daftar tipe identifier
+      tags:
+      - kepegawaian/identifier
+  /kepegawaian/pegawai:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of KepegawaianPegawai
+      parameters:
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.KepegawaianPegawaiResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of KepegawaianPegawai
+      tags:
+      - kepegawaian/pegawai
+    post:
+      consumes:
+      - application/json
+      description: Create New KepegawaianPegawai
+      parameters:
+      - description: Create Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateKepegawaianPegawaiRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KepegawaianPegawaiResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create KepegawaianPegawai
+      tags:
+      - kepegawaian/pegawai
+  /kepegawaian/pegawai/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete KepegawaianPegawai by :id
+      parameters:
+      - description: KepegawaianPegawai ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete KepegawaianPegawai
+      tags:
+      - kepegawaian/pegawai
+    get:
+      consumes:
+      - application/json
+      description: Get KepegawaianPegawai by :id
+      parameters:
+      - description: KepegawaianPegawai ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KepegawaianPegawaiResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get KepegawaianPegawai
+      tags:
+      - kepegawaian/pegawai
+    put:
+      consumes:
+      - application/json
+      description: Update KepegawaianPegawai by :id
+      parameters:
+      - description: KepegawaianPegawai ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateKepegawaianPegawaiRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KepegawaianPegawaiResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update KepegawaianPegawai
+      tags:
+      - kepegawaian/pegawai
   /master/agama:
     get:
       consumes:
@@ -2396,6 +2818,154 @@ paths:
       summary: Update Provinsi
       tags:
       - master/alamat/provinsi
+  /master/departemen:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of MasterDepartemen
+      parameters:
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.MasterDepartemenResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of MasterDepartemen
+      tags:
+      - master/departemen
+    post:
+      consumes:
+      - application/json
+      description: Create New MasterDepartemen
+      parameters:
+      - description: Create Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateMasterDepartemenRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MasterDepartemenResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create MasterDepartemen
+      tags:
+      - master/departemen
+  /master/departemen/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete MasterDepartemen by :id
+      parameters:
+      - description: MasterDepartemen ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete MasterDepartemen
+      tags:
+      - master/departemen
+    get:
+      consumes:
+      - application/json
+      description: Get MasterDepartemen by :id
+      parameters:
+      - description: MasterDepartemen ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MasterDepartemenResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get MasterDepartemen
+      tags:
+      - master/departemen
+    put:
+      consumes:
+      - application/json
+      description: Update MasterDepartemen by :id
+      parameters:
+      - description: MasterDepartemen ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateMasterDepartemenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MasterDepartemenResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update MasterDepartemen
+      tags:
+      - master/departemen
   /master/golongan_darah:
     get:
       consumes:

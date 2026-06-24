@@ -17,258 +17,6 @@
     "host": "localhost:1323",
     "basePath": "/api/v1",
     "paths": {
-        "/api/v1/master/departemen": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get paginated list of MasterDepartemen",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "master/departemen"
-                ],
-                "summary": "Get list of MasterDepartemen",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Filter by name (partial match)",
-                        "name": "name",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Page number",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Page size",
-                        "name": "page_size",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.MyGoResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/dto.MasterDepartemenResponse"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Create New MasterDepartemen",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "master/departemen"
-                ],
-                "summary": "Create MasterDepartemen",
-                "parameters": [
-                    {
-                        "description": "Create Request",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.CreateMasterDepartemenRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.MyGoResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/dto.MasterDepartemenResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/master/departemen/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get MasterDepartemen by :id",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "master/departemen"
-                ],
-                "summary": "Get MasterDepartemen",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "MasterDepartemen ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.MyGoResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/dto.MasterDepartemenResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            },
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Update MasterDepartemen by :id",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "master/departemen"
-                ],
-                "summary": "Update MasterDepartemen",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "MasterDepartemen ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Update Request",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UpdateMasterDepartemenRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.MyGoResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/dto.MasterDepartemenResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Delete MasterDepartemen by :id",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "master/departemen"
-                ],
-                "summary": "Delete MasterDepartemen",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "MasterDepartemen ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.MyGoResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/auth/forgot-password": {
             "post": {
                 "description": "Mengirim email reset password. Selalu response 200 untuk keamanan.",
@@ -527,6 +275,686 @@
                         "schema": {
                             "$ref": "#/definitions/dto.ResetPasswordRequest"
                         }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.MyGoResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/identifier": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menampilkan daftar identifier pegawai dengan filter dan pagination",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/identifier"
+                ],
+                "summary": "Daftar identifier pegawai",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Filter by ID pegawai",
+                        "name": "kepegawaian_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by tipe (NIK, STR, SIP, dll)",
+                        "name": "tipe",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by status aktif",
+                        "name": "is_aktif",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter identifier yang sudah expired",
+                        "name": "is_expired",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter identifier primary",
+                        "name": "is_primary",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Halaman (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Jumlah per halaman (default: 10, max: 100)",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.KepegawaianIdentifierResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menambahkan identifier baru untuk pegawai (NIK, STR, SIP, dll)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/identifier"
+                ],
+                "summary": "Tambah identifier pegawai",
+                "parameters": [
+                    {
+                        "description": "Data identifier",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateKepegawaianIdentifierRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KepegawaianIdentifierResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/identifier/expiring-soon": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menampilkan daftar identifier (STR/SIP) yang akan expired dalam N hari ke depan",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/identifier"
+                ],
+                "summary": "Identifier yang akan segera expired",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Jumlah hari ke depan (default: 30)",
+                        "name": "days",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.KepegawaianIdentifierResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/identifier/types": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menampilkan semua tipe identifier yang tersedia untuk dropdown UI",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/identifier"
+                ],
+                "summary": "Daftar tipe identifier",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.IdentifierMetaResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.MyGoResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/identifier/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menampilkan detail satu identifier pegawai berdasarkan ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/identifier"
+                ],
+                "summary": "Detail identifier pegawai",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID identifier",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KepegawaianIdentifierResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Memperbarui data identifier pegawai berdasarkan ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/identifier"
+                ],
+                "summary": "Update identifier pegawai",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID identifier",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Data yang diperbarui",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateKepegawaianIdentifierRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KepegawaianIdentifierResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menghapus identifier pegawai berdasarkan ID (soft delete)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/identifier"
+                ],
+                "summary": "Hapus identifier pegawai",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID identifier",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.MyGoResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/identifier/{pegawai_id}/pegawai": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menampilkan semua identifier yang dimiliki oleh pegawai tertentu",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/identifier"
+                ],
+                "summary": "Daftar identifier milik satu pegawai",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID pegawai",
+                        "name": "pegawai_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.KepegawaianIdentifierResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/pegawai": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get paginated list of KepegawaianPegawai",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/pegawai"
+                ],
+                "summary": "Get list of KepegawaianPegawai",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by name (partial match)",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.KepegawaianPegawaiResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create New KepegawaianPegawai",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/pegawai"
+                ],
+                "summary": "Create KepegawaianPegawai",
+                "parameters": [
+                    {
+                        "description": "Create Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateKepegawaianPegawaiRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KepegawaianPegawaiResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/pegawai/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get KepegawaianPegawai by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/pegawai"
+                ],
+                "summary": "Get KepegawaianPegawai",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "KepegawaianPegawai ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KepegawaianPegawaiResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update KepegawaianPegawai by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/pegawai"
+                ],
+                "summary": "Update KepegawaianPegawai",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "KepegawaianPegawai ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateKepegawaianPegawaiRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KepegawaianPegawaiResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete KepegawaianPegawai by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/pegawai"
+                ],
+                "summary": "Delete KepegawaianPegawai",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "KepegawaianPegawai ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -2102,6 +2530,258 @@
                     {
                         "type": "integer",
                         "description": "Provinsi ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.MyGoResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/master/departemen": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get paginated list of MasterDepartemen",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/departemen"
+                ],
+                "summary": "Get list of MasterDepartemen",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by name (partial match)",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.MasterDepartemenResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create New MasterDepartemen",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/departemen"
+                ],
+                "summary": "Create MasterDepartemen",
+                "parameters": [
+                    {
+                        "description": "Create Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateMasterDepartemenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.MasterDepartemenResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/master/departemen/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get MasterDepartemen by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/departemen"
+                ],
+                "summary": "Get MasterDepartemen",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "MasterDepartemen ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.MasterDepartemenResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update MasterDepartemen by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/departemen"
+                ],
+                "summary": "Update MasterDepartemen",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "MasterDepartemen ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateMasterDepartemenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.MasterDepartemenResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete MasterDepartemen by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/departemen"
+                ],
+                "summary": "Delete MasterDepartemen",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "MasterDepartemen ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -5449,6 +6129,60 @@
                 }
             }
         },
+        "dto.CreateKepegawaianIdentifierRequest": {
+            "type": "object",
+            "required": [
+                "nilai",
+                "pegawai_id",
+                "tipe"
+            ],
+            "properties": {
+                "is_aktif": {
+                    "type": "boolean"
+                },
+                "is_primary": {
+                    "type": "boolean"
+                },
+                "nilai": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
+                },
+                "pegawai_id": {
+                    "type": "integer"
+                },
+                "penerbit": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "tanggal_expired": {
+                    "type": "string"
+                },
+                "tanggal_terbit": {
+                    "type": "string"
+                },
+                "tipe": {
+                    "$ref": "#/definitions/models.IdentifierType"
+                }
+            }
+        },
+        "dto.CreateKepegawaianPegawaiRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                }
+            }
+        },
         "dto.CreateKotaKabupatenRequest": {
             "type": "object",
             "required": [
@@ -5801,6 +6535,32 @@
                 }
             }
         },
+        "dto.IdentifierMetaResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "fhir_system": {
+                    "type": "string"
+                },
+                "has_expiry": {
+                    "type": "boolean"
+                },
+                "is_nakes": {
+                    "type": "boolean"
+                },
+                "is_required": {
+                    "type": "boolean"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "penerbit": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.KecamatanDetailResponse": {
             "type": "object",
             "properties": {
@@ -5928,6 +6688,92 @@
                     "type": "string"
                 },
                 "postal_code": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.KepegawaianIdentifierResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "integer"
+                },
+                "days_until_expired": {
+                    "description": "-1 jika tidak ada expired date",
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_aktif": {
+                    "type": "boolean"
+                },
+                "is_expired": {
+                    "description": "sudah lewat tanggal expired?",
+                    "type": "boolean"
+                },
+                "is_fhir_mappable": {
+                    "description": "bisa disync ke SATUSEHAT?",
+                    "type": "boolean"
+                },
+                "is_primary": {
+                    "type": "boolean"
+                },
+                "nilai": {
+                    "type": "string"
+                },
+                "pegawai_id": {
+                    "type": "integer"
+                },
+                "penerbit": {
+                    "type": "string"
+                },
+                "tanggal_expired": {
+                    "type": "string"
+                },
+                "tanggal_terbit": {
+                    "type": "string"
+                },
+                "tipe": {
+                    "type": "string"
+                },
+                "tipe_label": {
+                    "description": "label human-readable, ex: \"Surat Tanda Registrasi\"",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.KepegawaianPegawaiResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
                     "type": "string"
                 },
                 "updated_at": {
@@ -6554,6 +7400,49 @@
                 }
             }
         },
+        "dto.UpdateKepegawaianIdentifierRequest": {
+            "type": "object",
+            "properties": {
+                "is_aktif": {
+                    "type": "boolean"
+                },
+                "is_primary": {
+                    "type": "boolean"
+                },
+                "nilai": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
+                },
+                "penerbit": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "tanggal_expired": {
+                    "type": "string"
+                },
+                "tanggal_terbit": {
+                    "type": "string"
+                },
+                "tipe": {
+                    "$ref": "#/definitions/models.IdentifierType"
+                }
+            }
+        },
+        "dto.UpdateKepegawaianPegawaiRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                }
+            }
+        },
         "dto.UpdateKotaKabupatenRequest": {
             "type": "object",
             "properties": {
@@ -6914,6 +7803,35 @@
                     "type": "string"
                 }
             }
+        },
+        "models.IdentifierType": {
+            "type": "string",
+            "enum": [
+                "NIK",
+                "IHS_NUMBER",
+                "STR",
+                "SIP",
+                "NPA_IDI",
+                "NPA_IAI",
+                "NPA_IBI",
+                "NPA_PPNI",
+                "NPWP",
+                "BPJS_KES",
+                "BPJS_TK"
+            ],
+            "x-enum-varnames": [
+                "IdentifierNIK",
+                "IdentifierIHS",
+                "IdentifierSTR",
+                "IdentifierSIP",
+                "IdentifierNPAIDI",
+                "IdentifierNPAIAI",
+                "IdentifierNPAIBI",
+                "IdentifierNPAPPNI",
+                "IdentifierNPWP",
+                "IdentifierBPJSKes",
+                "IdentifierBPJSTK"
+            ]
         },
         "models.LoginHistory": {
             "type": "object",

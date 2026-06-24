@@ -15,29 +15,31 @@ import (
 // ─── Configs ───────────────────────────────────────────────────────────────────
 
 type ModuleConfig struct {
-	MainModule    string
-	SubModule     string
-	ModuleName    string
-	ModuleTitle   string
-	ModulePlural  string
-	PackageName   string
-	ProjectModule string
-	Timestamp     string
-	URLPrefix     string
-	TableName     string
+	MainModule       string
+	SubModule        string
+	ModuleName       string
+	ModuleTitle      string
+	ModulePlural     string
+	PackageName      string
+	ProjectModule    string
+	Timestamp        string
+	URLPrefix        string
+	URLPrefixOpenAPI string
+	TableName        string
 }
 
 type AddItemConfig struct {
-	MainModule    string
-	SubModule     string
-	ItemName      string
-	ItemTitle     string
-	FullTitle     string
-	PackageName   string
-	ProjectModule string
-	Timestamp     string
-	URLPrefix     string
-	TableName     string
+	MainModule       string
+	SubModule        string
+	ItemName         string
+	ItemTitle        string
+	FullTitle        string
+	PackageName      string
+	ProjectModule    string
+	Timestamp        string
+	URLPrefix        string
+	URLPrefixOpenAPI string
+	TableName        string
 }
 
 // ─── Main ──────────────────────────────────────────────────────────────────────
@@ -89,8 +91,10 @@ func runGenerateModule(name, add, project string) {
 	}
 
 	urlPrefix := fmt.Sprintf("/api/v1/%s", name)
+	urlPrefixOpenAPI := fmt.Sprintf("/v1/%s", name)
 	if add != "" {
 		urlPrefix = fmt.Sprintf("/api/v1/%s/%s", name, add)
+		urlPrefixOpenAPI = fmt.Sprintf("/%s/%s", name, add)
 	}
 
 	tableName := name + "s"
@@ -99,16 +103,17 @@ func runGenerateModule(name, add, project string) {
 	}
 
 	cfg := ModuleConfig{
-		MainModule:    name,
-		SubModule:     subModule,
-		ModuleName:    subModule,
-		ModuleTitle:   entityTitle,
-		ModulePlural:  entityTitle + "s",
-		PackageName:   toPackageName(subModule),
-		ProjectModule: project,
-		Timestamp:     time.Now().Format("20060102150405"),
-		URLPrefix:     urlPrefix,
-		TableName:     tableName,
+		MainModule:       name,
+		SubModule:        subModule,
+		ModuleName:       subModule,
+		ModuleTitle:      entityTitle,
+		ModulePlural:     entityTitle + "s",
+		PackageName:      toPackageName(subModule),
+		ProjectModule:    project,
+		Timestamp:        time.Now().Format("20060102150405"),
+		URLPrefix:        urlPrefix,
+		URLPrefixOpenAPI: urlPrefixOpenAPI,
+		TableName:        tableName,
 	}
 
 	basePath := filepath.Join("internal", "modules", cfg.MainModule, cfg.SubModule)
@@ -219,16 +224,17 @@ func runAddItem(name, sub, add, project string) {
 	itemPascal := toPascalCase(add)
 
 	cfg := AddItemConfig{
-		MainModule:    name,
-		SubModule:     sub,
-		ItemName:      add,
-		ItemTitle:     itemPascal,
-		FullTitle:     mainPascal + subPascal + itemPascal,
-		PackageName:   toPackageName(sub),
-		ProjectModule: project,
-		Timestamp:     time.Now().Format("20060102150405"),
-		URLPrefix:     fmt.Sprintf("/api/v1/%s/%s/%ss", name, sub, add),
-		TableName:     fmt.Sprintf("%s_%s_%ss", name, sub, add),
+		MainModule:       name,
+		SubModule:        sub,
+		ItemName:         add,
+		ItemTitle:        itemPascal,
+		FullTitle:        mainPascal + subPascal + itemPascal,
+		PackageName:      toPackageName(sub),
+		ProjectModule:    project,
+		Timestamp:        time.Now().Format("20060102150405"),
+		URLPrefix:        fmt.Sprintf("/api/v1/%s/%s/%ss", name, sub, add),
+		URLPrefixOpenAPI: fmt.Sprintf("/%s/%s/%ss", name, sub, add),
+		TableName:        fmt.Sprintf("%s_%s_%ss", name, sub, add),
 	}
 
 	basePath := filepath.Join("internal", "modules", cfg.MainModule, cfg.SubModule)
@@ -424,9 +430,9 @@ type Filter{{.ModuleTitle}}Request struct {
 var tmplResponse = `package dto
 
 import (
-	"time"
 
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
+	"{{.ProjectModule}}/internal/shared/types"
 )
 
 // {{.ModuleTitle}}Response response untuk single {{.ModuleTitle}}
@@ -436,8 +442,8 @@ type {{.ModuleTitle}}Response struct {
 	Description *string   ` + "`" + `json:"description"` + "`" + `
 	CreatedBy   *int64    ` + "`" + `json:"created_by"` + "`" + `
 	UpdatedBy   *int64    ` + "`" + `json:"updated_by"` + "`" + `
-	CreatedAt   time.Time ` + "`" + `json:"created_at"` + "`" + `
-	UpdatedAt   time.Time ` + "`" + `json:"updated_at"` + "`" + `
+	CreatedAt   types.CustomTime ` + "`" + `json:"created_at"` + "`" + `
+	UpdatedAt   types.CustomTime ` + "`" + `json:"updated_at"` + "`" + `
 }
 
 // To{{.ModuleTitle}}Response mengubah model menjadi response
@@ -448,8 +454,8 @@ func To{{.ModuleTitle}}Response(m *models.{{.ModuleTitle}}) *{{.ModuleTitle}}Res
 		Description: m.Description,
 		CreatedBy:   m.CreatedBy,
 		UpdatedBy:   m.UpdatedBy,
-		CreatedAt:   m.CreatedAt,
-		UpdatedAt:   m.UpdatedAt,
+		CreatedAt:   types.CustomTime{Time: m.CreatedAt},
+		UpdatedAt:   types.CustomTime{Time: m.UpdatedAt},
 	}
 }
 
@@ -824,7 +830,7 @@ import (
 //	@Param			page		query		int		false	"Page number"
 //	@Param			page_size	query		int		false	"Page size"
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.{{.ModuleTitle}}Response}
-//	@Router			{{.URLPrefix}} [get]
+//	@Router			{{.URLPrefixOpenAPI}} [get]
 func (h *{{.ModuleTitle}}Handler) List(c *echo.Context) error {
 	page, pageSize := 1, 10
 	filter := dto.Filter{{.ModuleTitle}}Request{
@@ -859,7 +865,7 @@ func (h *{{.ModuleTitle}}Handler) List(c *echo.Context) error {
 //	@Security		BearerAuth
 //	@Param			id	path		int	true	"{{.ModuleTitle}} ID"
 //	@Success		200	{object}	response.MyGoResponse{data=dto.{{.ModuleTitle}}Response}
-//	@Router			{{.URLPrefix}}/{id} [get]
+//	@Router			{{.URLPrefixOpenAPI}}/{id} [get]
 func (h *{{.ModuleTitle}}Handler) GetByID(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
@@ -883,7 +889,7 @@ func (h *{{.ModuleTitle}}Handler) GetByID(c *echo.Context) error {
 //	@Security		BearerAuth
 //	@Param			body	body		dto.Create{{.ModuleTitle}}Request	true	"Create Request"
 //	@Success		201		{object}	response.MyGoResponse{data=dto.{{.ModuleTitle}}Response}
-//	@Router			{{.URLPrefix}} [post]
+//	@Router			{{.URLPrefixOpenAPI}} [post]
 func (h *{{.ModuleTitle}}Handler) Create(c *echo.Context) error {
 	var req dto.Create{{.ModuleTitle}}Request
 	if err := c.Bind(&req); err != nil {
@@ -911,7 +917,7 @@ func (h *{{.ModuleTitle}}Handler) Create(c *echo.Context) error {
 //	@Param			id		path		int						true	"{{.ModuleTitle}} ID"
 //	@Param			body	body		dto.Update{{.ModuleTitle}}Request	true	"Update Request"
 //	@Success		200		{object}	response.MyGoResponse{data=dto.{{.ModuleTitle}}Response}
-//	@Router			{{.URLPrefix}}/{id} [put]
+//	@Router			{{.URLPrefixOpenAPI}}/{id} [put]
 func (h *{{.ModuleTitle}}Handler) Update(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
@@ -946,7 +952,7 @@ func (h *{{.ModuleTitle}}Handler) Update(c *echo.Context) error {
 //	@Security		BearerAuth
 //	@Param			id	path		int	true	"{{.ModuleTitle}} ID"
 //	@Success		200	{object}	response.MyGoResponse{}
-//	@Router			{{.URLPrefix}}/{id} [delete]
+//	@Router			{{.URLPrefixOpenAPI}}/{id} [delete]
 func (h *{{.ModuleTitle}}Handler) Delete(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {

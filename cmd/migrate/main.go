@@ -19,6 +19,10 @@ import (
 	_ "neosim_go/internal/modules/master/alamat"
 	_ "neosim_go/internal/modules/master/departemen"
 	_ "neosim_go/internal/modules/master/master"
+
+	// Kepegawaian
+	_ "neosim_go/internal/modules/kepegawaian/identifier"
+	_ "neosim_go/internal/modules/kepegawaian/pegawai"
 	// =====================================================================
 )
 

@@ -5,9 +5,9 @@ import (
 	"strconv"
 
 	"neosim_go/internal/modules/master/departemen/dto"
+	he "neosim_go/internal/shared/httputil"
 	"neosim_go/internal/shared/response"
 	"neosim_go/internal/shared/validator"
-	he "neosim_go/internal/shared/httputil"
 
 	"github.com/labstack/echo/v5"
 )
@@ -24,7 +24,7 @@ import (
 //	@Param			page		query		int		false	"Page number"
 //	@Param			page_size	query		int		false	"Page size"
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.MasterDepartemenResponse}
-//	@Router			/api/v1/master/departemen [get]
+//	@Router			/master/departemen [get]
 func (h *MasterDepartemenHandler) List(c *echo.Context) error {
 	page, pageSize := 1, 10
 	filter := dto.FilterMasterDepartemenRequest{
@@ -59,7 +59,7 @@ func (h *MasterDepartemenHandler) List(c *echo.Context) error {
 //	@Security		BearerAuth
 //	@Param			id	path		int	true	"MasterDepartemen ID"
 //	@Success		200	{object}	response.MyGoResponse{data=dto.MasterDepartemenResponse}
-//	@Router			/api/v1/master/departemen/{id} [get]
+//	@Router			/master/departemen/{id} [get]
 func (h *MasterDepartemenHandler) GetByID(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
@@ -83,7 +83,7 @@ func (h *MasterDepartemenHandler) GetByID(c *echo.Context) error {
 //	@Security		BearerAuth
 //	@Param			body	body		dto.CreateMasterDepartemenRequest	true	"Create Request"
 //	@Success		201		{object}	response.MyGoResponse{data=dto.MasterDepartemenResponse}
-//	@Router			/api/v1/master/departemen [post]
+//	@Router			/master/departemen [post]
 func (h *MasterDepartemenHandler) Create(c *echo.Context) error {
 	var req dto.CreateMasterDepartemenRequest
 	if err := c.Bind(&req); err != nil {
@@ -111,7 +111,7 @@ func (h *MasterDepartemenHandler) Create(c *echo.Context) error {
 //	@Param			id		path		int						true	"MasterDepartemen ID"
 //	@Param			body	body		dto.UpdateMasterDepartemenRequest	true	"Update Request"
 //	@Success		200		{object}	response.MyGoResponse{data=dto.MasterDepartemenResponse}
-//	@Router			/api/v1/master/departemen/{id} [put]
+//	@Router			/master/departemen/{id} [put]
 func (h *MasterDepartemenHandler) Update(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
@@ -146,7 +146,7 @@ func (h *MasterDepartemenHandler) Update(c *echo.Context) error {
 //	@Security		BearerAuth
 //	@Param			id	path		int	true	"MasterDepartemen ID"
 //	@Success		200	{object}	response.MyGoResponse{}
-//	@Router			/api/v1/master/departemen/{id} [delete]
+//	@Router			/master/departemen/{id} [delete]
 func (h *MasterDepartemenHandler) Delete(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {

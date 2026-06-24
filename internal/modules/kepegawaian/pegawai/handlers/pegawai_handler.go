@@ -5,9 +5,9 @@ import (
 	"strconv"
 
 	"neosim_go/internal/modules/kepegawaian/pegawai/dto"
+	he "neosim_go/internal/shared/httputil"
 	"neosim_go/internal/shared/response"
 	"neosim_go/internal/shared/validator"
-	he "neosim_go/internal/shared/httputil"
 
 	"github.com/labstack/echo/v5"
 )
@@ -24,7 +24,7 @@ import (
 //	@Param			page		query		int		false	"Page number"
 //	@Param			page_size	query		int		false	"Page size"
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.KepegawaianPegawaiResponse}
-//	@Router			/api/v1/kepegawaian/pegawai [get]
+//	@Router			/kepegawaian/pegawai [get]
 func (h *KepegawaianPegawaiHandler) List(c *echo.Context) error {
 	page, pageSize := 1, 10
 	filter := dto.FilterKepegawaianPegawaiRequest{
@@ -59,7 +59,7 @@ func (h *KepegawaianPegawaiHandler) List(c *echo.Context) error {
 //	@Security		BearerAuth
 //	@Param			id	path		int	true	"KepegawaianPegawai ID"
 //	@Success		200	{object}	response.MyGoResponse{data=dto.KepegawaianPegawaiResponse}
-//	@Router			/api/v1/kepegawaian/pegawai/{id} [get]
+//	@Router			/kepegawaian/pegawai/{id} [get]
 func (h *KepegawaianPegawaiHandler) GetByID(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
@@ -83,7 +83,7 @@ func (h *KepegawaianPegawaiHandler) GetByID(c *echo.Context) error {
 //	@Security		BearerAuth
 //	@Param			body	body		dto.CreateKepegawaianPegawaiRequest	true	"Create Request"
 //	@Success		201		{object}	response.MyGoResponse{data=dto.KepegawaianPegawaiResponse}
-//	@Router			/api/v1/kepegawaian/pegawai [post]
+//	@Router			/kepegawaian/pegawai [post]
 func (h *KepegawaianPegawaiHandler) Create(c *echo.Context) error {
 	var req dto.CreateKepegawaianPegawaiRequest
 	if err := c.Bind(&req); err != nil {
@@ -111,7 +111,7 @@ func (h *KepegawaianPegawaiHandler) Create(c *echo.Context) error {
 //	@Param			id		path		int						true	"KepegawaianPegawai ID"
 //	@Param			body	body		dto.UpdateKepegawaianPegawaiRequest	true	"Update Request"
 //	@Success		200		{object}	response.MyGoResponse{data=dto.KepegawaianPegawaiResponse}
-//	@Router			/api/v1/kepegawaian/pegawai/{id} [put]
+//	@Router			/kepegawaian/pegawai/{id} [put]
 func (h *KepegawaianPegawaiHandler) Update(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
@@ -146,7 +146,7 @@ func (h *KepegawaianPegawaiHandler) Update(c *echo.Context) error {
 //	@Security		BearerAuth
 //	@Param			id	path		int	true	"KepegawaianPegawai ID"
 //	@Success		200	{object}	response.MyGoResponse{}
-//	@Router			/api/v1/kepegawaian/pegawai/{id} [delete]
+//	@Router			/kepegawaian/pegawai/{id} [delete]
 func (h *KepegawaianPegawaiHandler) Delete(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
