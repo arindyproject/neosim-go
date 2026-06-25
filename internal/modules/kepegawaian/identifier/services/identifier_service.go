@@ -72,7 +72,15 @@ func (s *service) Create(
 	if err := s.repo.Create(ctx, m); err != nil {
 		return nil, appErrors.Internal("gagal menyimpan identifier pegawai")
 	}
-	return dto.ToKepegawaianIdentifierResponse(m), nil
+
+	creator := s.buildCreator(m.CreatedBy)
+	updater := s.buildCreator(m.UpdatedBy)
+
+	return dto.ToKepegawaianIdentifierResponse(dto.KepegawaianIdentifierResponseParams{
+		Identifier: m,
+		Creator:    creator,
+		Updater:    updater,
+	}), nil
 }
 
 // ── GetByID ───────────────────────────────────────────────────────────────────
@@ -98,7 +106,14 @@ func (s *service) GetByID(
 	if m == nil {
 		return nil, appErrors.Wrap(http.StatusNotFound, "Identifier pegawai tidak ditemukan.", nil)
 	}
-	return dto.ToKepegawaianIdentifierResponse(m), nil
+
+	creator := s.buildCreator(m.CreatedBy)
+	updater := s.buildCreator(m.UpdatedBy)
+	return dto.ToKepegawaianIdentifierResponse(dto.KepegawaianIdentifierResponseParams{
+		Identifier: m,
+		Creator:    creator,
+		Updater:    updater,
+	}), nil
 }
 
 // ── List ──────────────────────────────────────────────────────────────────────
@@ -129,7 +144,10 @@ func (s *service) List(
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal mengambil daftar identifier")
 	}
-	return dto.ToKepegawaianIdentifierListResponse(items), total, nil
+
+	creatorsMap, updatersMap := s.buildAuditMaps(items)
+	return toIdentifierResponses(items, creatorsMap, updatersMap), total, nil
+
 }
 
 // ── ListByPegawai ─────────────────────────────────────────────────────────────
@@ -152,7 +170,9 @@ func (s *service) ListByPegawai(
 	if err != nil {
 		return nil, appErrors.Internal("gagal mengambil identifier pegawai")
 	}
-	return dto.ToKepegawaianIdentifierListResponse(items), nil
+
+	creatorsMap, updatersMap := s.buildAuditMaps(items)
+	return toIdentifierResponses(items, creatorsMap, updatersMap), nil
 }
 
 // ── Update ────────────────────────────────────────────────────────────────────
@@ -248,7 +268,14 @@ func (s *service) Update(
 	if err := s.repo.Update(ctx, m); err != nil {
 		return nil, appErrors.Internal("gagal menyimpan perubahan identifier")
 	}
-	return dto.ToKepegawaianIdentifierResponse(m), nil
+
+	creator := s.buildCreator(m.CreatedBy)
+	updater := s.buildCreator(m.UpdatedBy)
+	return dto.ToKepegawaianIdentifierResponse(dto.KepegawaianIdentifierResponseParams{
+		Identifier: m,
+		Creator:    creator,
+		Updater:    updater,
+	}), nil
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
@@ -322,7 +349,8 @@ func (s *service) GetExpiringSoon(
 	if err != nil {
 		return nil, appErrors.Internal("gagal mengambil data identifier yang akan expired")
 	}
-	return dto.ToKepegawaianIdentifierListResponse(items), nil
+	creatorsMap, updatersMap := s.buildAuditMaps(items)
+	return toIdentifierResponses(items, creatorsMap, updatersMap), nil
 }
 
 // ── GetIdentifierTypes ────────────────────────────────────────────────────────

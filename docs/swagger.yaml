@@ -486,7 +486,7 @@ definitions:
       created_at:
         type: string
       created_by:
-        type: integer
+        $ref: '#/definitions/httputil.UserData'
       days_until_expired:
         description: -1 jika tidak ada expired date
         type: integer
@@ -520,7 +520,7 @@ definitions:
       updated_at:
         type: string
       updated_by:
-        type: integer
+        $ref: '#/definitions/httputil.UserData'
     type: object
   dto.KepegawaianPegawaiResponse:
     properties:
@@ -1227,6 +1227,16 @@ definitions:
           $ref: '#/definitions/dto.RoleSimpleResponse'
         type: array
       updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+  httputil.UserData:
+    properties:
+      id:
+        format: int64
+        type: integer
+      name:
         type: string
       username:
         type: string

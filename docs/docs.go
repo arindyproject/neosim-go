@@ -6711,7 +6711,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "created_by": {
-                    "type": "integer"
+                    "$ref": "#/definitions/httputil.UserData"
                 },
                 "days_until_expired": {
                     "description": "-1 jika tidak ada expired date",
@@ -6760,7 +6760,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_by": {
-                    "type": "integer"
+                    "$ref": "#/definitions/httputil.UserData"
                 }
             }
         },
@@ -7803,6 +7803,21 @@ const docTemplate = `{
                     }
                 },
                 "updated_at": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "httputil.UserData": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "name": {
                     "type": "string"
                 },
                 "username": {

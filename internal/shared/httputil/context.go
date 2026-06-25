@@ -11,6 +11,12 @@ type AuthContext struct {
 	IsSuperadmin bool
 }
 
+type UserData struct {
+	ID       int64
+	Username string
+	Name     string
+}
+
 func BuildAuthContext(c *echo.Context) AuthContext {
 	userID, _ := rbacMiddlewares.GetUserIDFromContext(c)
 	isSuperadmin := rbacMiddlewares.IsSuperadmin(c)

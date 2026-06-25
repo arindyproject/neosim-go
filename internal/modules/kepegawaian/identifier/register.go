@@ -13,6 +13,7 @@ import (
 	authRepositories "neosim_go/internal/modules/auth/repositories"
 	rbacContracts "neosim_go/internal/modules/rbac/contracts"
 	rbacRepositories "neosim_go/internal/modules/rbac/repositories"
+	userRepositories "neosim_go/internal/modules/users/repositories"
 
 	"github.com/labstack/echo/v5"
 	"gorm.io/gorm"
@@ -46,7 +47,8 @@ func (r *registryModule) InitRoutes(e *echo.Echo) {
 		r.cfg.JWTAccessTokenExpMinutes,
 		r.cfg.JWTRefreshTokenExpDays,
 	)
-	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo).InitRoutes(e)
+	userRepo := userRepositories.NewRepository(r.db)
+	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo, userRepo).InitRoutes(e)
 }
 
 func (r *registryModule) Models() []interface{} {

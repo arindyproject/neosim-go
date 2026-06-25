@@ -9,6 +9,7 @@ import (
 
 	authContracts "neosim_go/internal/modules/auth/contracts"
 	rbacContracts "neosim_go/internal/modules/rbac/contracts"
+	userContracts "neosim_go/internal/modules/users/contracts"
 
 	"github.com/labstack/echo/v5"
 	"gorm.io/gorm"
@@ -27,9 +28,10 @@ func NewModule(
 	jwtManager *utils.JWTManager,
 	rbacRepo rbacContracts.RBACRepository,
 	authRepo authContracts.AuthRepository,
+	userRepo userContracts.Repository,
 ) *Module {
 	repo := repositories.NewKepegawaianIdentifierRepository(db)
-	svc := services.NewKepegawaianIdentifierService(repo, rbacRepo, authRepo)
+	svc := services.NewKepegawaianIdentifierService(repo, rbacRepo, authRepo, userRepo)
 	handler := handlers.NewKepegawaianIdentifierHandler(svc)
 
 	return &Module{
