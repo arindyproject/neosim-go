@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"strconv"
 
 	"neosim_go/internal/modules/artikel/artikel/dto"
 	"neosim_go/internal/shared/response"
@@ -24,7 +23,7 @@ import (
 //	@Param			page		query		int		false	"Page number"
 //	@Param			page_size	query		int		false	"Page size"
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.ArtikelResponse}
-//	@Router			/v1/artikel [get]
+//	@Router			/artikel [get]
 func (h *ArtikelHandler) List(c *echo.Context) error {
 
 	filter := dto.FilterArtikelRequest{
@@ -50,7 +49,7 @@ func (h *ArtikelHandler) List(c *echo.Context) error {
 //	@Security		BearerAuth
 //	@Param			id	path		int	true	"Artikel ID"
 //	@Success		200	{object}	response.MyGoResponse{data=dto.ArtikelResponse}
-//	@Router			/v1/artikel/{id} [get]
+//	@Router			/artikel/{id} [get]
 func (h *ArtikelHandler) GetByID(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
@@ -74,7 +73,7 @@ func (h *ArtikelHandler) GetByID(c *echo.Context) error {
 //	@Security		BearerAuth
 //	@Param			body	body		dto.CreateArtikelRequest	true	"Create Request"
 //	@Success		201		{object}	response.MyGoResponse{data=dto.ArtikelResponse}
-//	@Router			/v1/artikel [post]
+//	@Router			/artikel [post]
 func (h *ArtikelHandler) Create(c *echo.Context) error {
 	var req dto.CreateArtikelRequest
 	if err := c.Bind(&req); err != nil {
@@ -84,7 +83,7 @@ func (h *ArtikelHandler) Create(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.Create(&req, he.GetActorID(c), actor)
+	item, err := h.service.Create(&req,  actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
@@ -102,7 +101,7 @@ func (h *ArtikelHandler) Create(c *echo.Context) error {
 //	@Param			id		path		int						true	"Artikel ID"
 //	@Param			body	body		dto.UpdateArtikelRequest	true	"Update Request"
 //	@Success		200		{object}	response.MyGoResponse{data=dto.ArtikelResponse}
-//	@Router			/v1/artikel/{id} [put]
+//	@Router			/artikel/{id} [put]
 func (h *ArtikelHandler) Update(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
@@ -116,7 +115,7 @@ func (h *ArtikelHandler) Update(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.Update(id, &req, he.GetActorID(c), actor)
+	item, err := h.service.Update(id, &req, actor)
 	if err != nil {
 		status := http.StatusBadRequest
 		if err.Error() == "Artikel tidak ditemukan" {
@@ -137,7 +136,7 @@ func (h *ArtikelHandler) Update(c *echo.Context) error {
 //	@Security		BearerAuth
 //	@Param			id	path		int	true	"Artikel ID"
 //	@Success		200	{object}	response.MyGoResponse{}
-//	@Router			/v1/artikel/{id} [delete]
+//	@Router			/artikel/{id} [delete]
 func (h *ArtikelHandler) Delete(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {

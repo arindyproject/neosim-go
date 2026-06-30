@@ -23,6 +23,9 @@ import (
 	// Kepegawaian
 	_ "neosim_go/internal/modules/kepegawaian/identifier"
 	_ "neosim_go/internal/modules/kepegawaian/pegawai"
+
+	// artikel
+	_ "neosim_go/internal/modules/artikel/artikel"
 	// =====================================================================
 )
 

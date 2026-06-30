@@ -11,7 +11,7 @@ import (
 	he "neosim_go/internal/shared/httputil"
 )
 
-func (s *service) Create(req *dto.CreateArtikelRequest, createdBy *int64, actor he.AuthContext) (*dto.ArtikelResponse, error) {
+func (s *service) Create(req *dto.CreateArtikelRequest, actor he.AuthContext) (*dto.ArtikelResponse, error) {
 	can, err := s.canCreateArtikel(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -24,13 +24,21 @@ func (s *service) Create(req *dto.CreateArtikelRequest, createdBy *int64, actor 
 	m := &models.Artikel{
 		Name:        req.Name,
 		Description: req.Description,
-		CreatedBy:   createdBy,
-		UpdatedBy:   createdBy,
+		CreatedBy:   &actor.UserID,
+		UpdatedBy:   &actor.UserID,
 	}
 	if err := s.repo.Create(m); err != nil {
 		return nil, err
 	}
-	return dto.ToArtikelResponse(m), nil
+	
+	creator := s.buildCreator(m.CreatedBy)
+	updater := s.buildCreator(m.UpdatedBy)
+
+	return dto.ToArtikelResponse(dto.ArtikelResponseParams{
+		Artikel: m,
+		Creator:    creator,
+		Updater:    updater,
+	}), nil
 }
 
 func (s *service) GetByID(id int64, actor he.AuthContext) (*dto.ArtikelResponse, error) {
@@ -50,7 +58,15 @@ func (s *service) GetByID(id int64, actor he.AuthContext) (*dto.ArtikelResponse,
 	if m == nil {
 		return nil, errors.New("Artikel tidak ditemukan")
 	}
-	return dto.ToArtikelResponse(m), nil
+	
+	creator := s.buildCreator(m.CreatedBy)
+	updater := s.buildCreator(m.UpdatedBy)
+
+	return dto.ToArtikelResponse(dto.ArtikelResponseParams{
+		Artikel: m,
+		Creator:    creator,
+		Updater:    updater,
+	}), nil
 }
 
 func (s *service) List(page, pageSize int, filter *dto.FilterArtikelRequest, actor he.AuthContext) ([]dto.ArtikelResponse, int64, error) {
@@ -73,10 +89,12 @@ func (s *service) List(page, pageSize int, filter *dto.FilterArtikelRequest, act
 	if err != nil {
 		return nil, 0, err
 	}
-	return dto.ToArtikelListResponse(items), total, nil
+
+	creatorsMap, updatersMap := s.buildAuditMaps(items)
+	return toArtikelResponses(items, creatorsMap, updatersMap), total, nil
 }
 
-func (s *service) Update(id int64, req *dto.UpdateArtikelRequest, updatedBy *int64, actor he.AuthContext) (*dto.ArtikelResponse, error) {
+func (s *service) Update(id int64, req *dto.UpdateArtikelRequest, actor he.AuthContext) (*dto.ArtikelResponse, error) {
 	can, err := s.canUpdateArtikel(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -99,13 +117,21 @@ func (s *service) Update(id int64, req *dto.UpdateArtikelRequest, updatedBy *int
 	if req.Description != nil {
 		m.Description = req.Description
 	}
-	m.UpdatedBy = updatedBy
+	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()
 
 	if err := s.repo.Update(m); err != nil {
 		return nil, err
 	}
-	return dto.ToArtikelResponse(m), nil
+	
+	creator := s.buildCreator(m.CreatedBy)
+	updater := s.buildCreator(m.UpdatedBy)
+
+	return dto.ToArtikelResponse(dto.ArtikelResponseParams{
+		Artikel: m,
+		Creator:    creator,
+		Updater:    updater,
+	}), nil
 }
 
 func (s *service) Delete(id int64, actor he.AuthContext) error {

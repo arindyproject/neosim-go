@@ -17,9 +17,9 @@ type Repository interface {
 
 // Service defines business logic operations
 type Service interface {
-	Create(req *dto.CreateArtikelRequest, createdBy *int64, actor he.AuthContext) (*dto.ArtikelResponse, error)
+	Create(req *dto.CreateArtikelRequest, actor he.AuthContext) (*dto.ArtikelResponse, error)
 	GetByID(id int64, actor he.AuthContext) (*dto.ArtikelResponse, error)
 	List(page, pageSize int, filter *dto.FilterArtikelRequest, actor he.AuthContext) ([]dto.ArtikelResponse, int64, error)
-	Update(id int64, req *dto.UpdateArtikelRequest, updatedBy *int64, actor he.AuthContext) (*dto.ArtikelResponse, error)
+	Update(id int64, req *dto.UpdateArtikelRequest, actor he.AuthContext) (*dto.ArtikelResponse, error)
 	Delete(id int64, actor he.AuthContext) error
 }

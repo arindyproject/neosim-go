@@ -18,6 +18,8 @@ import (
 	masterAlamat "neosim_go/internal/modules/master/alamat/tests/seeders"
 	masterDepartemen "neosim_go/internal/modules/master/departemen/tests/seeders"
 	masterMaster "neosim_go/internal/modules/master/master/tests/seeders"
+
+	masterArtikel "neosim_go/internal/modules/artikel/artikel/tests/seeders"
 	// =====================================================================
 )
 
@@ -114,6 +116,18 @@ func main() {
 	} //------Departemen----------------------------------------------------
 
 	// =====================================================================
+
+	//------Artikel----------------------------------------------------
+	masterArtikels := masterArtikel.NewArtikelSeeder(db)
+	if *fresh {
+		if err := masterArtikels.Fresh(); err != nil {
+			log.Fatal("Gagal fresh seed Artikel:", err)
+		}
+	} else {
+		if err := masterArtikels.Run(); err != nil {
+			log.Fatal("Gagal seed Artikel:", err)
+		}
+	} //------Artikel----------------------------------------------------
 
 	log.Println("✅ Seeding selesai!")
 }

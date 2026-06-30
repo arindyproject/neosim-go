@@ -12,9 +12,9 @@ type AuthContext struct {
 }
 
 type UserData struct {
-	ID       int64
-	Username string
-	Name     string
+	ID       int64  `json:"id"`
+	Username string `json:"username"`
+	Name     string `json:"name"`
 }
 
 func BuildAuthContext(c *echo.Context) AuthContext {

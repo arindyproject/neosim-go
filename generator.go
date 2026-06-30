@@ -91,7 +91,7 @@ func runGenerateModule(name, add, project string) {
 	}
 
 	urlPrefix := fmt.Sprintf("/api/v1/%s", name)
-	urlPrefixOpenAPI := fmt.Sprintf("/v1/%s", name)
+	urlPrefixOpenAPI := fmt.Sprintf("/%s", name)
 	if add != "" {
 		urlPrefix = fmt.Sprintf("/api/v1/%s/%s", name, add)
 		urlPrefixOpenAPI = fmt.Sprintf("/%s/%s", name, add)
@@ -399,10 +399,10 @@ type Repository interface {
 
 // Service defines business logic operations
 type Service interface {
-	Create(req *dto.Create{{.ModuleTitle}}Request, createdBy *int64, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error)
+	Create(req *dto.Create{{.ModuleTitle}}Request, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error)
 	GetByID(id int64, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error)
 	List(page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request, actor he.AuthContext) ([]dto.{{.ModuleTitle}}Response, int64, error)
-	Update(id int64, req *dto.Update{{.ModuleTitle}}Request, updatedBy *int64, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error)
+	Update(id int64, req *dto.Update{{.ModuleTitle}}Request, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error)
 	Delete(id int64, actor he.AuthContext) error
 }
 `
@@ -433,6 +433,7 @@ import (
 
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
 	"{{.ProjectModule}}/internal/shared/types"
+	he "{{.ProjectModule}}/internal/shared/httputil"
 )
 
 // {{.ModuleTitle}}Response response untuk single {{.ModuleTitle}}
@@ -440,31 +441,56 @@ type {{.ModuleTitle}}Response struct {
 	ID          int64     ` + "`" + `json:"id"` + "`" + `
 	Name        string    ` + "`" + `json:"name"` + "`" + `
 	Description *string   ` + "`" + `json:"description"` + "`" + `
-	CreatedBy   *int64    ` + "`" + `json:"created_by"` + "`" + `
-	UpdatedBy   *int64    ` + "`" + `json:"updated_by"` + "`" + `
+	CreatedBy   *he.UserData ` + "`" + `json:"created_by"` + "`" + `
+	UpdatedBy   *he.UserData ` + "`" + `json:"updated_by"` + "`" + `
 	CreatedAt   types.CustomTime ` + "`" + `json:"created_at"` + "`" + `
 	UpdatedAt   types.CustomTime ` + "`" + `json:"updated_at"` + "`" + `
 }
 
+type {{.ModuleTitle}}ResponseParams struct {
+	{{.ModuleTitle}} *models.{{.ModuleTitle}}
+	Creator         *he.UserData
+	Updater         *he.UserData
+}
+
 // To{{.ModuleTitle}}Response mengubah model menjadi response
-func To{{.ModuleTitle}}Response(m *models.{{.ModuleTitle}}) *{{.ModuleTitle}}Response {
+func To{{.ModuleTitle}}Response(params {{.ModuleTitle}}ResponseParams) *{{.ModuleTitle}}Response {
 	return &{{.ModuleTitle}}Response{
-		ID:          m.ID,
-		Name:        m.Name,
-		Description: m.Description,
-		CreatedBy:   m.CreatedBy,
-		UpdatedBy:   m.UpdatedBy,
-		CreatedAt:   types.CustomTime(m.CreatedAt),
-		UpdatedAt:   types.CustomTime(m.UpdatedAt),
+		ID:          params.{{.ModuleTitle}}.ID,
+		Name:        params.{{.ModuleTitle}}.Name,
+		Description: params.{{.ModuleTitle}}.Description,
+		CreatedBy:   params.Creator,
+		UpdatedBy:   params.Updater,
+		CreatedAt:   types.CustomTime(params.{{.ModuleTitle}}.CreatedAt),
+		UpdatedAt:   types.CustomTime(params.{{.ModuleTitle}}.UpdatedAt),
 	}
 }
 
 // To{{.ModuleTitle}}ListResponse mengubah slice model menjadi slice response
-func To{{.ModuleTitle}}ListResponse(items []models.{{.ModuleTitle}}) []{{.ModuleTitle}}Response {
-	var responses []{{.ModuleTitle}}Response
+func To{{.ModuleTitle}}ListResponse(
+	items []models.{{.ModuleTitle}},
+	creatorsMap map[int64]*he.UserData,
+	updatersMap map[int64]*he.UserData,
+) []{{.ModuleTitle}}Response {
+	responses := make([]{{.ModuleTitle}}Response, 0, len(items))
+
 	for _, m := range items {
-		responses = append(responses, *To{{.ModuleTitle}}Response(&m))
+		var creator, updater *he.UserData
+
+		if creatorsMap != nil {
+			creator = creatorsMap[m.ID]
+		}
+		if updatersMap != nil {
+			updater = updatersMap[m.ID]
+		}
+
+		responses = append(responses, *To{{.ModuleTitle}}Response({{.ModuleTitle}}ResponseParams{
+			{{.ModuleTitle}}: &m,
+			Creator:    creator,
+			Updater:    updater,
+		}))
 	}
+
 	return responses
 }
 `
@@ -571,15 +597,20 @@ var tmplMainService = `package services
 import (
 	"{{.ProjectModule}}/config"
 	{{.ModuleName}}Contracts "{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/contracts"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
 
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
 	authContracts "{{.ProjectModule}}/internal/modules/auth/contracts"
 	rbacContracts "{{.ProjectModule}}/internal/modules/rbac/contracts"
+	userContracts "{{.ProjectModule}}/internal/modules/users/contracts"
+	he "{{.ProjectModule}}/internal/shared/httputil"
 )
 
 type service struct {
 	repo     {{.ModuleName}}Contracts.Repository
 	rbacRepo rbacContracts.RBACRepository
 	authRepo authContracts.AuthRepository
+	userRepo userContracts.Repository
 	cfg      *config.Config
 }
 
@@ -588,15 +619,97 @@ func New{{.ModuleTitle}}Service(
 	repo {{.ModuleName}}Contracts.Repository,
 	rbacRepo rbacContracts.RBACRepository,
 	authRepo authContracts.AuthRepository,
+	userRepo userContracts.Repository,
 	cfg    *config.Config,
 ) {{.ModuleName}}Contracts.Service {
 	return &service{
 		repo:     repo,
 		rbacRepo: rbacRepo,
 		authRepo: authRepo,
+		userRepo: userRepo,
 		cfg:      cfg,
 	}
 }
+
+// buildCreator mengambil data creator user
+func (s *service) buildCreator(createdBy *int64) *he.UserData {
+	if createdBy == nil {
+		return nil
+	}
+	creator, err := s.userRepo.GetByID(*createdBy)
+	if err != nil || creator == nil {
+		return nil
+	}
+	return &he.UserData{
+		ID:       creator.ID,
+		Username: creator.Username,
+		Name:     creator.Name,
+	}
+}
+
+// ── helper: build creator/updater maps ───────────────────────────────────────
+
+func (s *service) buildAuditMaps(items []models.{{.ModuleTitle}}) (map[int64]*he.UserData, map[int64]*he.UserData) {
+	fetchUser := func(id int64) (*he.UserData, error) {
+		user, err := s.userRepo.GetByID(id)
+		if err != nil || user == nil {
+			return nil, err
+		}
+		return &he.UserData{ID: user.ID, Username: user.Username, Name: user.Name}, nil
+	}
+
+	creatorIDs := make(map[int64]struct{})
+	updaterIDs := make(map[int64]struct{})
+	for _, item := range items {
+		if item.CreatedBy != nil {
+			creatorIDs[*item.CreatedBy] = struct{}{}
+		}
+		if item.UpdatedBy != nil {
+			updaterIDs[*item.UpdatedBy] = struct{}{}
+		}
+	}
+
+	creatorsMap := make(map[int64]*he.UserData)
+	for id := range creatorIDs {
+		if data, err := fetchUser(id); err == nil && data != nil {
+			creatorsMap[id] = data
+		}
+	}
+
+	updatersMap := make(map[int64]*he.UserData)
+	for id := range updaterIDs {
+		if data, ok := creatorsMap[id]; ok {
+			updatersMap[id] = data
+		} else if data, err := fetchUser(id); err == nil && data != nil {
+			updatersMap[id] = data
+		}
+	}
+
+	return creatorsMap, updatersMap
+}
+// ── helper: convert items to responses ───────────────────────────────────────
+func to{{.ModuleTitle}}Responses(
+	items []models.{{.ModuleTitle}},
+	creatorsMap, updatersMap map[int64]*he.UserData,
+) []dto.{{.ModuleTitle}}Response {
+	responses := make([]dto.{{.ModuleTitle}}Response, 0, len(items))
+	for _, item := range items {
+		var creator, updater *he.UserData
+		if item.CreatedBy != nil {
+			creator = creatorsMap[*item.CreatedBy]
+		}
+		if item.UpdatedBy != nil {
+			updater = updatersMap[*item.UpdatedBy]
+		}
+		responses = append(responses, *dto.To{{.ModuleTitle}}Response(dto.{{.ModuleTitle}}ResponseParams{
+			{{.ModuleTitle}}: &item,
+			Creator: creator,
+			Updater: updater,
+		}))
+	}
+	return responses
+}
+
 `
 
 var tmplPermissionService = `package services
@@ -673,7 +786,7 @@ import (
 	he "{{.ProjectModule}}/internal/shared/httputil"
 )
 
-func (s *service) Create(req *dto.Create{{.ModuleTitle}}Request, createdBy *int64, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
+func (s *service) Create(req *dto.Create{{.ModuleTitle}}Request, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
 	can, err := s.canCreate{{.ModuleTitle}}(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -686,13 +799,21 @@ func (s *service) Create(req *dto.Create{{.ModuleTitle}}Request, createdBy *int6
 	m := &models.{{.ModuleTitle}}{
 		Name:        req.Name,
 		Description: req.Description,
-		CreatedBy:   createdBy,
-		UpdatedBy:   createdBy,
+		CreatedBy:   &actor.UserID,
+		UpdatedBy:   &actor.UserID,
 	}
 	if err := s.repo.Create(m); err != nil {
 		return nil, err
 	}
-	return dto.To{{.ModuleTitle}}Response(m), nil
+	
+	creator := s.buildCreator(m.CreatedBy)
+	updater := s.buildCreator(m.UpdatedBy)
+
+	return dto.To{{.ModuleTitle}}Response(dto.{{.ModuleTitle}}ResponseParams{
+		{{.ModuleTitle}}: m,
+		Creator:    creator,
+		Updater:    updater,
+	}), nil
 }
 
 func (s *service) GetByID(id int64, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
@@ -712,7 +833,15 @@ func (s *service) GetByID(id int64, actor he.AuthContext) (*dto.{{.ModuleTitle}}
 	if m == nil {
 		return nil, errors.New("{{.ModuleTitle}} tidak ditemukan")
 	}
-	return dto.To{{.ModuleTitle}}Response(m), nil
+	
+	creator := s.buildCreator(m.CreatedBy)
+	updater := s.buildCreator(m.UpdatedBy)
+
+	return dto.To{{.ModuleTitle}}Response(dto.{{.ModuleTitle}}ResponseParams{
+		{{.ModuleTitle}}: m,
+		Creator:    creator,
+		Updater:    updater,
+	}), nil
 }
 
 func (s *service) List(page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request, actor he.AuthContext) ([]dto.{{.ModuleTitle}}Response, int64, error) {
@@ -735,10 +864,12 @@ func (s *service) List(page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Req
 	if err != nil {
 		return nil, 0, err
 	}
-	return dto.To{{.ModuleTitle}}ListResponse(items), total, nil
+
+	creatorsMap, updatersMap := s.buildAuditMaps(items)
+	return to{{.ModuleTitle}}Responses(items, creatorsMap, updatersMap), total, nil
 }
 
-func (s *service) Update(id int64, req *dto.Update{{.ModuleTitle}}Request, updatedBy *int64, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
+func (s *service) Update(id int64, req *dto.Update{{.ModuleTitle}}Request, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
 	can, err := s.canUpdate{{.ModuleTitle}}(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -761,13 +892,21 @@ func (s *service) Update(id int64, req *dto.Update{{.ModuleTitle}}Request, updat
 	if req.Description != nil {
 		m.Description = req.Description
 	}
-	m.UpdatedBy = updatedBy
+	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()
 
 	if err := s.repo.Update(m); err != nil {
 		return nil, err
 	}
-	return dto.To{{.ModuleTitle}}Response(m), nil
+	
+	creator := s.buildCreator(m.CreatedBy)
+	updater := s.buildCreator(m.UpdatedBy)
+
+	return dto.To{{.ModuleTitle}}Response(dto.{{.ModuleTitle}}ResponseParams{
+		{{.ModuleTitle}}: m,
+		Creator:    creator,
+		Updater:    updater,
+	}), nil
 }
 
 func (s *service) Delete(id int64, actor he.AuthContext) error {
@@ -814,7 +953,6 @@ var tmplHandler = `package handlers
 
 import (
 	"net/http"
-	"strconv"
 
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
 	"{{.ProjectModule}}/internal/shared/response"
@@ -896,7 +1034,7 @@ func (h *{{.ModuleTitle}}Handler) Create(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.Create(&req, he.GetActorID(c), actor)
+	item, err := h.service.Create(&req,  actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
@@ -928,7 +1066,7 @@ func (h *{{.ModuleTitle}}Handler) Update(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.Update(id, &req, he.GetActorID(c), actor)
+	item, err := h.service.Update(id, &req, actor)
 	if err != nil {
 		status := http.StatusBadRequest
 		if err.Error() == "{{.ModuleTitle}} tidak ditemukan" {
@@ -1182,6 +1320,7 @@ import (
 
 	authContracts "{{.ProjectModule}}/internal/modules/auth/contracts"
 	rbacContracts "{{.ProjectModule}}/internal/modules/rbac/contracts"
+	userContracts "{{.ProjectModule}}/internal/modules/users/contracts"
 
 	"github.com/labstack/echo/v5"
 	"gorm.io/gorm"
@@ -1200,10 +1339,11 @@ func NewModule(
 	jwtManager *utils.JWTManager,
 	rbacRepo rbacContracts.RBACRepository,
 	authRepo authContracts.AuthRepository,
+	userRepo userContracts.Repository,
 	cfg *config.Config,
 ) *Module {
 	repo := repositories.New{{.ModuleTitle}}Repository(db)
-	svc := services.New{{.ModuleTitle}}Service(repo, rbacRepo, authRepo, cfg)
+	svc := services.New{{.ModuleTitle}}Service(repo, rbacRepo, authRepo,userRepo, cfg)
 	handler := handlers.New{{.ModuleTitle}}Handler(svc, cfg)
 
 	return &Module{
@@ -1257,6 +1397,7 @@ import (
 	authRepositories "{{.ProjectModule}}/internal/modules/auth/repositories"
 	rbacContracts "{{.ProjectModule}}/internal/modules/rbac/contracts"
 	rbacRepositories "{{.ProjectModule}}/internal/modules/rbac/repositories"
+	userRepositories "neosim_go/internal/modules/users/repositories"
 
 	"github.com/labstack/echo/v5"
 	"gorm.io/gorm"
@@ -1290,7 +1431,8 @@ func (r *registryModule) InitRoutes(e *echo.Echo) {
 		r.cfg.JWTAccessTokenExpMinutes,
 		r.cfg.JWTRefreshTokenExpDays,
 	)
-	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo, r.cfg).InitRoutes(e)
+	userRepo := userRepositories.NewRepository(r.db)
+	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo,userRepo, r.cfg).InitRoutes(e)
 }
 
 func (r *registryModule) Models() []interface{} {
@@ -2480,7 +2622,7 @@ func (h *{{.ItemTitle}}Handler) Create(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.Create(&req, he.GetActorID(c), actor)
+	item, err := h.service.Create(&req,  actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
@@ -2507,7 +2649,7 @@ func (h *{{.ItemTitle}}Handler) Update(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.Update(id, &req, he.GetActorID(c), actor)
+	item, err := h.service.Update(id, &req,  actor)
 	if err != nil {
 		status := http.StatusBadRequest
 		if err.Error() == "{{.ItemTitle}} tidak ditemukan" { status = http.StatusNotFound }
