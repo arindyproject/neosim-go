@@ -30,7 +30,7 @@ import (
 //
 // ListProvinsi handles GET /api/v1/master/alamat/alamat/provinsi
 func (h *MasterAlamatHandler) ListProvinsi(c *echo.Context) error {
-	page, pageSize := he.ParsePagination(c)
+	page, pageSize := he.ParsePagination(c, h.cfg)
 	negaraID := he.ParseOptionalInt64Query(c, "negara_id")
 	filter := dto.FilterProvinsiRequest{
 		Code: c.QueryParam("code"),

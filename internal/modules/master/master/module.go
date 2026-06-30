@@ -1,6 +1,7 @@
 package master
 
 import (
+	"neosim_go/config"
 	"neosim_go/internal/modules/master/master/contracts"
 	"neosim_go/internal/modules/master/master/handlers"
 	"neosim_go/internal/modules/master/master/repositories"
@@ -23,6 +24,7 @@ type Module struct {
 	repo         contracts.Repository
 	rbacRepo     rbacContracts.RBACRepository //RBAC
 	cacheManager *cache.Manager               // <--- Tambahkan field ini
+	cfg          *config.Config
 }
 
 // NewModule membuat instance module baru dan wire semua layer
@@ -32,6 +34,7 @@ func NewModule(
 	rbacRepo rbacContracts.RBACRepository, //RBAC
 	authRepo authContracts.AuthRepository, //AUTH
 	cacheManager *cache.Manager, // <--- Terima Cache Manager
+	cfg *config.Config,
 ) *Module {
 	repo := repositories.NewMasterRepository(db)
 	svc := services.NewMasterService(
@@ -39,8 +42,9 @@ func NewModule(
 		rbacRepo,
 		authRepo,
 		cacheManager, // <--- Kirim Cache Manager
+		cfg,
 	)
-	handler := handlers.NewMasterHandler(svc)
+	handler := handlers.NewMasterHandler(svc, cfg)
 
 	return &Module{
 		db:           db,
@@ -49,6 +53,7 @@ func NewModule(
 		repo:         repo,
 		rbacRepo:     rbacRepo,     //RBAC
 		cacheManager: cacheManager, // <--- Simpan Cache Manager
+		cfg:          cfg,
 	}
 }
 

@@ -29,7 +29,7 @@ import (
 //
 // ListAgama handles GET /api/v1/master/Agama
 func (h *MasterHandler) ListAgama(c *echo.Context) error {
-	page, pageSize := he.ParsePagination(c)
+	page, pageSize := he.ParsePagination(c, h.cfg)
 	filter := dto.FilterMasterAgamaRequest{
 		KodeKemenkes: c.QueryParam("kode_kemenkes"),
 		Name:         c.QueryParam("name"),

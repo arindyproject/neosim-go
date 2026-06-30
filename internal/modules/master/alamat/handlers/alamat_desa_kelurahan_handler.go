@@ -31,7 +31,7 @@ import (
 //
 // ListKelurahanDesa handles GET /api/v1/master/alamat/desa
 func (h *MasterAlamatHandler) ListKelurahanDesa(c *echo.Context) error {
-	page, pageSize := he.ParsePagination(c)
+	page, pageSize := he.ParsePagination(c, h.cfg)
 	kecamatanID := he.ParseOptionalInt64Query(c, "kecamatan_id")
 	filter := dto.FilterKelurahanDesaRequest{
 		Code:       c.QueryParam("code"),

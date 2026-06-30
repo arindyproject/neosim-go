@@ -68,6 +68,7 @@ func (r *registryModule) InitRoutes(e *echo.Echo) {
 		r.rbacRepo,
 		r.authRepo,
 		r.cacheManager, // <---  Cache Redis
+		r.cfg,
 	).InitRoutes(e)
 }
 

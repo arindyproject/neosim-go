@@ -29,7 +29,7 @@ import (
 //
 // ListPekerjaan handles GET /api/v1/master/pekerjaan
 func (h *MasterHandler) ListPekerjaan(c *echo.Context) error {
-	page, pageSize := he.ParsePagination(c)
+	page, pageSize := he.ParsePagination(c, h.cfg)
 	filter := dto.FilterMasterPekerjaanRequest{
 		KodeKemenkes: c.QueryParam("kode_kemenkes"),
 		Name:         c.QueryParam("name"),

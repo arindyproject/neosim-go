@@ -29,7 +29,7 @@ import (
 //
 // ListPendidikan handles GET /api/v1/master/pendidikan
 func (h *MasterHandler) ListPendidikan(c *echo.Context) error {
-	page, pageSize := he.ParsePagination(c)
+	page, pageSize := he.ParsePagination(c, h.cfg)
 	filter := dto.FilterMasterPendidikanRequest{
 		KodeKemenkes: c.QueryParam("kode_kemenkes"),
 		Name:         c.QueryParam("name"),

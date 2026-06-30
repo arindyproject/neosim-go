@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
+	"neosim_go/config"
 	"neosim_go/internal/modules/master/master/services"
 	"neosim_go/internal/modules/master/master/tests/mocks"
 
@@ -40,6 +41,7 @@ type MasterServiceTestSuite struct {
 	rbacRepo *mocks.RBACRepositoryMock
 	authRepo *mocks.AuthRepositoryMock
 	svc      masterContracts.Service
+	cfg      *config.Config
 }
 
 func (s *MasterServiceTestSuite) SetupTest() {
@@ -51,7 +53,7 @@ func (s *MasterServiceTestSuite) SetupTest() {
 	// Tujuannya agar unit test tidak bergantung pada koneksi Redis yang sebenarnya
 	// dan fokus menguji logika bisnis, validasi, serta permission seperti semula.
 	cacheManager := cache.NewManager(nil, false, 0)
-	s.svc = services.NewMasterService(s.repo, s.rbacRepo, s.authRepo, cacheManager)
+	s.svc = services.NewMasterService(s.repo, s.rbacRepo, s.authRepo, cacheManager, s.cfg)
 }
 
 func TestMasterService(t *testing.T) {

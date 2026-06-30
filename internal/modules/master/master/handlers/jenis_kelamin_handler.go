@@ -29,7 +29,7 @@ import (
 //
 // ListJenisKelamin handles GET /api/v1/master/jenis_kelamin
 func (h *MasterHandler) ListJenisKelamin(c *echo.Context) error {
-	page, pageSize := he.ParsePagination(c)
+	page, pageSize := he.ParsePagination(c, h.cfg)
 	filter := dto.FilterMasterJenisKelaminRequest{
 		KodeKemenkes: c.QueryParam("kode_kemenkes"),
 		Name:         c.QueryParam("name"),

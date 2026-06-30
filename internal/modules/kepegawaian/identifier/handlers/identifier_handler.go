@@ -29,13 +29,13 @@ import (
 //	@Param			is_expired		query		bool	false	"Filter identifier yang sudah expired"
 //	@Param			is_primary		query		bool	false	"Filter identifier primary"
 //	@Param			page			query		int		false	"Halaman (default: 1)"
-//	@Param			page_size		query		int		false	"Jumlah per halaman (default: 10, max: 100)"
+//	@Param			page_size		query		int		false	"Jumlah per halaman (default: 10, max: 1000)"
 //	@Success		200				{object}	response.MyGoResponse{data=[]dto.KepegawaianIdentifierResponse}
 //	@Router			/kepegawaian/identifier [get]
 func (h *KepegawaianIdentifierHandler) List(c *echo.Context) error {
 	actor := he.BuildAuthContext(c)
 
-	page, pageSize := he.ParsePagination(c)
+	page, pageSize := he.ParsePagination(c, h.cfg)
 	filter := parseIdentifierFilter(c)
 	items, total, err := h.service.List(c.Request().Context(), page, pageSize, filter, actor)
 	if err != nil {

@@ -1,6 +1,7 @@
 package alamat
 
 import (
+	"neosim_go/config"
 	"neosim_go/internal/modules/master/alamat/contracts"
 	"neosim_go/internal/modules/master/alamat/handlers"
 	"neosim_go/internal/modules/master/alamat/repositories"
@@ -32,6 +33,7 @@ func NewModule(
 	rbacRepo rbacContracts.RBACRepository, //RBAC
 	authRepo authContracts.AuthRepository, //AUTH
 	cacheManager *cache.Manager, // <--- Cache Manager
+	cfg *config.Config,
 ) *Module {
 	repo := repositories.NewMasterAlamatRepository(db)
 	svc := services.NewMasterAlamatService(
@@ -40,7 +42,7 @@ func NewModule(
 		authRepo,
 		cacheManager, //cache
 	)
-	handler := handlers.NewMasterAlamatHandler(svc)
+	handler := handlers.NewMasterAlamatHandler(svc, cfg)
 
 	return &Module{
 		db:         db,

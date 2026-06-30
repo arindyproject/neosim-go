@@ -29,7 +29,7 @@ import (
 //
 // ListGolonganDarah handles GET /api/v1/master/golongan_darah
 func (h *MasterHandler) ListGolonganDarah(c *echo.Context) error {
-	page, pageSize := he.ParsePagination(c)
+	page, pageSize := he.ParsePagination(c, h.cfg)
 	filter := dto.FilterMasterGolonganDarahRequest{
 		KodeKemenkes: c.QueryParam("kode_kemenkes"),
 		Name:         c.QueryParam("name"),

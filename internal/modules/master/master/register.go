@@ -62,7 +62,7 @@ func (r *registryModule) InitRoutes(e *echo.Echo) {
 		r.cfg.JWTAccessTokenExpMinutes,
 		r.cfg.JWTRefreshTokenExpDays,
 	)
-	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo, r.cacheManager).InitRoutes(e)
+	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo, r.cacheManager, r.cfg).InitRoutes(e)
 }
 
 func (r *registryModule) Models() []interface{} {

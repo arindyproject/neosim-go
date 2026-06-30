@@ -30,7 +30,7 @@ import (
 //
 // ListKecamatan handles GET /api/v1/master/alamat/kecamatan
 func (h *MasterAlamatHandler) ListKecamatan(c *echo.Context) error {
-	page, pageSize := he.ParsePagination(c)
+	page, pageSize := he.ParsePagination(c, h.cfg)
 	kotaKabupatenID := he.ParseOptionalInt64Query(c, "kota_kabupaten_id")
 	filter := dto.FilterKecamatanRequest{
 		Code: c.QueryParam("code"),

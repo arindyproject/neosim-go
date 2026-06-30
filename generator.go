@@ -454,8 +454,8 @@ func To{{.ModuleTitle}}Response(m *models.{{.ModuleTitle}}) *{{.ModuleTitle}}Res
 		Description: m.Description,
 		CreatedBy:   m.CreatedBy,
 		UpdatedBy:   m.UpdatedBy,
-		CreatedAt:   types.CustomTime{Time: m.CreatedAt},
-		UpdatedAt:   types.CustomTime{Time: m.UpdatedAt},
+		CreatedAt:   types.CustomTime(m.CreatedAt),
+		UpdatedAt:   types.CustomTime(m.UpdatedAt),
 	}
 }
 
@@ -569,6 +569,7 @@ func (r *repository) Delete(id int64) error {
 var tmplMainService = `package services
 
 import (
+	"{{.ProjectModule}}/config"
 	{{.ModuleName}}Contracts "{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/contracts"
 
 	authContracts "{{.ProjectModule}}/internal/modules/auth/contracts"
@@ -579,6 +580,7 @@ type service struct {
 	repo     {{.ModuleName}}Contracts.Repository
 	rbacRepo rbacContracts.RBACRepository
 	authRepo authContracts.AuthRepository
+	cfg      *config.Config
 }
 
 // New{{.ModuleTitle}}Service membuat instance service baru
@@ -586,11 +588,13 @@ func New{{.ModuleTitle}}Service(
 	repo {{.ModuleName}}Contracts.Repository,
 	rbacRepo rbacContracts.RBACRepository,
 	authRepo authContracts.AuthRepository,
+	cfg    *config.Config,
 ) {{.ModuleName}}Contracts.Service {
 	return &service{
 		repo:     repo,
 		rbacRepo: rbacRepo,
 		authRepo: authRepo,
+		cfg:      cfg,
 	}
 }
 `
@@ -790,17 +794,19 @@ func (s *service) Delete(id int64, actor he.AuthContext) error {
 var tmplMainHandler = `package handlers
 
 import (
+	"{{.ProjectModule}}/config"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/contracts"
 )
 
 // {{.ModuleTitle}}Handler defines HTTP handlers
 type {{.ModuleTitle}}Handler struct {
 	service contracts.Service
+	cfg     *config.Config
 }
 
 // New{{.ModuleTitle}}Handler membuat instance handler baru
-func New{{.ModuleTitle}}Handler(service contracts.Service) *{{.ModuleTitle}}Handler {
-	return &{{.ModuleTitle}}Handler{service: service}
+func New{{.ModuleTitle}}Handler(service contracts.Service, cfg *config.Config) *{{.ModuleTitle}}Handler {
+	return &{{.ModuleTitle}}Handler{service: service, cfg: cfg}
 }
 `
 
@@ -832,20 +838,11 @@ import (
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.{{.ModuleTitle}}Response}
 //	@Router			{{.URLPrefixOpenAPI}} [get]
 func (h *{{.ModuleTitle}}Handler) List(c *echo.Context) error {
-	page, pageSize := 1, 10
+
 	filter := dto.Filter{{.ModuleTitle}}Request{
 		Name: c.QueryParam("name"),
 	}
-	if p := c.QueryParam("page"); p != "" {
-		if v, err := strconv.Atoi(p); err == nil && v > 0 {
-			page = v
-		}
-	}
-	if ps := c.QueryParam("page_size"); ps != "" {
-		if v, err := strconv.Atoi(ps); err == nil && v > 0 && v <= 100 {
-			pageSize = v
-		}
-	}
+	page, pageSize := he.ParsePagination(c, h.cfg)
 
 	actor := he.BuildAuthContext(c)
 	items, total, err := h.service.List(page, pageSize, &filter, actor)
@@ -1176,6 +1173,7 @@ func TruncateTable(db *gorm.DB, tables ...string) {
 var tmplModule = `package {{.PackageName}}
 
 import (
+	"{{.ProjectModule}}/config"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/contracts"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/handlers"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/repositories"
@@ -1202,10 +1200,11 @@ func NewModule(
 	jwtManager *utils.JWTManager,
 	rbacRepo rbacContracts.RBACRepository,
 	authRepo authContracts.AuthRepository,
+	cfg *config.Config,
 ) *Module {
 	repo := repositories.New{{.ModuleTitle}}Repository(db)
-	svc := services.New{{.ModuleTitle}}Service(repo, rbacRepo, authRepo)
-	handler := handlers.New{{.ModuleTitle}}Handler(svc)
+	svc := services.New{{.ModuleTitle}}Service(repo, rbacRepo, authRepo, cfg)
+	handler := handlers.New{{.ModuleTitle}}Handler(svc, cfg)
 
 	return &Module{
 		db:         db,
@@ -1291,7 +1290,7 @@ func (r *registryModule) InitRoutes(e *echo.Echo) {
 		r.cfg.JWTAccessTokenExpMinutes,
 		r.cfg.JWTRefreshTokenExpDays,
 	)
-	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo).InitRoutes(e)
+	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo, r.cfg).InitRoutes(e)
 }
 
 func (r *registryModule) Models() []interface{} {
@@ -1589,6 +1588,7 @@ import (
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/services"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/tests/factories"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/tests/mocks"
+	"{{.ProjectModule}}/config"
 
 	{{.ModuleName}}Contracts "{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/contracts"
 	rbacModels "{{.ProjectModule}}/internal/modules/rbac/models"
@@ -1618,13 +1618,14 @@ type {{.ModuleTitle}}ServiceTestSuite struct {
 	rbacRepo *mocks.RBACRepositoryMock
 	authRepo *mocks.AuthRepositoryMock
 	svc      {{.ModuleName}}Contracts.Service
+	cfg      *config.Config
 }
 
 func (s *{{.ModuleTitle}}ServiceTestSuite) SetupTest() {
 	s.repo     = new(mocks.{{.ModuleTitle}}RepositoryMock)
 	s.rbacRepo = new(mocks.RBACRepositoryMock)
 	s.authRepo = new(mocks.AuthRepositoryMock)
-	s.svc = services.New{{.ModuleTitle}}Service(s.repo, s.rbacRepo, s.authRepo)
+	s.svc = services.New{{.ModuleTitle}}Service(s.repo, s.rbacRepo, s.authRepo, s.cfg)
 }
 
 func Test{{.ModuleTitle}}Service(t *testing.T) {
@@ -2084,36 +2085,62 @@ import (
 	"time"
 
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
+	he "{{.ProjectModule}}/internal/shared/httputil"
 )
 
 // {{.ItemTitle}}Response response untuk single {{.ItemTitle}}
 type {{.ItemTitle}}Response struct {
-	ID          int64     ` + "`" + `json:"id"` + "`" + `
-	Name        string    ` + "`" + `json:"name"` + "`" + `
-	Description *string   ` + "`" + `json:"description"` + "`" + `
-	CreatedBy   *int64    ` + "`" + `json:"created_by"` + "`" + `
-	UpdatedBy   *int64    ` + "`" + `json:"updated_by"` + "`" + `
-	CreatedAt   time.Time ` + "`" + `json:"created_at"` + "`" + `
-	UpdatedAt   time.Time ` + "`" + `json:"updated_at"` + "`" + `
+	ID          int64        ` + "`" + `json:"id"` + "`" + `
+	Name        string       ` + "`" + `json:"name"` + "`" + `
+	Description *string      ` + "`" + `json:"description"` + "`" + `
+	CreatedBy   *he.UserData ` + "`" + `json:"created_by"` + "`" + `
+	UpdatedBy   *he.UserData ` + "`" + `json:"updated_by"` + "`" + `
+	CreatedAt   time.Time    ` + "`" + `json:"created_at"` + "`" + `
+	UpdatedAt   time.Time    ` + "`" + `json:"updated_at"` + "`" + `
 }
 
-func To{{.ItemTitle}}Response(m *models.{{.ItemTitle}}) *{{.ItemTitle}}Response {
+type {{.ItemTitle}}ResponseParams struct {
+	{{.ItemTitle}} *models.{{.ItemTitle}}
+	Creator         *he.UserData
+	Updater         *he.UserData
+}
+
+func To{{.ItemTitle}}Response(params {{.ItemTitle}}ResponseParams) *{{.ItemTitle}}Response {
 	return &{{.ItemTitle}}Response{
-		ID:          m.ID,
-		Name:        m.Name,
-		Description: m.Description,
-		CreatedBy:   m.CreatedBy,
-		UpdatedBy:   m.UpdatedBy,
-		CreatedAt:   m.CreatedAt,
-		UpdatedAt:   m.UpdatedAt,
+		ID:          params.{{.ItemTitle}}.ID,
+		Name:        params.{{.ItemTitle}}.Name,
+		Description: params.{{.ItemTitle}}.Description,
+		CreatedBy:   params.Creator,
+		UpdatedBy:   params.Updater,
+		CreatedAt:   types.CustomTime(params.{{.ItemTitle}}.CreatedAt),
+		UpdatedAt:   types.CustomTime(params.{{.ItemTitle}}.UpdatedAt),
 	}
 }
 
-func To{{.ItemTitle}}ListResponse(items []models.{{.ItemTitle}}) []{{.ItemTitle}}Response {
-	var responses []{{.ItemTitle}}Response
+func To{{.ItemTitle}}ListResponse(
+	items []models.{{.ItemTitle}},
+	creatorsMap map[int64]*he.UserData,
+	updatersMap map[int64]*he.UserData,
+) []{{.ItemTitle}}Response {
+	responses := make([]{{.ItemTitle}}Response, 0, len(items))
+
 	for _, m := range items {
-		responses = append(responses, *To{{.ItemTitle}}Response(&m))
+		var creator, updater *he.UserData
+
+		if creatorsMap != nil {
+			creator = creatorsMap[m.ID]
+		}
+		if updatersMap != nil {
+			updater = updatersMap[m.ID]
+		}
+
+		responses = append(responses, *To{{.ItemTitle}}Response({{.ItemTitle}}ResponseParams{
+			{{.ItemTitle}}: &m,
+			Creator:    creator,
+			Updater:    updater,
+		}))
 	}
+
 	return responses
 }
 `
@@ -2207,6 +2234,7 @@ func (r *{{.ItemName}}Repository) Delete(id int64) error {
 var tmplItemService = `package services
 
 import (
+	"{{.ProjectModule}}/config"
 	"errors"
 	"net/http"
 	"time"
@@ -2225,6 +2253,7 @@ type {{.ItemName}}Service struct {
 	repo     contracts.{{.ItemTitle}}Repository
 	rbacRepo rbacContracts.RBACRepository
 	authRepo authContracts.AuthRepository
+	cfg      *config.Config
 }
 
 // New{{.ItemTitle}}Service membuat instance service baru
@@ -2232,8 +2261,9 @@ func New{{.ItemTitle}}Service(
 	repo contracts.{{.ItemTitle}}Repository,
 	rbacRepo rbacContracts.RBACRepository,
 	authRepo authContracts.AuthRepository,
+	cfg *config.Config,
 ) contracts.{{.ItemTitle}}Service {
-	return &{{.ItemName}}Service{repo: repo, rbacRepo: rbacRepo, authRepo: authRepo}
+	return &{{.ItemName}}Service{repo: repo, rbacRepo: rbacRepo, authRepo: authRepo, cfg: cfg}
 }
 
 func (s *{{.ItemName}}Service) Create(req *dto.Create{{.ItemTitle}}Request, createdBy *int64, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error) {
@@ -2278,7 +2308,7 @@ func (s *{{.ItemName}}Service) List(page, pageSize int, filter *dto.Filter{{.Ite
 		return nil, 0, appErrors.Wrap(http.StatusForbidden, "Akses ditolak. Anda tidak memiliki hak akses untuk melihat daftar {{.ItemTitle}}.", nil)
 	}
 	if page < 1 { page = 1 }
-	if pageSize < 1 || pageSize > 100 { pageSize = 10 }
+	if pageSize < 1 || pageSize > s.cfg.DefaultPageSizeMax { pageSize = s.cfg.DefaultPageSize }
 	items, total, err := s.repo.List(page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err

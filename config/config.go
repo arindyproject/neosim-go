@@ -21,8 +21,9 @@ type Config struct {
 	TimeZone   string
 
 	// Default
-	DefaultPageSize int
-	DefaultPassword string
+	DefaultPageSizeMax int
+	DefaultPageSize    int
+	DefaultPassword    string
 
 	// Database
 	DatabaseURL  string
@@ -112,8 +113,9 @@ func LoadConfig() *Config {
 		TimeZone:   getEnv("TimeZone", "Asia/Jakarta"),
 
 		// ─── Default ─────────────────────────────────────────────
-		DefaultPageSize: getEnvAsInt("DEFAULT_PAGE_SIZE", 10),
-		DefaultPassword: getEnv("DEFAULT_PASSWORD", "password123"),
+		DefaultPageSizeMax: getEnvAsInt("DEFAULT_PAGE_SIZE_MAX", 100),
+		DefaultPageSize:    getEnvAsInt("DEFAULT_PAGE_SIZE", 10),
+		DefaultPassword:    getEnv("DEFAULT_PASSWORD", "password123"),
 
 		// ─── Database ──────────────────────────────────────────
 		DatabaseURL:  getEnv("DATABASE_URL", ""),

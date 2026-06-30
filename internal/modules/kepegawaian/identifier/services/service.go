@@ -1,6 +1,7 @@
 package services
 
 import (
+	"neosim_go/config"
 	identifierContracts "neosim_go/internal/modules/kepegawaian/identifier/contracts"
 	"neosim_go/internal/modules/kepegawaian/identifier/dto"
 	"neosim_go/internal/modules/kepegawaian/identifier/models"
@@ -16,6 +17,7 @@ type service struct {
 	rbacRepo rbacContracts.RBACRepository
 	authRepo authContracts.AuthRepository
 	userRepo userContracts.Repository
+	cfg      *config.Config
 }
 
 // NewKepegawaianIdentifierService membuat instance service baru
@@ -24,12 +26,14 @@ func NewKepegawaianIdentifierService(
 	rbacRepo rbacContracts.RBACRepository,
 	authRepo authContracts.AuthRepository,
 	userRepo userContracts.Repository,
+	cfg *config.Config,
 ) identifierContracts.Service {
 	return &service{
 		repo:     repo,
 		rbacRepo: rbacRepo,
 		authRepo: authRepo,
 		userRepo: userRepo,
+		cfg:      cfg,
 	}
 }
 

@@ -29,7 +29,7 @@ import (
 //
 // ListStatusPernikahan handles GET /api/v1/master/status_pernikahan
 func (h *MasterHandler) ListStatusPernikahan(c *echo.Context) error {
-	page, pageSize := he.ParsePagination(c)
+	page, pageSize := he.ParsePagination(c, h.cfg)
 	filter := dto.FilterMasterStatusPernikahanRequest{
 		KodeKemenkes: c.QueryParam("kode_kemenkes"),
 		Name:         c.QueryParam("name"),

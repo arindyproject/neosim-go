@@ -1,6 +1,7 @@
 package services
 
 import (
+	"neosim_go/config"
 	masterContracts "neosim_go/internal/modules/master/master/contracts"
 
 	//RBAC AUTH----------------------------------------
@@ -15,6 +16,7 @@ type service struct {
 	rbacRepo rbacContracts.RBACRepository //RBAC
 	authRepo authContracts.AuthRepository //AUTH
 	cache    *cache.Manager               // <--- Gunakan Cache Manager
+	cfg      *config.Config
 }
 
 // NewMasterService membuat instance service baru
@@ -23,11 +25,13 @@ func NewMasterService(
 	rbacRepo rbacContracts.RBACRepository, //RBAC
 	authRepo authContracts.AuthRepository, //AUTH
 	cacheManager *cache.Manager, // <--- Terima Cache Manager
+	cfg *config.Config,
 ) masterContracts.Service {
 	return &service{
 		repo:     repo,
 		rbacRepo: rbacRepo, //RBAC
 		authRepo: authRepo, //AUTH
 		cache:    cacheManager,
+		cfg:      cfg,
 	}
 }

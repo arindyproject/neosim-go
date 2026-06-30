@@ -29,7 +29,7 @@ import (
 //
 // ListNegara handles GET /api/v1/master/alamat/alamat/negara
 func (h *MasterAlamatHandler) ListNegara(c *echo.Context) error {
-	page, pageSize := he.ParsePagination(c)
+	page, pageSize := he.ParsePagination(c, h.cfg)
 	filter := dto.FilterNegaraRequest{
 		Code: c.QueryParam("code"),
 		Name: c.QueryParam("name"),

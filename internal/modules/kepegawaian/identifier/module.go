@@ -1,6 +1,7 @@
 package identifier
 
 import (
+	"neosim_go/config"
 	"neosim_go/internal/modules/kepegawaian/identifier/contracts"
 	"neosim_go/internal/modules/kepegawaian/identifier/handlers"
 	"neosim_go/internal/modules/kepegawaian/identifier/repositories"
@@ -29,10 +30,11 @@ func NewModule(
 	rbacRepo rbacContracts.RBACRepository,
 	authRepo authContracts.AuthRepository,
 	userRepo userContracts.Repository,
+	cfg *config.Config,
 ) *Module {
 	repo := repositories.NewKepegawaianIdentifierRepository(db)
-	svc := services.NewKepegawaianIdentifierService(repo, rbacRepo, authRepo, userRepo)
-	handler := handlers.NewKepegawaianIdentifierHandler(svc)
+	svc := services.NewKepegawaianIdentifierService(repo, rbacRepo, authRepo, userRepo, cfg)
+	handler := handlers.NewKepegawaianIdentifierHandler(svc, cfg)
 
 	return &Module{
 		db:         db,

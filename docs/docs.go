@@ -350,7 +350,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "Jumlah per halaman (default: 10, max: 100)",
+                        "description": "Jumlah per halaman (default: 10, max: 1000)",
                         "name": "page_size",
                         "in": "query"
                     }
