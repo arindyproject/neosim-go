@@ -26,6 +26,7 @@ import (
 
 	// artikel
 	_ "neosim_go/internal/modules/artikel/artikel"
+	_ "neosim_go/internal/modules/artikel/kategori"
 	// =====================================================================
 )
 
@@ -48,8 +49,29 @@ func main() {
 
 	log.Printf("🚀 Memulai migrasi untuk environment: %s", *env)
 
-	// Load config & connect DB
+	// =====================================================================
+	// DAFTAR MODUL YANG AKAN DIMIGRASI
+	// =====================================================================
+	modules := []string{
+		"Auth",
+		"RBAC",
+		"Users",
+		"Master: Alamat",
+		"Master: Departemen",
+		"Master: Master",
+		"Kepegawaian: Identifier",
+		"Kepegawaian: Pegawai",
+		"Artikel: Artikel",
+		"Artikel: Kategori",
+	}
 
+	log.Println("📋 Daftar modul yang akan dimigrasi:")
+	for i, mod := range modules {
+		log.Printf("   %d. %s", i+1, mod)
+	}
+	// =====================================================================
+
+	// Load config & connect DB
 	db, err := cfg.ConnectDB()
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)

@@ -1,7 +1,7 @@
--- Migration: Create artikels table
--- Timestamp: 20260703104307
+-- Migration: Create artikel_kategoris table
+-- Timestamp: 20260703104717
 
-CREATE TABLE IF NOT EXISTS artikels (
+CREATE TABLE IF NOT EXISTS artikel_kategoris (
     id          BIGSERIAL    PRIMARY KEY,
     name        VARCHAR(255) NOT NULL,
     description TEXT,
@@ -12,4 +12,4 @@ CREATE TABLE IF NOT EXISTS artikels (
     deleted_at  TIMESTAMPTZ
 );
 
-CREATE INDEX IF NOT EXISTS idx_artikels_deleted_at ON artikels(deleted_at);
+CREATE INDEX IF NOT EXISTS idx_artikel_kategoris_deleted_at ON artikel_kategoris(deleted_at);

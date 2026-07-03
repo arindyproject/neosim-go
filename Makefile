@@ -228,8 +228,13 @@ test-master-master: ## Run tests for master module
 test-master-alamat: ## Run tests for master module
 	@go test -json ./internal/modules/master/alamat/tests | gotestfmt
 
+#---------------------------------------------------------------------------------
 test-artikel-artikel: ## Run tests for master module
 	@go test -json ./internal/modules/artikel/artikel/tests | gotestfmt
+
+test-artikel-kategori: ## Run tests for master module
+	@go test -json ./internal/modules/artikel/kategori/tests | gotestfmt
+#---------------------------------------------------------------------------------
 
 test: ## Run all tests
 	@go test -json ./internal/modules/.../tests | gotestfmt

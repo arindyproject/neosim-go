@@ -157,6 +157,7 @@ func buildModuleFileList(cfg ModuleConfig, base string) []fileEntry {
 		{filepath.Join(base, "tests", "mocks", fmt.Sprintf("%s_repository_mock.go", cfg.ModuleName)), tmplModuleServiceMock},
 		{filepath.Join(base, "tests", "mocks", "rbac_repository_mock.go"), tmplRBACMock},
 		{filepath.Join(base, "tests", "mocks", "auth_repository_mock.go"), tmplAuthMock},
+		{filepath.Join(base, "tests", "mocks", "user_repository_mock.go"), tmplUserMock}, // ⬅️ BARU
 		{filepath.Join(base, "tests", fmt.Sprintf("%s_service_test.go", cfg.ModuleName)), tmplModuleServiceTest},
 		{filepath.Join(base, "module.go"), tmplModule},
 		{filepath.Join(base, "routes.go"), tmplRoutes},
@@ -1713,6 +1714,91 @@ func (m *AuthRepositoryMock) GetPasswordHistories(userID int64, limit int) ([]au
 }
 `
 
+var tmplUserMock = `package mocks
+
+import (
+	userDto    "{{.ProjectModule}}/internal/modules/users/dto"
+	userModels "{{.ProjectModule}}/internal/modules/users/models"
+	"github.com/stretchr/testify/mock"
+)
+
+// UserRepositoryMock adalah mock dari userContracts.Repository (modul users).
+type UserRepositoryMock struct {
+	mock.Mock
+}
+
+func (m *UserRepositoryMock) Create(user *userModels.User) error {
+	args := m.Called(user)
+	return args.Error(0)
+}
+
+func (m *UserRepositoryMock) GetByID(id int64) (*userModels.User, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*userModels.User), args.Error(1)
+}
+
+func (m *UserRepositoryMock) GetByUsername(username string) (*userModels.User, error) {
+	args := m.Called(username)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*userModels.User), args.Error(1)
+}
+
+func (m *UserRepositoryMock) GetByEmail(email string) (*userModels.User, error) {
+	args := m.Called(email)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*userModels.User), args.Error(1)
+}
+
+func (m *UserRepositoryMock) List(page, pageSize int, filter *userDto.UserFilter) ([]userModels.User, int64, error) {
+	args := m.Called(page, pageSize, filter)
+	var users []userModels.User
+	if args.Get(0) != nil {
+		users = args.Get(0).([]userModels.User)
+	}
+	return users, args.Get(1).(int64), args.Error(2)
+}
+
+func (m *UserRepositoryMock) Update(user *userModels.User) error {
+	args := m.Called(user)
+	return args.Error(0)
+}
+
+func (m *UserRepositoryMock) Delete(id int64, deletedBy int64, reason string) error {
+	args := m.Called(id, deletedBy, reason)
+	return args.Error(0)
+}
+
+func (m *UserRepositoryMock) DeletedList(page, pageSize int, filter *userDto.UserDeletedFilter) ([]userModels.User, int64, error) {
+	args := m.Called(page, pageSize, filter)
+	var users []userModels.User
+	if args.Get(0) != nil {
+		users = args.Get(0).([]userModels.User)
+	}
+	return users, args.Get(1).(int64), args.Error(2)
+}
+
+func (m *UserRepositoryMock) GetSettings(id int64) ([]userModels.UserSetting, error) {
+	args := m.Called(id)
+	var settings []userModels.UserSetting
+	if args.Get(0) != nil {
+		settings = args.Get(0).([]userModels.UserSetting)
+	}
+	return settings, args.Error(1)
+}
+
+func (m *UserRepositoryMock) UpdateSettings(id int64, settings []userModels.UserSetting) error {
+	args := m.Called(id, settings)
+	return args.Error(0)
+}
+`
+
 var tmplModuleServiceTest = `package tests
 
 import (
@@ -1725,12 +1811,12 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
+	"{{.ProjectModule}}/config"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/services"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/tests/factories"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/tests/mocks"
-	"{{.ProjectModule}}/config"
 
 	{{.ModuleName}}Contracts "{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/contracts"
 	rbacModels "{{.ProjectModule}}/internal/modules/rbac/models"
@@ -1759,6 +1845,7 @@ type {{.ModuleTitle}}ServiceTestSuite struct {
 	repo     *mocks.{{.ModuleTitle}}RepositoryMock
 	rbacRepo *mocks.RBACRepositoryMock
 	authRepo *mocks.AuthRepositoryMock
+	userRepo *mocks.UserRepositoryMock
 	svc      {{.ModuleName}}Contracts.Service
 	cfg      *config.Config
 }
@@ -1767,7 +1854,13 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) SetupTest() {
 	s.repo     = new(mocks.{{.ModuleTitle}}RepositoryMock)
 	s.rbacRepo = new(mocks.RBACRepositoryMock)
 	s.authRepo = new(mocks.AuthRepositoryMock)
-	s.svc = services.New{{.ModuleTitle}}Service(s.repo, s.rbacRepo, s.authRepo, s.cfg)
+	s.userRepo = new(mocks.UserRepositoryMock)
+	s.cfg      = &config.Config{}
+	s.svc = services.New{{.ModuleTitle}}Service(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.cfg)
+
+	// Stub default agar buildCreator/buildAuditMaps tidak panic saat memanggil userRepo.
+	// Boleh dipanggil 0 kali atau lebih (.Maybe()) tergantung skenario test.
+	s.userRepo.On("GetByID", mock.Anything).Return(nil, nil).Maybe()
 }
 
 func Test{{.ModuleTitle}}Service(t *testing.T) {
@@ -1796,7 +1889,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Create_Superadmin_Success() {
 
 	s.repo.On("Create", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(nil)
 
-	result, err := s.svc.Create(req, &actor.UserID, actor)
+	result, err := s.svc.Create(req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -1811,7 +1904,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Create_WithPermission_Success() 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(true, nil)
 	s.repo.On("Create", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(nil)
 
-	result, err := s.svc.Create(req, &actor.UserID, actor)
+	result, err := s.svc.Create(req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -1826,7 +1919,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Create_WithManagePermission_Succ
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyManage).Return(true, nil)
 	s.repo.On("Create", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(nil)
 
-	result, err := s.svc.Create(req, &actor.UserID, actor)
+	result, err := s.svc.Create(req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -1837,7 +1930,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Create_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.Create(req, &actor.UserID, actor)
+	result, err := s.svc.Create(req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -1852,7 +1945,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Create_RepoError() {
 
 	s.repo.On("Create", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.Create(req, &actor.UserID, actor)
+	result, err := s.svc.Create(req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -2019,7 +2112,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update_Superadmin_Success() {
 	s.repo.On("GetByID", int64(1)).Return(existing, nil)
 	s.repo.On("Update", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(nil)
 
-	result, err := s.svc.Update(1, req, &actor.UserID, actor)
+	result, err := s.svc.Update(1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -2037,7 +2130,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update_WithPermission_Success() 
 	s.repo.On("GetByID", int64(1)).Return(existing, nil)
 	s.repo.On("Update", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(nil)
 
-	result, err := s.svc.Update(1, req, &actor.UserID, actor)
+	result, err := s.svc.Update(1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -2048,7 +2141,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update_Forbidden() {
 	req := &dto.Update{{.ModuleTitle}}Request{}
 	s.mockNoPermissions()
 
-	result, err := s.svc.Update(1, req, &actor.UserID, actor)
+	result, err := s.svc.Update(1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -2063,7 +2156,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update_NotFound() {
 
 	s.repo.On("GetByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.Update(999, req, &actor.UserID, actor)
+	result, err := s.svc.Update(999, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -2083,7 +2176,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update_PartialFields() {
 		return m.Name == originalName && *m.Description == newDesc
 	})).Return(nil)
 
-	result, err := s.svc.Update(1, req, &actor.UserID, actor)
+	result, err := s.svc.Update(1, req, actor)
 
 	s.NoError(err)
 	s.Equal(originalName, result.Name)
@@ -2099,7 +2192,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update_RepoError() {
 	s.repo.On("GetByID", int64(1)).Return(existing, nil)
 	s.repo.On("Update", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.Update(1, req, &actor.UserID, actor)
+	result, err := s.svc.Update(1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -2788,7 +2881,7 @@ import (
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/services"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/tests/mocks"
-
+	"{{.ProjectModule}}/config"
 	rbacModels "{{.ProjectModule}}/internal/modules/rbac/models"
 	appErrors "{{.ProjectModule}}/internal/shared/errors"
 	he "{{.ProjectModule}}/internal/shared/httputil"
@@ -2806,7 +2899,8 @@ func (s *{{.ItemTitle}}ServiceTestSuite) SetupTest() {
 	s.repo     = new(mocks.{{.ItemTitle}}RepositoryMock)
 	s.rbacRepo = new(mocks.RBACRepositoryMock)
 	s.authRepo = new(mocks.AuthRepositoryMock)
-	s.svc = services.New{{.ItemTitle}}Service(s.repo, s.rbacRepo, s.authRepo)
+	s.cfg      = &config.Config{DefaultPageSize: 10, DefaultPageSizeMax: 100}
+	s.svc = services.New{{.ItemTitle}}Service(s.repo, s.rbacRepo, s.authRepo, s.cfg)
 }
 
 func Test{{.ItemTitle}}Service(t *testing.T) {

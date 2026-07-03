@@ -59,6 +59,7 @@ import (
 
 	// Artikel
 	_ "neosim_go/internal/modules/artikel/artikel"
+	_ "neosim_go/internal/modules/artikel/kategori"
 	// =============== Modules ===============
 )
 

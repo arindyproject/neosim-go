@@ -1,5 +1,22 @@
 basePath: /api/v1
 definitions:
+  dto.ArtikelKategoriResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        $ref: '#/definitions/httputil.UserData'
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        $ref: '#/definitions/httputil.UserData'
+    type: object
   dto.ArtikelResponse:
     properties:
       created_at:
@@ -60,6 +77,18 @@ definitions:
     - confirm_password
     - new_password
     - old_password
+    type: object
+  dto.CreateArtikelKategoriRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - name
     type: object
   dto.CreateArtikelRequest:
     properties:
@@ -611,13 +640,11 @@ definitions:
   dto.LoginRequest:
     properties:
       identifier:
-        description: username atau email
+        example: superadmin
         type: string
       password:
+        example: password123
         type: string
-    required:
-    - identifier
-    - password
     type: object
   dto.LogoutRequest:
     properties:
@@ -947,6 +974,16 @@ definitions:
         type: string
       user:
         $ref: '#/definitions/dto.UserResponse'
+    type: object
+  dto.UpdateArtikelKategoriRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
     type: object
   dto.UpdateArtikelRequest:
     properties:
@@ -1515,6 +1552,154 @@ paths:
       summary: Update Artikel
       tags:
       - artikel/artikel
+  /artikel/kategori:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of ArtikelKategori
+      parameters:
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.ArtikelKategoriResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of ArtikelKategori
+      tags:
+      - artikel/kategori
+    post:
+      consumes:
+      - application/json
+      description: Create New ArtikelKategori
+      parameters:
+      - description: Create Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateArtikelKategoriRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ArtikelKategoriResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create ArtikelKategori
+      tags:
+      - artikel/kategori
+  /artikel/kategori/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete ArtikelKategori by :id
+      parameters:
+      - description: ArtikelKategori ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete ArtikelKategori
+      tags:
+      - artikel/kategori
+    get:
+      consumes:
+      - application/json
+      description: Get ArtikelKategori by :id
+      parameters:
+      - description: ArtikelKategori ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ArtikelKategoriResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get ArtikelKategori
+      tags:
+      - artikel/kategori
+    put:
+      consumes:
+      - application/json
+      description: Update ArtikelKategori by :id
+      parameters:
+      - description: ArtikelKategori ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateArtikelKategoriRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ArtikelKategoriResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update ArtikelKategori
+      tags:
+      - artikel/kategori
   /auth/forgot-password:
     post:
       consumes:

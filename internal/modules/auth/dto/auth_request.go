@@ -4,8 +4,8 @@ package dto
 
 // LoginRequest request body untuk login
 type LoginRequest struct {
-	Identifier string `json:"identifier" validate:"required"` // username atau email
-	Password   string `json:"password"   validate:"required"`
+	Identifier string `json:"identifier" example:"superadmin"`
+	Password   string `json:"password" example:"password123"`
 }
 
 // ─── Register ──────────────────────────────────────────────────────────────────
