@@ -239,7 +239,7 @@ var tmplResponse = `package dto
 
 import (
 	"time"
-
+	"{{.ProjectModule}}/internal/shared/types"
 	"{{.ProjectModule}}/internal/modules/{{.ModuleName}}/models"
 )
 

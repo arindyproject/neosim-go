@@ -2317,8 +2317,7 @@ type Filter{{.ItemTitle}}Request struct {
 var tmplItemResponse = `package dto
 
 import (
-	"time"
-
+	"{{.ProjectModule}}/internal/shared/types"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
 	he "{{.ProjectModule}}/internal/shared/httputil"
 )
@@ -2330,8 +2329,8 @@ type {{.ItemTitle}}Response struct {
 	Description *string      ` + "`" + `json:"description"` + "`" + `
 	CreatedBy   *he.UserData ` + "`" + `json:"created_by"` + "`" + `
 	UpdatedBy   *he.UserData ` + "`" + `json:"updated_by"` + "`" + `
-	CreatedAt   time.Time    ` + "`" + `json:"created_at"` + "`" + `
-	UpdatedAt   time.Time    ` + "`" + `json:"updated_at"` + "`" + `
+	CreatedAt   types.CustomTime    ` + "`" + `json:"created_at"` + "`" + `
+	UpdatedAt   types.CustomTime    ` + "`" + `json:"updated_at"` + "`" + `
 }
 
 type {{.ItemTitle}}ResponseParams struct {
