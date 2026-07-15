@@ -39,6 +39,9 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
+// ArtikelKategoriServiceTestSuite dipakai bersama oleh SELURUH item di dalam
+// sub-module ini (lihat mis. tag_service_test.go) — karena hanya ada satu
+// struct service/repository, satu suite ini sudah cukup untuk semuanya.
 type ArtikelKategoriServiceTestSuite struct {
 	suite.Suite
 	repo     *mocks.ArtikelKategoriRepositoryMock

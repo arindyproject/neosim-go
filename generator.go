@@ -28,12 +28,18 @@ type ModuleConfig struct {
 	TableName        string
 }
 
+// AddItemConfig dipakai pada Mode 3 (-sub=... -add=...).
+// Item BARU TIDAK memiliki struct/handler/repository/service sendiri.
+// Semua method item ditempelkan ke struct `service`, `repository`, dan
+// `{{SubModuleTitle}}Handler` yang sudah dibuat pada Mode 1/2 untuk sub-module
+// terkait. Interface tetap didefinisikan di file terpisah (mis. tag_interfaces.go)
+// lalu di-embed otomatis ke dalam interface Repository/Service utama.
 type AddItemConfig struct {
 	MainModule       string
 	SubModule        string
+	SubModuleTitle   string // Pascal title milik sub-module existing, mis. "ArtikelKategori" -> dipakai untuk nama Handler/Mock/Suite yang sudah ada
 	ItemName         string
 	ItemTitle        string
-	FullTitle        string
 	PackageName      string
 	ProjectModule    string
 	Timestamp        string
@@ -157,7 +163,7 @@ func buildModuleFileList(cfg ModuleConfig, base string) []fileEntry {
 		{filepath.Join(base, "tests", "mocks", fmt.Sprintf("%s_repository_mock.go", cfg.ModuleName)), tmplModuleServiceMock},
 		{filepath.Join(base, "tests", "mocks", "rbac_repository_mock.go"), tmplRBACMock},
 		{filepath.Join(base, "tests", "mocks", "auth_repository_mock.go"), tmplAuthMock},
-		{filepath.Join(base, "tests", "mocks", "user_repository_mock.go"), tmplUserMock}, // ⬅️ BARU
+		{filepath.Join(base, "tests", "mocks", "user_repository_mock.go"), tmplUserMock},
 		{filepath.Join(base, "tests", fmt.Sprintf("%s_service_test.go", cfg.ModuleName)), tmplModuleServiceTest},
 		{filepath.Join(base, "module.go"), tmplModule},
 		{filepath.Join(base, "routes.go"), tmplRoutes},
@@ -206,30 +212,53 @@ func printModuleNextSteps(cfg ModuleConfig) {
 
 5. Jalankan seeder:
    make seed
+
+💡 Ingin menambah entitas anak (mis. tag) di dalam module ini tanpa
+   membuat struct/handler/service terpisah? Gunakan mode add-item:
+   go run generator.go -name=%s -sub=%s -add=<item>
 ────────────────────────────────────────────────────────
 `,
 		cfg.MainModule, cfg.SubModule,
 		cfg.ProjectModule, cfg.MainModule, cfg.SubModule,
 		cfg.ProjectModule, cfg.MainModule, cfg.SubModule,
 		cfg.MainModule, cfg.SubModule, cfg.ModuleName,
+		cfg.MainModule, cfg.SubModule,
 	)
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// MODE 3 — Add Item ke Sub-Module Existing
+// MODE 3 — Add Item ke Sub-Module Existing (SHARED STRUCT, tanpa struct baru)
 // ═══════════════════════════════════════════════════════════════════════════════
+//
+// Prinsip:
+//   - Interface item (mis. TagRepository / TagService) didefinisikan di file
+//     terpisah (contracts/tag_interfaces.go) dengan method bersuffix nama item
+//     (CreateTag, GetTagByID, dst) agar tidak bentrok ketika di-embed.
+//   - Method CRUD item ditempelkan ke struct `repository` & `service` yang
+//     SAMA dengan sub-module induknya (bukan struct baru). Jadi tidak perlu
+//     tagRepo/tagService terpisah — cukup satu instance yang sudah ada.
+//   - Interface Repository & Service utama (contracts/interfaces.go) di-embed
+//     otomatis dengan TagRepository/TagService lewat marker komentar
+//     "// GEN:ITEM_REPOSITORY_INTERFACE" & "// GEN:ITEM_SERVICE_INTERFACE".
+//   - routes.go, register.go (Models & MigrateSQL) juga di-update otomatis
+//     lewat marker, sehingga TIDAK ADA lagi langkah wiring manual.
 
 func runAddItem(name, sub, add, project string) {
 	mainPascal := toPascalCase(name)
 	subPascal := toPascalCase(sub)
 	itemPascal := toPascalCase(add)
 
+	subModuleTitle := mainPascal
+	if sub != name {
+		subModuleTitle = mainPascal + subPascal
+	}
+
 	cfg := AddItemConfig{
 		MainModule:       name,
 		SubModule:        sub,
+		SubModuleTitle:   subModuleTitle,
 		ItemName:         add,
 		ItemTitle:        itemPascal,
-		FullTitle:        mainPascal + subPascal + itemPascal,
 		PackageName:      toPackageName(sub),
 		ProjectModule:    project,
 		Timestamp:        time.Now().Format("20060102150405"),
@@ -240,7 +269,7 @@ func runAddItem(name, sub, add, project string) {
 
 	basePath := filepath.Join("internal", "modules", cfg.MainModule, cfg.SubModule)
 
-	fmt.Printf("\n🚀 Menambahkan item '%s' ke dalam %s/%s\n", cfg.ItemName, cfg.MainModule, cfg.SubModule)
+	fmt.Printf("\n🚀 Menambahkan item '%s' ke dalam %s/%s (shared struct, tanpa file service/repository baru)\n", cfg.ItemName, cfg.MainModule, cfg.SubModule)
 	fmt.Printf("   Path: %s\n\n", basePath)
 
 	for _, f := range buildItemFileList(cfg, basePath) {
@@ -250,7 +279,12 @@ func runAddItem(name, sub, add, project string) {
 		fmt.Printf("   ✅ %s\n", f.path)
 	}
 
-	printItemNextSteps(cfg, basePath)
+	fmt.Println()
+	if err := updateSharedFiles(cfg, basePath); err != nil {
+		log.Fatalf("❌ Gagal update file bersama: %v", err)
+	}
+
+	printItemNextSteps(cfg)
 }
 
 func buildItemFileList(cfg AddItemConfig, base string) []fileEntry {
@@ -266,6 +300,8 @@ func buildItemFileList(cfg AddItemConfig, base string) []fileEntry {
 		{filepath.Join(base, "handlers", fmt.Sprintf("%s_handler.go", cfg.ItemName)), tmplItemHandler},
 		{filepath.Join(base, "migrations", fmt.Sprintf("%s_migrate.go", cfg.ItemName)), tmplItemMigration},
 		{filepath.Join(base, "migrations", fmt.Sprintf("%s_create_%s_table.sql", ts, cfg.TableName)), tmplItemSQL},
+		{filepath.Join(base, "tests", "factories", fmt.Sprintf("%s_factory.go", cfg.ItemName)), tmplItemFactory},
+		{filepath.Join(base, "tests", "seeders", fmt.Sprintf("%s_seeder.go", cfg.ItemName)), tmplItemSeeder},
 		{filepath.Join(base, "tests", "mocks", fmt.Sprintf("%s_repository_mock.go", cfg.ItemName)), tmplItemRepositoryMock},
 		{filepath.Join(base, "tests", fmt.Sprintf("%s_service_test.go", cfg.ItemName)), tmplItemServiceTest},
 	}
@@ -291,67 +327,132 @@ func generateItemFile(path, tmplStr string, cfg AddItemConfig) error {
 	return tmpl.Execute(f, cfg)
 }
 
-func printItemNextSteps(cfg AddItemConfig, basePath string) {
+// updateSharedFiles menyuntikkan embed interface + wiring routes/models/migration
+// ke file-file yang sudah ada, lewat marker komentar "// GEN:...".
+// Ini menggantikan seluruh langkah manual yang sebelumnya dicetak di
+// printItemNextSteps.
+func updateSharedFiles(cfg AddItemConfig, basePath string) error {
+	type patch struct {
+		file   string
+		marker string
+		insert string
+	}
+
+	itemRoutesBlock := fmt.Sprintf(
+		"g%s := e.Group(\"%s\", jwt)\n"+
+			"\tg%s.GET(\"\", h.List%s)\n"+
+			"\tg%s.GET(\"/:id\", h.Get%sByID)\n"+
+			"\tg%s.POST(\"\", h.Create%s)\n"+
+			"\tg%s.PUT(\"/:id\", h.Update%s)\n"+
+			"\tg%s.DELETE(\"/:id\", h.Delete%s)\n"+
+			"\t// GEN:ITEM_ROUTES",
+		cfg.ItemTitle, cfg.URLPrefix,
+		cfg.ItemTitle, cfg.ItemTitle,
+		cfg.ItemTitle, cfg.ItemTitle,
+		cfg.ItemTitle, cfg.ItemTitle,
+		cfg.ItemTitle, cfg.ItemTitle,
+		cfg.ItemTitle, cfg.ItemTitle,
+	)
+
+	migrationBlock := fmt.Sprintf(
+		"if err := migrations.Migrate%sWithSQL(sqlDB); err != nil {\n"+
+			"\t\treturn err\n"+
+			"\t}\n"+
+			"\t// GEN:ITEM_MIGRATIONS",
+		cfg.ItemTitle,
+	)
+
+	patches := []patch{
+		{
+			file:   filepath.Join(basePath, "contracts", "interfaces.go"),
+			marker: "// GEN:ITEM_REPOSITORY_INTERFACE",
+			insert: fmt.Sprintf("%sRepository\n\t// GEN:ITEM_REPOSITORY_INTERFACE", cfg.ItemTitle),
+		},
+		{
+			file:   filepath.Join(basePath, "contracts", "interfaces.go"),
+			marker: "// GEN:ITEM_SERVICE_INTERFACE",
+			insert: fmt.Sprintf("%sService\n\t// GEN:ITEM_SERVICE_INTERFACE", cfg.ItemTitle),
+		},
+		{
+			file:   filepath.Join(basePath, "routes.go"),
+			marker: "// GEN:ITEM_ROUTES",
+			insert: itemRoutesBlock,
+		},
+		{
+			file:   filepath.Join(basePath, "register.go"),
+			marker: "// GEN:ITEM_MODELS",
+			insert: fmt.Sprintf("&models.%s{},\n\t\t// GEN:ITEM_MODELS", cfg.ItemTitle),
+		},
+		{
+			file:   filepath.Join(basePath, "register.go"),
+			marker: "// GEN:ITEM_MIGRATIONS",
+			insert: migrationBlock,
+		},
+	}
+
+	anyFailed := false
+	for _, p := range patches {
+		if err := insertBeforeMarker(p.file, p.marker, p.insert); err != nil {
+			anyFailed = true
+			fmt.Printf("   ⚠️  %v\n", err)
+		} else {
+			fmt.Printf("   ✅ %s (updated)\n", p.file)
+		}
+	}
+	if anyFailed {
+		fmt.Println("   ⚠️  Sebagian file bersama tidak ter-update otomatis. Cek marker \"// GEN:...\" di atas secara manual.")
+	}
+	return nil
+}
+
+// insertBeforeMarker mengganti baris marker dengan (insertion + marker),
+// sehingga marker tetap ada untuk pemanggilan add-item berikutnya.
+func insertBeforeMarker(path, marker, insertion string) error {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("gagal baca %s: %w", path, err)
+	}
+	content := string(data)
+	if strings.Contains(content, insertion) {
+		return fmt.Errorf("skip (sudah ter-update sebelumnya): %s", path)
+	}
+	if !strings.Contains(content, marker) {
+		return fmt.Errorf("marker %q tidak ditemukan di %s — tambahkan manual", marker, path)
+	}
+	content = strings.Replace(content, marker, insertion, 1)
+	return os.WriteFile(path, []byte(content), 0644)
+}
+
+func printItemNextSteps(cfg AddItemConfig) {
 	fmt.Printf(`
 ────────────────────────────────────────────────────────
 ✅ Item '%s' berhasil ditambahkan ke %s/%s!
 
-📋 Update MANUAL diperlukan:
+Semua wiring (interface embed, route, model, migration) sudah
+di-update otomatis lewat marker "// GEN:...". Tidak ada lagi
+struct/service/repository terpisah untuk '%s' — semuanya menempel
+ke struct 'service' & 'repository' milik %s/%s, dan ke handler
+%sHandler yang sudah ada.
 
-1. %s/services/service.go — tambah field di struct 'service':
-   ┌─────────────────────────────────────────────────────
-   │ %sRepo contracts.%sRepository
-   └─────────────────────────────────────────────────────
-   Dan tambah import alias jika belum:
-   │ (contracts sudah 1 package, tidak perlu alias baru)
+📋 Yang tersisa (opsional):
 
-2. %s/services/service.go — tambah parameter di New...Service():
-   ┌─────────────────────────────────────────────────────
-   │ %sRepo contracts.%sRepository,
-   └─────────────────────────────────────────────────────
+1. Jalankan migrasi:
+   make migrate-dev
 
-3. %s/module.go — tambah wiring di NewModule():
-   ┌─────────────────────────────────────────────────────
-   │ %sRepo := repositories.New%sRepository(db)
-   │ // lalu inject %sRepo ke service
-   └─────────────────────────────────────────────────────
+2. Panggil seeders.New%sSeeder(db).Run() dari seed runner-mu bila perlu,
+   lalu jalankan test:
+   go test ./internal/modules/%s/%s/...
 
-4. %s/routes.go — tambah route di RegisterRoutes():
-   ┌─────────────────────────────────────────────────────
-   │ %sH := handlers.New%sHandler(/* inject svc */)
-   │ g%s := e.Group("%s", jwt)
-   │ g%s.GET("", %sH.List)
-   │ g%s.GET("/:id", %sH.GetByID)
-   │ g%s.POST("", %sH.Create)
-   │ g%s.PUT("/:id", %sH.Update)
-   │ g%s.DELETE("/:id", %sH.Delete)
-   └─────────────────────────────────────────────────────
-
-5. %s/register.go — tambah di MigrateSQL():
-   │ migrations.Migrate%sWithSQL(sqlDB)
-
-6. %s/register.go — tambah di Models():
-   │ &models.%s{},
+3. Review validasi di dto/%s_request.go sesuai kebutuhan bisnis.
 ────────────────────────────────────────────────────────
 `,
 		cfg.ItemName, cfg.MainModule, cfg.SubModule,
-
-		basePath, cfg.ItemName, cfg.ItemTitle,
-		basePath, cfg.ItemName, cfg.ItemTitle,
-
-		basePath, cfg.ItemName, cfg.ItemTitle, cfg.ItemName,
-
-		basePath,
-		cfg.ItemName, cfg.ItemTitle,
-		cfg.ItemName, cfg.URLPrefix,
-		cfg.ItemName, cfg.ItemName,
-		cfg.ItemName, cfg.ItemName,
-		cfg.ItemName, cfg.ItemName,
-		cfg.ItemName, cfg.ItemName,
-		cfg.ItemName, cfg.ItemName,
-
-		basePath, cfg.ItemTitle,
-		basePath, cfg.ItemTitle,
+		cfg.ItemName,
+		cfg.MainModule, cfg.SubModule,
+		cfg.SubModuleTitle,
+		cfg.ItemTitle,
+		cfg.MainModule, cfg.SubModule,
+		cfg.ItemName,
 	)
 }
 
@@ -396,6 +497,7 @@ type Repository interface {
 	List(page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request) ([]models.{{.ModuleTitle}}, int64, error)
 	Update(m *models.{{.ModuleTitle}}) error
 	Delete(id int64) error
+	// GEN:ITEM_REPOSITORY_INTERFACE
 }
 
 // Service defines business logic operations
@@ -405,6 +507,7 @@ type Service interface {
 	List(page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request, actor he.AuthContext) ([]dto.{{.ModuleTitle}}Response, int64, error)
 	Update(id int64, req *dto.Update{{.ModuleTitle}}Request, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error)
 	Delete(id int64, actor he.AuthContext) error
+	// GEN:ITEM_SERVICE_INTERFACE
 }
 `
 
@@ -528,6 +631,11 @@ import (
 	"gorm.io/gorm"
 )
 
+// repository adalah satu-satunya struct repository untuk sub-module ini.
+// Item baru (mode add-item) TIDAK membuat struct repository baru — method
+// CRUD-nya ditempelkan langsung ke struct ini di file terpisah
+// (mis. repositories/tag_repository.go), sehingga satu instance struct ini
+// otomatis memenuhi contracts.Repository maupun interface item (TagRepository, dst).
 type repository struct {
 	db *gorm.DB
 }
@@ -607,6 +715,12 @@ import (
 	he "{{.ProjectModule}}/internal/shared/httputil"
 )
 
+// service adalah satu-satunya struct service untuk sub-module ini.
+// Item baru (mode add-item) TIDAK membuat struct service baru — method
+// CRUD & permission-nya ditempelkan langsung ke struct ini (mis.
+// services/tag_service.go, services/tag_permission.go), dan repo field
+// di bawah ini otomatis mencakup method item begitu contracts.Repository
+// di-embed dengan interface repository item (lihat contracts/interfaces.go).
 type service struct {
 	repo     {{.ModuleName}}Contracts.Repository
 	rbacRepo rbacContracts.RBACRepository
@@ -938,7 +1052,11 @@ import (
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/contracts"
 )
 
-// {{.ModuleTitle}}Handler defines HTTP handlers
+// {{.ModuleTitle}}Handler adalah satu-satunya struct handler untuk sub-module ini.
+// Item baru (mode add-item) TIDAK membuat handler baru — method HTTP-nya
+// ditempelkan langsung ke struct ini di file terpisah (mis. handlers/tag_handler.go),
+// dengan nama method bersuffix nama item (ListTag, CreateTag, dst) agar tidak
+// bentrok dengan method CRUD entitas utama.
 type {{.ModuleTitle}}Handler struct {
 	service contracts.Service
 	cfg     *config.Config
@@ -1380,6 +1498,7 @@ func RegisterRoutes(e *echo.Echo, h *handlers.{{.ModuleTitle}}Handler, jwtManage
 	g.POST("", h.Create)
 	g.PUT("/:id", h.Update)
 	g.DELETE("/:id", h.Delete)
+	// GEN:ITEM_ROUTES
 }
 `
 
@@ -1439,6 +1558,7 @@ func (r *registryModule) InitRoutes(e *echo.Echo) {
 func (r *registryModule) Models() []interface{} {
 	return []interface{}{
 		&models.{{.ModuleTitle}}{},
+		// GEN:ITEM_MODELS
 	}
 }
 
@@ -1447,7 +1567,11 @@ func (r *registryModule) SeedData(db *gorm.DB) error {
 }
 
 func (r *registryModule) MigrateSQL(sqlDB *sql.DB) error {
-	return migrations.Migrate{{.ModuleTitle}}WithSQL(sqlDB)
+	if err := migrations.Migrate{{.ModuleTitle}}WithSQL(sqlDB); err != nil {
+		return err
+	}
+	// GEN:ITEM_MIGRATIONS
+	return nil
 }
 `
 
@@ -1459,7 +1583,10 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// {{.ModuleTitle}}RepositoryMock is a mock implementation of contracts.Repository
+// {{.ModuleTitle}}RepositoryMock is a mock implementation of contracts.Repository.
+// Ketika item ditambahkan (mode add-item), method mock untuk item tersebut
+// ditempelkan ke struct INI JUGA (mis. tests/mocks/tag_repository_mock.go),
+// bukan membuat mock struct baru.
 type {{.ModuleTitle}}RepositoryMock struct {
 	mock.Mock
 }
@@ -1840,6 +1967,9 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
+// {{.ModuleTitle}}ServiceTestSuite dipakai bersama oleh SELURUH item di dalam
+// sub-module ini (lihat mis. tag_service_test.go) — karena hanya ada satu
+// struct service/repository, satu suite ini sudah cukup untuk semuanya.
 type {{.ModuleTitle}}ServiceTestSuite struct {
 	suite.Suite
 	repo     *mocks.{{.ModuleTitle}}RepositoryMock
@@ -2264,7 +2394,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Delete_RepoError() {
 `
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// TEMPLATES — MODE 3 (Add Item)
+// TEMPLATES — MODE 3 (Add Item, SHARED STRUCT)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 var tmplItemContracts = `package contracts
@@ -2275,22 +2405,27 @@ import (
 	he "{{.ProjectModule}}/internal/shared/httputil"
 )
 
-// {{.ItemTitle}}Repository defines database operations for {{.ItemTitle}}
+// {{.ItemTitle}}Repository defines database operations for {{.ItemTitle}}.
+// Diimplementasikan oleh struct 'repository' yang sama dengan entitas utama
+// sub-module ini (lihat repositories/repository.go) — TIDAK ADA struct baru.
+// Method diberi suffix nama item agar tidak bentrok saat di-embed ke
+// contracts.Repository.
 type {{.ItemTitle}}Repository interface {
-	Create(m *models.{{.ItemTitle}}) error
-	GetByID(id int64) (*models.{{.ItemTitle}}, error)
-	List(page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request) ([]models.{{.ItemTitle}}, int64, error)
-	Update(m *models.{{.ItemTitle}}) error
-	Delete(id int64) error
+	Create{{.ItemTitle}}(m *models.{{.ItemTitle}}) error
+	Get{{.ItemTitle}}ByID(id int64) (*models.{{.ItemTitle}}, error)
+	List{{.ItemTitle}}(page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request) ([]models.{{.ItemTitle}}, int64, error)
+	Update{{.ItemTitle}}(m *models.{{.ItemTitle}}) error
+	Delete{{.ItemTitle}}(id int64) error
 }
 
-// {{.ItemTitle}}Service defines business logic operations for {{.ItemTitle}}
+// {{.ItemTitle}}Service defines business logic operations for {{.ItemTitle}}.
+// Diimplementasikan oleh struct 'service' yang sama dengan entitas utama.
 type {{.ItemTitle}}Service interface {
-	Create(req *dto.Create{{.ItemTitle}}Request, createdBy *int64, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error)
-	GetByID(id int64, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error)
-	List(page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request, actor he.AuthContext) ([]dto.{{.ItemTitle}}Response, int64, error)
-	Update(id int64, req *dto.Update{{.ItemTitle}}Request, updatedBy *int64, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error)
-	Delete(id int64, actor he.AuthContext) error
+	Create{{.ItemTitle}}(req *dto.Create{{.ItemTitle}}Request, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error)
+	Get{{.ItemTitle}}ByID(id int64, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error)
+	List{{.ItemTitle}}(page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request, actor he.AuthContext) ([]dto.{{.ItemTitle}}Response, int64, error)
+	Update{{.ItemTitle}}(id int64, req *dto.Update{{.ItemTitle}}Request, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error)
+	Delete{{.ItemTitle}}(id int64, actor he.AuthContext) error
 }
 `
 
@@ -2317,28 +2452,29 @@ type Filter{{.ItemTitle}}Request struct {
 var tmplItemResponse = `package dto
 
 import (
-	"{{.ProjectModule}}/internal/shared/types"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
 	he "{{.ProjectModule}}/internal/shared/httputil"
+	"{{.ProjectModule}}/internal/shared/types"
 )
 
 // {{.ItemTitle}}Response response untuk single {{.ItemTitle}}
 type {{.ItemTitle}}Response struct {
-	ID          int64        ` + "`" + `json:"id"` + "`" + `
-	Name        string       ` + "`" + `json:"name"` + "`" + `
-	Description *string      ` + "`" + `json:"description"` + "`" + `
-	CreatedBy   *he.UserData ` + "`" + `json:"created_by"` + "`" + `
-	UpdatedBy   *he.UserData ` + "`" + `json:"updated_by"` + "`" + `
-	CreatedAt   types.CustomTime    ` + "`" + `json:"created_at"` + "`" + `
-	UpdatedAt   types.CustomTime    ` + "`" + `json:"updated_at"` + "`" + `
+	ID          int64            ` + "`" + `json:"id"` + "`" + `
+	Name        string           ` + "`" + `json:"name"` + "`" + `
+	Description *string          ` + "`" + `json:"description"` + "`" + `
+	CreatedBy   *he.UserData     ` + "`" + `json:"created_by"` + "`" + `
+	UpdatedBy   *he.UserData     ` + "`" + `json:"updated_by"` + "`" + `
+	CreatedAt   types.CustomTime ` + "`" + `json:"created_at"` + "`" + `
+	UpdatedAt   types.CustomTime ` + "`" + `json:"updated_at"` + "`" + `
 }
 
 type {{.ItemTitle}}ResponseParams struct {
 	{{.ItemTitle}} *models.{{.ItemTitle}}
-	Creator         *he.UserData
-	Updater         *he.UserData
+	Creator       *he.UserData
+	Updater       *he.UserData
 }
 
+// To{{.ItemTitle}}Response mengubah model menjadi response
 func To{{.ItemTitle}}Response(params {{.ItemTitle}}ResponseParams) *{{.ItemTitle}}Response {
 	return &{{.ItemTitle}}Response{
 		ID:          params.{{.ItemTitle}}.ID,
@@ -2349,33 +2485,6 @@ func To{{.ItemTitle}}Response(params {{.ItemTitle}}ResponseParams) *{{.ItemTitle
 		CreatedAt:   types.CustomTime(params.{{.ItemTitle}}.CreatedAt),
 		UpdatedAt:   types.CustomTime(params.{{.ItemTitle}}.UpdatedAt),
 	}
-}
-
-func To{{.ItemTitle}}ListResponse(
-	items []models.{{.ItemTitle}},
-	creatorsMap map[int64]*he.UserData,
-	updatersMap map[int64]*he.UserData,
-) []{{.ItemTitle}}Response {
-	responses := make([]{{.ItemTitle}}Response, 0, len(items))
-
-	for _, m := range items {
-		var creator, updater *he.UserData
-
-		if creatorsMap != nil {
-			creator = creatorsMap[m.ID]
-		}
-		if updatersMap != nil {
-			updater = updatersMap[m.ID]
-		}
-
-		responses = append(responses, *To{{.ItemTitle}}Response({{.ItemTitle}}ResponseParams{
-			{{.ItemTitle}}: &m,
-			Creator:    creator,
-			Updater:    updater,
-		}))
-	}
-
-	return responses
 }
 `
 
@@ -2416,20 +2525,19 @@ import (
 	"gorm.io/gorm"
 )
 
-type {{.ItemName}}Repository struct {
-	db *gorm.DB
-}
-
-// New{{.ItemTitle}}Repository membuat instance repository baru
+// New{{.ItemTitle}}Repository mengembalikan struct repository yang SAMA
+// dengan repository entitas utama, dilihat sebagai contracts.{{.ItemTitle}}Repository.
+// Berguna untuk test {{.ItemTitle}} yang berdiri sendiri; di production cukup
+// pakai repo yang sudah dibuat lewat New{{.SubModuleTitle}}Repository(db).
 func New{{.ItemTitle}}Repository(db *gorm.DB) contracts.{{.ItemTitle}}Repository {
-	return &{{.ItemName}}Repository{db: db}
+	return &repository{db: db}
 }
 
-func (r *{{.ItemName}}Repository) Create(m *models.{{.ItemTitle}}) error {
+func (r *repository) Create{{.ItemTitle}}(m *models.{{.ItemTitle}}) error {
 	return r.db.Create(m).Error
 }
 
-func (r *{{.ItemName}}Repository) GetByID(id int64) (*models.{{.ItemTitle}}, error) {
+func (r *repository) Get{{.ItemTitle}}ByID(id int64) (*models.{{.ItemTitle}}, error) {
 	var m models.{{.ItemTitle}}
 	result := r.db.Where("id = ? AND deleted_at IS NULL", id).First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -2438,7 +2546,7 @@ func (r *{{.ItemName}}Repository) GetByID(id int64) (*models.{{.ItemTitle}}, err
 	return &m, result.Error
 }
 
-func (r *{{.ItemName}}Repository) List(page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request) ([]models.{{.ItemTitle}}, int64, error) {
+func (r *repository) List{{.ItemTitle}}(page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request) ([]models.{{.ItemTitle}}, int64, error) {
 	var items []models.{{.ItemTitle}}
 	var total int64
 
@@ -2456,11 +2564,11 @@ func (r *{{.ItemName}}Repository) List(page, pageSize int, filter *dto.Filter{{.
 	return items, total, nil
 }
 
-func (r *{{.ItemName}}Repository) Update(m *models.{{.ItemTitle}}) error {
+func (r *repository) Update{{.ItemTitle}}(m *models.{{.ItemTitle}}) error {
 	return r.db.Save(m).Error
 }
 
-func (r *{{.ItemName}}Repository) Delete(id int64) error {
+func (r *repository) Delete{{.ItemTitle}}(id int64) error {
 	return r.db.Where("id = ?", id).Delete(&models.{{.ItemTitle}}{}).Error
 }
 `
@@ -2468,129 +2576,224 @@ func (r *{{.ItemName}}Repository) Delete(id int64) error {
 var tmplItemService = `package services
 
 import (
-	"{{.ProjectModule}}/config"
 	"errors"
 	"net/http"
 	"time"
 
-	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/contracts"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
 	appErrors "{{.ProjectModule}}/internal/shared/errors"
 	he "{{.ProjectModule}}/internal/shared/httputil"
-
-	authContracts "{{.ProjectModule}}/internal/modules/auth/contracts"
-	rbacContracts "{{.ProjectModule}}/internal/modules/rbac/contracts"
 )
 
-type {{.ItemName}}Service struct {
-	repo     contracts.{{.ItemTitle}}Repository
-	rbacRepo rbacContracts.RBACRepository
-	authRepo authContracts.AuthRepository
-	cfg      *config.Config
-}
+// Semua method di bawah ini ditempelkan ke struct 'service' yang sama dengan
+// entitas utama (lihat services/service.go). s.repo, s.buildCreator, dan
+// s.buildAuditMaps dipakai ulang langsung — tidak perlu field/param baru.
 
-// New{{.ItemTitle}}Service membuat instance service baru
-func New{{.ItemTitle}}Service(
-	repo contracts.{{.ItemTitle}}Repository,
-	rbacRepo rbacContracts.RBACRepository,
-	authRepo authContracts.AuthRepository,
-	cfg *config.Config,
-) contracts.{{.ItemTitle}}Service {
-	return &{{.ItemName}}Service{repo: repo, rbacRepo: rbacRepo, authRepo: authRepo, cfg: cfg}
-}
-
-func (s *{{.ItemName}}Service) Create(req *dto.Create{{.ItemTitle}}Request, createdBy *int64, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error) {
+func (s *service) Create{{.ItemTitle}}(req *dto.Create{{.ItemTitle}}Request, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error) {
 	can, err := s.canCreate{{.ItemTitle}}(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
 	if !can {
-		return nil, appErrors.Wrap(http.StatusForbidden, "Akses ditolak. Anda tidak memiliki hak akses untuk membuat {{.ItemTitle}} baru.", nil)
+		return nil, appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda tidak memiliki hak akses untuk membuat {{.ItemTitle}} baru.", nil)
 	}
-	m := &models.{{.ItemTitle}}{Name: req.Name, Description: req.Description, CreatedBy: createdBy, UpdatedBy: createdBy}
-	if err := s.repo.Create(m); err != nil {
+
+	m := &models.{{.ItemTitle}}{
+		Name:        req.Name,
+		Description: req.Description,
+		CreatedBy:   &actor.UserID,
+		UpdatedBy:   &actor.UserID,
+	}
+	if err := s.repo.Create{{.ItemTitle}}(m); err != nil {
 		return nil, err
 	}
-	return dto.To{{.ItemTitle}}Response(m), nil
+
+	creator := s.buildCreator(m.CreatedBy)
+	updater := s.buildCreator(m.UpdatedBy)
+
+	return dto.To{{.ItemTitle}}Response(dto.{{.ItemTitle}}ResponseParams{
+		{{.ItemTitle}}: m,
+		Creator:       creator,
+		Updater:       updater,
+	}), nil
 }
 
-func (s *{{.ItemName}}Service) GetByID(id int64, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error) {
+func (s *service) Get{{.ItemTitle}}ByID(id int64, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error) {
 	can, err := s.canRead{{.ItemTitle}}(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
 	if !can {
-		return nil, appErrors.Wrap(http.StatusForbidden, "Akses ditolak. Anda tidak memiliki hak akses untuk melihat {{.ItemTitle}}.", nil)
+		return nil, appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda tidak memiliki hak akses untuk melihat {{.ItemTitle}}.", nil)
 	}
-	m, err := s.repo.GetByID(id)
+
+	m, err := s.repo.Get{{.ItemTitle}}ByID(id)
 	if err != nil {
 		return nil, err
 	}
 	if m == nil {
 		return nil, errors.New("{{.ItemTitle}} tidak ditemukan")
 	}
-	return dto.To{{.ItemTitle}}Response(m), nil
+
+	creator := s.buildCreator(m.CreatedBy)
+	updater := s.buildCreator(m.UpdatedBy)
+
+	return dto.To{{.ItemTitle}}Response(dto.{{.ItemTitle}}ResponseParams{
+		{{.ItemTitle}}: m,
+		Creator:       creator,
+		Updater:       updater,
+	}), nil
 }
 
-func (s *{{.ItemName}}Service) List(page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request, actor he.AuthContext) ([]dto.{{.ItemTitle}}Response, int64, error) {
+func (s *service) List{{.ItemTitle}}(page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request, actor he.AuthContext) ([]dto.{{.ItemTitle}}Response, int64, error) {
 	can, err := s.canRead{{.ItemTitle}}(actor)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal cek akses")
 	}
 	if !can {
-		return nil, 0, appErrors.Wrap(http.StatusForbidden, "Akses ditolak. Anda tidak memiliki hak akses untuk melihat daftar {{.ItemTitle}}.", nil)
+		return nil, 0, appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda tidak memiliki hak akses untuk melihat daftar {{.ItemTitle}}.", nil)
 	}
-	if page < 1 { page = 1 }
-	if pageSize < 1 || pageSize > s.cfg.DefaultPageSizeMax { pageSize = s.cfg.DefaultPageSize }
-	items, total, err := s.repo.List(page, pageSize, filter)
+
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 10
+	}
+	items, total, err := s.repo.List{{.ItemTitle}}(page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}
-	return dto.To{{.ItemTitle}}ListResponse(items), total, nil
+
+	creatorsMap, updatersMap := s.buildAuditMapsFor{{.ItemTitle}}(items)
+	return to{{.ItemTitle}}Responses(items, creatorsMap, updatersMap), total, nil
 }
 
-func (s *{{.ItemName}}Service) Update(id int64, req *dto.Update{{.ItemTitle}}Request, updatedBy *int64, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error) {
+func (s *service) Update{{.ItemTitle}}(id int64, req *dto.Update{{.ItemTitle}}Request, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error) {
 	can, err := s.canUpdate{{.ItemTitle}}(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
 	if !can {
-		return nil, appErrors.Wrap(http.StatusForbidden, "Akses ditolak. Anda tidak memiliki hak akses untuk mengubah {{.ItemTitle}}.", nil)
+		return nil, appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda tidak memiliki hak akses untuk mengubah {{.ItemTitle}}.", nil)
 	}
-	m, err := s.repo.GetByID(id)
+
+	m, err := s.repo.Get{{.ItemTitle}}ByID(id)
 	if err != nil {
 		return nil, err
 	}
 	if m == nil {
 		return nil, errors.New("{{.ItemTitle}} tidak ditemukan")
 	}
-	if req.Name != nil { m.Name = *req.Name }
-	if req.Description != nil { m.Description = req.Description }
-	m.UpdatedBy = updatedBy
+	if req.Name != nil {
+		m.Name = *req.Name
+	}
+	if req.Description != nil {
+		m.Description = req.Description
+	}
+	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()
-	if err := s.repo.Update(m); err != nil {
+
+	if err := s.repo.Update{{.ItemTitle}}(m); err != nil {
 		return nil, err
 	}
-	return dto.To{{.ItemTitle}}Response(m), nil
+
+	creator := s.buildCreator(m.CreatedBy)
+	updater := s.buildCreator(m.UpdatedBy)
+
+	return dto.To{{.ItemTitle}}Response(dto.{{.ItemTitle}}ResponseParams{
+		{{.ItemTitle}}: m,
+		Creator:       creator,
+		Updater:       updater,
+	}), nil
 }
 
-func (s *{{.ItemName}}Service) Delete(id int64, actor he.AuthContext) error {
+func (s *service) Delete{{.ItemTitle}}(id int64, actor he.AuthContext) error {
 	can, err := s.canDelete{{.ItemTitle}}(actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
 	}
 	if !can {
-		return appErrors.Wrap(http.StatusForbidden, "Akses ditolak. Anda tidak memiliki hak akses untuk menghapus {{.ItemTitle}}.", nil)
+		return appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda tidak memiliki hak akses untuk menghapus {{.ItemTitle}}.", nil)
 	}
-	m, err := s.repo.GetByID(id)
+
+	m, err := s.repo.Get{{.ItemTitle}}ByID(id)
 	if err != nil {
 		return err
 	}
 	if m == nil {
 		return errors.New("{{.ItemTitle}} tidak ditemukan")
 	}
-	return s.repo.Delete(id)
+	return s.repo.Delete{{.ItemTitle}}(id)
+}
+
+// ── helper khusus {{.ItemTitle}} (nama fungsi unik agar tidak bentrok) ───────
+
+func (s *service) buildAuditMapsFor{{.ItemTitle}}(items []models.{{.ItemTitle}}) (map[int64]*he.UserData, map[int64]*he.UserData) {
+	fetchUser := func(id int64) (*he.UserData, error) {
+		user, err := s.userRepo.GetByID(id)
+		if err != nil || user == nil {
+			return nil, err
+		}
+		return &he.UserData{ID: user.ID, Username: user.Username, Name: user.Name}, nil
+	}
+
+	creatorIDs := make(map[int64]struct{})
+	updaterIDs := make(map[int64]struct{})
+	for _, item := range items {
+		if item.CreatedBy != nil {
+			creatorIDs[*item.CreatedBy] = struct{}{}
+		}
+		if item.UpdatedBy != nil {
+			updaterIDs[*item.UpdatedBy] = struct{}{}
+		}
+	}
+
+	creatorsMap := make(map[int64]*he.UserData)
+	for id := range creatorIDs {
+		if data, err := fetchUser(id); err == nil && data != nil {
+			creatorsMap[id] = data
+		}
+	}
+
+	updatersMap := make(map[int64]*he.UserData)
+	for id := range updaterIDs {
+		if data, ok := creatorsMap[id]; ok {
+			updatersMap[id] = data
+		} else if data, err := fetchUser(id); err == nil && data != nil {
+			updatersMap[id] = data
+		}
+	}
+
+	return creatorsMap, updatersMap
+}
+
+func to{{.ItemTitle}}Responses(
+	items []models.{{.ItemTitle}},
+	creatorsMap, updatersMap map[int64]*he.UserData,
+) []dto.{{.ItemTitle}}Response {
+	responses := make([]dto.{{.ItemTitle}}Response, 0, len(items))
+	for _, item := range items {
+		var creator, updater *he.UserData
+		if item.CreatedBy != nil {
+			creator = creatorsMap[*item.CreatedBy]
+		}
+		if item.UpdatedBy != nil {
+			updater = updatersMap[*item.UpdatedBy]
+		}
+		responses = append(responses, *dto.To{{.ItemTitle}}Response(dto.{{.ItemTitle}}ResponseParams{
+			{{.ItemTitle}}: &item,
+			Creator:       creator,
+			Updater:       updater,
+		}))
+	}
+	return responses
 }
 `
 
@@ -2602,31 +2805,55 @@ import (
 	he "{{.ProjectModule}}/internal/shared/httputil"
 )
 
-func (s *{{.ItemName}}Service) canRead{{.ItemTitle}}(actor he.AuthContext) (bool, error) {
-	if actor.IsSuperadmin { return true, nil }
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyRead); err != nil || has { return has, err }
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has { return has, err }
+func (s *service) canRead{{.ItemTitle}}(actor he.AuthContext) (bool, error) {
+	if actor.IsSuperadmin {
+		return true, nil
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyRead); err != nil || has {
+		return has, err
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
+		return has, err
+	}
 	return false, nil
 }
 
-func (s *{{.ItemName}}Service) canCreate{{.ItemTitle}}(actor he.AuthContext) (bool, error) {
-	if actor.IsSuperadmin { return true, nil }
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyCreate); err != nil || has { return has, err }
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has { return has, err }
+func (s *service) canCreate{{.ItemTitle}}(actor he.AuthContext) (bool, error) {
+	if actor.IsSuperadmin {
+		return true, nil
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyCreate); err != nil || has {
+		return has, err
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
+		return has, err
+	}
 	return false, nil
 }
 
-func (s *{{.ItemName}}Service) canUpdate{{.ItemTitle}}(actor he.AuthContext) (bool, error) {
-	if actor.IsSuperadmin { return true, nil }
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyUpdate); err != nil || has { return has, err }
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has { return has, err }
+func (s *service) canUpdate{{.ItemTitle}}(actor he.AuthContext) (bool, error) {
+	if actor.IsSuperadmin {
+		return true, nil
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyUpdate); err != nil || has {
+		return has, err
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
+		return has, err
+	}
 	return false, nil
 }
 
-func (s *{{.ItemName}}Service) canDelete{{.ItemTitle}}(actor he.AuthContext) (bool, error) {
-	if actor.IsSuperadmin { return true, nil }
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyDelete); err != nil || has { return has, err }
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has { return has, err }
+func (s *service) canDelete{{.ItemTitle}}(actor he.AuthContext) (bool, error) {
+	if actor.IsSuperadmin {
+		return true, nil
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyDelete); err != nil || has {
+		return has, err
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
+		return has, err
+	}
 	return false, nil
 }
 `
@@ -2635,77 +2862,81 @@ var tmplItemHandler = `package handlers
 
 import (
 	"net/http"
-	"strconv"
 
-	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/contracts"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
+	he "{{.ProjectModule}}/internal/shared/httputil"
 	"{{.ProjectModule}}/internal/shared/response"
 	"{{.ProjectModule}}/internal/shared/validator"
-	he "{{.ProjectModule}}/internal/shared/httputil"
 
 	"github.com/labstack/echo/v5"
 )
 
-// {{.ItemTitle}}Handler defines HTTP handlers for {{.ItemTitle}}
-type {{.ItemTitle}}Handler struct {
-	service contracts.{{.ItemTitle}}Service
-}
+// Method di bawah ini ditempelkan ke struct {{.SubModuleTitle}}Handler yang
+// sama dengan handler entitas utama (lihat handlers/handler.go). Nama method
+// diberi suffix {{.ItemTitle}} agar tidak bentrok dengan List/GetByID/dst milik
+// entitas utama pada struct handler yang sama.
 
-func New{{.ItemTitle}}Handler(service contracts.{{.ItemTitle}}Service) *{{.ItemTitle}}Handler {
-	return &{{.ItemTitle}}Handler{service: service}
-}
-
-// @Summary		Get list of {{.ItemTitle}}
-// @Tags			{{.MainModule}}/{{.SubModule}}
-// @Security		BearerAuth
-// @Param			name		query		string	false	"Filter by name"
-// @Param			page		query		int		false	"Page number"
-// @Param			page_size	query		int		false	"Page size"
-// @Success		200			{object}	response.MyGoResponse{data=[]dto.{{.ItemTitle}}Response}
-// @Router			{{.URLPrefix}} [get]
-func (h *{{.ItemTitle}}Handler) List(c *echo.Context) error {
-	page, pageSize := 1, 10
+// ─── List{{.ItemTitle}} ──────────────────────────────────────────────────────
+//
+//	@Summary		Get list of {{.ItemTitle}}
+//	@Description	Get paginated list of {{.ItemTitle}}
+//	@Tags			{{.MainModule}}/{{.SubModule}}
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			name		query		string	false	"Filter by name (partial match)"
+//	@Param			page		query		int		false	"Page number"
+//	@Param			page_size	query		int		false	"Page size"
+//	@Success		200			{object}	response.MyGoResponse{data=[]dto.{{.ItemTitle}}Response}
+//	@Router			{{.URLPrefixOpenAPI}} [get]
+func (h *{{.SubModuleTitle}}Handler) List{{.ItemTitle}}(c *echo.Context) error {
 	filter := dto.Filter{{.ItemTitle}}Request{Name: c.QueryParam("name")}
-	if p := c.QueryParam("page"); p != "" {
-		if v, err := strconv.Atoi(p); err == nil && v > 0 { page = v }
-	}
-	if ps := c.QueryParam("page_size"); ps != "" {
-		if v, err := strconv.Atoi(ps); err == nil && v > 0 && v <= 100 { pageSize = v }
-	}
+	page, pageSize := he.ParsePagination(c, h.cfg)
+
 	actor := he.BuildAuthContext(c)
-	items, total, err := h.service.List(page, pageSize, &filter, actor)
+	items, total, err := h.service.List{{.ItemTitle}}(page, pageSize, &filter, actor)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
 	}
 	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data", items, total, page, pageSize)
 }
 
-// @Summary		Get {{.ItemTitle}} by ID
-// @Tags			{{.MainModule}}/{{.SubModule}}
-// @Security		BearerAuth
-// @Param			id	path		int	true	"{{.ItemTitle}} ID"
-// @Success		200	{object}	response.MyGoResponse{data=dto.{{.ItemTitle}}Response}
-// @Router			{{.URLPrefix}}/{id} [get]
-func (h *{{.ItemTitle}}Handler) GetByID(c *echo.Context) error {
+// ─── Get{{.ItemTitle}}ByID ───────────────────────────────────────────────────
+//
+//	@Summary		Get {{.ItemTitle}}
+//	@Description	Get {{.ItemTitle}} by :id
+//	@Tags			{{.MainModule}}/{{.SubModule}}
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		int	true	"{{.ItemTitle}} ID"
+//	@Success		200	{object}	response.MyGoResponse{data=dto.{{.ItemTitle}}Response}
+//	@Router			{{.URLPrefixOpenAPI}}/{id} [get]
+func (h *{{.SubModuleTitle}}Handler) Get{{.ItemTitle}}ByID(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.GetByID(id, actor)
+	item, err := h.service.Get{{.ItemTitle}}ByID(id, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
 	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", item, nil)
 }
 
-// @Summary		Create {{.ItemTitle}}
-// @Tags			{{.MainModule}}/{{.SubModule}}
-// @Security		BearerAuth
-// @Param			body	body		dto.Create{{.ItemTitle}}Request	true	"Create Request"
-// @Success		201		{object}	response.MyGoResponse{data=dto.{{.ItemTitle}}Response}
-// @Router			{{.URLPrefix}} [post]
-func (h *{{.ItemTitle}}Handler) Create(c *echo.Context) error {
+// ─── Create{{.ItemTitle}} ────────────────────────────────────────────────────
+//
+//	@Summary		Create {{.ItemTitle}}
+//	@Description	Create New {{.ItemTitle}}
+//	@Tags			{{.MainModule}}/{{.SubModule}}
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		dto.Create{{.ItemTitle}}Request	true	"Create Request"
+//	@Success		201		{object}	response.MyGoResponse{data=dto.{{.ItemTitle}}Response}
+//	@Router			{{.URLPrefixOpenAPI}} [post]
+func (h *{{.SubModuleTitle}}Handler) Create{{.ItemTitle}}(c *echo.Context) error {
 	var req dto.Create{{.ItemTitle}}Request
 	if err := c.Bind(&req); err != nil {
 		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
@@ -2714,21 +2945,26 @@ func (h *{{.ItemTitle}}Handler) Create(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.Create(&req,  actor)
+	item, err := h.service.Create{{.ItemTitle}}(&req, actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
 	return response.Response(c, http.StatusCreated, true, "Data berhasil dibuat", item, nil)
 }
 
-// @Summary		Update {{.ItemTitle}}
-// @Tags			{{.MainModule}}/{{.SubModule}}
-// @Security		BearerAuth
-// @Param			id		path		int							true	"{{.ItemTitle}} ID"
-// @Param			body	body		dto.Update{{.ItemTitle}}Request	true	"Update Request"
-// @Success		200		{object}	response.MyGoResponse{data=dto.{{.ItemTitle}}Response}
-// @Router			{{.URLPrefix}}/{id} [put]
-func (h *{{.ItemTitle}}Handler) Update(c *echo.Context) error {
+// ─── Update{{.ItemTitle}} ────────────────────────────────────────────────────
+//
+//	@Summary		Update {{.ItemTitle}}
+//	@Description	Update {{.ItemTitle}} by :id
+//	@Tags			{{.MainModule}}/{{.SubModule}}
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		int							true	"{{.ItemTitle}} ID"
+//	@Param			body	body		dto.Update{{.ItemTitle}}Request	true	"Update Request"
+//	@Success		200		{object}	response.MyGoResponse{data=dto.{{.ItemTitle}}Response}
+//	@Router			{{.URLPrefixOpenAPI}}/{id} [put]
+func (h *{{.SubModuleTitle}}Handler) Update{{.ItemTitle}}(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
@@ -2741,30 +2977,39 @@ func (h *{{.ItemTitle}}Handler) Update(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.Update(id, &req,  actor)
+	item, err := h.service.Update{{.ItemTitle}}(id, &req, actor)
 	if err != nil {
 		status := http.StatusBadRequest
-		if err.Error() == "{{.ItemTitle}} tidak ditemukan" { status = http.StatusNotFound }
+		if err.Error() == "{{.ItemTitle}} tidak ditemukan" {
+			status = http.StatusNotFound
+		}
 		return response.Response(c, status, false, err.Error(), nil, nil)
 	}
 	return response.Response(c, http.StatusOK, true, "Data berhasil diupdate", item, nil)
 }
 
-// @Summary		Delete {{.ItemTitle}}
-// @Tags			{{.MainModule}}/{{.SubModule}}
-// @Security		BearerAuth
-// @Param			id	path		int	true	"{{.ItemTitle}} ID"
-// @Success		200	{object}	response.MyGoResponse{}
-// @Router			{{.URLPrefix}}/{id} [delete]
-func (h *{{.ItemTitle}}Handler) Delete(c *echo.Context) error {
+// ─── Delete{{.ItemTitle}} ────────────────────────────────────────────────────
+//
+//	@Summary		Delete {{.ItemTitle}}
+//	@Description	Delete {{.ItemTitle}} by :id
+//	@Tags			{{.MainModule}}/{{.SubModule}}
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		int	true	"{{.ItemTitle}} ID"
+//	@Success		200	{object}	response.MyGoResponse{}
+//	@Router			{{.URLPrefixOpenAPI}}/{id} [delete]
+func (h *{{.SubModuleTitle}}Handler) Delete{{.ItemTitle}}(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	if err := h.service.Delete(id, actor); err != nil {
+	if err := h.service.Delete{{.ItemTitle}}(id, actor); err != nil {
 		status := http.StatusInternalServerError
-		if err.Error() == "{{.ItemTitle}} tidak ditemukan" { status = http.StatusNotFound }
+		if err.Error() == "{{.ItemTitle}} tidak ditemukan" {
+			status = http.StatusNotFound
+		}
 		return response.Response(c, status, false, err.Error(), nil, nil)
 	}
 	return response.Response(c, http.StatusOK, true, "Data berhasil dihapus", nil, nil)
@@ -2825,41 +3070,155 @@ CREATE TABLE IF NOT EXISTS {{.TableName}} (
 CREATE INDEX IF NOT EXISTS idx_{{.TableName}}_deleted_at ON {{.TableName}}(deleted_at);
 `
 
+var tmplItemFactory = `package factories
+
+import (
+	"fmt"
+
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
+)
+
+// {{.ItemTitle}}Factory membuat data {{.ItemTitle}} untuk testing/seeding.
+// Memakai 'rng' package-level yang sudah dideklarasikan di factory entitas
+// utama sub-module ini.
+type {{.ItemTitle}}Factory struct {
+	overrides map[string]interface{}
+}
+
+func New{{.ItemTitle}}Factory() *{{.ItemTitle}}Factory {
+	return &{{.ItemTitle}}Factory{overrides: make(map[string]interface{})}
+}
+
+func (f *{{.ItemTitle}}Factory) With(field string, value interface{}) *{{.ItemTitle}}Factory {
+	f.overrides[field] = value
+	return f
+}
+
+func (f *{{.ItemTitle}}Factory) Make() *models.{{.ItemTitle}} {
+	idx := rng.Intn(999999)
+	name := fmt.Sprintf("{{.ItemTitle}} %d", idx)
+	desc := fmt.Sprintf("Deskripsi {{.ItemTitle}} %d", idx)
+
+	if v, ok := f.overrides["name"]; ok {
+		name = v.(string)
+	}
+
+	return &models.{{.ItemTitle}}{
+		Name:        name,
+		Description: &desc,
+	}
+}
+
+func (f *{{.ItemTitle}}Factory) MakeMany(count int) []*models.{{.ItemTitle}} {
+	items := make([]*models.{{.ItemTitle}}, count)
+	for i := 0; i < count; i++ {
+		items[i] = New{{.ItemTitle}}Factory().Make()
+	}
+	return items
+}
+`
+
+var tmplItemSeeder = `package seeders
+
+import (
+	"log"
+
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/tests/factories"
+
+	"gorm.io/gorm"
+)
+
+// {{.ItemTitle}}Seeder mengelola seeding data {{.ItemTitle}}.
+// Seeder tetap punya struct sendiri per entitas (bukan digabung ke seeder
+// entitas utama), karena tidak ada interface/contract yang perlu di-embed —
+// seeder cuma dipanggil manual dari cmd/seed, tidak lewat DI seperti
+// repository/service/handler.
+type {{.ItemTitle}}Seeder struct {
+	db *gorm.DB
+}
+
+func New{{.ItemTitle}}Seeder(db *gorm.DB) *{{.ItemTitle}}Seeder {
+	return &{{.ItemTitle}}Seeder{db: db}
+}
+
+func (s *{{.ItemTitle}}Seeder) Run() error {
+	log.Println("🌱 Seeding {{.TableName}}...")
+
+	items := factories.New{{.ItemTitle}}Factory().MakeMany(10)
+	for _, item := range items {
+		if err := s.db.Create(item).Error; err != nil {
+			log.Printf("   ⚠️  Gagal membuat {{.ItemTitle}}: %v", err)
+			continue
+		}
+		log.Printf("   ✅ {{.ItemTitle}} '%s' dibuat.", item.Name)
+	}
+
+	log.Println("✅ {{.TableName}} seeding selesai!")
+	return nil
+}
+
+func (s *{{.ItemTitle}}Seeder) Fresh() error {
+	log.Println("🗑️  Menghapus semua data {{.TableName}}...")
+	if err := s.db.Exec("DELETE FROM {{.TableName}}").Error; err != nil {
+		return err
+	}
+	if err := s.db.Exec("ALTER SEQUENCE {{.TableName}}_id_seq RESTART WITH 1").Error; err != nil {
+		log.Printf("Warning: Gagal reset sequence: %v", err)
+	}
+	return s.Run()
+}
+
+func (s *{{.ItemTitle}}Seeder) seedDefault(name string) error {
+	var count int64
+	s.db.Model(&models.{{.ItemTitle}}{}).Where("name = ?", name).Count(&count)
+	if count > 0 {
+		log.Printf("   ⏭️  '%s' sudah ada, skip.", name)
+		return nil
+	}
+	item := factories.New{{.ItemTitle}}Factory().With("name", name).Make()
+	if err := s.db.Create(item).Error; err != nil {
+		return err
+	}
+	log.Printf("   ✅ '%s' dibuat.", name)
+	return nil
+}
+`
+
 var tmplItemRepositoryMock = `package mocks
 
 import (
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
-	"github.com/stretchr/testify/mock"
 )
 
-// {{.ItemTitle}}RepositoryMock is a mock implementation of contracts.{{.ItemTitle}}Repository
-type {{.ItemTitle}}RepositoryMock struct {
-	mock.Mock
-}
+// Method di bawah ini ditempelkan ke {{.SubModuleTitle}}RepositoryMock yang
+// sama dengan mock entitas utama (lihat tests/mocks/{{.SubModule}}_repository_mock.go).
 
-func (m *{{.ItemTitle}}RepositoryMock) Create(item *models.{{.ItemTitle}}) error {
+func (m *{{.SubModuleTitle}}RepositoryMock) Create{{.ItemTitle}}(item *models.{{.ItemTitle}}) error {
 	args := m.Called(item)
 	return args.Error(0)
 }
 
-func (m *{{.ItemTitle}}RepositoryMock) GetByID(id int64) (*models.{{.ItemTitle}}, error) {
+func (m *{{.SubModuleTitle}}RepositoryMock) Get{{.ItemTitle}}ByID(id int64) (*models.{{.ItemTitle}}, error) {
 	args := m.Called(id)
-	if args.Get(0) == nil { return nil, args.Error(1) }
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
 	return args.Get(0).(*models.{{.ItemTitle}}), args.Error(1)
 }
 
-func (m *{{.ItemTitle}}RepositoryMock) List(page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request) ([]models.{{.ItemTitle}}, int64, error) {
+func (m *{{.SubModuleTitle}}RepositoryMock) List{{.ItemTitle}}(page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request) ([]models.{{.ItemTitle}}, int64, error) {
 	args := m.Called(page, pageSize, filter)
 	return args.Get(0).([]models.{{.ItemTitle}}), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *{{.ItemTitle}}RepositoryMock) Update(item *models.{{.ItemTitle}}) error {
+func (m *{{.SubModuleTitle}}RepositoryMock) Update{{.ItemTitle}}(item *models.{{.ItemTitle}}) error {
 	args := m.Called(item)
 	return args.Error(0)
 }
 
-func (m *{{.ItemTitle}}RepositoryMock) Delete(id int64) error {
+func (m *{{.SubModuleTitle}}RepositoryMock) Delete{{.ItemTitle}}(id int64) error {
 	args := m.Called(id)
 	return args.Error(0)
 }
@@ -2870,86 +3229,41 @@ var tmplItemServiceTest = `package tests
 import (
 	"fmt"
 	"net/http"
-	"testing"
 
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/suite"
 
-	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/contracts"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
-	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/services"
-	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/tests/mocks"
-	"{{.ProjectModule}}/config"
-	rbacModels "{{.ProjectModule}}/internal/modules/rbac/models"
+	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/tests/factories"
+
 	appErrors "{{.ProjectModule}}/internal/shared/errors"
-	he "{{.ProjectModule}}/internal/shared/httputil"
 )
 
-type {{.ItemTitle}}ServiceTestSuite struct {
-	suite.Suite
-	repo     *mocks.{{.ItemTitle}}RepositoryMock
-	rbacRepo *mocks.RBACRepositoryMock
-	authRepo *mocks.AuthRepositoryMock
-	svc      contracts.{{.ItemTitle}}Service
-}
+// Catatan: suite {{.SubModuleTitle}}ServiceTestSuite, TestMain, dan helper
+// (superadminActor, regularActor, mockNoPermissions, dst) sudah didefinisikan
+// di {{.SubModule}}_service_test.go. File ini HANYA menambah skenario test untuk
+// {{.ItemTitle}}, memakai s.svc / s.repo yang SAMA (satu service & repository
+// untuk seluruh sub-module {{.SubModule}}).
 
-func (s *{{.ItemTitle}}ServiceTestSuite) SetupTest() {
-	s.repo     = new(mocks.{{.ItemTitle}}RepositoryMock)
-	s.rbacRepo = new(mocks.RBACRepositoryMock)
-	s.authRepo = new(mocks.AuthRepositoryMock)
-	s.cfg      = &config.Config{DefaultPageSize: 10, DefaultPageSizeMax: 100}
-	s.svc = services.New{{.ItemTitle}}Service(s.repo, s.rbacRepo, s.authRepo, s.cfg)
-}
-
-func Test{{.ItemTitle}}Service(t *testing.T) {
-	suite.Run(t, new({{.ItemTitle}}ServiceTestSuite))
-}
-
-func (s *{{.ItemTitle}}ServiceTestSuite) superadminActor() he.AuthContext {
-	return he.AuthContext{UserID: 1, IsSuperadmin: true}
-}
-
-func (s *{{.ItemTitle}}ServiceTestSuite) regularActor() he.AuthContext {
-	return he.AuthContext{UserID: 2, IsSuperadmin: false}
-}
-
-func (s *{{.ItemTitle}}ServiceTestSuite) mockNoPermissions() {
-	s.rbacRepo.On("HasPermission", int64(2), mock.Anything).Return(false, nil)
-}
-
-func (s *{{.ItemTitle}}ServiceTestSuite) Test_Create_Superadmin_Success() {
-	actor := s.superadminActor()
+func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_Create{{.ItemTitle}}_Superadmin_Success() {
 	req := &dto.Create{{.ItemTitle}}Request{Name: "Test {{.ItemTitle}}"}
+	actor := superadminActor()
 
-	s.repo.On("Create", mock.AnythingOfType("*models.{{.ItemTitle}}")).Return(nil)
+	s.repo.On("Create{{.ItemTitle}}", mock.AnythingOfType("*models.{{.ItemTitle}}")).Return(nil)
 
-	result, err := s.svc.Create(req, &actor.UserID, actor)
+	result, err := s.svc.Create{{.ItemTitle}}(req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 	s.Equal(req.Name, result.Name)
 }
 
-func (s *{{.ItemTitle}}ServiceTestSuite) Test_Create_WithPermission_Success() {
-	actor := s.regularActor()
+func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_Create{{.ItemTitle}}_Forbidden() {
 	req := &dto.Create{{.ItemTitle}}Request{Name: "Test"}
-
-	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(true, nil)
-	s.repo.On("Create", mock.AnythingOfType("*models.{{.ItemTitle}}")).Return(nil)
-
-	result, err := s.svc.Create(req, &actor.UserID, actor)
-
-	s.NoError(err)
-	s.NotNil(result)
-}
-
-func (s *{{.ItemTitle}}ServiceTestSuite) Test_Create_Forbidden() {
-	actor := s.regularActor()
-	req := &dto.Create{{.ItemTitle}}Request{Name: "Test"}
+	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.Create(req, &actor.UserID, actor)
+	result, err := s.svc.Create{{.ItemTitle}}(req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -2958,182 +3272,159 @@ func (s *{{.ItemTitle}}ServiceTestSuite) Test_Create_Forbidden() {
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *{{.ItemTitle}}ServiceTestSuite) Test_Create_RepoError() {
-	actor := s.superadminActor()
+func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_Create{{.ItemTitle}}_RepoError() {
 	req := &dto.Create{{.ItemTitle}}Request{Name: "Test"}
+	actor := superadminActor()
 
-	s.repo.On("Create", mock.AnythingOfType("*models.{{.ItemTitle}}")).Return(fmt.Errorf("db error"))
+	s.repo.On("Create{{.ItemTitle}}", mock.AnythingOfType("*models.{{.ItemTitle}}")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.Create(req, &actor.UserID, actor)
+	result, err := s.svc.Create{{.ItemTitle}}(req, actor)
 
 	s.Nil(result)
 	s.Error(err)
 }
 
-func (s *{{.ItemTitle}}ServiceTestSuite) Test_GetByID_Superadmin_Success() {
-	actor := s.superadminActor()
-	item := &models.{{.ItemTitle}}{ID: 1, Name: "Test"}
+func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_Get{{.ItemTitle}}ByID_Success() {
+	actor := superadminActor()
+	item := factories.New{{.ItemTitle}}Factory().Make()
+	item.ID = 1
 
-	s.repo.On("GetByID", int64(1)).Return(item, nil)
+	s.repo.On("Get{{.ItemTitle}}ByID", int64(1)).Return(item, nil)
 
-	result, err := s.svc.GetByID(1, actor)
+	result, err := s.svc.Get{{.ItemTitle}}ByID(1, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
-	s.Equal(int64(1), result.ID)
+	s.Equal(item.ID, result.ID)
 }
 
-func (s *{{.ItemTitle}}ServiceTestSuite) Test_GetByID_NotFound() {
-	actor := s.superadminActor()
+func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_Get{{.ItemTitle}}ByID_NotFound() {
+	actor := superadminActor()
 
-	s.repo.On("GetByID", int64(999)).Return(nil, nil)
+	s.repo.On("Get{{.ItemTitle}}ByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.GetByID(999, actor)
+	result, err := s.svc.Get{{.ItemTitle}}ByID(999, actor)
 
 	s.Nil(result)
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
 }
 
-func (s *{{.ItemTitle}}ServiceTestSuite) Test_GetByID_Forbidden() {
-	actor := s.regularActor()
+func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_Get{{.ItemTitle}}ByID_Forbidden() {
+	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.GetByID(1, actor)
+	result, err := s.svc.Get{{.ItemTitle}}ByID(1, actor)
 
 	s.Nil(result)
 	s.Error(err)
-	var appErr *appErrors.AppError
-	s.ErrorAs(err, &appErr)
-	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *{{.ItemTitle}}ServiceTestSuite) Test_List_Superadmin_Success() {
-	actor := s.superadminActor()
+func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_List{{.ItemTitle}}_Success() {
+	actor := superadminActor()
 	filter := &dto.Filter{{.ItemTitle}}Request{}
-	itemA := models.{{.ItemTitle}}{ID: 1, Name: "A"}
-	itemB := models.{{.ItemTitle}}{ID: 2, Name: "B"}
-	items := []models.{{.ItemTitle}}{itemA, itemB}
+	items := []models.{{.ItemTitle}}{
+		*factories.New{{.ItemTitle}}Factory().Make(),
+		*factories.New{{.ItemTitle}}Factory().Make(),
+	}
 
-	s.repo.On("List", 1, 10, filter).Return(items, int64(2), nil)
+	s.repo.On("List{{.ItemTitle}}", 1, 10, filter).Return(items, int64(2), nil)
 
-	result, total, err := s.svc.List(1, 10, filter, actor)
+	result, total, err := s.svc.List{{.ItemTitle}}(1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(2), total)
 	s.Len(result, 2)
 }
 
-func (s *{{.ItemTitle}}ServiceTestSuite) Test_List_DefaultPagination() {
-	actor := s.superadminActor()
-	filter := &dto.Filter{{.ItemTitle}}Request{}
-
-	s.repo.On("List", 1, 10, filter).Return([]models.{{.ItemTitle}}{}, int64(0), nil)
-
-	_, _, err := s.svc.List(0, 999, filter, actor)
-
-	s.NoError(err)
-	s.repo.AssertCalled(s.T(), "List", 1, 10, filter)
-}
-
-func (s *{{.ItemTitle}}ServiceTestSuite) Test_List_Forbidden() {
-	actor := s.regularActor()
+func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_List{{.ItemTitle}}_Forbidden() {
+	actor := regularActor()
 	filter := &dto.Filter{{.ItemTitle}}Request{}
 	s.mockNoPermissions()
 
-	result, total, err := s.svc.List(1, 10, filter, actor)
+	result, total, err := s.svc.List{{.ItemTitle}}(1, 10, filter, actor)
 
 	s.Nil(result)
 	s.Equal(int64(0), total)
 	s.Error(err)
+	var appErr *appErrors.AppError
+	s.ErrorAs(err, &appErr)
+	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *{{.ItemTitle}}ServiceTestSuite) Test_Update_Superadmin_Success() {
-	actor := s.superadminActor()
-	existing := &models.{{.ItemTitle}}{ID: 1, Name: "Old"}
-	newName := "New Name"
+func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_Update{{.ItemTitle}}_Success() {
+	actor := superadminActor()
+	existing := factories.New{{.ItemTitle}}Factory().Make()
+	existing.ID = 1
+	newName := "Updated Name"
 	req := &dto.Update{{.ItemTitle}}Request{Name: &newName}
 
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Update", mock.AnythingOfType("*models.{{.ItemTitle}}")).Return(nil)
+	s.repo.On("Get{{.ItemTitle}}ByID", int64(1)).Return(existing, nil)
+	s.repo.On("Update{{.ItemTitle}}", mock.AnythingOfType("*models.{{.ItemTitle}}")).Return(nil)
 
-	result, err := s.svc.Update(1, req, &actor.UserID, actor)
+	result, err := s.svc.Update{{.ItemTitle}}(1, req, actor)
 
 	s.NoError(err)
 	s.Equal(newName, result.Name)
 }
 
-func (s *{{.ItemTitle}}ServiceTestSuite) Test_Update_NotFound() {
-	actor := s.superadminActor()
+func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_Update{{.ItemTitle}}_NotFound() {
+	actor := superadminActor()
 	req := &dto.Update{{.ItemTitle}}Request{}
 
-	s.repo.On("GetByID", int64(999)).Return(nil, nil)
+	s.repo.On("Get{{.ItemTitle}}ByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.Update(999, req, &actor.UserID, actor)
+	result, err := s.svc.Update{{.ItemTitle}}(999, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
 }
 
-func (s *{{.ItemTitle}}ServiceTestSuite) Test_Update_Forbidden() {
-	actor := s.regularActor()
+func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_Update{{.ItemTitle}}_Forbidden() {
+	actor := regularActor()
 	req := &dto.Update{{.ItemTitle}}Request{}
 	s.mockNoPermissions()
 
-	result, err := s.svc.Update(1, req, &actor.UserID, actor)
+	result, err := s.svc.Update{{.ItemTitle}}(1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
-	var appErr *appErrors.AppError
-	s.ErrorAs(err, &appErr)
-	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *{{.ItemTitle}}ServiceTestSuite) Test_Delete_Superadmin_Success() {
-	actor := s.superadminActor()
-	existing := &models.{{.ItemTitle}}{ID: 1, Name: "Test"}
+func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_Delete{{.ItemTitle}}_Success() {
+	actor := superadminActor()
+	existing := factories.New{{.ItemTitle}}Factory().Make()
+	existing.ID = 1
 
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Delete", int64(1)).Return(nil)
+	s.repo.On("Get{{.ItemTitle}}ByID", int64(1)).Return(existing, nil)
+	s.repo.On("Delete{{.ItemTitle}}", int64(1)).Return(nil)
 
-	err := s.svc.Delete(1, actor)
+	err := s.svc.Delete{{.ItemTitle}}(1, actor)
 
 	s.NoError(err)
 }
 
-func (s *{{.ItemTitle}}ServiceTestSuite) Test_Delete_NotFound() {
-	actor := s.superadminActor()
+func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_Delete{{.ItemTitle}}_NotFound() {
+	actor := superadminActor()
 
-	s.repo.On("GetByID", int64(999)).Return(nil, nil)
+	s.repo.On("Get{{.ItemTitle}}ByID", int64(999)).Return(nil, nil)
 
-	err := s.svc.Delete(999, actor)
+	err := s.svc.Delete{{.ItemTitle}}(999, actor)
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
 }
 
-func (s *{{.ItemTitle}}ServiceTestSuite) Test_Delete_Forbidden() {
-	actor := s.regularActor()
+func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_Delete{{.ItemTitle}}_Forbidden() {
+	actor := regularActor()
 	s.mockNoPermissions()
 
-	err := s.svc.Delete(1, actor)
+	err := s.svc.Delete{{.ItemTitle}}(1, actor)
 
 	s.Error(err)
 	var appErr *appErrors.AppError
 	s.ErrorAs(err, &appErr)
 	s.Equal(http.StatusForbidden, appErr.Code)
-}
-
-func (s *{{.ItemTitle}}ServiceTestSuite) Test_Delete_RepoError() {
-	actor := s.superadminActor()
-	existing := &models.{{.ItemTitle}}{ID: 1, Name: "Test"}
-
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Delete", int64(1)).Return(fmt.Errorf("db error"))
-
-	err := s.svc.Delete(1, actor)
-
-	s.Error(err)
 }
 `

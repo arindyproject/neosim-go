@@ -30,14 +30,14 @@ func (s *service) Create(req *dto.CreateArtikelKategoriRequest, actor he.AuthCon
 	if err := s.repo.Create(m); err != nil {
 		return nil, err
 	}
-
+	
 	creator := s.buildCreator(m.CreatedBy)
 	updater := s.buildCreator(m.UpdatedBy)
 
 	return dto.ToArtikelKategoriResponse(dto.ArtikelKategoriResponseParams{
 		ArtikelKategori: m,
-		Creator:         creator,
-		Updater:         updater,
+		Creator:    creator,
+		Updater:    updater,
 	}), nil
 }
 
@@ -58,14 +58,14 @@ func (s *service) GetByID(id int64, actor he.AuthContext) (*dto.ArtikelKategoriR
 	if m == nil {
 		return nil, errors.New("ArtikelKategori tidak ditemukan")
 	}
-
+	
 	creator := s.buildCreator(m.CreatedBy)
 	updater := s.buildCreator(m.UpdatedBy)
 
 	return dto.ToArtikelKategoriResponse(dto.ArtikelKategoriResponseParams{
 		ArtikelKategori: m,
-		Creator:         creator,
-		Updater:         updater,
+		Creator:    creator,
+		Updater:    updater,
 	}), nil
 }
 
@@ -123,14 +123,14 @@ func (s *service) Update(id int64, req *dto.UpdateArtikelKategoriRequest, actor 
 	if err := s.repo.Update(m); err != nil {
 		return nil, err
 	}
-
+	
 	creator := s.buildCreator(m.CreatedBy)
 	updater := s.buildCreator(m.UpdatedBy)
 
 	return dto.ToArtikelKategoriResponse(dto.ArtikelKategoriResponseParams{
 		ArtikelKategori: m,
-		Creator:         creator,
-		Updater:         updater,
+		Creator:    creator,
+		Updater:    updater,
 	}), nil
 }
 

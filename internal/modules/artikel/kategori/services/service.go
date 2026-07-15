@@ -12,6 +12,12 @@ import (
 	he "neosim_go/internal/shared/httputil"
 )
 
+// service adalah satu-satunya struct service untuk sub-module ini.
+// Item baru (mode add-item) TIDAK membuat struct service baru — method
+// CRUD & permission-nya ditempelkan langsung ke struct ini (mis.
+// services/tag_service.go, services/tag_permission.go), dan repo field
+// di bawah ini otomatis mencakup method item begitu contracts.Repository
+// di-embed dengan interface repository item (lihat contracts/interfaces.go).
 type service struct {
 	repo     kategoriContracts.Repository
 	rbacRepo rbacContracts.RBACRepository

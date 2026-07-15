@@ -6,7 +6,10 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// ArtikelKategoriRepositoryMock is a mock implementation of contracts.Repository
+// ArtikelKategoriRepositoryMock is a mock implementation of contracts.Repository.
+// Ketika item ditambahkan (mode add-item), method mock untuk item tersebut
+// ditempelkan ke struct INI JUGA (mis. tests/mocks/tag_repository_mock.go),
+// bukan membuat mock struct baru.
 type ArtikelKategoriRepositoryMock struct {
 	mock.Mock
 }

@@ -19,6 +19,10 @@ import (
 	masterDepartemen "neosim_go/internal/modules/master/departemen/tests/seeders"
 	masterMaster "neosim_go/internal/modules/master/master/tests/seeders"
 
+	// Kepegawaian----------------------------------------------------------
+	masterKepegawaianPegawai "neosim_go/internal/modules/kepegawaian/pegawai/tests/seeders"
+
+	// Artikel---------------------------------------------------------------
 	masterArtikel "neosim_go/internal/modules/artikel/artikel/tests/seeders"
 	masterArtikelKategori "neosim_go/internal/modules/artikel/kategori/tests/seeders"
 	// =====================================================================
@@ -116,6 +120,18 @@ func main() {
 		}
 	} //------Departemen----------------------------------------------------
 
+	//------Kepegawaian-----------------------------------------------------
+	masterKepegawaianPegawaiSeeder := masterKepegawaianPegawai.NewKepegawaianPegawaiSeeder(db)
+	if *fresh {
+		if err := masterKepegawaianPegawaiSeeder.Fresh(); err != nil {
+			log.Fatal("Gagal fresh seed Pegawai:", err)
+		}
+	} else {
+		if err := masterKepegawaianPegawaiSeeder.Run(); err != nil {
+			log.Fatal("Gagal seed Pegawai:", err)
+		}
+	} //------Kepegawaian----------------------------------------------------
+
 	// =====================================================================
 
 	//------Artikel----------------------------------------------------
@@ -137,6 +153,16 @@ func main() {
 	} else {
 		if err := masterArtikelKategoris.Run(); err != nil {
 			log.Fatal("Gagal seed Artikel Kategori:", err)
+		}
+	}
+	masterArtikelTags := masterArtikelKategori.NewTagSeeder(db)
+	if *fresh {
+		if err := masterArtikelTags.Fresh(); err != nil {
+			log.Fatal("Gagal fresh seed Artikel Tag:", err)
+		}
+	} else {
+		if err := masterArtikelTags.Run(); err != nil {
+			log.Fatal("Gagal seed Artikel Tag:", err)
 		}
 	}
 	//------Artikel----------------------------------------------------

@@ -4,6 +4,7 @@ package repositories
 import (
 	"context"
 	"errors"
+	"sync"
 	"time"
 
 	"gorm.io/gorm"
@@ -51,6 +52,55 @@ func (r *repository) FindByID(ctx context.Context, id int64) (*models.Kepegawaia
 		return nil, nil
 	}
 	return &identifier, err
+}
+
+func (r *repository) FindAll2(
+	ctx context.Context,
+	filter dto.FilterKepegawaianIdentifierRequest,
+	page, limit int,
+) ([]models.KepegawaianIdentifier, int64, error) {
+	var (
+		items    []models.KepegawaianIdentifier
+		total    int64
+		countErr error
+		findErr  error
+	)
+
+	baseQuery := func() *gorm.DB {
+		q := r.db.WithContext(ctx).
+			Model(&models.KepegawaianIdentifier{}).
+			Where("deleted_at IS NULL")
+		return applyIdentifierFilter(q, filter)
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+		countErr = baseQuery().Count(&total).Error
+	}()
+
+	go func() {
+		defer wg.Done()
+		offset := (page - 1) * limit
+		findErr = baseQuery().
+			Order("created_at DESC").
+			Offset(offset).
+			Limit(limit).
+			Find(&items).Error
+	}()
+
+	wg.Wait()
+
+	if countErr != nil {
+		return nil, 0, countErr
+	}
+	if findErr != nil {
+		return nil, 0, findErr
+	}
+
+	return items, total, nil
 }
 
 func (r *repository) FindAll(

@@ -28,11 +28,12 @@ import (
 	"neosim_go/config"
 	"neosim_go/internal/apps"
 
+	httpSwagger "github.com/swaggo/http-swagger/v2"
+
 	appErrors "neosim_go/internal/shared/errors"
 	"neosim_go/internal/shared/logger"
 	"neosim_go/internal/shared/utils"
 
-	echoSwagger "github.com/swaggo/echo-swagger/v2"
 	// Import docs yang di-generate swag
 	_ "neosim_go/docs"
 
@@ -110,7 +111,11 @@ func main() {
 	// 8. Swagger UI (DEV only)
 	if cfg.Env == "development" {
 		// Swagger UI tersedia di /swagger/index.html
-		e.GET("/swagger/*", echoSwagger.WrapHandler)
+		e.GET("/swagger/*", echo.WrapHandler(httpSwagger.Handler(
+			httpSwagger.UIConfig(map[string]string{
+				"displayRequestDuration": "true",
+			}),
+		)))
 	}
 
 	// Debug: uncomment untuk cek routes terdaftar

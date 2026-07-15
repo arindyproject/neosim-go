@@ -54,6 +54,7 @@ func (r *registryModule) InitRoutes(e *echo.Echo) {
 func (r *registryModule) Models() []interface{} {
 	return []interface{}{
 		&models.Artikel{},
+		// GEN:ITEM_MODELS
 	}
 }
 
@@ -62,5 +63,9 @@ func (r *registryModule) SeedData(db *gorm.DB) error {
 }
 
 func (r *registryModule) MigrateSQL(sqlDB *sql.DB) error {
-	return migrations.MigrateArtikelWithSQL(sqlDB)
+	if err := migrations.MigrateArtikelWithSQL(sqlDB); err != nil {
+		return err
+	}
+	// GEN:ITEM_MIGRATIONS
+	return nil
 }

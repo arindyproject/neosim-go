@@ -6,30 +6,54 @@ import (
 	he "neosim_go/internal/shared/httputil"
 )
 
-func (s *tagService) canReadTag(actor he.AuthContext) (bool, error) {
-	if actor.IsSuperadmin { return true, nil }
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyRead); err != nil || has { return has, err }
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has { return has, err }
+func (s *service) canReadTag(actor he.AuthContext) (bool, error) {
+	if actor.IsSuperadmin {
+		return true, nil
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyRead); err != nil || has {
+		return has, err
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
+		return has, err
+	}
 	return false, nil
 }
 
-func (s *tagService) canCreateTag(actor he.AuthContext) (bool, error) {
-	if actor.IsSuperadmin { return true, nil }
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyCreate); err != nil || has { return has, err }
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has { return has, err }
+func (s *service) canCreateTag(actor he.AuthContext) (bool, error) {
+	if actor.IsSuperadmin {
+		return true, nil
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyCreate); err != nil || has {
+		return has, err
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
+		return has, err
+	}
 	return false, nil
 }
 
-func (s *tagService) canUpdateTag(actor he.AuthContext) (bool, error) {
-	if actor.IsSuperadmin { return true, nil }
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyUpdate); err != nil || has { return has, err }
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has { return has, err }
+func (s *service) canUpdateTag(actor he.AuthContext) (bool, error) {
+	if actor.IsSuperadmin {
+		return true, nil
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyUpdate); err != nil || has {
+		return has, err
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
+		return has, err
+	}
 	return false, nil
 }
 
-func (s *tagService) canDeleteTag(actor he.AuthContext) (bool, error) {
-	if actor.IsSuperadmin { return true, nil }
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyDelete); err != nil || has { return has, err }
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has { return has, err }
+func (s *service) canDeleteTag(actor he.AuthContext) (bool, error) {
+	if actor.IsSuperadmin {
+		return true, nil
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyDelete); err != nil || has {
+		return has, err
+	}
+	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
+		return has, err
+	}
 	return false, nil
 }

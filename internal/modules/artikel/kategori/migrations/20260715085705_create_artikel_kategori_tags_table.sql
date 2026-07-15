@@ -1,5 +1,5 @@
 -- Migration: Create artikel_kategori_tags table
--- Timestamp: 20260706082728
+-- Timestamp: 20260715085705
 
 CREATE TABLE IF NOT EXISTS artikel_kategori_tags (
     id          BIGSERIAL    PRIMARY KEY,

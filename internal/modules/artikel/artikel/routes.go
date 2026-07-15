@@ -17,4 +17,5 @@ func RegisterRoutes(e *echo.Echo, h *handlers.ArtikelHandler, jwtManager *utils.
 	g.POST("", h.Create)
 	g.PUT("/:id", h.Update)
 	g.DELETE("/:id", h.Delete)
+	// GEN:ITEM_ROUTES
 }

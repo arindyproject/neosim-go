@@ -13,6 +13,7 @@ type Repository interface {
 	List(page, pageSize int, filter *dto.FilterArtikelRequest) ([]models.Artikel, int64, error)
 	Update(m *models.Artikel) error
 	Delete(id int64) error
+	// GEN:ITEM_REPOSITORY_INTERFACE
 }
 
 // Service defines business logic operations
@@ -22,4 +23,5 @@ type Service interface {
 	List(page, pageSize int, filter *dto.FilterArtikelRequest, actor he.AuthContext) ([]dto.ArtikelResponse, int64, error)
 	Update(id int64, req *dto.UpdateArtikelRequest, actor he.AuthContext) (*dto.ArtikelResponse, error)
 	Delete(id int64, actor he.AuthContext) error
+	// GEN:ITEM_SERVICE_INTERFACE
 }

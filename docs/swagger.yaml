@@ -389,6 +389,18 @@ definitions:
     - display_name
     - name
     type: object
+  dto.CreateTagRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
   dto.CreateUserRequest:
     properties:
       email:
@@ -960,6 +972,23 @@ definitions:
       name:
         type: string
     type: object
+  dto.TagResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        $ref: '#/definitions/httputil.UserData'
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        $ref: '#/definitions/httputil.UserData'
+    type: object
   dto.TokenResponse:
     properties:
       access_token:
@@ -1213,6 +1242,16 @@ definitions:
         type: array
     required:
     - settings
+    type: object
+  dto.UpdateTagRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
     type: object
   dto.UpdateUserRequest:
     properties:
@@ -1698,6 +1737,154 @@ paths:
       security:
       - BearerAuth: []
       summary: Update ArtikelKategori
+      tags:
+      - artikel/kategori
+  /artikel/kategori/tags:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of Tag
+      parameters:
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.TagResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Tag
+      tags:
+      - artikel/kategori
+    post:
+      consumes:
+      - application/json
+      description: Create New Tag
+      parameters:
+      - description: Create Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateTagRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.TagResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create Tag
+      tags:
+      - artikel/kategori
+  /artikel/kategori/tags/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Tag by :id
+      parameters:
+      - description: Tag ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete Tag
+      tags:
+      - artikel/kategori
+    get:
+      consumes:
+      - application/json
+      description: Get Tag by :id
+      parameters:
+      - description: Tag ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.TagResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get Tag
+      tags:
+      - artikel/kategori
+    put:
+      consumes:
+      - application/json
+      description: Update Tag by :id
+      parameters:
+      - description: Tag ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateTagRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.TagResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update Tag
       tags:
       - artikel/kategori
   /auth/forgot-password:

@@ -17,4 +17,11 @@ func RegisterRoutes(e *echo.Echo, h *handlers.ArtikelKategoriHandler, jwtManager
 	g.POST("", h.Create)
 	g.PUT("/:id", h.Update)
 	g.DELETE("/:id", h.Delete)
+	gTag := e.Group("/api/v1/artikel/kategori/tags", jwt)
+	gTag.GET("", h.ListTag)
+	gTag.GET("/:id", h.GetTagByID)
+	gTag.POST("", h.CreateTag)
+	gTag.PUT("/:id", h.UpdateTag)
+	gTag.DELETE("/:id", h.DeleteTag)
+	// GEN:ITEM_ROUTES
 }

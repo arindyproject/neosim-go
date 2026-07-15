@@ -48,12 +48,14 @@ func (r *registryModule) InitRoutes(e *echo.Echo) {
 		r.cfg.JWTRefreshTokenExpDays,
 	)
 	userRepo := userRepositories.NewRepository(r.db)
-	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo, userRepo, r.cfg).InitRoutes(e)
+	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo,userRepo, r.cfg).InitRoutes(e)
 }
 
 func (r *registryModule) Models() []interface{} {
 	return []interface{}{
 		&models.ArtikelKategori{},
+		&models.Tag{},
+		// GEN:ITEM_MODELS
 	}
 }
 
@@ -62,5 +64,12 @@ func (r *registryModule) SeedData(db *gorm.DB) error {
 }
 
 func (r *registryModule) MigrateSQL(sqlDB *sql.DB) error {
-	return migrations.MigrateArtikelKategoriWithSQL(sqlDB)
+	if err := migrations.MigrateArtikelKategoriWithSQL(sqlDB); err != nil {
+		return err
+	}
+	if err := migrations.MigrateTagWithSQL(sqlDB); err != nil {
+		return err
+	}
+	// GEN:ITEM_MIGRATIONS
+	return nil
 }

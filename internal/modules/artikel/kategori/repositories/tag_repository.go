@@ -10,20 +10,19 @@ import (
 	"gorm.io/gorm"
 )
 
-type tagRepository struct {
-	db *gorm.DB
-}
-
-// NewTagRepository membuat instance repository baru
+// NewTagRepository mengembalikan struct repository yang SAMA
+// dengan repository entitas utama, dilihat sebagai contracts.TagRepository.
+// Berguna untuk test Tag yang berdiri sendiri; di production cukup
+// pakai repo yang sudah dibuat lewat NewArtikelKategoriRepository(db).
 func NewTagRepository(db *gorm.DB) contracts.TagRepository {
-	return &tagRepository{db: db}
+	return &repository{db: db}
 }
 
-func (r *tagRepository) Create(m *models.Tag) error {
+func (r *repository) CreateTag(m *models.Tag) error {
 	return r.db.Create(m).Error
 }
 
-func (r *tagRepository) GetByID(id int64) (*models.Tag, error) {
+func (r *repository) GetTagByID(id int64) (*models.Tag, error) {
 	var m models.Tag
 	result := r.db.Where("id = ? AND deleted_at IS NULL", id).First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -32,7 +31,7 @@ func (r *tagRepository) GetByID(id int64) (*models.Tag, error) {
 	return &m, result.Error
 }
 
-func (r *tagRepository) List(page, pageSize int, filter *dto.FilterTagRequest) ([]models.Tag, int64, error) {
+func (r *repository) ListTag(page, pageSize int, filter *dto.FilterTagRequest) ([]models.Tag, int64, error) {
 	var items []models.Tag
 	var total int64
 
@@ -50,10 +49,10 @@ func (r *tagRepository) List(page, pageSize int, filter *dto.FilterTagRequest) (
 	return items, total, nil
 }
 
-func (r *tagRepository) Update(m *models.Tag) error {
+func (r *repository) UpdateTag(m *models.Tag) error {
 	return r.db.Save(m).Error
 }
 
-func (r *tagRepository) Delete(id int64) error {
+func (r *repository) DeleteTag(id int64) error {
 	return r.db.Where("id = ?", id).Delete(&models.Tag{}).Error
 }
