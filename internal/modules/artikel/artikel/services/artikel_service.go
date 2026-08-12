@@ -11,7 +11,7 @@ import (
 	he "neosim_go/internal/shared/httputil"
 )
 
-func (s *service) Create(req *dto.CreateArtikelRequest, actor he.AuthContext) (*dto.ArtikelResponse, error) {
+func (s *service) CreateArtikel(req *dto.CreateArtikelRequest, actor he.AuthContext) (*dto.ArtikelResponse, error) {
 	can, err := s.canCreateArtikel(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -27,7 +27,7 @@ func (s *service) Create(req *dto.CreateArtikelRequest, actor he.AuthContext) (*
 		CreatedBy:   &actor.UserID,
 		UpdatedBy:   &actor.UserID,
 	}
-	if err := s.repo.Create(m); err != nil {
+	if err := s.repo.CreateArtikel(m); err != nil {
 		return nil, err
 	}
 	
@@ -41,7 +41,7 @@ func (s *service) Create(req *dto.CreateArtikelRequest, actor he.AuthContext) (*
 	}), nil
 }
 
-func (s *service) GetByID(id int64, actor he.AuthContext) (*dto.ArtikelResponse, error) {
+func (s *service) GetArtikelByID(id int64, actor he.AuthContext) (*dto.ArtikelResponse, error) {
 	can, err := s.canReadArtikel(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -51,7 +51,7 @@ func (s *service) GetByID(id int64, actor he.AuthContext) (*dto.ArtikelResponse,
 			"Akses ditolak. Anda tidak memiliki hak akses untuk Melihat Artikel.", nil)
 	}
 
-	m, err := s.repo.GetByID(id)
+	m, err := s.repo.GetArtikelByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func (s *service) GetByID(id int64, actor he.AuthContext) (*dto.ArtikelResponse,
 	}), nil
 }
 
-func (s *service) List(page, pageSize int, filter *dto.FilterArtikelRequest, actor he.AuthContext) ([]dto.ArtikelResponse, int64, error) {
+func (s *service) ListArtikel(page, pageSize int, filter *dto.FilterArtikelRequest, actor he.AuthContext) ([]dto.ArtikelResponse, int64, error) {
 	can, err := s.canReadArtikel(actor)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal cek akses")
@@ -85,7 +85,7 @@ func (s *service) List(page, pageSize int, filter *dto.FilterArtikelRequest, act
 	if pageSize < 1 || pageSize > 100 {
 		pageSize = 10
 	}
-	items, total, err := s.repo.List(page, pageSize, filter)
+	items, total, err := s.repo.ListArtikel(page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -94,7 +94,7 @@ func (s *service) List(page, pageSize int, filter *dto.FilterArtikelRequest, act
 	return toArtikelResponses(items, creatorsMap, updatersMap), total, nil
 }
 
-func (s *service) Update(id int64, req *dto.UpdateArtikelRequest, actor he.AuthContext) (*dto.ArtikelResponse, error) {
+func (s *service) UpdateArtikel(id int64, req *dto.UpdateArtikelRequest, actor he.AuthContext) (*dto.ArtikelResponse, error) {
 	can, err := s.canUpdateArtikel(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -104,7 +104,7 @@ func (s *service) Update(id int64, req *dto.UpdateArtikelRequest, actor he.AuthC
 			"Akses ditolak. Anda tidak memiliki hak akses untuk mengubah Artikel.", nil)
 	}
 
-	m, err := s.repo.GetByID(id)
+	m, err := s.repo.GetArtikelByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +120,7 @@ func (s *service) Update(id int64, req *dto.UpdateArtikelRequest, actor he.AuthC
 	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()
 
-	if err := s.repo.Update(m); err != nil {
+	if err := s.repo.UpdateArtikel(m); err != nil {
 		return nil, err
 	}
 	
@@ -134,7 +134,7 @@ func (s *service) Update(id int64, req *dto.UpdateArtikelRequest, actor he.AuthC
 	}), nil
 }
 
-func (s *service) Delete(id int64, actor he.AuthContext) error {
+func (s *service) DeleteArtikel(id int64, actor he.AuthContext) error {
 	can, err := s.canDeleteArtikel(actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
@@ -144,12 +144,12 @@ func (s *service) Delete(id int64, actor he.AuthContext) error {
 			"Akses ditolak. Anda tidak memiliki hak akses untuk menghapus Artikel.", nil)
 	}
 
-	m, err := s.repo.GetByID(id)
+	m, err := s.repo.GetArtikelByID(id)
 	if err != nil {
 		return err
 	}
 	if m == nil {
 		return errors.New("Artikel tidak ditemukan")
 	}
-	return s.repo.Delete(id)
+	return s.repo.DeleteArtikel(id)
 }

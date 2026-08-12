@@ -11,7 +11,7 @@ import (
 	he "neosim_go/internal/shared/httputil"
 )
 
-func (s *service) Create(req *dto.CreateArtikelKategoriRequest, actor he.AuthContext) (*dto.ArtikelKategoriResponse, error) {
+func (s *service) CreateKategori(req *dto.CreateArtikelKategoriRequest, actor he.AuthContext) (*dto.ArtikelKategoriResponse, error) {
 	can, err := s.canCreateArtikelKategori(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -27,7 +27,7 @@ func (s *service) Create(req *dto.CreateArtikelKategoriRequest, actor he.AuthCon
 		CreatedBy:   &actor.UserID,
 		UpdatedBy:   &actor.UserID,
 	}
-	if err := s.repo.Create(m); err != nil {
+	if err := s.repo.CreateKategori(m); err != nil {
 		return nil, err
 	}
 	
@@ -41,7 +41,7 @@ func (s *service) Create(req *dto.CreateArtikelKategoriRequest, actor he.AuthCon
 	}), nil
 }
 
-func (s *service) GetByID(id int64, actor he.AuthContext) (*dto.ArtikelKategoriResponse, error) {
+func (s *service) GetKategoriByID(id int64, actor he.AuthContext) (*dto.ArtikelKategoriResponse, error) {
 	can, err := s.canReadArtikelKategori(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -51,7 +51,7 @@ func (s *service) GetByID(id int64, actor he.AuthContext) (*dto.ArtikelKategoriR
 			"Akses ditolak. Anda tidak memiliki hak akses untuk Melihat ArtikelKategori.", nil)
 	}
 
-	m, err := s.repo.GetByID(id)
+	m, err := s.repo.GetKategoriByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func (s *service) GetByID(id int64, actor he.AuthContext) (*dto.ArtikelKategoriR
 	}), nil
 }
 
-func (s *service) List(page, pageSize int, filter *dto.FilterArtikelKategoriRequest, actor he.AuthContext) ([]dto.ArtikelKategoriResponse, int64, error) {
+func (s *service) ListKategori(page, pageSize int, filter *dto.FilterArtikelKategoriRequest, actor he.AuthContext) ([]dto.ArtikelKategoriResponse, int64, error) {
 	can, err := s.canReadArtikelKategori(actor)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal cek akses")
@@ -85,7 +85,7 @@ func (s *service) List(page, pageSize int, filter *dto.FilterArtikelKategoriRequ
 	if pageSize < 1 || pageSize > 100 {
 		pageSize = 10
 	}
-	items, total, err := s.repo.List(page, pageSize, filter)
+	items, total, err := s.repo.ListKategori(page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -94,7 +94,7 @@ func (s *service) List(page, pageSize int, filter *dto.FilterArtikelKategoriRequ
 	return toArtikelKategoriResponses(items, creatorsMap, updatersMap), total, nil
 }
 
-func (s *service) Update(id int64, req *dto.UpdateArtikelKategoriRequest, actor he.AuthContext) (*dto.ArtikelKategoriResponse, error) {
+func (s *service) UpdateKategori(id int64, req *dto.UpdateArtikelKategoriRequest, actor he.AuthContext) (*dto.ArtikelKategoriResponse, error) {
 	can, err := s.canUpdateArtikelKategori(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -104,7 +104,7 @@ func (s *service) Update(id int64, req *dto.UpdateArtikelKategoriRequest, actor 
 			"Akses ditolak. Anda tidak memiliki hak akses untuk mengubah ArtikelKategori.", nil)
 	}
 
-	m, err := s.repo.GetByID(id)
+	m, err := s.repo.GetKategoriByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +120,7 @@ func (s *service) Update(id int64, req *dto.UpdateArtikelKategoriRequest, actor 
 	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()
 
-	if err := s.repo.Update(m); err != nil {
+	if err := s.repo.UpdateKategori(m); err != nil {
 		return nil, err
 	}
 	
@@ -134,7 +134,7 @@ func (s *service) Update(id int64, req *dto.UpdateArtikelKategoriRequest, actor 
 	}), nil
 }
 
-func (s *service) Delete(id int64, actor he.AuthContext) error {
+func (s *service) DeleteKategori(id int64, actor he.AuthContext) error {
 	can, err := s.canDeleteArtikelKategori(actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
@@ -144,12 +144,12 @@ func (s *service) Delete(id int64, actor he.AuthContext) error {
 			"Akses ditolak. Anda tidak memiliki hak akses untuk menghapus ArtikelKategori.", nil)
 	}
 
-	m, err := s.repo.GetByID(id)
+	m, err := s.repo.GetKategoriByID(id)
 	if err != nil {
 		return err
 	}
 	if m == nil {
 		return errors.New("ArtikelKategori tidak ditemukan")
 	}
-	return s.repo.Delete(id)
+	return s.repo.DeleteKategori(id)
 }

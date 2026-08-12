@@ -9,7 +9,7 @@ import (
 // Item baru (mode add-item) TIDAK membuat handler baru — method HTTP-nya
 // ditempelkan langsung ke struct ini di file terpisah (mis. handlers/tag_handler.go),
 // dengan nama method bersuffix nama item (ListTag, CreateTag, dst) agar tidak
-// bentrok dengan method CRUD entitas utama.
+// bentrok dengan method CRUD entitas utama (ListKategori, CreateKategori, dst).
 type ArtikelKategoriHandler struct {
 	service contracts.Service
 	cfg     *config.Config

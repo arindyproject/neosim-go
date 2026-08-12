@@ -9,11 +9,11 @@ import (
 	"gorm.io/gorm"
 )
 
-func (r *repository) Create(m *models.Artikel) error {
+func (r *repository) CreateArtikel(m *models.Artikel) error {
 	return r.db.Create(m).Error
 }
 
-func (r *repository) GetByID(id int64) (*models.Artikel, error) {
+func (r *repository) GetArtikelByID(id int64) (*models.Artikel, error) {
 	var m models.Artikel
 	result := r.db.Where("id = ? AND deleted_at IS NULL", id).First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -22,7 +22,7 @@ func (r *repository) GetByID(id int64) (*models.Artikel, error) {
 	return &m, result.Error
 }
 
-func (r *repository) List(page, pageSize int, filter *dto.FilterArtikelRequest) ([]models.Artikel, int64, error) {
+func (r *repository) ListArtikel(page, pageSize int, filter *dto.FilterArtikelRequest) ([]models.Artikel, int64, error) {
 	var items []models.Artikel
 	var total int64
 
@@ -44,10 +44,10 @@ func (r *repository) List(page, pageSize int, filter *dto.FilterArtikelRequest) 
 	return items, total, nil
 }
 
-func (r *repository) Update(m *models.Artikel) error {
+func (r *repository) UpdateArtikel(m *models.Artikel) error {
 	return r.db.Save(m).Error
 }
 
-func (r *repository) Delete(id int64) error {
+func (r *repository) DeleteArtikel(id int64) error {
 	return r.db.Where("id = ?", id).Delete(&models.Artikel{}).Error
 }

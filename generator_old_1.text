@@ -19,7 +19,6 @@ type ModuleConfig struct {
 	SubModule        string
 	ModuleName       string
 	ModuleTitle      string
-	MethodSuffix     string // Pascal(ModuleName) — suffix method: Create{{MethodSuffix}}, Get{{MethodSuffix}}ByID, dst.
 	ModulePlural     string
 	PackageName      string
 	ProjectModule    string
@@ -114,7 +113,6 @@ func runGenerateModule(name, add, project string) {
 		SubModule:        subModule,
 		ModuleName:       subModule,
 		ModuleTitle:      entityTitle,
-		MethodSuffix:     subPascal, // Create{{MethodSuffix}}, Get{{MethodSuffix}}ByID, dst — konsisten dgn pola item (Tag)
 		ModulePlural:     entityTitle + "s",
 		PackageName:      toPackageName(subModule),
 		ProjectModule:    project,
@@ -147,7 +145,6 @@ type fileEntry struct {
 func buildModuleFileList(cfg ModuleConfig, base string) []fileEntry {
 	return []fileEntry{
 		{filepath.Join(base, "contracts", "interfaces.go"), tmplContracts},
-		{filepath.Join(base, "contracts", fmt.Sprintf("%s_interfaces.go", cfg.ModuleName)), tmplModuleInterfaces},
 		{filepath.Join(base, "dto", fmt.Sprintf("%s_request.go", cfg.ModuleName)), tmplRequest},
 		{filepath.Join(base, "dto", fmt.Sprintf("%s_response.go", cfg.ModuleName)), tmplResponse},
 		{filepath.Join(base, "models", fmt.Sprintf("%s.go", cfg.ModuleName)), tmplModel},
@@ -241,8 +238,7 @@ func printModuleNextSteps(cfg ModuleConfig) {
 //     SAMA dengan sub-module induknya (bukan struct baru). Jadi tidak perlu
 //     tagRepo/tagService terpisah — cukup satu instance yang sudah ada.
 //   - Interface Repository & Service utama (contracts/interfaces.go) di-embed
-//     otomatis dengan {{ModuleTitle}}Repository/{{ModuleTitle}}Service (method
-//     utama) dan TagRepository/TagService (item tambahan) lewat marker komentar
+//     otomatis dengan TagRepository/TagService lewat marker komentar
 //     "// GEN:ITEM_REPOSITORY_INTERFACE" & "// GEN:ITEM_SERVICE_INTERFACE".
 //   - routes.go, register.go (Models & MigrateSQL) juga di-update otomatis
 //     lewat marker, sehingga TIDAK ADA lagi langkah wiring manual.
@@ -486,34 +482,7 @@ func toPackageName(s string) string {
 // TEMPLATES — MODE 1 & 2
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// tmplContracts (interfaces.go) HANYA berfungsi sebagai agregator: menggabungkan
-// interface method utama ({{ModuleTitle}}Repository/{{ModuleTitle}}Service, yang
-// didefinisikan di {{ModuleName}}_interfaces.go) dengan interface item tambahan
-// hasil mode add-item (mis. TagRepository/TagService) via marker GEN:.
 var tmplContracts = `package contracts
-
-// Repository defines database operations.
-// Method utama {{.ModuleTitle}} didefinisikan di {{.ModuleName}}_interfaces.go.
-// Item tambahan (mode add-item) di-embed otomatis lewat marker di bawah.
-type Repository interface {
-	{{.ModuleTitle}}Repository
-	// GEN:ITEM_REPOSITORY_INTERFACE
-}
-
-// Service defines business logic operations.
-// Method utama {{.ModuleTitle}} didefinisikan di {{.ModuleName}}_interfaces.go.
-// Item tambahan (mode add-item) di-embed otomatis lewat marker di bawah.
-type Service interface {
-	{{.ModuleTitle}}Service
-	// GEN:ITEM_SERVICE_INTERFACE
-}
-`
-
-// tmplModuleInterfaces mendefinisikan interface method utama entitas
-// {{.ModuleTitle}}, dengan method diberi suffix {{.MethodSuffix}} — pola yang
-// SAMA dengan interface item hasil mode add-item (mis. TagRepository/TagService),
-// supaya konsisten di seluruh sub-module.
-var tmplModuleInterfaces = `package contracts
 
 import (
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
@@ -521,26 +490,24 @@ import (
 	he "{{.ProjectModule}}/internal/shared/httputil"
 )
 
-// {{.ModuleTitle}}Repository defines database operations for {{.ModuleTitle}}.
-// Diimplementasikan oleh struct 'repository' (lihat repositories/repository.go
-// & repositories/{{.ModuleName}}_repository.go).
-type {{.ModuleTitle}}Repository interface {
-	Create{{.MethodSuffix}}(m *models.{{.ModuleTitle}}) error
-	Get{{.MethodSuffix}}ByID(id int64) (*models.{{.ModuleTitle}}, error)
-	List{{.MethodSuffix}}(page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request) ([]models.{{.ModuleTitle}}, int64, error)
-	Update{{.MethodSuffix}}(m *models.{{.ModuleTitle}}) error
-	Delete{{.MethodSuffix}}(id int64) error
+// Repository defines database operations
+type Repository interface {
+	Create(m *models.{{.ModuleTitle}}) error
+	GetByID(id int64) (*models.{{.ModuleTitle}}, error)
+	List(page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request) ([]models.{{.ModuleTitle}}, int64, error)
+	Update(m *models.{{.ModuleTitle}}) error
+	Delete(id int64) error
+	// GEN:ITEM_REPOSITORY_INTERFACE
 }
 
-// {{.ModuleTitle}}Service defines business logic operations for {{.ModuleTitle}}.
-// Diimplementasikan oleh struct 'service' (lihat services/service.go
-// & services/{{.ModuleName}}_service.go).
-type {{.ModuleTitle}}Service interface {
-	Create{{.MethodSuffix}}(req *dto.Create{{.ModuleTitle}}Request, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error)
-	Get{{.MethodSuffix}}ByID(id int64, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error)
-	List{{.MethodSuffix}}(page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request, actor he.AuthContext) ([]dto.{{.ModuleTitle}}Response, int64, error)
-	Update{{.MethodSuffix}}(id int64, req *dto.Update{{.ModuleTitle}}Request, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error)
-	Delete{{.MethodSuffix}}(id int64, actor he.AuthContext) error
+// Service defines business logic operations
+type Service interface {
+	Create(req *dto.Create{{.ModuleTitle}}Request, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error)
+	GetByID(id int64, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error)
+	List(page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request, actor he.AuthContext) ([]dto.{{.ModuleTitle}}Response, int64, error)
+	Update(id int64, req *dto.Update{{.ModuleTitle}}Request, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error)
+	Delete(id int64, actor he.AuthContext) error
+	// GEN:ITEM_SERVICE_INTERFACE
 }
 `
 
@@ -690,11 +657,11 @@ import (
 	"gorm.io/gorm"
 )
 
-func (r *repository) Create{{.MethodSuffix}}(m *models.{{.ModuleTitle}}) error {
+func (r *repository) Create(m *models.{{.ModuleTitle}}) error {
 	return r.db.Create(m).Error
 }
 
-func (r *repository) Get{{.MethodSuffix}}ByID(id int64) (*models.{{.ModuleTitle}}, error) {
+func (r *repository) GetByID(id int64) (*models.{{.ModuleTitle}}, error) {
 	var m models.{{.ModuleTitle}}
 	result := r.db.Where("id = ? AND deleted_at IS NULL", id).First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -703,7 +670,7 @@ func (r *repository) Get{{.MethodSuffix}}ByID(id int64) (*models.{{.ModuleTitle}
 	return &m, result.Error
 }
 
-func (r *repository) List{{.MethodSuffix}}(page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request) ([]models.{{.ModuleTitle}}, int64, error) {
+func (r *repository) List(page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request) ([]models.{{.ModuleTitle}}, int64, error) {
 	var items []models.{{.ModuleTitle}}
 	var total int64
 
@@ -725,11 +692,11 @@ func (r *repository) List{{.MethodSuffix}}(page, pageSize int, filter *dto.Filte
 	return items, total, nil
 }
 
-func (r *repository) Update{{.MethodSuffix}}(m *models.{{.ModuleTitle}}) error {
+func (r *repository) Update(m *models.{{.ModuleTitle}}) error {
 	return r.db.Save(m).Error
 }
 
-func (r *repository) Delete{{.MethodSuffix}}(id int64) error {
+func (r *repository) Delete(id int64) error {
 	return r.db.Where("id = ?", id).Delete(&models.{{.ModuleTitle}}{}).Error
 }
 `
@@ -934,7 +901,7 @@ import (
 	he "{{.ProjectModule}}/internal/shared/httputil"
 )
 
-func (s *service) Create{{.MethodSuffix}}(req *dto.Create{{.ModuleTitle}}Request, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
+func (s *service) Create(req *dto.Create{{.ModuleTitle}}Request, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
 	can, err := s.canCreate{{.ModuleTitle}}(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -950,7 +917,7 @@ func (s *service) Create{{.MethodSuffix}}(req *dto.Create{{.ModuleTitle}}Request
 		CreatedBy:   &actor.UserID,
 		UpdatedBy:   &actor.UserID,
 	}
-	if err := s.repo.Create{{.MethodSuffix}}(m); err != nil {
+	if err := s.repo.Create(m); err != nil {
 		return nil, err
 	}
 	
@@ -964,7 +931,7 @@ func (s *service) Create{{.MethodSuffix}}(req *dto.Create{{.ModuleTitle}}Request
 	}), nil
 }
 
-func (s *service) Get{{.MethodSuffix}}ByID(id int64, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
+func (s *service) GetByID(id int64, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
 	can, err := s.canRead{{.ModuleTitle}}(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -974,7 +941,7 @@ func (s *service) Get{{.MethodSuffix}}ByID(id int64, actor he.AuthContext) (*dto
 			"Akses ditolak. Anda tidak memiliki hak akses untuk Melihat {{.ModuleTitle}}.", nil)
 	}
 
-	m, err := s.repo.Get{{.MethodSuffix}}ByID(id)
+	m, err := s.repo.GetByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -992,7 +959,7 @@ func (s *service) Get{{.MethodSuffix}}ByID(id int64, actor he.AuthContext) (*dto
 	}), nil
 }
 
-func (s *service) List{{.MethodSuffix}}(page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request, actor he.AuthContext) ([]dto.{{.ModuleTitle}}Response, int64, error) {
+func (s *service) List(page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request, actor he.AuthContext) ([]dto.{{.ModuleTitle}}Response, int64, error) {
 	can, err := s.canRead{{.ModuleTitle}}(actor)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal cek akses")
@@ -1008,7 +975,7 @@ func (s *service) List{{.MethodSuffix}}(page, pageSize int, filter *dto.Filter{{
 	if pageSize < 1 || pageSize > 100 {
 		pageSize = 10
 	}
-	items, total, err := s.repo.List{{.MethodSuffix}}(page, pageSize, filter)
+	items, total, err := s.repo.List(page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -1017,7 +984,7 @@ func (s *service) List{{.MethodSuffix}}(page, pageSize int, filter *dto.Filter{{
 	return to{{.ModuleTitle}}Responses(items, creatorsMap, updatersMap), total, nil
 }
 
-func (s *service) Update{{.MethodSuffix}}(id int64, req *dto.Update{{.ModuleTitle}}Request, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
+func (s *service) Update(id int64, req *dto.Update{{.ModuleTitle}}Request, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
 	can, err := s.canUpdate{{.ModuleTitle}}(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -1027,7 +994,7 @@ func (s *service) Update{{.MethodSuffix}}(id int64, req *dto.Update{{.ModuleTitl
 			"Akses ditolak. Anda tidak memiliki hak akses untuk mengubah {{.ModuleTitle}}.", nil)
 	}
 
-	m, err := s.repo.Get{{.MethodSuffix}}ByID(id)
+	m, err := s.repo.GetByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -1043,7 +1010,7 @@ func (s *service) Update{{.MethodSuffix}}(id int64, req *dto.Update{{.ModuleTitl
 	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()
 
-	if err := s.repo.Update{{.MethodSuffix}}(m); err != nil {
+	if err := s.repo.Update(m); err != nil {
 		return nil, err
 	}
 	
@@ -1057,7 +1024,7 @@ func (s *service) Update{{.MethodSuffix}}(id int64, req *dto.Update{{.ModuleTitl
 	}), nil
 }
 
-func (s *service) Delete{{.MethodSuffix}}(id int64, actor he.AuthContext) error {
+func (s *service) Delete(id int64, actor he.AuthContext) error {
 	can, err := s.canDelete{{.ModuleTitle}}(actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
@@ -1067,14 +1034,14 @@ func (s *service) Delete{{.MethodSuffix}}(id int64, actor he.AuthContext) error 
 			"Akses ditolak. Anda tidak memiliki hak akses untuk menghapus {{.ModuleTitle}}.", nil)
 	}
 
-	m, err := s.repo.Get{{.MethodSuffix}}ByID(id)
+	m, err := s.repo.GetByID(id)
 	if err != nil {
 		return err
 	}
 	if m == nil {
 		return errors.New("{{.ModuleTitle}} tidak ditemukan")
 	}
-	return s.repo.Delete{{.MethodSuffix}}(id)
+	return s.repo.Delete(id)
 }
 `
 
@@ -1089,7 +1056,7 @@ import (
 // Item baru (mode add-item) TIDAK membuat handler baru — method HTTP-nya
 // ditempelkan langsung ke struct ini di file terpisah (mis. handlers/tag_handler.go),
 // dengan nama method bersuffix nama item (ListTag, CreateTag, dst) agar tidak
-// bentrok dengan method CRUD entitas utama (List{{.MethodSuffix}}, Create{{.MethodSuffix}}, dst).
+// bentrok dengan method CRUD entitas utama.
 type {{.ModuleTitle}}Handler struct {
 	service contracts.Service
 	cfg     *config.Config
@@ -1114,7 +1081,7 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
-// ─── List{{.MethodSuffix}} ─────────────────────────────────────────────────────
+// ─── List ──────────────────────────────────────────────────────────────────────
 //
 //	@Summary		Get list of {{.ModuleTitle}}
 //	@Description	Get paginated list of {{.ModuleTitle}}
@@ -1127,7 +1094,7 @@ import (
 //	@Param			page_size	query		int		false	"Page size"
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.{{.ModuleTitle}}Response}
 //	@Router			{{.URLPrefixOpenAPI}} [get]
-func (h *{{.ModuleTitle}}Handler) List{{.MethodSuffix}}(c *echo.Context) error {
+func (h *{{.ModuleTitle}}Handler) List(c *echo.Context) error {
 
 	filter := dto.Filter{{.ModuleTitle}}Request{
 		Name: c.QueryParam("name"),
@@ -1135,14 +1102,14 @@ func (h *{{.ModuleTitle}}Handler) List{{.MethodSuffix}}(c *echo.Context) error {
 	page, pageSize := he.ParsePagination(c, h.cfg)
 
 	actor := he.BuildAuthContext(c)
-	items, total, err := h.service.List{{.MethodSuffix}}(page, pageSize, &filter, actor)
+	items, total, err := h.service.List(page, pageSize, &filter, actor)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
 	}
 	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data", items, total, page, pageSize)
 }
 
-// ─── Get{{.MethodSuffix}}ByID ───────────────────────────────────────────────────
+// ─── GetByID ───────────────────────────────────────────────────────────────────
 //
 //	@Summary		Get {{.ModuleTitle}}
 //	@Description	Get {{.ModuleTitle}} by :id
@@ -1153,20 +1120,20 @@ func (h *{{.ModuleTitle}}Handler) List{{.MethodSuffix}}(c *echo.Context) error {
 //	@Param			id	path		int	true	"{{.ModuleTitle}} ID"
 //	@Success		200	{object}	response.MyGoResponse{data=dto.{{.ModuleTitle}}Response}
 //	@Router			{{.URLPrefixOpenAPI}}/{id} [get]
-func (h *{{.ModuleTitle}}Handler) Get{{.MethodSuffix}}ByID(c *echo.Context) error {
+func (h *{{.ModuleTitle}}Handler) GetByID(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.Get{{.MethodSuffix}}ByID(id, actor)
+	item, err := h.service.GetByID(id, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
 	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", item, nil)
 }
 
-// ─── Create{{.MethodSuffix}} ────────────────────────────────────────────────────
+// ─── Create ────────────────────────────────────────────────────────────────────
 //
 //	@Summary		Create {{.ModuleTitle}}
 //	@Description	Create New {{.ModuleTitle}}
@@ -1177,7 +1144,7 @@ func (h *{{.ModuleTitle}}Handler) Get{{.MethodSuffix}}ByID(c *echo.Context) erro
 //	@Param			body	body		dto.Create{{.ModuleTitle}}Request	true	"Create Request"
 //	@Success		201		{object}	response.MyGoResponse{data=dto.{{.ModuleTitle}}Response}
 //	@Router			{{.URLPrefixOpenAPI}} [post]
-func (h *{{.ModuleTitle}}Handler) Create{{.MethodSuffix}}(c *echo.Context) error {
+func (h *{{.ModuleTitle}}Handler) Create(c *echo.Context) error {
 	var req dto.Create{{.ModuleTitle}}Request
 	if err := c.Bind(&req); err != nil {
 		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
@@ -1186,14 +1153,14 @@ func (h *{{.ModuleTitle}}Handler) Create{{.MethodSuffix}}(c *echo.Context) error
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.Create{{.MethodSuffix}}(&req,  actor)
+	item, err := h.service.Create(&req,  actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
 	return response.Response(c, http.StatusCreated, true, "Data berhasil dibuat", item, nil)
 }
 
-// ─── Update{{.MethodSuffix}} ────────────────────────────────────────────────────
+// ─── Update ────────────────────────────────────────────────────────────────────
 //
 //	@Summary		Update {{.ModuleTitle}}
 //	@Description	Update {{.ModuleTitle}} by :id
@@ -1205,7 +1172,7 @@ func (h *{{.ModuleTitle}}Handler) Create{{.MethodSuffix}}(c *echo.Context) error
 //	@Param			body	body		dto.Update{{.ModuleTitle}}Request	true	"Update Request"
 //	@Success		200		{object}	response.MyGoResponse{data=dto.{{.ModuleTitle}}Response}
 //	@Router			{{.URLPrefixOpenAPI}}/{id} [put]
-func (h *{{.ModuleTitle}}Handler) Update{{.MethodSuffix}}(c *echo.Context) error {
+func (h *{{.ModuleTitle}}Handler) Update(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
@@ -1218,7 +1185,7 @@ func (h *{{.ModuleTitle}}Handler) Update{{.MethodSuffix}}(c *echo.Context) error
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.Update{{.MethodSuffix}}(id, &req, actor)
+	item, err := h.service.Update(id, &req, actor)
 	if err != nil {
 		status := http.StatusBadRequest
 		if err.Error() == "{{.ModuleTitle}} tidak ditemukan" {
@@ -1229,7 +1196,7 @@ func (h *{{.ModuleTitle}}Handler) Update{{.MethodSuffix}}(c *echo.Context) error
 	return response.Response(c, http.StatusOK, true, "Data berhasil diupdate", item, nil)
 }
 
-// ─── Delete{{.MethodSuffix}} ────────────────────────────────────────────────────
+// ─── Delete ────────────────────────────────────────────────────────────────────
 //
 //	@Summary		Delete {{.ModuleTitle}}
 //	@Description	Delete {{.ModuleTitle}} by :id
@@ -1240,13 +1207,13 @@ func (h *{{.ModuleTitle}}Handler) Update{{.MethodSuffix}}(c *echo.Context) error
 //	@Param			id	path		int	true	"{{.ModuleTitle}} ID"
 //	@Success		200	{object}	response.MyGoResponse{}
 //	@Router			{{.URLPrefixOpenAPI}}/{id} [delete]
-func (h *{{.ModuleTitle}}Handler) Delete{{.MethodSuffix}}(c *echo.Context) error {
+func (h *{{.ModuleTitle}}Handler) Delete(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	if err := h.service.Delete{{.MethodSuffix}}(id, actor); err != nil {
+	if err := h.service.Delete(id, actor); err != nil {
 		status := http.StatusInternalServerError
 		if err.Error() == "{{.ModuleTitle}} tidak ditemukan" {
 			status = http.StatusNotFound
@@ -1526,11 +1493,11 @@ import (
 func RegisterRoutes(e *echo.Echo, h *handlers.{{.ModuleTitle}}Handler, jwtManager *utils.JWTManager, db *gorm.DB) {
 	jwt := authMiddlewares.JWTMiddleware(jwtManager, db)
 	g := e.Group("{{.URLPrefix}}", jwt)
-	g.GET("", h.List{{.MethodSuffix}})
-	g.GET("/:id", h.Get{{.MethodSuffix}}ByID)
-	g.POST("", h.Create{{.MethodSuffix}})
-	g.PUT("/:id", h.Update{{.MethodSuffix}})
-	g.DELETE("/:id", h.Delete{{.MethodSuffix}})
+	g.GET("", h.List)
+	g.GET("/:id", h.GetByID)
+	g.POST("", h.Create)
+	g.PUT("/:id", h.Update)
+	g.DELETE("/:id", h.Delete)
 	// GEN:ITEM_ROUTES
 }
 `
@@ -1624,12 +1591,12 @@ type {{.ModuleTitle}}RepositoryMock struct {
 	mock.Mock
 }
 
-func (m *{{.ModuleTitle}}RepositoryMock) Create{{.MethodSuffix}}(item *models.{{.ModuleTitle}}) error {
+func (m *{{.ModuleTitle}}RepositoryMock) Create(item *models.{{.ModuleTitle}}) error {
 	args := m.Called(item)
 	return args.Error(0)
 }
 
-func (m *{{.ModuleTitle}}RepositoryMock) Get{{.MethodSuffix}}ByID(id int64) (*models.{{.ModuleTitle}}, error) {
+func (m *{{.ModuleTitle}}RepositoryMock) GetByID(id int64) (*models.{{.ModuleTitle}}, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -1637,17 +1604,17 @@ func (m *{{.ModuleTitle}}RepositoryMock) Get{{.MethodSuffix}}ByID(id int64) (*mo
 	return args.Get(0).(*models.{{.ModuleTitle}}), args.Error(1)
 }
 
-func (m *{{.ModuleTitle}}RepositoryMock) List{{.MethodSuffix}}(page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request) ([]models.{{.ModuleTitle}}, int64, error) {
+func (m *{{.ModuleTitle}}RepositoryMock) List(page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request) ([]models.{{.ModuleTitle}}, int64, error) {
 	args := m.Called(page, pageSize, filter)
 	return args.Get(0).([]models.{{.ModuleTitle}}), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *{{.ModuleTitle}}RepositoryMock) Update{{.MethodSuffix}}(item *models.{{.ModuleTitle}}) error {
+func (m *{{.ModuleTitle}}RepositoryMock) Update(item *models.{{.ModuleTitle}}) error {
 	args := m.Called(item)
 	return args.Error(0)
 }
 
-func (m *{{.ModuleTitle}}RepositoryMock) Delete{{.MethodSuffix}}(id int64) error {
+func (m *{{.ModuleTitle}}RepositoryMock) Delete(id int64) error {
 	args := m.Called(id)
 	return args.Error(0)
 }
@@ -2046,13 +2013,13 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) mockNoPermissions() {
 	s.rbacRepo.On("HasPermission", regularActor().UserID, mock.Anything, mock.Anything).Return(false, nil)
 }
 
-func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Create{{.MethodSuffix}}_Superadmin_Success() {
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Create_Superadmin_Success() {
 	req := &dto.Create{{.ModuleTitle}}Request{Name: "Test {{.ModuleTitle}}"}
 	actor := superadminActor()
 
-	s.repo.On("Create{{.MethodSuffix}}", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(nil)
+	s.repo.On("Create", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(nil)
 
-	result, err := s.svc.Create{{.MethodSuffix}}(req, actor)
+	result, err := s.svc.Create(req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -2060,40 +2027,40 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Create{{.MethodSuffix}}_Superadm
 	s.repo.AssertExpectations(s.T())
 }
 
-func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Create{{.MethodSuffix}}_WithPermission_Success() {
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Create_WithPermission_Success() {
 	req := &dto.Create{{.ModuleTitle}}Request{Name: "Test {{.ModuleTitle}}"}
 	actor := regularActor()
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(true, nil)
-	s.repo.On("Create{{.MethodSuffix}}", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(nil)
+	s.repo.On("Create", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(nil)
 
-	result, err := s.svc.Create{{.MethodSuffix}}(req, actor)
+	result, err := s.svc.Create(req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 	s.repo.AssertExpectations(s.T())
 }
 
-func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Create{{.MethodSuffix}}_WithManagePermission_Success() {
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Create_WithManagePermission_Success() {
 	req := &dto.Create{{.ModuleTitle}}Request{Name: "Test"}
 	actor := regularActor()
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(false, nil)
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyManage).Return(true, nil)
-	s.repo.On("Create{{.MethodSuffix}}", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(nil)
+	s.repo.On("Create", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(nil)
 
-	result, err := s.svc.Create{{.MethodSuffix}}(req, actor)
+	result, err := s.svc.Create(req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 }
 
-func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Create{{.MethodSuffix}}_Forbidden() {
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Create_Forbidden() {
 	req := &dto.Create{{.ModuleTitle}}Request{Name: "Test"}
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.Create{{.MethodSuffix}}(req, actor)
+	result, err := s.svc.Create(req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -2102,26 +2069,26 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Create{{.MethodSuffix}}_Forbidde
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Create{{.MethodSuffix}}_RepoError() {
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Create_RepoError() {
 	req := &dto.Create{{.ModuleTitle}}Request{Name: "Test"}
 	actor := superadminActor()
 
-	s.repo.On("Create{{.MethodSuffix}}", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(fmt.Errorf("db error"))
+	s.repo.On("Create", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.Create{{.MethodSuffix}}(req, actor)
+	result, err := s.svc.Create(req, actor)
 
 	s.Nil(result)
 	s.Error(err)
 }
 
-func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Get{{.MethodSuffix}}ByID_Superadmin_Success() {
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_GetByID_Superadmin_Success() {
 	actor := superadminActor()
 	item := factories.New{{.ModuleTitle}}Factory().Make()
 	item.ID = 1
 
-	s.repo.On("Get{{.MethodSuffix}}ByID", int64(1)).Return(item, nil)
+	s.repo.On("GetByID", int64(1)).Return(item, nil)
 
-	result, err := s.svc.Get{{.MethodSuffix}}ByID(1, actor)
+	result, err := s.svc.GetByID(1, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -2129,25 +2096,25 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Get{{.MethodSuffix}}ByID_Superad
 	s.Equal(item.Name, result.Name)
 }
 
-func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Get{{.MethodSuffix}}ByID_WithPermission_Success() {
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_GetByID_WithPermission_Success() {
 	actor := regularActor()
 	item := factories.New{{.ModuleTitle}}Factory().Make()
 	item.ID = 1
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyRead).Return(true, nil)
-	s.repo.On("Get{{.MethodSuffix}}ByID", int64(1)).Return(item, nil)
+	s.repo.On("GetByID", int64(1)).Return(item, nil)
 
-	result, err := s.svc.Get{{.MethodSuffix}}ByID(1, actor)
+	result, err := s.svc.GetByID(1, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 }
 
-func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Get{{.MethodSuffix}}ByID_Forbidden() {
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_GetByID_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.Get{{.MethodSuffix}}ByID(1, actor)
+	result, err := s.svc.GetByID(1, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -2156,30 +2123,30 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Get{{.MethodSuffix}}ByID_Forbidd
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Get{{.MethodSuffix}}ByID_NotFound() {
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_GetByID_NotFound() {
 	actor := superadminActor()
 
-	s.repo.On("Get{{.MethodSuffix}}ByID", int64(999)).Return(nil, nil)
+	s.repo.On("GetByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.Get{{.MethodSuffix}}ByID(999, actor)
+	result, err := s.svc.GetByID(999, actor)
 
 	s.Nil(result)
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
 }
 
-func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Get{{.MethodSuffix}}ByID_RepoError() {
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_GetByID_RepoError() {
 	actor := superadminActor()
 
-	s.repo.On("Get{{.MethodSuffix}}ByID", int64(1)).Return(nil, fmt.Errorf("db error"))
+	s.repo.On("GetByID", int64(1)).Return(nil, fmt.Errorf("db error"))
 
-	result, err := s.svc.Get{{.MethodSuffix}}ByID(1, actor)
+	result, err := s.svc.GetByID(1, actor)
 
 	s.Nil(result)
 	s.Error(err)
 }
 
-func (s *{{.ModuleTitle}}ServiceTestSuite) Test_List{{.MethodSuffix}}_Superadmin_Success() {
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_List_Superadmin_Success() {
 	actor := superadminActor()
 	filter := &dto.Filter{{.ModuleTitle}}Request{}
 	items := []models.{{.ModuleTitle}}{
@@ -2187,36 +2154,36 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_List{{.MethodSuffix}}_Superadmin
 		*factories.New{{.ModuleTitle}}Factory().Make(),
 	}
 
-	s.repo.On("List{{.MethodSuffix}}", 1, 10, filter).Return(items, int64(2), nil)
+	s.repo.On("List", 1, 10, filter).Return(items, int64(2), nil)
 
-	result, total, err := s.svc.List{{.MethodSuffix}}(1, 10, filter, actor)
+	result, total, err := s.svc.List(1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(2), total)
 	s.Len(result, 2)
 }
 
-func (s *{{.ModuleTitle}}ServiceTestSuite) Test_List{{.MethodSuffix}}_WithPermission_Success() {
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_List_WithPermission_Success() {
 	actor := regularActor()
 	filter := &dto.Filter{{.ModuleTitle}}Request{}
 	items := []models.{{.ModuleTitle}}{*factories.New{{.ModuleTitle}}Factory().Make()}
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyRead).Return(true, nil)
-	s.repo.On("List{{.MethodSuffix}}", 1, 10, filter).Return(items, int64(1), nil)
+	s.repo.On("List", 1, 10, filter).Return(items, int64(1), nil)
 
-	result, total, err := s.svc.List{{.MethodSuffix}}(1, 10, filter, actor)
+	result, total, err := s.svc.List(1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
 	s.Len(result, 1)
 }
 
-func (s *{{.ModuleTitle}}ServiceTestSuite) Test_List{{.MethodSuffix}}_Forbidden() {
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_List_Forbidden() {
 	actor := regularActor()
 	filter := &dto.Filter{{.ModuleTitle}}Request{}
 	s.mockNoPermissions()
 
-	result, total, err := s.svc.List{{.MethodSuffix}}(1, 10, filter, actor)
+	result, total, err := s.svc.List(1, 10, filter, actor)
 
 	s.Nil(result)
 	s.Equal(int64(0), total)
@@ -2226,63 +2193,63 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_List{{.MethodSuffix}}_Forbidden(
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *{{.ModuleTitle}}ServiceTestSuite) Test_List{{.MethodSuffix}}_DefaultPagination() {
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_List_DefaultPagination() {
 	actor := superadminActor()
 	filter := &dto.Filter{{.ModuleTitle}}Request{}
 
-	s.repo.On("List{{.MethodSuffix}}", 1, 10, filter).Return([]models.{{.ModuleTitle}}{}, int64(0), nil)
+	s.repo.On("List", 1, 10, filter).Return([]models.{{.ModuleTitle}}{}, int64(0), nil)
 
-	result, total, err := s.svc.List{{.MethodSuffix}}(0, 0, filter, actor)
+	result, total, err := s.svc.List(0, 0, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(0), total)
 	s.Empty(result)
 }
 
-func (s *{{.ModuleTitle}}ServiceTestSuite) Test_List{{.MethodSuffix}}_PageSizeCapped() {
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_List_PageSizeCapped() {
 	actor := superadminActor()
 	filter := &dto.Filter{{.ModuleTitle}}Request{}
 
-	s.repo.On("List{{.MethodSuffix}}", 1, 10, filter).Return([]models.{{.ModuleTitle}}{}, int64(0), nil)
+	s.repo.On("List", 1, 10, filter).Return([]models.{{.ModuleTitle}}{}, int64(0), nil)
 
-	_, _, err := s.svc.List{{.MethodSuffix}}(1, 999, filter, actor)
+	_, _, err := s.svc.List(1, 999, filter, actor)
 
 	s.NoError(err)
-	s.repo.AssertCalled(s.T(), "List{{.MethodSuffix}}", 1, 10, filter)
+	s.repo.AssertCalled(s.T(), "List", 1, 10, filter)
 }
 
-func (s *{{.ModuleTitle}}ServiceTestSuite) Test_List{{.MethodSuffix}}_WithNameFilter() {
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_List_WithNameFilter() {
 	actor := superadminActor()
 	filter := &dto.Filter{{.ModuleTitle}}Request{Name: "test"}
 	items := []models.{{.ModuleTitle}}{*factories.New{{.ModuleTitle}}Factory().Make()}
 
-	s.repo.On("List{{.MethodSuffix}}", 1, 10, filter).Return(items, int64(1), nil)
+	s.repo.On("List", 1, 10, filter).Return(items, int64(1), nil)
 
-	result, total, err := s.svc.List{{.MethodSuffix}}(1, 10, filter, actor)
+	result, total, err := s.svc.List(1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
 	s.Len(result, 1)
 }
 
-func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update{{.MethodSuffix}}_Superadmin_Success() {
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update_Superadmin_Success() {
 	actor := superadminActor()
 	existing := factories.New{{.ModuleTitle}}Factory().Make()
 	existing.ID = 1
 	newName := "Updated Name"
 	req := &dto.Update{{.ModuleTitle}}Request{Name: &newName}
 
-	s.repo.On("Get{{.MethodSuffix}}ByID", int64(1)).Return(existing, nil)
-	s.repo.On("Update{{.MethodSuffix}}", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(nil)
+	s.repo.On("GetByID", int64(1)).Return(existing, nil)
+	s.repo.On("Update", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(nil)
 
-	result, err := s.svc.Update{{.MethodSuffix}}(1, req, actor)
+	result, err := s.svc.Update(1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 	s.Equal(newName, result.Name)
 }
 
-func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update{{.MethodSuffix}}_WithPermission_Success() {
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update_WithPermission_Success() {
 	actor := regularActor()
 	existing := factories.New{{.ModuleTitle}}Factory().Make()
 	existing.ID = 1
@@ -2290,21 +2257,21 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update{{.MethodSuffix}}_WithPerm
 	req := &dto.Update{{.ModuleTitle}}Request{Name: &newName}
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyUpdate).Return(true, nil)
-	s.repo.On("Get{{.MethodSuffix}}ByID", int64(1)).Return(existing, nil)
-	s.repo.On("Update{{.MethodSuffix}}", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(nil)
+	s.repo.On("GetByID", int64(1)).Return(existing, nil)
+	s.repo.On("Update", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(nil)
 
-	result, err := s.svc.Update{{.MethodSuffix}}(1, req, actor)
+	result, err := s.svc.Update(1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 }
 
-func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update{{.MethodSuffix}}_Forbidden() {
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update_Forbidden() {
 	actor := regularActor()
 	req := &dto.Update{{.ModuleTitle}}Request{}
 	s.mockNoPermissions()
 
-	result, err := s.svc.Update{{.MethodSuffix}}(1, req, actor)
+	result, err := s.svc.Update(1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -2313,20 +2280,20 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update{{.MethodSuffix}}_Forbidde
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update{{.MethodSuffix}}_NotFound() {
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update_NotFound() {
 	actor := superadminActor()
 	req := &dto.Update{{.ModuleTitle}}Request{}
 
-	s.repo.On("Get{{.MethodSuffix}}ByID", int64(999)).Return(nil, nil)
+	s.repo.On("GetByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.Update{{.MethodSuffix}}(999, req, actor)
+	result, err := s.svc.Update(999, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
 }
 
-func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update{{.MethodSuffix}}_PartialFields() {
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update_PartialFields() {
 	actor := superadminActor()
 	existing := factories.New{{.ModuleTitle}}Factory().Make()
 	existing.ID = 1
@@ -2334,66 +2301,66 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update{{.MethodSuffix}}_PartialF
 	newDesc := "New description"
 	req := &dto.Update{{.ModuleTitle}}Request{Description: &newDesc}
 
-	s.repo.On("Get{{.MethodSuffix}}ByID", int64(1)).Return(existing, nil)
-	s.repo.On("Update{{.MethodSuffix}}", mock.MatchedBy(func(m *models.{{.ModuleTitle}}) bool {
+	s.repo.On("GetByID", int64(1)).Return(existing, nil)
+	s.repo.On("Update", mock.MatchedBy(func(m *models.{{.ModuleTitle}}) bool {
 		return m.Name == originalName && *m.Description == newDesc
 	})).Return(nil)
 
-	result, err := s.svc.Update{{.MethodSuffix}}(1, req, actor)
+	result, err := s.svc.Update(1, req, actor)
 
 	s.NoError(err)
 	s.Equal(originalName, result.Name)
 	s.Equal(newDesc, *result.Description)
 }
 
-func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update{{.MethodSuffix}}_RepoError() {
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update_RepoError() {
 	actor := superadminActor()
 	existing := factories.New{{.ModuleTitle}}Factory().Make()
 	existing.ID = 1
 	req := &dto.Update{{.ModuleTitle}}Request{}
 
-	s.repo.On("Get{{.MethodSuffix}}ByID", int64(1)).Return(existing, nil)
-	s.repo.On("Update{{.MethodSuffix}}", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(fmt.Errorf("db error"))
+	s.repo.On("GetByID", int64(1)).Return(existing, nil)
+	s.repo.On("Update", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.Update{{.MethodSuffix}}(1, req, actor)
+	result, err := s.svc.Update(1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
 }
 
-func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Delete{{.MethodSuffix}}_Superadmin_Success() {
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Delete_Superadmin_Success() {
 	actor := superadminActor()
 	existing := factories.New{{.ModuleTitle}}Factory().Make()
 	existing.ID = 1
 
-	s.repo.On("Get{{.MethodSuffix}}ByID", int64(1)).Return(existing, nil)
-	s.repo.On("Delete{{.MethodSuffix}}", int64(1)).Return(nil)
+	s.repo.On("GetByID", int64(1)).Return(existing, nil)
+	s.repo.On("Delete", int64(1)).Return(nil)
 
-	err := s.svc.Delete{{.MethodSuffix}}(1, actor)
+	err := s.svc.Delete(1, actor)
 
 	s.NoError(err)
 	s.repo.AssertExpectations(s.T())
 }
 
-func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Delete{{.MethodSuffix}}_WithPermission_Success() {
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Delete_WithPermission_Success() {
 	actor := regularActor()
 	existing := factories.New{{.ModuleTitle}}Factory().Make()
 	existing.ID = 1
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyDelete).Return(true, nil)
-	s.repo.On("Get{{.MethodSuffix}}ByID", int64(1)).Return(existing, nil)
-	s.repo.On("Delete{{.MethodSuffix}}", int64(1)).Return(nil)
+	s.repo.On("GetByID", int64(1)).Return(existing, nil)
+	s.repo.On("Delete", int64(1)).Return(nil)
 
-	err := s.svc.Delete{{.MethodSuffix}}(1, actor)
+	err := s.svc.Delete(1, actor)
 
 	s.NoError(err)
 }
 
-func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Delete{{.MethodSuffix}}_Forbidden() {
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Delete_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	err := s.svc.Delete{{.MethodSuffix}}(1, actor)
+	err := s.svc.Delete(1, actor)
 
 	s.Error(err)
 	var appErr *appErrors.AppError
@@ -2401,26 +2368,26 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Delete{{.MethodSuffix}}_Forbidde
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Delete{{.MethodSuffix}}_NotFound() {
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Delete_NotFound() {
 	actor := superadminActor()
 
-	s.repo.On("Get{{.MethodSuffix}}ByID", int64(999)).Return(nil, nil)
+	s.repo.On("GetByID", int64(999)).Return(nil, nil)
 
-	err := s.svc.Delete{{.MethodSuffix}}(999, actor)
+	err := s.svc.Delete(999, actor)
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
 }
 
-func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Delete{{.MethodSuffix}}_RepoError() {
+func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Delete_RepoError() {
 	actor := superadminActor()
 	existing := factories.New{{.ModuleTitle}}Factory().Make()
 	existing.ID = 1
 
-	s.repo.On("Get{{.MethodSuffix}}ByID", int64(1)).Return(existing, nil)
-	s.repo.On("Delete{{.MethodSuffix}}", int64(1)).Return(fmt.Errorf("db error"))
+	s.repo.On("GetByID", int64(1)).Return(existing, nil)
+	s.repo.On("Delete", int64(1)).Return(fmt.Errorf("db error"))
 
-	err := s.svc.Delete{{.MethodSuffix}}(1, actor)
+	err := s.svc.Delete(1, actor)
 
 	s.Error(err)
 }
@@ -2906,8 +2873,8 @@ import (
 
 // Method di bawah ini ditempelkan ke struct {{.SubModuleTitle}}Handler yang
 // sama dengan handler entitas utama (lihat handlers/handler.go). Nama method
-// diberi suffix {{.ItemTitle}} agar tidak bentrok dengan method entitas utama
-// pada struct handler yang sama.
+// diberi suffix {{.ItemTitle}} agar tidak bentrok dengan List/GetByID/dst milik
+// entitas utama pada struct handler yang sama.
 
 // ─── List{{.ItemTitle}} ──────────────────────────────────────────────────────
 //

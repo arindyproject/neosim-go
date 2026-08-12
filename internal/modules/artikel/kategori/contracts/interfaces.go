@@ -1,29 +1,19 @@
 package contracts
 
-import (
-	"neosim_go/internal/modules/artikel/kategori/dto"
-	"neosim_go/internal/modules/artikel/kategori/models"
-	he "neosim_go/internal/shared/httputil"
-)
-
-// Repository defines database operations
+// Repository defines database operations.
+// Method utama ArtikelKategori didefinisikan di kategori_interfaces.go.
+// Item tambahan (mode add-item) di-embed otomatis lewat marker di bawah.
 type Repository interface {
-	Create(m *models.ArtikelKategori) error
-	GetByID(id int64) (*models.ArtikelKategori, error)
-	List(page, pageSize int, filter *dto.FilterArtikelKategoriRequest) ([]models.ArtikelKategori, int64, error)
-	Update(m *models.ArtikelKategori) error
-	Delete(id int64) error
+	ArtikelKategoriRepository
 	TagRepository
 	// GEN:ITEM_REPOSITORY_INTERFACE
 }
 
-// Service defines business logic operations
+// Service defines business logic operations.
+// Method utama ArtikelKategori didefinisikan di kategori_interfaces.go.
+// Item tambahan (mode add-item) di-embed otomatis lewat marker di bawah.
 type Service interface {
-	Create(req *dto.CreateArtikelKategoriRequest, actor he.AuthContext) (*dto.ArtikelKategoriResponse, error)
-	GetByID(id int64, actor he.AuthContext) (*dto.ArtikelKategoriResponse, error)
-	List(page, pageSize int, filter *dto.FilterArtikelKategoriRequest, actor he.AuthContext) ([]dto.ArtikelKategoriResponse, int64, error)
-	Update(id int64, req *dto.UpdateArtikelKategoriRequest, actor he.AuthContext) (*dto.ArtikelKategoriResponse, error)
-	Delete(id int64, actor he.AuthContext) error
+	ArtikelKategoriService
 	TagService
 	// GEN:ITEM_SERVICE_INTERFACE
 }

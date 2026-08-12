@@ -85,13 +85,13 @@ func (s *ArtikelServiceTestSuite) mockNoPermissions() {
 	s.rbacRepo.On("HasPermission", regularActor().UserID, mock.Anything, mock.Anything).Return(false, nil)
 }
 
-func (s *ArtikelServiceTestSuite) Test_Create_Superadmin_Success() {
+func (s *ArtikelServiceTestSuite) Test_CreateArtikel_Superadmin_Success() {
 	req := &dto.CreateArtikelRequest{Name: "Test Artikel"}
 	actor := superadminActor()
 
-	s.repo.On("Create", mock.AnythingOfType("*models.Artikel")).Return(nil)
+	s.repo.On("CreateArtikel", mock.AnythingOfType("*models.Artikel")).Return(nil)
 
-	result, err := s.svc.Create(req, actor)
+	result, err := s.svc.CreateArtikel(req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -99,40 +99,40 @@ func (s *ArtikelServiceTestSuite) Test_Create_Superadmin_Success() {
 	s.repo.AssertExpectations(s.T())
 }
 
-func (s *ArtikelServiceTestSuite) Test_Create_WithPermission_Success() {
+func (s *ArtikelServiceTestSuite) Test_CreateArtikel_WithPermission_Success() {
 	req := &dto.CreateArtikelRequest{Name: "Test Artikel"}
 	actor := regularActor()
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(true, nil)
-	s.repo.On("Create", mock.AnythingOfType("*models.Artikel")).Return(nil)
+	s.repo.On("CreateArtikel", mock.AnythingOfType("*models.Artikel")).Return(nil)
 
-	result, err := s.svc.Create(req, actor)
+	result, err := s.svc.CreateArtikel(req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 	s.repo.AssertExpectations(s.T())
 }
 
-func (s *ArtikelServiceTestSuite) Test_Create_WithManagePermission_Success() {
+func (s *ArtikelServiceTestSuite) Test_CreateArtikel_WithManagePermission_Success() {
 	req := &dto.CreateArtikelRequest{Name: "Test"}
 	actor := regularActor()
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(false, nil)
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyManage).Return(true, nil)
-	s.repo.On("Create", mock.AnythingOfType("*models.Artikel")).Return(nil)
+	s.repo.On("CreateArtikel", mock.AnythingOfType("*models.Artikel")).Return(nil)
 
-	result, err := s.svc.Create(req, actor)
+	result, err := s.svc.CreateArtikel(req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 }
 
-func (s *ArtikelServiceTestSuite) Test_Create_Forbidden() {
+func (s *ArtikelServiceTestSuite) Test_CreateArtikel_Forbidden() {
 	req := &dto.CreateArtikelRequest{Name: "Test"}
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.Create(req, actor)
+	result, err := s.svc.CreateArtikel(req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -141,26 +141,26 @@ func (s *ArtikelServiceTestSuite) Test_Create_Forbidden() {
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *ArtikelServiceTestSuite) Test_Create_RepoError() {
+func (s *ArtikelServiceTestSuite) Test_CreateArtikel_RepoError() {
 	req := &dto.CreateArtikelRequest{Name: "Test"}
 	actor := superadminActor()
 
-	s.repo.On("Create", mock.AnythingOfType("*models.Artikel")).Return(fmt.Errorf("db error"))
+	s.repo.On("CreateArtikel", mock.AnythingOfType("*models.Artikel")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.Create(req, actor)
+	result, err := s.svc.CreateArtikel(req, actor)
 
 	s.Nil(result)
 	s.Error(err)
 }
 
-func (s *ArtikelServiceTestSuite) Test_GetByID_Superadmin_Success() {
+func (s *ArtikelServiceTestSuite) Test_GetArtikelByID_Superadmin_Success() {
 	actor := superadminActor()
 	item := factories.NewArtikelFactory().Make()
 	item.ID = 1
 
-	s.repo.On("GetByID", int64(1)).Return(item, nil)
+	s.repo.On("GetArtikelByID", int64(1)).Return(item, nil)
 
-	result, err := s.svc.GetByID(1, actor)
+	result, err := s.svc.GetArtikelByID(1, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -168,25 +168,25 @@ func (s *ArtikelServiceTestSuite) Test_GetByID_Superadmin_Success() {
 	s.Equal(item.Name, result.Name)
 }
 
-func (s *ArtikelServiceTestSuite) Test_GetByID_WithPermission_Success() {
+func (s *ArtikelServiceTestSuite) Test_GetArtikelByID_WithPermission_Success() {
 	actor := regularActor()
 	item := factories.NewArtikelFactory().Make()
 	item.ID = 1
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyRead).Return(true, nil)
-	s.repo.On("GetByID", int64(1)).Return(item, nil)
+	s.repo.On("GetArtikelByID", int64(1)).Return(item, nil)
 
-	result, err := s.svc.GetByID(1, actor)
+	result, err := s.svc.GetArtikelByID(1, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 }
 
-func (s *ArtikelServiceTestSuite) Test_GetByID_Forbidden() {
+func (s *ArtikelServiceTestSuite) Test_GetArtikelByID_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.GetByID(1, actor)
+	result, err := s.svc.GetArtikelByID(1, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -195,30 +195,30 @@ func (s *ArtikelServiceTestSuite) Test_GetByID_Forbidden() {
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *ArtikelServiceTestSuite) Test_GetByID_NotFound() {
+func (s *ArtikelServiceTestSuite) Test_GetArtikelByID_NotFound() {
 	actor := superadminActor()
 
-	s.repo.On("GetByID", int64(999)).Return(nil, nil)
+	s.repo.On("GetArtikelByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.GetByID(999, actor)
+	result, err := s.svc.GetArtikelByID(999, actor)
 
 	s.Nil(result)
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
 }
 
-func (s *ArtikelServiceTestSuite) Test_GetByID_RepoError() {
+func (s *ArtikelServiceTestSuite) Test_GetArtikelByID_RepoError() {
 	actor := superadminActor()
 
-	s.repo.On("GetByID", int64(1)).Return(nil, fmt.Errorf("db error"))
+	s.repo.On("GetArtikelByID", int64(1)).Return(nil, fmt.Errorf("db error"))
 
-	result, err := s.svc.GetByID(1, actor)
+	result, err := s.svc.GetArtikelByID(1, actor)
 
 	s.Nil(result)
 	s.Error(err)
 }
 
-func (s *ArtikelServiceTestSuite) Test_List_Superadmin_Success() {
+func (s *ArtikelServiceTestSuite) Test_ListArtikel_Superadmin_Success() {
 	actor := superadminActor()
 	filter := &dto.FilterArtikelRequest{}
 	items := []models.Artikel{
@@ -226,36 +226,36 @@ func (s *ArtikelServiceTestSuite) Test_List_Superadmin_Success() {
 		*factories.NewArtikelFactory().Make(),
 	}
 
-	s.repo.On("List", 1, 10, filter).Return(items, int64(2), nil)
+	s.repo.On("ListArtikel", 1, 10, filter).Return(items, int64(2), nil)
 
-	result, total, err := s.svc.List(1, 10, filter, actor)
+	result, total, err := s.svc.ListArtikel(1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(2), total)
 	s.Len(result, 2)
 }
 
-func (s *ArtikelServiceTestSuite) Test_List_WithPermission_Success() {
+func (s *ArtikelServiceTestSuite) Test_ListArtikel_WithPermission_Success() {
 	actor := regularActor()
 	filter := &dto.FilterArtikelRequest{}
 	items := []models.Artikel{*factories.NewArtikelFactory().Make()}
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyRead).Return(true, nil)
-	s.repo.On("List", 1, 10, filter).Return(items, int64(1), nil)
+	s.repo.On("ListArtikel", 1, 10, filter).Return(items, int64(1), nil)
 
-	result, total, err := s.svc.List(1, 10, filter, actor)
+	result, total, err := s.svc.ListArtikel(1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
 	s.Len(result, 1)
 }
 
-func (s *ArtikelServiceTestSuite) Test_List_Forbidden() {
+func (s *ArtikelServiceTestSuite) Test_ListArtikel_Forbidden() {
 	actor := regularActor()
 	filter := &dto.FilterArtikelRequest{}
 	s.mockNoPermissions()
 
-	result, total, err := s.svc.List(1, 10, filter, actor)
+	result, total, err := s.svc.ListArtikel(1, 10, filter, actor)
 
 	s.Nil(result)
 	s.Equal(int64(0), total)
@@ -265,63 +265,63 @@ func (s *ArtikelServiceTestSuite) Test_List_Forbidden() {
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *ArtikelServiceTestSuite) Test_List_DefaultPagination() {
+func (s *ArtikelServiceTestSuite) Test_ListArtikel_DefaultPagination() {
 	actor := superadminActor()
 	filter := &dto.FilterArtikelRequest{}
 
-	s.repo.On("List", 1, 10, filter).Return([]models.Artikel{}, int64(0), nil)
+	s.repo.On("ListArtikel", 1, 10, filter).Return([]models.Artikel{}, int64(0), nil)
 
-	result, total, err := s.svc.List(0, 0, filter, actor)
+	result, total, err := s.svc.ListArtikel(0, 0, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(0), total)
 	s.Empty(result)
 }
 
-func (s *ArtikelServiceTestSuite) Test_List_PageSizeCapped() {
+func (s *ArtikelServiceTestSuite) Test_ListArtikel_PageSizeCapped() {
 	actor := superadminActor()
 	filter := &dto.FilterArtikelRequest{}
 
-	s.repo.On("List", 1, 10, filter).Return([]models.Artikel{}, int64(0), nil)
+	s.repo.On("ListArtikel", 1, 10, filter).Return([]models.Artikel{}, int64(0), nil)
 
-	_, _, err := s.svc.List(1, 999, filter, actor)
+	_, _, err := s.svc.ListArtikel(1, 999, filter, actor)
 
 	s.NoError(err)
-	s.repo.AssertCalled(s.T(), "List", 1, 10, filter)
+	s.repo.AssertCalled(s.T(), "ListArtikel", 1, 10, filter)
 }
 
-func (s *ArtikelServiceTestSuite) Test_List_WithNameFilter() {
+func (s *ArtikelServiceTestSuite) Test_ListArtikel_WithNameFilter() {
 	actor := superadminActor()
 	filter := &dto.FilterArtikelRequest{Name: "test"}
 	items := []models.Artikel{*factories.NewArtikelFactory().Make()}
 
-	s.repo.On("List", 1, 10, filter).Return(items, int64(1), nil)
+	s.repo.On("ListArtikel", 1, 10, filter).Return(items, int64(1), nil)
 
-	result, total, err := s.svc.List(1, 10, filter, actor)
+	result, total, err := s.svc.ListArtikel(1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
 	s.Len(result, 1)
 }
 
-func (s *ArtikelServiceTestSuite) Test_Update_Superadmin_Success() {
+func (s *ArtikelServiceTestSuite) Test_UpdateArtikel_Superadmin_Success() {
 	actor := superadminActor()
 	existing := factories.NewArtikelFactory().Make()
 	existing.ID = 1
 	newName := "Updated Name"
 	req := &dto.UpdateArtikelRequest{Name: &newName}
 
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Update", mock.AnythingOfType("*models.Artikel")).Return(nil)
+	s.repo.On("GetArtikelByID", int64(1)).Return(existing, nil)
+	s.repo.On("UpdateArtikel", mock.AnythingOfType("*models.Artikel")).Return(nil)
 
-	result, err := s.svc.Update(1, req, actor)
+	result, err := s.svc.UpdateArtikel(1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 	s.Equal(newName, result.Name)
 }
 
-func (s *ArtikelServiceTestSuite) Test_Update_WithPermission_Success() {
+func (s *ArtikelServiceTestSuite) Test_UpdateArtikel_WithPermission_Success() {
 	actor := regularActor()
 	existing := factories.NewArtikelFactory().Make()
 	existing.ID = 1
@@ -329,21 +329,21 @@ func (s *ArtikelServiceTestSuite) Test_Update_WithPermission_Success() {
 	req := &dto.UpdateArtikelRequest{Name: &newName}
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyUpdate).Return(true, nil)
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Update", mock.AnythingOfType("*models.Artikel")).Return(nil)
+	s.repo.On("GetArtikelByID", int64(1)).Return(existing, nil)
+	s.repo.On("UpdateArtikel", mock.AnythingOfType("*models.Artikel")).Return(nil)
 
-	result, err := s.svc.Update(1, req, actor)
+	result, err := s.svc.UpdateArtikel(1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 }
 
-func (s *ArtikelServiceTestSuite) Test_Update_Forbidden() {
+func (s *ArtikelServiceTestSuite) Test_UpdateArtikel_Forbidden() {
 	actor := regularActor()
 	req := &dto.UpdateArtikelRequest{}
 	s.mockNoPermissions()
 
-	result, err := s.svc.Update(1, req, actor)
+	result, err := s.svc.UpdateArtikel(1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -352,20 +352,20 @@ func (s *ArtikelServiceTestSuite) Test_Update_Forbidden() {
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *ArtikelServiceTestSuite) Test_Update_NotFound() {
+func (s *ArtikelServiceTestSuite) Test_UpdateArtikel_NotFound() {
 	actor := superadminActor()
 	req := &dto.UpdateArtikelRequest{}
 
-	s.repo.On("GetByID", int64(999)).Return(nil, nil)
+	s.repo.On("GetArtikelByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.Update(999, req, actor)
+	result, err := s.svc.UpdateArtikel(999, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
 }
 
-func (s *ArtikelServiceTestSuite) Test_Update_PartialFields() {
+func (s *ArtikelServiceTestSuite) Test_UpdateArtikel_PartialFields() {
 	actor := superadminActor()
 	existing := factories.NewArtikelFactory().Make()
 	existing.ID = 1
@@ -373,66 +373,66 @@ func (s *ArtikelServiceTestSuite) Test_Update_PartialFields() {
 	newDesc := "New description"
 	req := &dto.UpdateArtikelRequest{Description: &newDesc}
 
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Update", mock.MatchedBy(func(m *models.Artikel) bool {
+	s.repo.On("GetArtikelByID", int64(1)).Return(existing, nil)
+	s.repo.On("UpdateArtikel", mock.MatchedBy(func(m *models.Artikel) bool {
 		return m.Name == originalName && *m.Description == newDesc
 	})).Return(nil)
 
-	result, err := s.svc.Update(1, req, actor)
+	result, err := s.svc.UpdateArtikel(1, req, actor)
 
 	s.NoError(err)
 	s.Equal(originalName, result.Name)
 	s.Equal(newDesc, *result.Description)
 }
 
-func (s *ArtikelServiceTestSuite) Test_Update_RepoError() {
+func (s *ArtikelServiceTestSuite) Test_UpdateArtikel_RepoError() {
 	actor := superadminActor()
 	existing := factories.NewArtikelFactory().Make()
 	existing.ID = 1
 	req := &dto.UpdateArtikelRequest{}
 
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Update", mock.AnythingOfType("*models.Artikel")).Return(fmt.Errorf("db error"))
+	s.repo.On("GetArtikelByID", int64(1)).Return(existing, nil)
+	s.repo.On("UpdateArtikel", mock.AnythingOfType("*models.Artikel")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.Update(1, req, actor)
+	result, err := s.svc.UpdateArtikel(1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
 }
 
-func (s *ArtikelServiceTestSuite) Test_Delete_Superadmin_Success() {
+func (s *ArtikelServiceTestSuite) Test_DeleteArtikel_Superadmin_Success() {
 	actor := superadminActor()
 	existing := factories.NewArtikelFactory().Make()
 	existing.ID = 1
 
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Delete", int64(1)).Return(nil)
+	s.repo.On("GetArtikelByID", int64(1)).Return(existing, nil)
+	s.repo.On("DeleteArtikel", int64(1)).Return(nil)
 
-	err := s.svc.Delete(1, actor)
+	err := s.svc.DeleteArtikel(1, actor)
 
 	s.NoError(err)
 	s.repo.AssertExpectations(s.T())
 }
 
-func (s *ArtikelServiceTestSuite) Test_Delete_WithPermission_Success() {
+func (s *ArtikelServiceTestSuite) Test_DeleteArtikel_WithPermission_Success() {
 	actor := regularActor()
 	existing := factories.NewArtikelFactory().Make()
 	existing.ID = 1
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyDelete).Return(true, nil)
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Delete", int64(1)).Return(nil)
+	s.repo.On("GetArtikelByID", int64(1)).Return(existing, nil)
+	s.repo.On("DeleteArtikel", int64(1)).Return(nil)
 
-	err := s.svc.Delete(1, actor)
+	err := s.svc.DeleteArtikel(1, actor)
 
 	s.NoError(err)
 }
 
-func (s *ArtikelServiceTestSuite) Test_Delete_Forbidden() {
+func (s *ArtikelServiceTestSuite) Test_DeleteArtikel_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	err := s.svc.Delete(1, actor)
+	err := s.svc.DeleteArtikel(1, actor)
 
 	s.Error(err)
 	var appErr *appErrors.AppError
@@ -440,26 +440,26 @@ func (s *ArtikelServiceTestSuite) Test_Delete_Forbidden() {
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *ArtikelServiceTestSuite) Test_Delete_NotFound() {
+func (s *ArtikelServiceTestSuite) Test_DeleteArtikel_NotFound() {
 	actor := superadminActor()
 
-	s.repo.On("GetByID", int64(999)).Return(nil, nil)
+	s.repo.On("GetArtikelByID", int64(999)).Return(nil, nil)
 
-	err := s.svc.Delete(999, actor)
+	err := s.svc.DeleteArtikel(999, actor)
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
 }
 
-func (s *ArtikelServiceTestSuite) Test_Delete_RepoError() {
+func (s *ArtikelServiceTestSuite) Test_DeleteArtikel_RepoError() {
 	actor := superadminActor()
 	existing := factories.NewArtikelFactory().Make()
 	existing.ID = 1
 
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Delete", int64(1)).Return(fmt.Errorf("db error"))
+	s.repo.On("GetArtikelByID", int64(1)).Return(existing, nil)
+	s.repo.On("DeleteArtikel", int64(1)).Return(fmt.Errorf("db error"))
 
-	err := s.svc.Delete(1, actor)
+	err := s.svc.DeleteArtikel(1, actor)
 
 	s.Error(err)
 }

@@ -85,13 +85,13 @@ func (s *ArtikelKategoriServiceTestSuite) mockNoPermissions() {
 	s.rbacRepo.On("HasPermission", regularActor().UserID, mock.Anything, mock.Anything).Return(false, nil)
 }
 
-func (s *ArtikelKategoriServiceTestSuite) Test_Create_Superadmin_Success() {
+func (s *ArtikelKategoriServiceTestSuite) Test_CreateKategori_Superadmin_Success() {
 	req := &dto.CreateArtikelKategoriRequest{Name: "Test ArtikelKategori"}
 	actor := superadminActor()
 
-	s.repo.On("Create", mock.AnythingOfType("*models.ArtikelKategori")).Return(nil)
+	s.repo.On("CreateKategori", mock.AnythingOfType("*models.ArtikelKategori")).Return(nil)
 
-	result, err := s.svc.Create(req, actor)
+	result, err := s.svc.CreateKategori(req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -99,40 +99,40 @@ func (s *ArtikelKategoriServiceTestSuite) Test_Create_Superadmin_Success() {
 	s.repo.AssertExpectations(s.T())
 }
 
-func (s *ArtikelKategoriServiceTestSuite) Test_Create_WithPermission_Success() {
+func (s *ArtikelKategoriServiceTestSuite) Test_CreateKategori_WithPermission_Success() {
 	req := &dto.CreateArtikelKategoriRequest{Name: "Test ArtikelKategori"}
 	actor := regularActor()
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(true, nil)
-	s.repo.On("Create", mock.AnythingOfType("*models.ArtikelKategori")).Return(nil)
+	s.repo.On("CreateKategori", mock.AnythingOfType("*models.ArtikelKategori")).Return(nil)
 
-	result, err := s.svc.Create(req, actor)
+	result, err := s.svc.CreateKategori(req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 	s.repo.AssertExpectations(s.T())
 }
 
-func (s *ArtikelKategoriServiceTestSuite) Test_Create_WithManagePermission_Success() {
+func (s *ArtikelKategoriServiceTestSuite) Test_CreateKategori_WithManagePermission_Success() {
 	req := &dto.CreateArtikelKategoriRequest{Name: "Test"}
 	actor := regularActor()
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(false, nil)
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyManage).Return(true, nil)
-	s.repo.On("Create", mock.AnythingOfType("*models.ArtikelKategori")).Return(nil)
+	s.repo.On("CreateKategori", mock.AnythingOfType("*models.ArtikelKategori")).Return(nil)
 
-	result, err := s.svc.Create(req, actor)
+	result, err := s.svc.CreateKategori(req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 }
 
-func (s *ArtikelKategoriServiceTestSuite) Test_Create_Forbidden() {
+func (s *ArtikelKategoriServiceTestSuite) Test_CreateKategori_Forbidden() {
 	req := &dto.CreateArtikelKategoriRequest{Name: "Test"}
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.Create(req, actor)
+	result, err := s.svc.CreateKategori(req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -141,26 +141,26 @@ func (s *ArtikelKategoriServiceTestSuite) Test_Create_Forbidden() {
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *ArtikelKategoriServiceTestSuite) Test_Create_RepoError() {
+func (s *ArtikelKategoriServiceTestSuite) Test_CreateKategori_RepoError() {
 	req := &dto.CreateArtikelKategoriRequest{Name: "Test"}
 	actor := superadminActor()
 
-	s.repo.On("Create", mock.AnythingOfType("*models.ArtikelKategori")).Return(fmt.Errorf("db error"))
+	s.repo.On("CreateKategori", mock.AnythingOfType("*models.ArtikelKategori")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.Create(req, actor)
+	result, err := s.svc.CreateKategori(req, actor)
 
 	s.Nil(result)
 	s.Error(err)
 }
 
-func (s *ArtikelKategoriServiceTestSuite) Test_GetByID_Superadmin_Success() {
+func (s *ArtikelKategoriServiceTestSuite) Test_GetKategoriByID_Superadmin_Success() {
 	actor := superadminActor()
 	item := factories.NewArtikelKategoriFactory().Make()
 	item.ID = 1
 
-	s.repo.On("GetByID", int64(1)).Return(item, nil)
+	s.repo.On("GetKategoriByID", int64(1)).Return(item, nil)
 
-	result, err := s.svc.GetByID(1, actor)
+	result, err := s.svc.GetKategoriByID(1, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -168,25 +168,25 @@ func (s *ArtikelKategoriServiceTestSuite) Test_GetByID_Superadmin_Success() {
 	s.Equal(item.Name, result.Name)
 }
 
-func (s *ArtikelKategoriServiceTestSuite) Test_GetByID_WithPermission_Success() {
+func (s *ArtikelKategoriServiceTestSuite) Test_GetKategoriByID_WithPermission_Success() {
 	actor := regularActor()
 	item := factories.NewArtikelKategoriFactory().Make()
 	item.ID = 1
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyRead).Return(true, nil)
-	s.repo.On("GetByID", int64(1)).Return(item, nil)
+	s.repo.On("GetKategoriByID", int64(1)).Return(item, nil)
 
-	result, err := s.svc.GetByID(1, actor)
+	result, err := s.svc.GetKategoriByID(1, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 }
 
-func (s *ArtikelKategoriServiceTestSuite) Test_GetByID_Forbidden() {
+func (s *ArtikelKategoriServiceTestSuite) Test_GetKategoriByID_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.GetByID(1, actor)
+	result, err := s.svc.GetKategoriByID(1, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -195,30 +195,30 @@ func (s *ArtikelKategoriServiceTestSuite) Test_GetByID_Forbidden() {
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *ArtikelKategoriServiceTestSuite) Test_GetByID_NotFound() {
+func (s *ArtikelKategoriServiceTestSuite) Test_GetKategoriByID_NotFound() {
 	actor := superadminActor()
 
-	s.repo.On("GetByID", int64(999)).Return(nil, nil)
+	s.repo.On("GetKategoriByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.GetByID(999, actor)
+	result, err := s.svc.GetKategoriByID(999, actor)
 
 	s.Nil(result)
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
 }
 
-func (s *ArtikelKategoriServiceTestSuite) Test_GetByID_RepoError() {
+func (s *ArtikelKategoriServiceTestSuite) Test_GetKategoriByID_RepoError() {
 	actor := superadminActor()
 
-	s.repo.On("GetByID", int64(1)).Return(nil, fmt.Errorf("db error"))
+	s.repo.On("GetKategoriByID", int64(1)).Return(nil, fmt.Errorf("db error"))
 
-	result, err := s.svc.GetByID(1, actor)
+	result, err := s.svc.GetKategoriByID(1, actor)
 
 	s.Nil(result)
 	s.Error(err)
 }
 
-func (s *ArtikelKategoriServiceTestSuite) Test_List_Superadmin_Success() {
+func (s *ArtikelKategoriServiceTestSuite) Test_ListKategori_Superadmin_Success() {
 	actor := superadminActor()
 	filter := &dto.FilterArtikelKategoriRequest{}
 	items := []models.ArtikelKategori{
@@ -226,36 +226,36 @@ func (s *ArtikelKategoriServiceTestSuite) Test_List_Superadmin_Success() {
 		*factories.NewArtikelKategoriFactory().Make(),
 	}
 
-	s.repo.On("List", 1, 10, filter).Return(items, int64(2), nil)
+	s.repo.On("ListKategori", 1, 10, filter).Return(items, int64(2), nil)
 
-	result, total, err := s.svc.List(1, 10, filter, actor)
+	result, total, err := s.svc.ListKategori(1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(2), total)
 	s.Len(result, 2)
 }
 
-func (s *ArtikelKategoriServiceTestSuite) Test_List_WithPermission_Success() {
+func (s *ArtikelKategoriServiceTestSuite) Test_ListKategori_WithPermission_Success() {
 	actor := regularActor()
 	filter := &dto.FilterArtikelKategoriRequest{}
 	items := []models.ArtikelKategori{*factories.NewArtikelKategoriFactory().Make()}
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyRead).Return(true, nil)
-	s.repo.On("List", 1, 10, filter).Return(items, int64(1), nil)
+	s.repo.On("ListKategori", 1, 10, filter).Return(items, int64(1), nil)
 
-	result, total, err := s.svc.List(1, 10, filter, actor)
+	result, total, err := s.svc.ListKategori(1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
 	s.Len(result, 1)
 }
 
-func (s *ArtikelKategoriServiceTestSuite) Test_List_Forbidden() {
+func (s *ArtikelKategoriServiceTestSuite) Test_ListKategori_Forbidden() {
 	actor := regularActor()
 	filter := &dto.FilterArtikelKategoriRequest{}
 	s.mockNoPermissions()
 
-	result, total, err := s.svc.List(1, 10, filter, actor)
+	result, total, err := s.svc.ListKategori(1, 10, filter, actor)
 
 	s.Nil(result)
 	s.Equal(int64(0), total)
@@ -265,63 +265,63 @@ func (s *ArtikelKategoriServiceTestSuite) Test_List_Forbidden() {
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *ArtikelKategoriServiceTestSuite) Test_List_DefaultPagination() {
+func (s *ArtikelKategoriServiceTestSuite) Test_ListKategori_DefaultPagination() {
 	actor := superadminActor()
 	filter := &dto.FilterArtikelKategoriRequest{}
 
-	s.repo.On("List", 1, 10, filter).Return([]models.ArtikelKategori{}, int64(0), nil)
+	s.repo.On("ListKategori", 1, 10, filter).Return([]models.ArtikelKategori{}, int64(0), nil)
 
-	result, total, err := s.svc.List(0, 0, filter, actor)
+	result, total, err := s.svc.ListKategori(0, 0, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(0), total)
 	s.Empty(result)
 }
 
-func (s *ArtikelKategoriServiceTestSuite) Test_List_PageSizeCapped() {
+func (s *ArtikelKategoriServiceTestSuite) Test_ListKategori_PageSizeCapped() {
 	actor := superadminActor()
 	filter := &dto.FilterArtikelKategoriRequest{}
 
-	s.repo.On("List", 1, 10, filter).Return([]models.ArtikelKategori{}, int64(0), nil)
+	s.repo.On("ListKategori", 1, 10, filter).Return([]models.ArtikelKategori{}, int64(0), nil)
 
-	_, _, err := s.svc.List(1, 999, filter, actor)
+	_, _, err := s.svc.ListKategori(1, 999, filter, actor)
 
 	s.NoError(err)
-	s.repo.AssertCalled(s.T(), "List", 1, 10, filter)
+	s.repo.AssertCalled(s.T(), "ListKategori", 1, 10, filter)
 }
 
-func (s *ArtikelKategoriServiceTestSuite) Test_List_WithNameFilter() {
+func (s *ArtikelKategoriServiceTestSuite) Test_ListKategori_WithNameFilter() {
 	actor := superadminActor()
 	filter := &dto.FilterArtikelKategoriRequest{Name: "test"}
 	items := []models.ArtikelKategori{*factories.NewArtikelKategoriFactory().Make()}
 
-	s.repo.On("List", 1, 10, filter).Return(items, int64(1), nil)
+	s.repo.On("ListKategori", 1, 10, filter).Return(items, int64(1), nil)
 
-	result, total, err := s.svc.List(1, 10, filter, actor)
+	result, total, err := s.svc.ListKategori(1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
 	s.Len(result, 1)
 }
 
-func (s *ArtikelKategoriServiceTestSuite) Test_Update_Superadmin_Success() {
+func (s *ArtikelKategoriServiceTestSuite) Test_UpdateKategori_Superadmin_Success() {
 	actor := superadminActor()
 	existing := factories.NewArtikelKategoriFactory().Make()
 	existing.ID = 1
 	newName := "Updated Name"
 	req := &dto.UpdateArtikelKategoriRequest{Name: &newName}
 
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Update", mock.AnythingOfType("*models.ArtikelKategori")).Return(nil)
+	s.repo.On("GetKategoriByID", int64(1)).Return(existing, nil)
+	s.repo.On("UpdateKategori", mock.AnythingOfType("*models.ArtikelKategori")).Return(nil)
 
-	result, err := s.svc.Update(1, req, actor)
+	result, err := s.svc.UpdateKategori(1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 	s.Equal(newName, result.Name)
 }
 
-func (s *ArtikelKategoriServiceTestSuite) Test_Update_WithPermission_Success() {
+func (s *ArtikelKategoriServiceTestSuite) Test_UpdateKategori_WithPermission_Success() {
 	actor := regularActor()
 	existing := factories.NewArtikelKategoriFactory().Make()
 	existing.ID = 1
@@ -329,21 +329,21 @@ func (s *ArtikelKategoriServiceTestSuite) Test_Update_WithPermission_Success() {
 	req := &dto.UpdateArtikelKategoriRequest{Name: &newName}
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyUpdate).Return(true, nil)
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Update", mock.AnythingOfType("*models.ArtikelKategori")).Return(nil)
+	s.repo.On("GetKategoriByID", int64(1)).Return(existing, nil)
+	s.repo.On("UpdateKategori", mock.AnythingOfType("*models.ArtikelKategori")).Return(nil)
 
-	result, err := s.svc.Update(1, req, actor)
+	result, err := s.svc.UpdateKategori(1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 }
 
-func (s *ArtikelKategoriServiceTestSuite) Test_Update_Forbidden() {
+func (s *ArtikelKategoriServiceTestSuite) Test_UpdateKategori_Forbidden() {
 	actor := regularActor()
 	req := &dto.UpdateArtikelKategoriRequest{}
 	s.mockNoPermissions()
 
-	result, err := s.svc.Update(1, req, actor)
+	result, err := s.svc.UpdateKategori(1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -352,20 +352,20 @@ func (s *ArtikelKategoriServiceTestSuite) Test_Update_Forbidden() {
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *ArtikelKategoriServiceTestSuite) Test_Update_NotFound() {
+func (s *ArtikelKategoriServiceTestSuite) Test_UpdateKategori_NotFound() {
 	actor := superadminActor()
 	req := &dto.UpdateArtikelKategoriRequest{}
 
-	s.repo.On("GetByID", int64(999)).Return(nil, nil)
+	s.repo.On("GetKategoriByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.Update(999, req, actor)
+	result, err := s.svc.UpdateKategori(999, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
 }
 
-func (s *ArtikelKategoriServiceTestSuite) Test_Update_PartialFields() {
+func (s *ArtikelKategoriServiceTestSuite) Test_UpdateKategori_PartialFields() {
 	actor := superadminActor()
 	existing := factories.NewArtikelKategoriFactory().Make()
 	existing.ID = 1
@@ -373,66 +373,66 @@ func (s *ArtikelKategoriServiceTestSuite) Test_Update_PartialFields() {
 	newDesc := "New description"
 	req := &dto.UpdateArtikelKategoriRequest{Description: &newDesc}
 
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Update", mock.MatchedBy(func(m *models.ArtikelKategori) bool {
+	s.repo.On("GetKategoriByID", int64(1)).Return(existing, nil)
+	s.repo.On("UpdateKategori", mock.MatchedBy(func(m *models.ArtikelKategori) bool {
 		return m.Name == originalName && *m.Description == newDesc
 	})).Return(nil)
 
-	result, err := s.svc.Update(1, req, actor)
+	result, err := s.svc.UpdateKategori(1, req, actor)
 
 	s.NoError(err)
 	s.Equal(originalName, result.Name)
 	s.Equal(newDesc, *result.Description)
 }
 
-func (s *ArtikelKategoriServiceTestSuite) Test_Update_RepoError() {
+func (s *ArtikelKategoriServiceTestSuite) Test_UpdateKategori_RepoError() {
 	actor := superadminActor()
 	existing := factories.NewArtikelKategoriFactory().Make()
 	existing.ID = 1
 	req := &dto.UpdateArtikelKategoriRequest{}
 
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Update", mock.AnythingOfType("*models.ArtikelKategori")).Return(fmt.Errorf("db error"))
+	s.repo.On("GetKategoriByID", int64(1)).Return(existing, nil)
+	s.repo.On("UpdateKategori", mock.AnythingOfType("*models.ArtikelKategori")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.Update(1, req, actor)
+	result, err := s.svc.UpdateKategori(1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
 }
 
-func (s *ArtikelKategoriServiceTestSuite) Test_Delete_Superadmin_Success() {
+func (s *ArtikelKategoriServiceTestSuite) Test_DeleteKategori_Superadmin_Success() {
 	actor := superadminActor()
 	existing := factories.NewArtikelKategoriFactory().Make()
 	existing.ID = 1
 
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Delete", int64(1)).Return(nil)
+	s.repo.On("GetKategoriByID", int64(1)).Return(existing, nil)
+	s.repo.On("DeleteKategori", int64(1)).Return(nil)
 
-	err := s.svc.Delete(1, actor)
+	err := s.svc.DeleteKategori(1, actor)
 
 	s.NoError(err)
 	s.repo.AssertExpectations(s.T())
 }
 
-func (s *ArtikelKategoriServiceTestSuite) Test_Delete_WithPermission_Success() {
+func (s *ArtikelKategoriServiceTestSuite) Test_DeleteKategori_WithPermission_Success() {
 	actor := regularActor()
 	existing := factories.NewArtikelKategoriFactory().Make()
 	existing.ID = 1
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyDelete).Return(true, nil)
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Delete", int64(1)).Return(nil)
+	s.repo.On("GetKategoriByID", int64(1)).Return(existing, nil)
+	s.repo.On("DeleteKategori", int64(1)).Return(nil)
 
-	err := s.svc.Delete(1, actor)
+	err := s.svc.DeleteKategori(1, actor)
 
 	s.NoError(err)
 }
 
-func (s *ArtikelKategoriServiceTestSuite) Test_Delete_Forbidden() {
+func (s *ArtikelKategoriServiceTestSuite) Test_DeleteKategori_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	err := s.svc.Delete(1, actor)
+	err := s.svc.DeleteKategori(1, actor)
 
 	s.Error(err)
 	var appErr *appErrors.AppError
@@ -440,26 +440,26 @@ func (s *ArtikelKategoriServiceTestSuite) Test_Delete_Forbidden() {
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *ArtikelKategoriServiceTestSuite) Test_Delete_NotFound() {
+func (s *ArtikelKategoriServiceTestSuite) Test_DeleteKategori_NotFound() {
 	actor := superadminActor()
 
-	s.repo.On("GetByID", int64(999)).Return(nil, nil)
+	s.repo.On("GetKategoriByID", int64(999)).Return(nil, nil)
 
-	err := s.svc.Delete(999, actor)
+	err := s.svc.DeleteKategori(999, actor)
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
 }
 
-func (s *ArtikelKategoriServiceTestSuite) Test_Delete_RepoError() {
+func (s *ArtikelKategoriServiceTestSuite) Test_DeleteKategori_RepoError() {
 	actor := superadminActor()
 	existing := factories.NewArtikelKategoriFactory().Make()
 	existing.ID = 1
 
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Delete", int64(1)).Return(fmt.Errorf("db error"))
+	s.repo.On("GetKategoriByID", int64(1)).Return(existing, nil)
+	s.repo.On("DeleteKategori", int64(1)).Return(fmt.Errorf("db error"))
 
-	err := s.svc.Delete(1, actor)
+	err := s.svc.DeleteKategori(1, actor)
 
 	s.Error(err)
 }

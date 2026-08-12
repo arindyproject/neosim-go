@@ -13,8 +13,8 @@ import (
 
 // Method di bawah ini ditempelkan ke struct ArtikelKategoriHandler yang
 // sama dengan handler entitas utama (lihat handlers/handler.go). Nama method
-// diberi suffix Tag agar tidak bentrok dengan List/GetByID/dst milik
-// entitas utama pada struct handler yang sama.
+// diberi suffix Tag agar tidak bentrok dengan method entitas utama
+// pada struct handler yang sama.
 
 // ─── ListTag ──────────────────────────────────────────────────────
 //

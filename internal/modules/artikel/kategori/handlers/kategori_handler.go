@@ -11,7 +11,7 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
-// ─── List ──────────────────────────────────────────────────────────────────────
+// ─── ListKategori ─────────────────────────────────────────────────────
 //
 //	@Summary		Get list of ArtikelKategori
 //	@Description	Get paginated list of ArtikelKategori
@@ -24,7 +24,7 @@ import (
 //	@Param			page_size	query		int		false	"Page size"
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.ArtikelKategoriResponse}
 //	@Router			/artikel/kategori [get]
-func (h *ArtikelKategoriHandler) List(c *echo.Context) error {
+func (h *ArtikelKategoriHandler) ListKategori(c *echo.Context) error {
 
 	filter := dto.FilterArtikelKategoriRequest{
 		Name: c.QueryParam("name"),
@@ -32,14 +32,14 @@ func (h *ArtikelKategoriHandler) List(c *echo.Context) error {
 	page, pageSize := he.ParsePagination(c, h.cfg)
 
 	actor := he.BuildAuthContext(c)
-	items, total, err := h.service.List(page, pageSize, &filter, actor)
+	items, total, err := h.service.ListKategori(page, pageSize, &filter, actor)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
 	}
 	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data", items, total, page, pageSize)
 }
 
-// ─── GetByID ───────────────────────────────────────────────────────────────────
+// ─── GetKategoriByID ───────────────────────────────────────────────────
 //
 //	@Summary		Get ArtikelKategori
 //	@Description	Get ArtikelKategori by :id
@@ -50,20 +50,20 @@ func (h *ArtikelKategoriHandler) List(c *echo.Context) error {
 //	@Param			id	path		int	true	"ArtikelKategori ID"
 //	@Success		200	{object}	response.MyGoResponse{data=dto.ArtikelKategoriResponse}
 //	@Router			/artikel/kategori/{id} [get]
-func (h *ArtikelKategoriHandler) GetByID(c *echo.Context) error {
+func (h *ArtikelKategoriHandler) GetKategoriByID(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.GetByID(id, actor)
+	item, err := h.service.GetKategoriByID(id, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
 	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", item, nil)
 }
 
-// ─── Create ────────────────────────────────────────────────────────────────────
+// ─── CreateKategori ────────────────────────────────────────────────────
 //
 //	@Summary		Create ArtikelKategori
 //	@Description	Create New ArtikelKategori
@@ -74,7 +74,7 @@ func (h *ArtikelKategoriHandler) GetByID(c *echo.Context) error {
 //	@Param			body	body		dto.CreateArtikelKategoriRequest	true	"Create Request"
 //	@Success		201		{object}	response.MyGoResponse{data=dto.ArtikelKategoriResponse}
 //	@Router			/artikel/kategori [post]
-func (h *ArtikelKategoriHandler) Create(c *echo.Context) error {
+func (h *ArtikelKategoriHandler) CreateKategori(c *echo.Context) error {
 	var req dto.CreateArtikelKategoriRequest
 	if err := c.Bind(&req); err != nil {
 		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
@@ -83,14 +83,14 @@ func (h *ArtikelKategoriHandler) Create(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.Create(&req,  actor)
+	item, err := h.service.CreateKategori(&req,  actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
 	return response.Response(c, http.StatusCreated, true, "Data berhasil dibuat", item, nil)
 }
 
-// ─── Update ────────────────────────────────────────────────────────────────────
+// ─── UpdateKategori ────────────────────────────────────────────────────
 //
 //	@Summary		Update ArtikelKategori
 //	@Description	Update ArtikelKategori by :id
@@ -102,7 +102,7 @@ func (h *ArtikelKategoriHandler) Create(c *echo.Context) error {
 //	@Param			body	body		dto.UpdateArtikelKategoriRequest	true	"Update Request"
 //	@Success		200		{object}	response.MyGoResponse{data=dto.ArtikelKategoriResponse}
 //	@Router			/artikel/kategori/{id} [put]
-func (h *ArtikelKategoriHandler) Update(c *echo.Context) error {
+func (h *ArtikelKategoriHandler) UpdateKategori(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
@@ -115,7 +115,7 @@ func (h *ArtikelKategoriHandler) Update(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.Update(id, &req, actor)
+	item, err := h.service.UpdateKategori(id, &req, actor)
 	if err != nil {
 		status := http.StatusBadRequest
 		if err.Error() == "ArtikelKategori tidak ditemukan" {
@@ -126,7 +126,7 @@ func (h *ArtikelKategoriHandler) Update(c *echo.Context) error {
 	return response.Response(c, http.StatusOK, true, "Data berhasil diupdate", item, nil)
 }
 
-// ─── Delete ────────────────────────────────────────────────────────────────────
+// ─── DeleteKategori ────────────────────────────────────────────────────
 //
 //	@Summary		Delete ArtikelKategori
 //	@Description	Delete ArtikelKategori by :id
@@ -137,13 +137,13 @@ func (h *ArtikelKategoriHandler) Update(c *echo.Context) error {
 //	@Param			id	path		int	true	"ArtikelKategori ID"
 //	@Success		200	{object}	response.MyGoResponse{}
 //	@Router			/artikel/kategori/{id} [delete]
-func (h *ArtikelKategoriHandler) Delete(c *echo.Context) error {
+func (h *ArtikelKategoriHandler) DeleteKategori(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	if err := h.service.Delete(id, actor); err != nil {
+	if err := h.service.DeleteKategori(id, actor); err != nil {
 		status := http.StatusInternalServerError
 		if err.Error() == "ArtikelKategori tidak ditemukan" {
 			status = http.StatusNotFound
