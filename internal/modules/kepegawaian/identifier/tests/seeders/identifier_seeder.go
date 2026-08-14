@@ -5,6 +5,7 @@ import (
 
 	"neosim_go/internal/modules/kepegawaian/identifier/models"
 	"neosim_go/internal/modules/kepegawaian/identifier/tests/factories"
+	pegawaiModel "neosim_go/internal/modules/kepegawaian/pegawai/models"
 
 	"gorm.io/gorm"
 )
@@ -21,13 +22,35 @@ func NewKepegawaianIdentifierSeeder(db *gorm.DB) *KepegawaianIdentifierSeeder {
 func (s *KepegawaianIdentifierSeeder) Run() error {
 	log.Println("🌱 Seeding kepegawaian_identifiers...")
 
-	items := factories.NewKepegawaianIdentifierFactory().MakeMany(10)
-	for _, item := range items {
+	// 1. Ambil daftar Tipe ID yang ada untuk memastikan relasi valid
+	var tipes []models.Tipe
+	if err := s.db.Find(&tipes).Error; err != nil || len(tipes) == 0 {
+		log.Println("   ⚠️  Master data 'Tipe' tidak ditemukan. Harap pastikan TipeSeeder dijalankan terlebih dahulu.")
+		return err
+	}
+
+	// 2. Ambil daftar Pegawai yang ada untuk memastikan PegawaiID valid
+	var pegawais []pegawaiModel.KepegawaianPegawai
+	if err := s.db.Find(&pegawais).Error; err != nil || len(pegawais) == 0 {
+		log.Println("   ⚠️  Data 'Pegawai' tidak ditemukan. Harap pastikan PegawaiSeeder dijalankan terlebih dahulu.")
+		return err
+	}
+
+	// 3. Buat sample data menggunakan factory dengan TipeID dan PegawaiID yang valid dari DB
+	for i := 0; i < 10; i++ {
+		validTipe := tipes[i%len(tipes)]          // Rotasi pilihan tipe
+		validPegawai := pegawais[i%len(pegawais)] // Rotasi pilihan pegawai
+
+		item := factories.NewKepegawaianIdentifierFactory().
+			With("TipeID", validTipe.ID).
+			With("PegawaiID", validPegawai.ID).
+			Make()
+
 		if err := s.db.Create(item).Error; err != nil {
 			log.Printf("   ⚠️  Gagal membuat KepegawaianIdentifier: %v", err)
 			continue
 		}
-		log.Printf("   ✅ KepegawaianIdentifier '%s' dibuat.", item.Name)
+		log.Printf("   ✅ KepegawaianIdentifier ID %d (PegawaiID: %d, Tipe: %s, Nilai: %s) dibuat.", item.ID, validPegawai.ID, validTipe.Code, item.Nilai)
 	}
 
 	log.Println("✅ kepegawaian_identifiers seeding selesai!")
@@ -45,17 +68,26 @@ func (s *KepegawaianIdentifierSeeder) Fresh() error {
 	return s.Run()
 }
 
-func (s *KepegawaianIdentifierSeeder) seedDefault(name string) error {
+func (s *KepegawaianIdentifierSeeder) seedDefault(pegawaiID int64, tipeID int64, nilai string) error {
 	var count int64
-	s.db.Model(&models.KepegawaianIdentifier{}).Where("name = ?", name).Count(&count)
+	s.db.Model(&models.KepegawaianIdentifier{}).
+		Where("pegawai_id = ? AND tipe_id = ?", pegawaiID, tipeID).
+		Count(&count)
+
 	if count > 0 {
-		log.Printf("   ⏭️  '%s' sudah ada, skip.", name)
+		log.Printf("   ⏭️  Identifier untuk PegawaiID %d dengan TipeID %d sudah ada, skip.", pegawaiID, tipeID)
 		return nil
 	}
-	item := factories.NewKepegawaianIdentifierFactory().With("name", name).Make()
+
+	item := factories.NewKepegawaianIdentifierFactory().
+		With("PegawaiID", pegawaiID).
+		With("TipeID", tipeID).
+		With("Nilai", nilai).
+		Make()
+
 	if err := s.db.Create(item).Error; err != nil {
 		return err
 	}
-	log.Printf("   ✅ '%s' dibuat.", name)
+	log.Printf("   ✅ Identifier '%s' untuk PegawaiID %d dibuat.", nilai, pegawaiID)
 	return nil
 }

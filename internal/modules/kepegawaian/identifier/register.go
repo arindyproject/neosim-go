@@ -53,7 +53,10 @@ func (r *registryModule) InitRoutes(e *echo.Echo) {
 
 func (r *registryModule) Models() []interface{} {
 	return []interface{}{
+		&models.Tipe{},
 		&models.KepegawaianIdentifier{},
+
+		// GEN:ITEM_MODELS
 	}
 }
 
@@ -62,5 +65,12 @@ func (r *registryModule) SeedData(db *gorm.DB) error {
 }
 
 func (r *registryModule) MigrateSQL(sqlDB *sql.DB) error {
-	return migrations.MigrateKepegawaianIdentifierWithSQL(sqlDB)
+	if err := migrations.MigrateKepegawaianIdentifierWithSQL(sqlDB); err != nil {
+		return err
+	}
+	if err := migrations.MigrateTipeWithSQL(sqlDB); err != nil {
+		return err
+	}
+	// GEN:ITEM_MIGRATIONS
+	return nil
 }

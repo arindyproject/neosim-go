@@ -10,7 +10,6 @@ func (s *service) canReadKepegawaianIdentifier(actor he.AuthContext) (bool, erro
 	if actor.IsSuperadmin {
 		return true, nil
 	}
-
 	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyRead); err != nil || has {
 		return has, err
 	}
@@ -20,11 +19,8 @@ func (s *service) canReadKepegawaianIdentifier(actor he.AuthContext) (bool, erro
 	return false, nil
 }
 
-func (s *service) canCreateKepegawaianIdentifier(actor he.AuthContext, targetUserID int64) (bool, error) {
+func (s *service) canCreateKepegawaianIdentifier(actor he.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
-		return true, nil
-	}
-	if actor.UserID == targetUserID {
 		return true, nil
 	}
 	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyCreate); err != nil || has {
@@ -40,7 +36,6 @@ func (s *service) canUpdateKepegawaianIdentifier(actor he.AuthContext) (bool, er
 	if actor.IsSuperadmin {
 		return true, nil
 	}
-
 	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyUpdate); err != nil || has {
 		return has, err
 	}

@@ -1119,7 +1119,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/dto.KepegawaianIdentifierResponse"
+                                                "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.KepegawaianIdentifierResponse"
                                             }
                                         }
                                     }
@@ -1153,7 +1153,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateKepegawaianIdentifierRequest"
+                            "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.CreateKepegawaianIdentifierRequest"
                         }
                     }
                 ],
@@ -1169,7 +1169,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dto.KepegawaianIdentifierResponse"
+                                            "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.KepegawaianIdentifierResponse"
                                         }
                                     }
                                 }
@@ -1219,12 +1219,288 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/dto.KepegawaianIdentifierResponse"
+                                                "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.KepegawaianIdentifierResponse"
                                             }
                                         }
                                     }
                                 }
                             ]
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/identifier/tipes": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get paginated list of Tipe with optional filters",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/identifier/tipe"
+                ],
+                "summary": "Get list of Tipe",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search by label or code",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by code",
+                        "name": "code",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by label",
+                        "name": "label",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by is_nakes",
+                        "name": "is_nakes",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by is_required",
+                        "name": "is_required",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.TipeResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create New Tipe",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/identifier/tipe"
+                ],
+                "summary": "Create Tipe",
+                "parameters": [
+                    {
+                        "description": "Create Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateTipeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TipeResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/identifier/tipes/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get Tipe by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/identifier/tipe"
+                ],
+                "summary": "Get Tipe",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Tipe ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TipeResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update Tipe by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/identifier/tipe"
+                ],
+                "summary": "Update Tipe",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Tipe ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateTipeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TipeResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete Tipe by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/identifier/tipe"
+                ],
+                "summary": "Delete Tipe",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Tipe ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.MyGoResponse"
                         }
                     }
                 }
@@ -1318,7 +1594,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dto.KepegawaianIdentifierResponse"
+                                            "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.KepegawaianIdentifierResponse"
                                         }
                                     }
                                 }
@@ -1358,7 +1634,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdateKepegawaianIdentifierRequest"
+                            "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.UpdateKepegawaianIdentifierRequest"
                         }
                     }
                 ],
@@ -1374,7 +1650,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dto.KepegawaianIdentifierResponse"
+                                            "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.KepegawaianIdentifierResponse"
                                         }
                                     }
                                 }
@@ -1460,12 +1736,264 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/dto.KepegawaianIdentifierResponse"
+                                                "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.KepegawaianIdentifierResponse"
                                             }
                                         }
                                     }
                                 }
                             ]
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/kontak": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get paginated list of KepegawaianKontak",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/kontak"
+                ],
+                "summary": "Get list of KepegawaianKontak",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by name (partial match)",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.KepegawaianKontakResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create New KepegawaianKontak",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/kontak"
+                ],
+                "summary": "Create KepegawaianKontak",
+                "parameters": [
+                    {
+                        "description": "Create Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateKepegawaianKontakRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KepegawaianKontakResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/kontak/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get KepegawaianKontak by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/kontak"
+                ],
+                "summary": "Get KepegawaianKontak",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "KepegawaianKontak ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KepegawaianKontakResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update KepegawaianKontak by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/kontak"
+                ],
+                "summary": "Update KepegawaianKontak",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "KepegawaianKontak ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateKepegawaianKontakRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KepegawaianKontakResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete KepegawaianKontak by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/kontak"
+                ],
+                "summary": "Delete KepegawaianKontak",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "KepegawaianKontak ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.MyGoResponse"
                         }
                     }
                 }
@@ -6971,40 +7499,20 @@
                 }
             }
         },
-        "dto.CreateKepegawaianIdentifierRequest": {
+        "dto.CreateKepegawaianKontakRequest": {
             "type": "object",
             "required": [
-                "nilai",
-                "pegawai_id",
-                "tipe"
+                "name"
             ],
             "properties": {
-                "is_aktif": {
-                    "type": "boolean"
-                },
-                "is_primary": {
-                    "type": "boolean"
-                },
-                "nilai": {
+                "description": {
                     "type": "string",
-                    "maxLength": 100,
+                    "maxLength": 500
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
                     "minLength": 1
-                },
-                "pegawai_id": {
-                    "type": "integer"
-                },
-                "penerbit": {
-                    "type": "string",
-                    "maxLength": 100
-                },
-                "tanggal_expired": {
-                    "type": "string"
-                },
-                "tanggal_terbit": {
-                    "type": "string"
-                },
-                "tipe": {
-                    "$ref": "#/definitions/models.IdentifierType"
                 }
             }
         },
@@ -7333,6 +7841,46 @@
                 }
             }
         },
+        "dto.CreateTipeRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "label"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "fhir_system": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "has_expiry": {
+                    "type": "boolean"
+                },
+                "is_nakes": {
+                    "type": "boolean"
+                },
+                "is_required": {
+                    "type": "boolean"
+                },
+                "label": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "penerbit": {
+                    "type": "string",
+                    "maxLength": 255
+                }
+            }
+        },
         "dto.CreateUserRequest": {
             "type": "object",
             "required": [
@@ -7557,7 +8105,7 @@
                 }
             }
         },
-        "dto.KepegawaianIdentifierResponse": {
+        "dto.KepegawaianKontakResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -7566,47 +8114,13 @@
                 "created_by": {
                     "$ref": "#/definitions/httputil.UserData"
                 },
-                "days_until_expired": {
-                    "description": "-1 jika tidak ada expired date",
-                    "type": "integer"
+                "description": {
+                    "type": "string"
                 },
                 "id": {
                     "type": "integer"
                 },
-                "is_aktif": {
-                    "type": "boolean"
-                },
-                "is_expired": {
-                    "description": "sudah lewat tanggal expired?",
-                    "type": "boolean"
-                },
-                "is_fhir_mappable": {
-                    "description": "bisa disync ke SATUSEHAT?",
-                    "type": "boolean"
-                },
-                "is_primary": {
-                    "type": "boolean"
-                },
-                "nilai": {
-                    "type": "string"
-                },
-                "pegawai_id": {
-                    "type": "integer"
-                },
-                "penerbit": {
-                    "type": "string"
-                },
-                "tanggal_expired": {
-                    "type": "string"
-                },
-                "tanggal_terbit": {
-                    "type": "string"
-                },
-                "tipe": {
-                    "type": "string"
-                },
-                "tipe_label": {
-                    "description": "label human-readable, ex: \"Surat Tanda Registrasi\"",
+                "name": {
                     "type": "string"
                 },
                 "updated_at": {
@@ -8220,6 +8734,82 @@
                 }
             }
         },
+        "dto.TipeResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "$ref": "#/definitions/httputil.UserData"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "fhir_system": {
+                    "type": "string"
+                },
+                "has_expiry": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_nakes": {
+                    "type": "boolean"
+                },
+                "is_required": {
+                    "type": "boolean"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "penerbit": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "$ref": "#/definitions/httputil.UserData"
+                }
+            }
+        },
+        "dto.TipeSimpelResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "fhir_system": {
+                    "type": "string"
+                },
+                "has_expiry": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_nakes": {
+                    "type": "boolean"
+                },
+                "is_required": {
+                    "type": "boolean"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "penerbit": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.TokenResponse": {
             "type": "object",
             "properties": {
@@ -8310,32 +8900,17 @@
                 }
             }
         },
-        "dto.UpdateKepegawaianIdentifierRequest": {
+        "dto.UpdateKepegawaianKontakRequest": {
             "type": "object",
             "properties": {
-                "is_aktif": {
-                    "type": "boolean"
-                },
-                "is_primary": {
-                    "type": "boolean"
-                },
-                "nilai": {
+                "description": {
                     "type": "string",
-                    "maxLength": 100,
+                    "maxLength": 500
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
                     "minLength": 1
-                },
-                "penerbit": {
-                    "type": "string",
-                    "maxLength": 100
-                },
-                "tanggal_expired": {
-                    "type": "string"
-                },
-                "tanggal_terbit": {
-                    "type": "string"
-                },
-                "tipe": {
-                    "$ref": "#/definitions/models.IdentifierType"
                 }
             }
         },
@@ -8590,6 +9165,42 @@
                 }
             }
         },
+        "dto.UpdateTipeRequest": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "fhir_system": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "has_expiry": {
+                    "type": "boolean"
+                },
+                "is_nakes": {
+                    "type": "boolean"
+                },
+                "is_required": {
+                    "type": "boolean"
+                },
+                "label": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "penerbit": {
+                    "type": "string",
+                    "maxLength": 255
+                }
+            }
+        },
         "dto.UpdateUserRequest": {
             "type": "object",
             "properties": {
@@ -8742,35 +9353,6 @@
                 }
             }
         },
-        "models.IdentifierType": {
-            "type": "string",
-            "enum": [
-                "NIK",
-                "IHS_NUMBER",
-                "STR",
-                "SIP",
-                "NPA_IDI",
-                "NPA_IAI",
-                "NPA_IBI",
-                "NPA_PPNI",
-                "NPWP",
-                "BPJS_KES",
-                "BPJS_TK"
-            ],
-            "x-enum-varnames": [
-                "IdentifierNIK",
-                "IdentifierIHS",
-                "IdentifierSTR",
-                "IdentifierSIP",
-                "IdentifierNPAIDI",
-                "IdentifierNPAIAI",
-                "IdentifierNPAIBI",
-                "IdentifierNPAPPNI",
-                "IdentifierNPWP",
-                "IdentifierBPJSKes",
-                "IdentifierBPJSTK"
-            ]
-        },
         "models.LoginHistory": {
             "type": "object",
             "properties": {
@@ -8830,6 +9412,130 @@
                 "value": {}
             }
         },
+        "neosim_go_internal_modules_kepegawaian_identifier_dto.CreateKepegawaianIdentifierRequest": {
+            "type": "object",
+            "required": [
+                "nilai",
+                "pegawai_id",
+                "tipe_id"
+            ],
+            "properties": {
+                "is_aktif": {
+                    "type": "boolean"
+                },
+                "is_primary": {
+                    "type": "boolean"
+                },
+                "nilai": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "pegawai_id": {
+                    "type": "integer"
+                },
+                "tanggal_expired": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-01-01"
+                },
+                "tanggal_terbit": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-01-01"
+                },
+                "tipe_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "neosim_go_internal_modules_kepegawaian_identifier_dto.KepegawaianIdentifierResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "$ref": "#/definitions/httputil.UserData"
+                },
+                "days_until_expired": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_aktif": {
+                    "type": "boolean"
+                },
+                "is_expired": {
+                    "type": "boolean"
+                },
+                "is_fhir_mappable": {
+                    "type": "boolean"
+                },
+                "is_primary": {
+                    "type": "boolean"
+                },
+                "nilai": {
+                    "type": "string"
+                },
+                "pegawai_id": {
+                    "type": "integer"
+                },
+                "penerbit": {
+                    "type": "string"
+                },
+                "tanggal_expired": {
+                    "$ref": "#/definitions/types.DateOnly"
+                },
+                "tanggal_terbit": {
+                    "$ref": "#/definitions/types.DateOnly"
+                },
+                "tipe": {
+                    "description": "TipeID         int64            `json:\"tipe_id\"`",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.TipeSimpelResponse"
+                        }
+                    ]
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "$ref": "#/definitions/httputil.UserData"
+                }
+            }
+        },
+        "neosim_go_internal_modules_kepegawaian_identifier_dto.UpdateKepegawaianIdentifierRequest": {
+            "type": "object",
+            "properties": {
+                "is_aktif": {
+                    "type": "boolean"
+                },
+                "is_primary": {
+                    "type": "boolean"
+                },
+                "nilai": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "tanggal_expired": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-01-01"
+                },
+                "tanggal_terbit": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-01-01"
+                },
+                "tipe_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "response.MyGoResponse": {
             "description": "Standard JSON response",
             "type": "object",
@@ -8841,6 +9547,14 @@
                 },
                 "status": {
                     "type": "boolean"
+                }
+            }
+        },
+        "types.DateOnly": {
+            "type": "object",
+            "properties": {
+                "time.Time": {
+                    "type": "string"
                 }
             }
         }

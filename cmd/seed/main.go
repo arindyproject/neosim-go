@@ -20,6 +20,7 @@ import (
 	masterMaster "neosim_go/internal/modules/master/master/tests/seeders"
 
 	// Kepegawaian----------------------------------------------------------
+	masterKepegawaianIdentifier "neosim_go/internal/modules/kepegawaian/identifier/tests/seeders"
 	masterKepegawaianPegawai "neosim_go/internal/modules/kepegawaian/pegawai/tests/seeders"
 
 	// Artikel---------------------------------------------------------------
@@ -120,6 +121,7 @@ func main() {
 		}
 	} //------Departemen----------------------------------------------------
 
+	//Kepegawaian-----------------------------------------------------------
 	//------Kepegawaian-----------------------------------------------------
 	masterKepegawaianPegawaiSeeder := masterKepegawaianPegawai.NewKepegawaianPegawaiSeeder(db)
 	if *fresh {
@@ -131,6 +133,31 @@ func main() {
 			log.Fatal("Gagal seed Pegawai:", err)
 		}
 	} //------Kepegawaian----------------------------------------------------
+
+	//------Kepegawaian Identifier Type--------------------------------------
+	masterKepegawaianIdentifierTypeSeeder := masterKepegawaianIdentifier.NewTipeSeeder(db)
+	if *fresh {
+		if err := masterKepegawaianIdentifierTypeSeeder.Fresh(); err != nil {
+			log.Fatal("Gagal fresh seed Identifier Type:", err)
+		}
+	} else {
+		if err := masterKepegawaianIdentifierTypeSeeder.Run(); err != nil {
+			log.Fatal("Gagal seed Identifier Type:", err)
+		}
+	} //------Kepegawaian Identifier Type------------------------------------
+
+	//------Kepegawaian Identifier-------------------------------------------
+	masterKepegawaianIdentifierSeeder := masterKepegawaianIdentifier.NewKepegawaianIdentifierSeeder(db)
+	if *fresh {
+		if err := masterKepegawaianIdentifierSeeder.Fresh(); err != nil {
+			log.Fatal("Gagal fresh seed Identifier:", err)
+		}
+	} else {
+		if err := masterKepegawaianIdentifierSeeder.Run(); err != nil {
+			log.Fatal("Gagal seed Identifier:", err)
+		}
+	} //------Kepegawaian Identifier-----------------------------------------
+	//Kepegawaian------------------------------------------------------------
 
 	// =====================================================================
 

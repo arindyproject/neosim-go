@@ -1,0 +1,66 @@
+package dto
+
+import (
+
+	"neosim_go/internal/modules/kepegawaian/kontak/models"
+	"neosim_go/internal/shared/types"
+	he "neosim_go/internal/shared/httputil"
+)
+
+// KepegawaianKontakResponse response untuk single KepegawaianKontak
+type KepegawaianKontakResponse struct {
+	ID          int64     `json:"id"`
+	Name        string    `json:"name"`
+	Description *string   `json:"description"`
+	CreatedBy   *he.UserData `json:"created_by"`
+	UpdatedBy   *he.UserData `json:"updated_by"`
+	CreatedAt   types.CustomTime `json:"created_at"`
+	UpdatedAt   types.CustomTime `json:"updated_at"`
+}
+
+type KepegawaianKontakResponseParams struct {
+	KepegawaianKontak *models.KepegawaianKontak
+	Creator         *he.UserData
+	Updater         *he.UserData
+}
+
+// ToKepegawaianKontakResponse mengubah model menjadi response
+func ToKepegawaianKontakResponse(params KepegawaianKontakResponseParams) *KepegawaianKontakResponse {
+	return &KepegawaianKontakResponse{
+		ID:          params.KepegawaianKontak.ID,
+		Name:        params.KepegawaianKontak.Name,
+		Description: params.KepegawaianKontak.Description,
+		CreatedBy:   params.Creator,
+		UpdatedBy:   params.Updater,
+		CreatedAt:   types.CustomTime(params.KepegawaianKontak.CreatedAt),
+		UpdatedAt:   types.CustomTime(params.KepegawaianKontak.UpdatedAt),
+	}
+}
+
+// ToKepegawaianKontakListResponse mengubah slice model menjadi slice response
+func ToKepegawaianKontakListResponse(
+	items []models.KepegawaianKontak,
+	creatorsMap map[int64]*he.UserData,
+	updatersMap map[int64]*he.UserData,
+) []KepegawaianKontakResponse {
+	responses := make([]KepegawaianKontakResponse, 0, len(items))
+
+	for _, m := range items {
+		var creator, updater *he.UserData
+
+		if creatorsMap != nil {
+			creator = creatorsMap[m.ID]
+		}
+		if updatersMap != nil {
+			updater = updatersMap[m.ID]
+		}
+
+		responses = append(responses, *ToKepegawaianKontakResponse(KepegawaianKontakResponseParams{
+			KepegawaianKontak: &m,
+			Creator:    creator,
+			Updater:    updater,
+		}))
+	}
+
+	return responses
+}

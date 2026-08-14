@@ -6,17 +6,20 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// KepegawaianIdentifierRepositoryMock is a mock implementation of contracts.Repository
+// KepegawaianIdentifierRepositoryMock is a mock implementation of contracts.Repository.
+// Ketika item ditambahkan (mode add-item), method mock untuk item tersebut
+// ditempelkan ke struct INI JUGA (mis. tests/mocks/tag_repository_mock.go),
+// bukan membuat mock struct baru.
 type KepegawaianIdentifierRepositoryMock struct {
 	mock.Mock
 }
 
-func (m *KepegawaianIdentifierRepositoryMock) Create(item *models.KepegawaianIdentifier) error {
+func (m *KepegawaianIdentifierRepositoryMock) CreateIdentifier(item *models.KepegawaianIdentifier) error {
 	args := m.Called(item)
 	return args.Error(0)
 }
 
-func (m *KepegawaianIdentifierRepositoryMock) GetByID(id int64) (*models.KepegawaianIdentifier, error) {
+func (m *KepegawaianIdentifierRepositoryMock) GetIdentifierByID(id int64) (*models.KepegawaianIdentifier, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -24,17 +27,17 @@ func (m *KepegawaianIdentifierRepositoryMock) GetByID(id int64) (*models.Kepegaw
 	return args.Get(0).(*models.KepegawaianIdentifier), args.Error(1)
 }
 
-func (m *KepegawaianIdentifierRepositoryMock) List(page, pageSize int, filter *dto.FilterKepegawaianIdentifierRequest) ([]models.KepegawaianIdentifier, int64, error) {
+func (m *KepegawaianIdentifierRepositoryMock) ListIdentifier(page, pageSize int, filter *dto.FilterKepegawaianIdentifierRequest) ([]models.KepegawaianIdentifier, int64, error) {
 	args := m.Called(page, pageSize, filter)
 	return args.Get(0).([]models.KepegawaianIdentifier), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *KepegawaianIdentifierRepositoryMock) Update(item *models.KepegawaianIdentifier) error {
+func (m *KepegawaianIdentifierRepositoryMock) UpdateIdentifier(item *models.KepegawaianIdentifier) error {
 	args := m.Called(item)
 	return args.Error(0)
 }
 
-func (m *KepegawaianIdentifierRepositoryMock) Delete(id int64) error {
+func (m *KepegawaianIdentifierRepositoryMock) DeleteIdentifier(id int64) error {
 	args := m.Called(id)
 	return args.Error(0)
 }

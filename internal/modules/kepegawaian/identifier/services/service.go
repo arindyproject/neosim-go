@@ -4,14 +4,20 @@ import (
 	"neosim_go/config"
 	identifierContracts "neosim_go/internal/modules/kepegawaian/identifier/contracts"
 	"neosim_go/internal/modules/kepegawaian/identifier/dto"
-	"neosim_go/internal/modules/kepegawaian/identifier/models"
-	he "neosim_go/internal/shared/httputil"
 
+	"neosim_go/internal/modules/kepegawaian/identifier/models"
 	authContracts "neosim_go/internal/modules/auth/contracts"
 	rbacContracts "neosim_go/internal/modules/rbac/contracts"
 	userContracts "neosim_go/internal/modules/users/contracts"
+	he "neosim_go/internal/shared/httputil"
 )
 
+// service adalah satu-satunya struct service untuk sub-module ini.
+// Item baru (mode add-item) TIDAK membuat struct service baru — method
+// CRUD & permission-nya ditempelkan langsung ke struct ini (mis.
+// services/tag_service.go, services/tag_permission.go), dan repo field
+// di bawah ini otomatis mencakup method item begitu contracts.Repository
+// di-embed dengan interface repository item (lihat contracts/interfaces.go).
 type service struct {
 	repo     identifierContracts.Repository
 	rbacRepo rbacContracts.RBACRepository
@@ -26,7 +32,7 @@ func NewKepegawaianIdentifierService(
 	rbacRepo rbacContracts.RBACRepository,
 	authRepo authContracts.AuthRepository,
 	userRepo userContracts.Repository,
-	cfg *config.Config,
+	cfg    *config.Config,
 ) identifierContracts.Service {
 	return &service{
 		repo:     repo,
@@ -93,10 +99,8 @@ func (s *service) buildAuditMaps(items []models.KepegawaianIdentifier) (map[int6
 
 	return creatorsMap, updatersMap
 }
-
 // ── helper: convert items to responses ───────────────────────────────────────
-
-func toIdentifierResponses(
+func toKepegawaianIdentifierResponses(
 	items []models.KepegawaianIdentifier,
 	creatorsMap, updatersMap map[int64]*he.UserData,
 ) []dto.KepegawaianIdentifierResponse {
@@ -110,10 +114,11 @@ func toIdentifierResponses(
 			updater = updatersMap[*item.UpdatedBy]
 		}
 		responses = append(responses, *dto.ToKepegawaianIdentifierResponse(dto.KepegawaianIdentifierResponseParams{
-			Identifier: &item,
-			Creator:    creator,
-			Updater:    updater,
+			KepegawaianIdentifier: &item,
+			Creator: creator,
+			Updater: updater,
 		}))
 	}
 	return responses
 }
+

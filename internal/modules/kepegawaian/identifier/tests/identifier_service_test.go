@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
+	"neosim_go/config"
 	"neosim_go/internal/modules/kepegawaian/identifier/dto"
 	"neosim_go/internal/modules/kepegawaian/identifier/models"
 	"neosim_go/internal/modules/kepegawaian/identifier/services"
@@ -38,19 +39,30 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
+// KepegawaianIdentifierServiceTestSuite dipakai bersama oleh SELURUH item di dalam
+// sub-module ini (lihat mis. tag_service_test.go) — karena hanya ada satu
+// struct service/repository, satu suite ini sudah cukup untuk semuanya.
 type KepegawaianIdentifierServiceTestSuite struct {
 	suite.Suite
 	repo     *mocks.KepegawaianIdentifierRepositoryMock
 	rbacRepo *mocks.RBACRepositoryMock
 	authRepo *mocks.AuthRepositoryMock
+	userRepo *mocks.UserRepositoryMock
 	svc      identifierContracts.Service
+	cfg      *config.Config
 }
 
 func (s *KepegawaianIdentifierServiceTestSuite) SetupTest() {
-	s.repo     = new(mocks.KepegawaianIdentifierRepositoryMock)
+	s.repo = new(mocks.KepegawaianIdentifierRepositoryMock)
 	s.rbacRepo = new(mocks.RBACRepositoryMock)
 	s.authRepo = new(mocks.AuthRepositoryMock)
-	s.svc = services.NewKepegawaianIdentifierService(s.repo, s.rbacRepo, s.authRepo)
+	s.userRepo = new(mocks.UserRepositoryMock)
+	s.cfg = &config.Config{}
+	s.svc = services.NewKepegawaianIdentifierService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.cfg)
+
+	// Stub default agar buildCreator/buildAuditMaps tidak panic saat memanggil userRepo.
+	// Boleh dipanggil 0 kali atau lebih (.Maybe()) tergantung skenario test.
+	s.userRepo.On("GetByID", mock.Anything).Return(nil, nil).Maybe()
 }
 
 func TestKepegawaianIdentifierService(t *testing.T) {
@@ -73,13 +85,13 @@ func (s *KepegawaianIdentifierServiceTestSuite) mockNoPermissions() {
 	s.rbacRepo.On("HasPermission", regularActor().UserID, mock.Anything, mock.Anything).Return(false, nil)
 }
 
-func (s *KepegawaianIdentifierServiceTestSuite) Test_Create_Superadmin_Success() {
+func (s *KepegawaianIdentifierServiceTestSuite) Test_CreateIdentifier_Superadmin_Success() {
 	req := &dto.CreateKepegawaianIdentifierRequest{Name: "Test KepegawaianIdentifier"}
 	actor := superadminActor()
 
-	s.repo.On("Create", mock.AnythingOfType("*models.KepegawaianIdentifier")).Return(nil)
+	s.repo.On("CreateIdentifier", mock.AnythingOfType("*models.KepegawaianIdentifier")).Return(nil)
 
-	result, err := s.svc.Create(req, &actor.UserID, actor)
+	result, err := s.svc.CreateIdentifier(req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -87,40 +99,40 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_Create_Superadmin_Success()
 	s.repo.AssertExpectations(s.T())
 }
 
-func (s *KepegawaianIdentifierServiceTestSuite) Test_Create_WithPermission_Success() {
+func (s *KepegawaianIdentifierServiceTestSuite) Test_CreateIdentifier_WithPermission_Success() {
 	req := &dto.CreateKepegawaianIdentifierRequest{Name: "Test KepegawaianIdentifier"}
 	actor := regularActor()
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(true, nil)
-	s.repo.On("Create", mock.AnythingOfType("*models.KepegawaianIdentifier")).Return(nil)
+	s.repo.On("CreateIdentifier", mock.AnythingOfType("*models.KepegawaianIdentifier")).Return(nil)
 
-	result, err := s.svc.Create(req, &actor.UserID, actor)
+	result, err := s.svc.CreateIdentifier(req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 	s.repo.AssertExpectations(s.T())
 }
 
-func (s *KepegawaianIdentifierServiceTestSuite) Test_Create_WithManagePermission_Success() {
+func (s *KepegawaianIdentifierServiceTestSuite) Test_CreateIdentifier_WithManagePermission_Success() {
 	req := &dto.CreateKepegawaianIdentifierRequest{Name: "Test"}
 	actor := regularActor()
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(false, nil)
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyManage).Return(true, nil)
-	s.repo.On("Create", mock.AnythingOfType("*models.KepegawaianIdentifier")).Return(nil)
+	s.repo.On("CreateIdentifier", mock.AnythingOfType("*models.KepegawaianIdentifier")).Return(nil)
 
-	result, err := s.svc.Create(req, &actor.UserID, actor)
+	result, err := s.svc.CreateIdentifier(req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 }
 
-func (s *KepegawaianIdentifierServiceTestSuite) Test_Create_Forbidden() {
+func (s *KepegawaianIdentifierServiceTestSuite) Test_CreateIdentifier_Forbidden() {
 	req := &dto.CreateKepegawaianIdentifierRequest{Name: "Test"}
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.Create(req, &actor.UserID, actor)
+	result, err := s.svc.CreateIdentifier(req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -129,26 +141,26 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_Create_Forbidden() {
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *KepegawaianIdentifierServiceTestSuite) Test_Create_RepoError() {
+func (s *KepegawaianIdentifierServiceTestSuite) Test_CreateIdentifier_RepoError() {
 	req := &dto.CreateKepegawaianIdentifierRequest{Name: "Test"}
 	actor := superadminActor()
 
-	s.repo.On("Create", mock.AnythingOfType("*models.KepegawaianIdentifier")).Return(fmt.Errorf("db error"))
+	s.repo.On("CreateIdentifier", mock.AnythingOfType("*models.KepegawaianIdentifier")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.Create(req, &actor.UserID, actor)
+	result, err := s.svc.CreateIdentifier(req, actor)
 
 	s.Nil(result)
 	s.Error(err)
 }
 
-func (s *KepegawaianIdentifierServiceTestSuite) Test_GetByID_Superadmin_Success() {
+func (s *KepegawaianIdentifierServiceTestSuite) Test_GetIdentifierByID_Superadmin_Success() {
 	actor := superadminActor()
 	item := factories.NewKepegawaianIdentifierFactory().Make()
 	item.ID = 1
 
-	s.repo.On("GetByID", int64(1)).Return(item, nil)
+	s.repo.On("GetIdentifierByID", int64(1)).Return(item, nil)
 
-	result, err := s.svc.GetByID(1, actor)
+	result, err := s.svc.GetIdentifierByID(1, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -156,25 +168,25 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_GetByID_Superadmin_Success(
 	s.Equal(item.Name, result.Name)
 }
 
-func (s *KepegawaianIdentifierServiceTestSuite) Test_GetByID_WithPermission_Success() {
+func (s *KepegawaianIdentifierServiceTestSuite) Test_GetIdentifierByID_WithPermission_Success() {
 	actor := regularActor()
 	item := factories.NewKepegawaianIdentifierFactory().Make()
 	item.ID = 1
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyRead).Return(true, nil)
-	s.repo.On("GetByID", int64(1)).Return(item, nil)
+	s.repo.On("GetIdentifierByID", int64(1)).Return(item, nil)
 
-	result, err := s.svc.GetByID(1, actor)
+	result, err := s.svc.GetIdentifierByID(1, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 }
 
-func (s *KepegawaianIdentifierServiceTestSuite) Test_GetByID_Forbidden() {
+func (s *KepegawaianIdentifierServiceTestSuite) Test_GetIdentifierByID_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.GetByID(1, actor)
+	result, err := s.svc.GetIdentifierByID(1, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -183,30 +195,30 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_GetByID_Forbidden() {
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *KepegawaianIdentifierServiceTestSuite) Test_GetByID_NotFound() {
+func (s *KepegawaianIdentifierServiceTestSuite) Test_GetIdentifierByID_NotFound() {
 	actor := superadminActor()
 
-	s.repo.On("GetByID", int64(999)).Return(nil, nil)
+	s.repo.On("GetIdentifierByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.GetByID(999, actor)
+	result, err := s.svc.GetIdentifierByID(999, actor)
 
 	s.Nil(result)
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
 }
 
-func (s *KepegawaianIdentifierServiceTestSuite) Test_GetByID_RepoError() {
+func (s *KepegawaianIdentifierServiceTestSuite) Test_GetIdentifierByID_RepoError() {
 	actor := superadminActor()
 
-	s.repo.On("GetByID", int64(1)).Return(nil, fmt.Errorf("db error"))
+	s.repo.On("GetIdentifierByID", int64(1)).Return(nil, fmt.Errorf("db error"))
 
-	result, err := s.svc.GetByID(1, actor)
+	result, err := s.svc.GetIdentifierByID(1, actor)
 
 	s.Nil(result)
 	s.Error(err)
 }
 
-func (s *KepegawaianIdentifierServiceTestSuite) Test_List_Superadmin_Success() {
+func (s *KepegawaianIdentifierServiceTestSuite) Test_ListIdentifier_Superadmin_Success() {
 	actor := superadminActor()
 	filter := &dto.FilterKepegawaianIdentifierRequest{}
 	items := []models.KepegawaianIdentifier{
@@ -214,36 +226,36 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_List_Superadmin_Success() {
 		*factories.NewKepegawaianIdentifierFactory().Make(),
 	}
 
-	s.repo.On("List", 1, 10, filter).Return(items, int64(2), nil)
+	s.repo.On("ListIdentifier", 1, 10, filter).Return(items, int64(2), nil)
 
-	result, total, err := s.svc.List(1, 10, filter, actor)
+	result, total, err := s.svc.ListIdentifier(1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(2), total)
 	s.Len(result, 2)
 }
 
-func (s *KepegawaianIdentifierServiceTestSuite) Test_List_WithPermission_Success() {
+func (s *KepegawaianIdentifierServiceTestSuite) Test_ListIdentifier_WithPermission_Success() {
 	actor := regularActor()
 	filter := &dto.FilterKepegawaianIdentifierRequest{}
 	items := []models.KepegawaianIdentifier{*factories.NewKepegawaianIdentifierFactory().Make()}
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyRead).Return(true, nil)
-	s.repo.On("List", 1, 10, filter).Return(items, int64(1), nil)
+	s.repo.On("ListIdentifier", 1, 10, filter).Return(items, int64(1), nil)
 
-	result, total, err := s.svc.List(1, 10, filter, actor)
+	result, total, err := s.svc.ListIdentifier(1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
 	s.Len(result, 1)
 }
 
-func (s *KepegawaianIdentifierServiceTestSuite) Test_List_Forbidden() {
+func (s *KepegawaianIdentifierServiceTestSuite) Test_ListIdentifier_Forbidden() {
 	actor := regularActor()
 	filter := &dto.FilterKepegawaianIdentifierRequest{}
 	s.mockNoPermissions()
 
-	result, total, err := s.svc.List(1, 10, filter, actor)
+	result, total, err := s.svc.ListIdentifier(1, 10, filter, actor)
 
 	s.Nil(result)
 	s.Equal(int64(0), total)
@@ -253,63 +265,63 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_List_Forbidden() {
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *KepegawaianIdentifierServiceTestSuite) Test_List_DefaultPagination() {
+func (s *KepegawaianIdentifierServiceTestSuite) Test_ListIdentifier_DefaultPagination() {
 	actor := superadminActor()
 	filter := &dto.FilterKepegawaianIdentifierRequest{}
 
-	s.repo.On("List", 1, 10, filter).Return([]models.KepegawaianIdentifier{}, int64(0), nil)
+	s.repo.On("ListIdentifier", 1, 10, filter).Return([]models.KepegawaianIdentifier{}, int64(0), nil)
 
-	result, total, err := s.svc.List(0, 0, filter, actor)
+	result, total, err := s.svc.ListIdentifier(0, 0, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(0), total)
 	s.Empty(result)
 }
 
-func (s *KepegawaianIdentifierServiceTestSuite) Test_List_PageSizeCapped() {
+func (s *KepegawaianIdentifierServiceTestSuite) Test_ListIdentifier_PageSizeCapped() {
 	actor := superadminActor()
 	filter := &dto.FilterKepegawaianIdentifierRequest{}
 
-	s.repo.On("List", 1, 10, filter).Return([]models.KepegawaianIdentifier{}, int64(0), nil)
+	s.repo.On("ListIdentifier", 1, 10, filter).Return([]models.KepegawaianIdentifier{}, int64(0), nil)
 
-	_, _, err := s.svc.List(1, 999, filter, actor)
+	_, _, err := s.svc.ListIdentifier(1, 999, filter, actor)
 
 	s.NoError(err)
-	s.repo.AssertCalled(s.T(), "List", 1, 10, filter)
+	s.repo.AssertCalled(s.T(), "ListIdentifier", 1, 10, filter)
 }
 
-func (s *KepegawaianIdentifierServiceTestSuite) Test_List_WithNameFilter() {
+func (s *KepegawaianIdentifierServiceTestSuite) Test_ListIdentifier_WithNameFilter() {
 	actor := superadminActor()
 	filter := &dto.FilterKepegawaianIdentifierRequest{Name: "test"}
 	items := []models.KepegawaianIdentifier{*factories.NewKepegawaianIdentifierFactory().Make()}
 
-	s.repo.On("List", 1, 10, filter).Return(items, int64(1), nil)
+	s.repo.On("ListIdentifier", 1, 10, filter).Return(items, int64(1), nil)
 
-	result, total, err := s.svc.List(1, 10, filter, actor)
+	result, total, err := s.svc.ListIdentifier(1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
 	s.Len(result, 1)
 }
 
-func (s *KepegawaianIdentifierServiceTestSuite) Test_Update_Superadmin_Success() {
+func (s *KepegawaianIdentifierServiceTestSuite) Test_UpdateIdentifier_Superadmin_Success() {
 	actor := superadminActor()
 	existing := factories.NewKepegawaianIdentifierFactory().Make()
 	existing.ID = 1
 	newName := "Updated Name"
 	req := &dto.UpdateKepegawaianIdentifierRequest{Name: &newName}
 
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Update", mock.AnythingOfType("*models.KepegawaianIdentifier")).Return(nil)
+	s.repo.On("GetIdentifierByID", int64(1)).Return(existing, nil)
+	s.repo.On("UpdateIdentifier", mock.AnythingOfType("*models.KepegawaianIdentifier")).Return(nil)
 
-	result, err := s.svc.Update(1, req, &actor.UserID, actor)
+	result, err := s.svc.UpdateIdentifier(1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 	s.Equal(newName, result.Name)
 }
 
-func (s *KepegawaianIdentifierServiceTestSuite) Test_Update_WithPermission_Success() {
+func (s *KepegawaianIdentifierServiceTestSuite) Test_UpdateIdentifier_WithPermission_Success() {
 	actor := regularActor()
 	existing := factories.NewKepegawaianIdentifierFactory().Make()
 	existing.ID = 1
@@ -317,21 +329,21 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_Update_WithPermission_Succe
 	req := &dto.UpdateKepegawaianIdentifierRequest{Name: &newName}
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyUpdate).Return(true, nil)
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Update", mock.AnythingOfType("*models.KepegawaianIdentifier")).Return(nil)
+	s.repo.On("GetIdentifierByID", int64(1)).Return(existing, nil)
+	s.repo.On("UpdateIdentifier", mock.AnythingOfType("*models.KepegawaianIdentifier")).Return(nil)
 
-	result, err := s.svc.Update(1, req, &actor.UserID, actor)
+	result, err := s.svc.UpdateIdentifier(1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 }
 
-func (s *KepegawaianIdentifierServiceTestSuite) Test_Update_Forbidden() {
+func (s *KepegawaianIdentifierServiceTestSuite) Test_UpdateIdentifier_Forbidden() {
 	actor := regularActor()
 	req := &dto.UpdateKepegawaianIdentifierRequest{}
 	s.mockNoPermissions()
 
-	result, err := s.svc.Update(1, req, &actor.UserID, actor)
+	result, err := s.svc.UpdateIdentifier(1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -340,20 +352,20 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_Update_Forbidden() {
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *KepegawaianIdentifierServiceTestSuite) Test_Update_NotFound() {
+func (s *KepegawaianIdentifierServiceTestSuite) Test_UpdateIdentifier_NotFound() {
 	actor := superadminActor()
 	req := &dto.UpdateKepegawaianIdentifierRequest{}
 
-	s.repo.On("GetByID", int64(999)).Return(nil, nil)
+	s.repo.On("GetIdentifierByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.Update(999, req, &actor.UserID, actor)
+	result, err := s.svc.UpdateIdentifier(999, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
 }
 
-func (s *KepegawaianIdentifierServiceTestSuite) Test_Update_PartialFields() {
+func (s *KepegawaianIdentifierServiceTestSuite) Test_UpdateIdentifier_PartialFields() {
 	actor := superadminActor()
 	existing := factories.NewKepegawaianIdentifierFactory().Make()
 	existing.ID = 1
@@ -361,66 +373,66 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_Update_PartialFields() {
 	newDesc := "New description"
 	req := &dto.UpdateKepegawaianIdentifierRequest{Description: &newDesc}
 
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Update", mock.MatchedBy(func(m *models.KepegawaianIdentifier) bool {
+	s.repo.On("GetIdentifierByID", int64(1)).Return(existing, nil)
+	s.repo.On("UpdateIdentifier", mock.MatchedBy(func(m *models.KepegawaianIdentifier) bool {
 		return m.Name == originalName && *m.Description == newDesc
 	})).Return(nil)
 
-	result, err := s.svc.Update(1, req, &actor.UserID, actor)
+	result, err := s.svc.UpdateIdentifier(1, req, actor)
 
 	s.NoError(err)
 	s.Equal(originalName, result.Name)
 	s.Equal(newDesc, *result.Description)
 }
 
-func (s *KepegawaianIdentifierServiceTestSuite) Test_Update_RepoError() {
+func (s *KepegawaianIdentifierServiceTestSuite) Test_UpdateIdentifier_RepoError() {
 	actor := superadminActor()
 	existing := factories.NewKepegawaianIdentifierFactory().Make()
 	existing.ID = 1
 	req := &dto.UpdateKepegawaianIdentifierRequest{}
 
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Update", mock.AnythingOfType("*models.KepegawaianIdentifier")).Return(fmt.Errorf("db error"))
+	s.repo.On("GetIdentifierByID", int64(1)).Return(existing, nil)
+	s.repo.On("UpdateIdentifier", mock.AnythingOfType("*models.KepegawaianIdentifier")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.Update(1, req, &actor.UserID, actor)
+	result, err := s.svc.UpdateIdentifier(1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
 }
 
-func (s *KepegawaianIdentifierServiceTestSuite) Test_Delete_Superadmin_Success() {
+func (s *KepegawaianIdentifierServiceTestSuite) Test_DeleteIdentifier_Superadmin_Success() {
 	actor := superadminActor()
 	existing := factories.NewKepegawaianIdentifierFactory().Make()
 	existing.ID = 1
 
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Delete", int64(1)).Return(nil)
+	s.repo.On("GetIdentifierByID", int64(1)).Return(existing, nil)
+	s.repo.On("DeleteIdentifier", int64(1)).Return(nil)
 
-	err := s.svc.Delete(1, actor)
+	err := s.svc.DeleteIdentifier(1, actor)
 
 	s.NoError(err)
 	s.repo.AssertExpectations(s.T())
 }
 
-func (s *KepegawaianIdentifierServiceTestSuite) Test_Delete_WithPermission_Success() {
+func (s *KepegawaianIdentifierServiceTestSuite) Test_DeleteIdentifier_WithPermission_Success() {
 	actor := regularActor()
 	existing := factories.NewKepegawaianIdentifierFactory().Make()
 	existing.ID = 1
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyDelete).Return(true, nil)
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Delete", int64(1)).Return(nil)
+	s.repo.On("GetIdentifierByID", int64(1)).Return(existing, nil)
+	s.repo.On("DeleteIdentifier", int64(1)).Return(nil)
 
-	err := s.svc.Delete(1, actor)
+	err := s.svc.DeleteIdentifier(1, actor)
 
 	s.NoError(err)
 }
 
-func (s *KepegawaianIdentifierServiceTestSuite) Test_Delete_Forbidden() {
+func (s *KepegawaianIdentifierServiceTestSuite) Test_DeleteIdentifier_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	err := s.svc.Delete(1, actor)
+	err := s.svc.DeleteIdentifier(1, actor)
 
 	s.Error(err)
 	var appErr *appErrors.AppError
@@ -428,26 +440,26 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_Delete_Forbidden() {
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *KepegawaianIdentifierServiceTestSuite) Test_Delete_NotFound() {
+func (s *KepegawaianIdentifierServiceTestSuite) Test_DeleteIdentifier_NotFound() {
 	actor := superadminActor()
 
-	s.repo.On("GetByID", int64(999)).Return(nil, nil)
+	s.repo.On("GetIdentifierByID", int64(999)).Return(nil, nil)
 
-	err := s.svc.Delete(999, actor)
+	err := s.svc.DeleteIdentifier(999, actor)
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
 }
 
-func (s *KepegawaianIdentifierServiceTestSuite) Test_Delete_RepoError() {
+func (s *KepegawaianIdentifierServiceTestSuite) Test_DeleteIdentifier_RepoError() {
 	actor := superadminActor()
 	existing := factories.NewKepegawaianIdentifierFactory().Make()
 	existing.ID = 1
 
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Delete", int64(1)).Return(fmt.Errorf("db error"))
+	s.repo.On("GetIdentifierByID", int64(1)).Return(existing, nil)
+	s.repo.On("DeleteIdentifier", int64(1)).Return(fmt.Errorf("db error"))
 
-	err := s.svc.Delete(1, actor)
+	err := s.svc.DeleteIdentifier(1, actor)
 
 	s.Error(err)
 }

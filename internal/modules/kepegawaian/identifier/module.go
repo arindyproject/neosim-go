@@ -33,7 +33,7 @@ func NewModule(
 	cfg *config.Config,
 ) *Module {
 	repo := repositories.NewKepegawaianIdentifierRepository(db)
-	svc := services.NewKepegawaianIdentifierService(repo, rbacRepo, authRepo, userRepo, cfg)
+	svc := services.NewKepegawaianIdentifierService(repo, rbacRepo, authRepo,userRepo, cfg)
 	handler := handlers.NewKepegawaianIdentifierHandler(svc, cfg)
 
 	return &Module{

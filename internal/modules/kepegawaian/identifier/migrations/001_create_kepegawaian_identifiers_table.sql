@@ -1,5 +1,5 @@
 -- Migration: Create kepegawaian_identifiers table
--- Timestamp: 20260624085035
+-- Timestamp: 20260814105026
 
 CREATE TABLE IF NOT EXISTS kepegawaian_identifiers (
     id          BIGSERIAL    PRIMARY KEY,

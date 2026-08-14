@@ -26,17 +26,56 @@ func (f *KepegawaianIdentifierFactory) With(field string, value interface{}) *Ke
 
 func (f *KepegawaianIdentifierFactory) Make() *models.KepegawaianIdentifier {
 	idx := rng.Intn(999999)
-	name := fmt.Sprintf("KepegawaianIdentifier %d", idx)
-	desc := fmt.Sprintf("Deskripsi KepegawaianIdentifier %d", idx)
+	pegawaiID := int64(rng.Intn(1000) + 1)
+	tipeID := int64(rng.Intn(10) + 1)
+	nilai := fmt.Sprintf("3512345678%06d", idx)
 
-	if v, ok := f.overrides["name"]; ok {
-		name = v.(string)
+	now := time.Now()
+	tanggalTerbit := now.AddDate(-1, 0, 0)
+	tanggalExpired := now.AddDate(4, 0, 0)
+	createdBy := int64(1)
+	updatedBy := int64(1)
+
+	item := &models.KepegawaianIdentifier{
+		PegawaiID:      pegawaiID,
+		TipeID:         tipeID,
+		Nilai:          nilai,
+		TanggalTerbit:  &tanggalTerbit,
+		TanggalExpired: &tanggalExpired,
+		IsPrimary:      true,
+		IsAktif:        true,
+		CreatedBy:      &createdBy,
+		UpdatedBy:      &updatedBy,
 	}
 
-	return &models.KepegawaianIdentifier{
-		Name:        name,
-		Description: &desc,
+	// Apply overrides jika ada
+	if v, ok := f.overrides["PegawaiID"]; ok {
+		item.PegawaiID = v.(int64)
 	}
+	if v, ok := f.overrides["TipeID"]; ok {
+		item.TipeID = v.(int64)
+	}
+	if v, ok := f.overrides["Nilai"]; ok {
+		item.Nilai = v.(string)
+	}
+
+	if v, ok := f.overrides["TanggalTerbit"]; ok {
+		item.TanggalTerbit = v.(*time.Time)
+	}
+	if v, ok := f.overrides["TanggalExpired"]; ok {
+		item.TanggalExpired = v.(*time.Time)
+	}
+	if v, ok := f.overrides["IsPrimary"]; ok {
+		item.IsPrimary = v.(bool)
+	}
+	if v, ok := f.overrides["IsAktif"]; ok {
+		item.IsAktif = v.(bool)
+	}
+	if v, ok := f.overrides["Tipe"]; ok {
+		item.Tipe = v.(*models.Tipe)
+	}
+
+	return item
 }
 
 func (f *KepegawaianIdentifierFactory) MakeMany(count int) []*models.KepegawaianIdentifier {

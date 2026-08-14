@@ -229,6 +229,17 @@ test-master-alamat: ## Run tests for master module
 	@go test -json ./internal/modules/master/alamat/tests | gotestfmt
 
 #---------------------------------------------------------------------------------
+test-kepegawaian: 
+	@go test -json ./internal/modules/kepegawaian/.../tests | gotestfmt
+
+test-kepegawaian-pegawai: 
+	@go test -json ./internal/modules/kepegawaian/pegawai/tests | gotestfmt
+
+test-kepegawaian-identifier: 
+	@go test -json ./internal/modules/kepegawaian/identifier/tests | gotestfmt
+
+
+#---------------------------------------------------------------------------------
 test-artikel-artikel: ## Run tests for master module
 	@go test -json ./internal/modules/artikel/artikel/tests | gotestfmt
 
