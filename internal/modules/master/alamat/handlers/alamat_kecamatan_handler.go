@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"io"
 	"neosim_go/internal/modules/master/alamat/dto"
+	"neosim_go/internal/shared/binding"
 	he "neosim_go/internal/shared/httputil"
 	"neosim_go/internal/shared/response"
 	"neosim_go/internal/shared/validator"
@@ -89,8 +91,13 @@ func (h *MasterAlamatHandler) GetByIDKecamatan(c *echo.Context) error {
 // CreateKecamatan handles POST /api/v1/master/alamat/kecamatan
 func (h *MasterAlamatHandler) CreateKecamatan(c *echo.Context) error {
 	var req dto.CreateKecamatanRequest
-	if err := c.Bind(&req); err != nil {
-		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Gagal membaca request body", nil, err.Error())
+	}
+
+	if errs := binding.BindErrors(body, &req); len(errs) > 0 {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 	if errs := validator.Validate(req); errs != nil {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
@@ -127,8 +134,13 @@ func (h *MasterAlamatHandler) UpdateKecamatan(c *echo.Context) error {
 	}
 
 	var req dto.UpdateKecamatanRequest
-	if err := c.Bind(&req); err != nil {
-		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Gagal membaca request body", nil, err.Error())
+	}
+
+	if errs := binding.BindErrors(body, &req); len(errs) > 0 {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 	if errs := validator.Validate(req); errs != nil {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)

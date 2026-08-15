@@ -14,6 +14,8 @@ import (
 type TipeRepository interface {
 	CreateTipe(m *models.Tipe) error
 	GetTipeByID(id int64) (*models.Tipe, error)
+	GetTipeByCode(code string) (*models.Tipe, error)
+	GetTipeByLabel(label string) (*models.Tipe, error)
 	ListTipe(page, pageSize int, filter *dto.FilterTipeRequest) ([]models.Tipe, int64, error)
 	UpdateTipe(m *models.Tipe) error
 	DeleteTipe(id int64) error
@@ -24,6 +26,8 @@ type TipeRepository interface {
 type TipeService interface {
 	CreateTipe(req *dto.CreateTipeRequest, actor he.AuthContext) (*dto.TipeResponse, error)
 	GetTipeByID(id int64, actor he.AuthContext) (*dto.TipeResponse, error)
+	GetTipeByCode(code string, actor he.AuthContext) (*dto.TipeResponse, error)
+	GetTipeByLabel(label string, actor he.AuthContext) (*dto.TipeResponse, error)
 	ListTipe(page, pageSize int, filter *dto.FilterTipeRequest, actor he.AuthContext) ([]dto.TipeResponse, int64, error)
 	UpdateTipe(id int64, req *dto.UpdateTipeRequest, actor he.AuthContext) (*dto.TipeResponse, error)
 	DeleteTipe(id int64, actor he.AuthContext) error

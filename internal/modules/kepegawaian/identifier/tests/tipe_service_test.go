@@ -2,6 +2,7 @@ package tests
 
 import (
 	"fmt"
+	"math/rand"
 	"net/http"
 
 	"github.com/stretchr/testify/mock"
@@ -18,7 +19,6 @@ import (
 // di identifier_service_test.go. File ini HANYA menambah skenario test untuk
 // Tipe, memakai s.svc / s.repo yang SAMA (satu service & repository
 // untuk seluruh sub-module identifier).
-
 func (s *KepegawaianIdentifierServiceTestSuite) Test_CreateTipe_Superadmin_Success() {
 	penerbit := "Dukcapil / Kemendagri"
 	fhirSystem := "https://fhir.kemkes.go.id/id/nik"
@@ -32,6 +32,10 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_CreateTipe_Superadmin_Succe
 		IsRequired: true,
 	}
 	actor := superadminActor()
+
+	// Mock pengecekan keunikan (Code & Label belum digunakan)
+	s.repo.On("GetTipeByCode", req.Code).Return(nil, nil)
+	s.repo.On("GetTipeByLabel", req.Label).Return(nil, nil)
 
 	s.repo.On("CreateTipe", mock.AnythingOfType("*models.Tipe")).Return(nil)
 
@@ -62,17 +66,31 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_CreateTipe_Forbidden() {
 
 func (s *KepegawaianIdentifierServiceTestSuite) Test_CreateTipe_RepoError() {
 	req := &dto.CreateTipeRequest{
-		Code:  "NIK",
-		Label: "NIK",
+		Code:  "TEST_" + randomString(8),
+		Label: "TEST_" + randomString(8),
 	}
 	actor := superadminActor()
 
+	// 1. Mock pengecekan code & label (mengembalikan nil agar lolos validasi keunikan)
+	s.repo.On("GetTipeByCode", req.Code).Return(nil, nil)
+	s.repo.On("GetTipeByLabel", req.Label).Return(nil, nil)
+
+	// 2. Mock error saat insert ke DB
 	s.repo.On("CreateTipe", mock.AnythingOfType("*models.Tipe")).Return(fmt.Errorf("db error"))
 
 	result, err := s.svc.CreateTipe(req, actor)
 
 	s.Nil(result)
 	s.Error(err)
+}
+
+func randomString(i int) string {
+	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	b := make([]byte, i)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
 }
 
 func (s *KepegawaianIdentifierServiceTestSuite) Test_GetTipeByID_Success() {
@@ -157,7 +175,14 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_UpdateTipe_Success() {
 		Label: &newLabel,
 	}
 
+	// 1. Ambil data eksis
 	s.repo.On("GetTipeByID", int64(1)).Return(existing, nil)
+
+	// 2. Mock validasi keunikan Code & Label baru (kembalikan nil agar dianggap tidak ada bentrok)
+	s.repo.On("GetTipeByCode", newCode).Return(nil, nil)
+	s.repo.On("GetTipeByLabel", newLabel).Return(nil, nil)
+
+	// 3. Update ke DB
 	s.repo.On("UpdateTipe", mock.AnythingOfType("*models.Tipe")).Return(nil)
 
 	result, err := s.svc.UpdateTipe(1, req, actor)

@@ -21,6 +21,22 @@ func (m *KepegawaianIdentifierRepositoryMock) GetTipeByID(id int64) (*models.Tip
 	return args.Get(0).(*models.Tipe), args.Error(1)
 }
 
+func (m *KepegawaianIdentifierRepositoryMock) GetTipeByLabel(label string) (*models.Tipe, error) {
+	args := m.Called(label)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.Tipe), args.Error(1)
+}
+
+func (m *KepegawaianIdentifierRepositoryMock) GetTipeByCode(code string) (*models.Tipe, error) {
+	args := m.Called(code)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.Tipe), args.Error(1)
+}
+
 func (m *KepegawaianIdentifierRepositoryMock) ListTipe(page, pageSize int, filter *dto.FilterTipeRequest) ([]models.Tipe, int64, error) {
 	args := m.Called(page, pageSize, filter)
 	return args.Get(0).([]models.Tipe), args.Get(1).(int64), args.Error(2)

@@ -1104,11 +1104,13 @@ func New{{.ModuleTitle}}Handler(service contracts.Service, cfg *config.Config) *
 var tmplHandler = `package handlers
 
 import (
+	"io"
 	"net/http"
 
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
 	"{{.ProjectModule}}/internal/shared/response"
 	"{{.ProjectModule}}/internal/shared/validator"
+	"{{.ProjectModule}}/internal/shared/binding"
 	he "{{.ProjectModule}}/internal/shared/httputil"
 
 	"github.com/labstack/echo/v5"
@@ -1179,11 +1181,16 @@ func (h *{{.ModuleTitle}}Handler) Get{{.MethodSuffix}}ByID(c *echo.Context) erro
 //	@Router			{{.URLPrefixOpenAPI}} [post]
 func (h *{{.ModuleTitle}}Handler) Create{{.MethodSuffix}}(c *echo.Context) error {
 	var req dto.Create{{.ModuleTitle}}Request
-	if err := c.Bind(&req); err != nil {
-		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Gagal membaca request body", nil, err.Error())
+	}
+
+	if errs := binding.BindErrors(body, &req); len(errs) > 0 {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (binding)", nil, errs)
 	}
 	if errs := validator.Validate(req); errs != nil {
-		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (validator)", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
 	item, err := h.service.Create{{.MethodSuffix}}(&req,  actor)
@@ -1211,11 +1218,16 @@ func (h *{{.ModuleTitle}}Handler) Update{{.MethodSuffix}}(c *echo.Context) error
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	var req dto.Update{{.ModuleTitle}}Request
-	if err := c.Bind(&req); err != nil {
-		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Gagal membaca request body", nil, err.Error())
+	}
+
+	if errs := binding.BindErrors(body, &req); len(errs) > 0 {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (binding)", nil, errs)
 	}
 	if errs := validator.Validate(req); errs != nil {
-		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (validator)", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
 	item, err := h.service.Update{{.MethodSuffix}}(id, &req, actor)
@@ -2894,12 +2906,14 @@ func (s *service) canDelete{{.ItemTitle}}(actor he.AuthContext) (bool, error) {
 var tmplItemHandler = `package handlers
 
 import (
+	"io"
 	"net/http"
 
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
 	he "{{.ProjectModule}}/internal/shared/httputil"
 	"{{.ProjectModule}}/internal/shared/response"
 	"{{.ProjectModule}}/internal/shared/validator"
+	"{{.ProjectModule}}/internal/shared/binding"
 
 	"github.com/labstack/echo/v5"
 )
@@ -2971,11 +2985,16 @@ func (h *{{.SubModuleTitle}}Handler) Get{{.ItemTitle}}ByID(c *echo.Context) erro
 //	@Router			{{.URLPrefixOpenAPI}} [post]
 func (h *{{.SubModuleTitle}}Handler) Create{{.ItemTitle}}(c *echo.Context) error {
 	var req dto.Create{{.ItemTitle}}Request
-	if err := c.Bind(&req); err != nil {
-		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Gagal membaca request body", nil, err.Error())
+	}
+
+	if errs := binding.BindErrors(body, &req); len(errs) > 0 {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (binding)", nil, errs)
 	}
 	if errs := validator.Validate(req); errs != nil {
-		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (validator)", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
 	item, err := h.service.Create{{.ItemTitle}}(&req, actor)
@@ -3002,12 +3021,18 @@ func (h *{{.SubModuleTitle}}Handler) Update{{.ItemTitle}}(c *echo.Context) error
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
+
 	var req dto.Update{{.ItemTitle}}Request
-	if err := c.Bind(&req); err != nil {
-		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Gagal membaca request body", nil, err.Error())
+	}
+
+	if errs := binding.BindErrors(body, &req); len(errs) > 0 {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (binding)", nil, errs)
 	}
 	if errs := validator.Validate(req); errs != nil {
-		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (validator)", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
 	item, err := h.service.Update{{.ItemTitle}}(id, &req, actor)

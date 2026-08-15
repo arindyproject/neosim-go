@@ -30,4 +30,5 @@ type FilterKepegawaianIdentifierRequest struct {
 	Nilai     string `query:"nilai"`
 	IsPrimary *bool  `query:"is_primary"`
 	IsAktif   *bool  `query:"is_aktif"`
+	IsExpired *bool  `query:"is_expired"`
 }

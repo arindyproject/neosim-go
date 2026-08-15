@@ -139,6 +139,33 @@ definitions:
     - kecamatan_id
     - name
     type: object
+  dto.CreateKepegawaianIdentifierRequest:
+    properties:
+      is_aktif:
+        type: boolean
+      is_primary:
+        type: boolean
+      nilai:
+        maxLength: 255
+        minLength: 1
+        type: string
+      pegawai_id:
+        type: integer
+      tanggal_expired:
+        example: "2026-01-01"
+        format: date
+        type: string
+      tanggal_terbit:
+        example: "2026-01-01"
+        format: date
+        type: string
+      tipe_id:
+        type: integer
+    required:
+    - nilai
+    - pegawai_id
+    - tipe_id
+    type: object
   dto.CreateKepegawaianKontakRequest:
     properties:
       description:
@@ -459,23 +486,6 @@ definitions:
     required:
     - identifier
     type: object
-  dto.IdentifierMetaResponse:
-    properties:
-      code:
-        type: string
-      fhir_system:
-        type: string
-      has_expiry:
-        type: boolean
-      is_nakes:
-        type: boolean
-      is_required:
-        type: boolean
-      label:
-        type: string
-      penerbit:
-        type: string
-    type: object
   dto.KecamatanDetailResponse:
     properties:
       code:
@@ -565,6 +575,43 @@ definitions:
         type: string
       updated_by:
         type: integer
+    type: object
+  dto.KepegawaianIdentifierResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        $ref: '#/definitions/httputil.UserData'
+      days_until_expired:
+        type: integer
+      id:
+        type: integer
+      is_aktif:
+        type: boolean
+      is_expired:
+        type: boolean
+      is_fhir_mappable:
+        type: boolean
+      is_primary:
+        type: boolean
+      nilai:
+        type: string
+      pegawai_id:
+        type: integer
+      penerbit:
+        type: string
+      tanggal_expired:
+        $ref: '#/definitions/types.DateOnly'
+      tanggal_terbit:
+        $ref: '#/definitions/types.DateOnly'
+      tipe:
+        allOf:
+        - $ref: '#/definitions/dto.TipeSimpelResponse'
+        description: TipeID         int64            `json:"tipe_id"`
+      updated_at:
+        type: string
+      updated_by:
+        $ref: '#/definitions/httputil.UserData'
     type: object
   dto.KepegawaianKontakResponse:
     properties:
@@ -1094,6 +1141,27 @@ definitions:
         maxLength: 10
         type: string
     type: object
+  dto.UpdateKepegawaianIdentifierRequest:
+    properties:
+      is_aktif:
+        type: boolean
+      is_primary:
+        type: boolean
+      nilai:
+        maxLength: 255
+        minLength: 1
+        type: string
+      tanggal_expired:
+        example: "2026-01-01"
+        format: date
+        type: string
+      tanggal_terbit:
+        example: "2026-01-01"
+        format: date
+        type: string
+      tipe_id:
+        type: integer
+    type: object
   dto.UpdateKepegawaianKontakRequest:
     properties:
       description:
@@ -1450,91 +1518,6 @@ definitions:
       type:
         type: string
       value: {}
-    type: object
-  neosim_go_internal_modules_kepegawaian_identifier_dto.CreateKepegawaianIdentifierRequest:
-    properties:
-      is_aktif:
-        type: boolean
-      is_primary:
-        type: boolean
-      nilai:
-        maxLength: 255
-        minLength: 1
-        type: string
-      pegawai_id:
-        type: integer
-      tanggal_expired:
-        example: "2026-01-01"
-        format: date
-        type: string
-      tanggal_terbit:
-        example: "2026-01-01"
-        format: date
-        type: string
-      tipe_id:
-        type: integer
-    required:
-    - nilai
-    - pegawai_id
-    - tipe_id
-    type: object
-  neosim_go_internal_modules_kepegawaian_identifier_dto.KepegawaianIdentifierResponse:
-    properties:
-      created_at:
-        type: string
-      created_by:
-        $ref: '#/definitions/httputil.UserData'
-      days_until_expired:
-        type: integer
-      id:
-        type: integer
-      is_aktif:
-        type: boolean
-      is_expired:
-        type: boolean
-      is_fhir_mappable:
-        type: boolean
-      is_primary:
-        type: boolean
-      nilai:
-        type: string
-      pegawai_id:
-        type: integer
-      penerbit:
-        type: string
-      tanggal_expired:
-        $ref: '#/definitions/types.DateOnly'
-      tanggal_terbit:
-        $ref: '#/definitions/types.DateOnly'
-      tipe:
-        allOf:
-        - $ref: '#/definitions/dto.TipeSimpelResponse'
-        description: TipeID         int64            `json:"tipe_id"`
-      updated_at:
-        type: string
-      updated_by:
-        $ref: '#/definitions/httputil.UserData'
-    type: object
-  neosim_go_internal_modules_kepegawaian_identifier_dto.UpdateKepegawaianIdentifierRequest:
-    properties:
-      is_aktif:
-        type: boolean
-      is_primary:
-        type: boolean
-      nilai:
-        maxLength: 255
-        minLength: 1
-        type: string
-      tanggal_expired:
-        example: "2026-01-01"
-        format: date
-        type: string
-      tanggal_terbit:
-        example: "2026-01-01"
-        format: date
-        type: string
-      tipe_id:
-        type: integer
     type: object
   response.MyGoResponse:
     description: Standard JSON response
@@ -2178,17 +2161,25 @@ paths:
     get:
       consumes:
       - application/json
-      description: Menampilkan daftar identifier pegawai dengan filter dan pagination
+      description: Get paginated list of KepegawaianIdentifier
       parameters:
-      - description: Filter by ID pegawai
+      - description: Filter by Pegawai ID
         in: query
-        name: kepegawaian_id
+        name: pegawai_id
         type: integer
-      - description: Filter by tipe (NIK, STR, SIP, dll)
+      - description: Filter by Tipe ID
         in: query
-        name: tipe
+        name: tipe_id
+        type: integer
+      - description: Filter by Nilai / Nomor Identifier (partial match)
+        in: query
+        name: nilai
         type: string
-      - description: Filter by status aktif
+      - description: Filter by Is Primary Status
+        in: query
+        name: is_primary
+        type: boolean
+      - description: Filter by Is Aktif Status
         in: query
         name: is_aktif
         type: boolean
@@ -2196,15 +2187,11 @@ paths:
         in: query
         name: is_expired
         type: boolean
-      - description: Filter identifier primary
-        in: query
-        name: is_primary
-        type: boolean
-      - description: 'Halaman (default: 1)'
+      - description: Page number
         in: query
         name: page
         type: integer
-      - description: 'Jumlah per halaman (default: 10, max: 1000)'
+      - description: Page size
         in: query
         name: page_size
         type: integer
@@ -2219,25 +2206,25 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.KepegawaianIdentifierResponse'
+                    $ref: '#/definitions/dto.KepegawaianIdentifierResponse'
                   type: array
               type: object
       security:
       - BearerAuth: []
-      summary: Daftar identifier pegawai
+      summary: Get list of KepegawaianIdentifier
       tags:
       - kepegawaian/identifier
     post:
       consumes:
       - application/json
-      description: Menambahkan identifier baru untuk pegawai (NIK, STR, SIP, dll)
+      description: Create New KepegawaianIdentifier
       parameters:
-      - description: Data identifier
+      - description: Create Request
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.CreateKepegawaianIdentifierRequest'
+          $ref: '#/definitions/dto.CreateKepegawaianIdentifierRequest'
       produces:
       - application/json
       responses:
@@ -2248,20 +2235,20 @@ paths:
             - $ref: '#/definitions/response.MyGoResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.KepegawaianIdentifierResponse'
+                  $ref: '#/definitions/dto.KepegawaianIdentifierResponse'
               type: object
       security:
       - BearerAuth: []
-      summary: Tambah identifier pegawai
+      summary: Create KepegawaianIdentifier
       tags:
       - kepegawaian/identifier
   /kepegawaian/identifier/{id}:
     delete:
       consumes:
       - application/json
-      description: Menghapus identifier pegawai berdasarkan ID (soft delete)
+      description: Delete KepegawaianIdentifier by :id (soft delete)
       parameters:
-      - description: ID identifier
+      - description: KepegawaianIdentifier ID
         in: path
         name: id
         required: true
@@ -2275,15 +2262,15 @@ paths:
             $ref: '#/definitions/response.MyGoResponse'
       security:
       - BearerAuth: []
-      summary: Hapus identifier pegawai
+      summary: Delete KepegawaianIdentifier
       tags:
       - kepegawaian/identifier
     get:
       consumes:
       - application/json
-      description: Menampilkan detail satu identifier pegawai berdasarkan ID
+      description: Get KepegawaianIdentifier by :id
       parameters:
-      - description: ID identifier
+      - description: KepegawaianIdentifier ID
         in: path
         name: id
         required: true
@@ -2298,29 +2285,29 @@ paths:
             - $ref: '#/definitions/response.MyGoResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.KepegawaianIdentifierResponse'
+                  $ref: '#/definitions/dto.KepegawaianIdentifierResponse'
               type: object
       security:
       - BearerAuth: []
-      summary: Detail identifier pegawai
+      summary: Get KepegawaianIdentifier
       tags:
       - kepegawaian/identifier
     put:
       consumes:
       - application/json
-      description: Memperbarui data identifier pegawai berdasarkan ID
+      description: Update KepegawaianIdentifier by :id
       parameters:
-      - description: ID identifier
+      - description: KepegawaianIdentifier ID
         in: path
         name: id
         required: true
         type: integer
-      - description: Data yang diperbarui
+      - description: Update Request
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.UpdateKepegawaianIdentifierRequest'
+          $ref: '#/definitions/dto.UpdateKepegawaianIdentifierRequest'
       produces:
       - application/json
       responses:
@@ -2331,11 +2318,11 @@ paths:
             - $ref: '#/definitions/response.MyGoResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.KepegawaianIdentifierResponse'
+                  $ref: '#/definitions/dto.KepegawaianIdentifierResponse'
               type: object
       security:
       - BearerAuth: []
-      summary: Update identifier pegawai
+      summary: Update KepegawaianIdentifier
       tags:
       - kepegawaian/identifier
   /kepegawaian/identifier/{pegawai_id}/pegawai:
@@ -2360,12 +2347,37 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.KepegawaianIdentifierResponse'
+                    $ref: '#/definitions/dto.KepegawaianIdentifierResponse'
                   type: array
               type: object
       security:
       - BearerAuth: []
       summary: Daftar identifier milik satu pegawai
+      tags:
+      - kepegawaian/identifier
+  /kepegawaian/identifier/expired:
+    get:
+      consumes:
+      - application/json
+      description: Menampilkan daftar identifier (STR/SIP) yang sudah melewati tanggal
+        expired
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.KepegawaianIdentifierResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Identifier yang sudah expired
       tags:
       - kepegawaian/identifier
   /kepegawaian/identifier/expiring-soon:
@@ -2390,7 +2402,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.KepegawaianIdentifierResponse'
+                    $ref: '#/definitions/dto.KepegawaianIdentifierResponse'
                   type: array
               type: object
       security:
@@ -2562,35 +2574,6 @@ paths:
       summary: Update Tipe
       tags:
       - kepegawaian/identifier/tipe
-  /kepegawaian/identifier/types:
-    get:
-      consumes:
-      - application/json
-      description: Menampilkan semua tipe identifier yang tersedia untuk dropdown
-        UI
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.MyGoResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/dto.IdentifierMetaResponse'
-                  type: array
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.MyGoResponse'
-      security:
-      - BearerAuth: []
-      summary: Daftar tipe identifier
-      tags:
-      - kepegawaian/identifier
   /kepegawaian/kontak:
     get:
       consumes:

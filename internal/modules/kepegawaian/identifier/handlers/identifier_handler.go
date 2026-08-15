@@ -5,16 +5,16 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/labstack/echo/v5"
+
 	"neosim_go/internal/modules/kepegawaian/identifier/dto"
 	"neosim_go/internal/shared/binding"
 	he "neosim_go/internal/shared/httputil"
 	"neosim_go/internal/shared/response"
 	"neosim_go/internal/shared/validator"
-
-	"github.com/labstack/echo/v5"
 )
 
-// ─── ListIdentifier ───────────────────────────────────────────────────── v
+// ─── ListIdentifier ──────────────────────────────────────────────────────────
 //
 //	@Summary        Get list of KepegawaianIdentifier
 //	@Description    Get paginated list of KepegawaianIdentifier
@@ -27,6 +27,7 @@ import (
 //	@Param          nilai       query       string  false   "Filter by Nilai / Nomor Identifier (partial match)"
 //	@Param          is_primary  query       boolean false   "Filter by Is Primary Status"
 //	@Param          is_aktif    query       boolean false   "Filter by Is Aktif Status"
+//	@Param          is_expired  query       boolean false   "Filter identifier yang sudah expired"
 //	@Param          page        query       int     false   "Page number"
 //	@Param          page_size   query       int     false   "Page size"
 //	@Success        200         {object}    response.MyGoResponse{data=[]dto.KepegawaianIdentifierResponse}
@@ -60,17 +61,23 @@ func (h *KepegawaianIdentifierHandler) ListIdentifier(c *echo.Context) error {
 		}
 	}
 
+	if isExpiredStr := c.QueryParam("is_expired"); isExpiredStr != "" {
+		if val, err := strconv.ParseBool(isExpiredStr); err == nil {
+			filter.IsExpired = &val
+		}
+	}
+
 	page, pageSize := he.ParsePagination(c, h.cfg)
 
 	actor := he.BuildAuthContext(c)
-	items, total, err := h.service.ListIdentifier(page, pageSize, &filter, actor)
+	items, total, err := h.service.ListIdentifier(c.Request().Context(), page, pageSize, &filter, actor)
 	if err != nil {
-		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
+		return response.Response(c, he.NotFoundStatus(err, "Gagal mengambil data"), false, err.Error(), nil, nil)
 	}
 	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data", items, total, page, pageSize)
 }
 
-// ─── GetIdentifierByID ─────────────────────────────────────────────────── v
+// ─── GetIdentifierByID ────────────────────────────────────────────────────────
 //
 //	@Summary        Get KepegawaianIdentifier
 //	@Description    Get KepegawaianIdentifier by :id
@@ -87,14 +94,45 @@ func (h *KepegawaianIdentifierHandler) GetIdentifierByID(c *echo.Context) error 
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.GetIdentifierByID(id, actor)
+	item, err := h.service.GetIdentifierByID(c.Request().Context(), id, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
 	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", item, nil)
 }
 
-// ─── CreateIdentifier ──────────────────────────────────────────────────── v
+// ─── ListByPegawai ────────────────────────────────────────────────────────────
+//
+//	@Summary        Daftar identifier milik satu pegawai
+//	@Description    Menampilkan semua identifier yang dimiliki oleh pegawai tertentu
+//	@Tags           kepegawaian/identifier
+//	@Accept         json
+//	@Produce        json
+//	@Security       BearerAuth
+//	@Param          pegawai_id  path        int true    "ID pegawai"
+//	@Success        200         {object}    response.MyGoResponse{data=[]dto.KepegawaianIdentifierResponse}
+//	@Router         /kepegawaian/identifier/{pegawai_id}/pegawai [get]
+func (h *KepegawaianIdentifierHandler) ListByPegawai(c *echo.Context) error {
+	actor := he.BuildAuthContext(c)
+
+	pegawaiID, err := parsePegawaiID(c)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
+	}
+
+	items, err := h.service.ListByPegawai(c.Request().Context(), pegawaiID, actor)
+	if err != nil {
+		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
+	}
+
+	if len(items) == 0 {
+		return response.Response(c, http.StatusNotFound, false, "Data tidak ditemukan", nil, nil)
+	}
+
+	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", items, nil)
+}
+
+// ─── CreateIdentifier ──────────────────────────────────────────────────────────
 //
 //	@Summary        Create KepegawaianIdentifier
 //	@Description    Create New KepegawaianIdentifier
@@ -120,15 +158,16 @@ func (h *KepegawaianIdentifierHandler) CreateIdentifier(c *echo.Context) error {
 	if errs := validator.Validate(req); errs != nil {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
+
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.CreateIdentifier(&req, actor)
+	item, err := h.service.CreateIdentifier(c.Request().Context(), &req, actor)
 	if err != nil {
-		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
+		return response.Response(c, http.StatusUnprocessableEntity, false, err.Error(), nil, nil)
 	}
 	return response.Response(c, http.StatusCreated, true, "Data berhasil dibuat", item, nil)
 }
 
-// ─── UpdateIdentifier ────────────────────────────────────────────────────
+// ─── UpdateIdentifier ──────────────────────────────────────────────────────────
 //
 //	@Summary        Update KepegawaianIdentifier
 //	@Description    Update KepegawaianIdentifier by :id
@@ -161,21 +200,17 @@ func (h *KepegawaianIdentifierHandler) UpdateIdentifier(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.UpdateIdentifier(id, &req, actor)
+	item, err := h.service.UpdateIdentifier(c.Request().Context(), id, &req, actor)
 	if err != nil {
-		status := http.StatusBadRequest
-		if err.Error() == "KepegawaianIdentifier tidak ditemukan" {
-			status = http.StatusNotFound
-		}
-		return response.Response(c, status, false, err.Error(), nil, nil)
+		return response.Response(c, he.NotFoundStatus(err, "Data tidak ditemukan"), false, err.Error(), nil, nil)
 	}
 	return response.Response(c, http.StatusOK, true, "Data berhasil diupdate", item, nil)
 }
 
-// ─── DeleteIdentifier ────────────────────────────────────────────────────
+// ─── DeleteIdentifier ──────────────────────────────────────────────────────────
 //
 //	@Summary        Delete KepegawaianIdentifier
-//	@Description    Delete KepegawaianIdentifier by :id
+//	@Description    Delete KepegawaianIdentifier by :id (soft delete)
 //	@Tags           kepegawaian/identifier
 //	@Accept         json
 //	@Produce        json
@@ -189,12 +224,76 @@ func (h *KepegawaianIdentifierHandler) DeleteIdentifier(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	if err := h.service.DeleteIdentifier(id, actor); err != nil {
-		status := http.StatusInternalServerError
-		if err.Error() == "KepegawaianIdentifier tidak ditemukan" {
-			status = http.StatusNotFound
-		}
-		return response.Response(c, status, false, err.Error(), nil, nil)
+	if err := h.service.DeleteIdentifier(c.Request().Context(), id, actor); err != nil {
+		return response.Response(c, he.NotFoundStatus(err, "Data tidak ditemukan"), false, err.Error(), nil, nil)
 	}
 	return response.Response(c, http.StatusOK, true, "Data berhasil dihapus", nil, nil)
+}
+
+// ─── GetExpiringSoonIdentifier ──────────────────────────────────────────────────
+
+// GetExpiringSoonIdentifier godoc
+//
+//	@Summary		Identifier yang akan segera expired
+//	@Description	Menampilkan daftar identifier (STR/SIP) yang akan expired dalam N hari ke depan
+//	@Tags			kepegawaian/identifier
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			days	query		int	false	"Jumlah hari ke depan (default: 30)"
+//	@Success		200		{object}	response.MyGoResponse{data=[]dto.KepegawaianIdentifierResponse}
+//	@Router			/kepegawaian/identifier/expiring-soon [get]
+func (h *KepegawaianIdentifierHandler) GetExpiringSoonIdentifier(c *echo.Context) error {
+	actor := he.BuildAuthContext(c)
+
+	days := 30
+	if d := c.QueryParam("days"); d != "" {
+		if parsed, err := strconv.Atoi(d); err == nil && parsed > 0 {
+			days = parsed
+		}
+	}
+
+	items, err := h.service.GetExpiringSoonIdentifier(c.Request().Context(), days, actor)
+	if err != nil {
+		return response.Response(c, http.StatusUnprocessableEntity, false, err.Error(), nil, nil)
+	}
+
+	if len(items) == 0 {
+		return response.Response(c, http.StatusOK, true, "Data tidak ditemukan", nil, nil)
+	}
+
+	return response.Response(c, http.StatusOK, true, "Data berhasil diambil", items, nil)
+}
+
+// ─── GetExpiredIdentifier ────────────────────────────────────────────────────
+
+// GetExpiredIdentifier godoc
+//
+//	@Summary		Identifier yang sudah expired
+//	@Description	Menampilkan daftar identifier (STR/SIP) yang sudah melewati tanggal expired
+//	@Tags			kepegawaian/identifier
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{object}	response.MyGoResponse{data=[]dto.KepegawaianIdentifierResponse}
+//	@Router			/kepegawaian/identifier/expired [get]
+func (h *KepegawaianIdentifierHandler) GetExpiredIdentifier(c *echo.Context) error {
+	actor := he.BuildAuthContext(c)
+
+	items, err := h.service.GetExpiredIdentifier(c.Request().Context(), actor)
+	if err != nil {
+		return response.Response(c, http.StatusUnprocessableEntity, false, err.Error(), nil, nil)
+	}
+
+	if len(items) == 0 {
+		return response.Response(c, http.StatusOK, true, "Data tidak ditemukan", nil, nil)
+	}
+
+	return response.Response(c, http.StatusOK, true, "Data berhasil diambil", items, nil)
+}
+
+// ─── Helper privat ──────────────────────────────────────────────────────────
+
+func parsePegawaiID(c *echo.Context) (int64, error) {
+	return strconv.ParseInt(c.Param("pegawai_id"), 10, 64)
 }

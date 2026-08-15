@@ -25,6 +25,24 @@ func (s *service) CreateTipe(req *dto.CreateTipeRequest, actor he.AuthContext) (
 			"Akses ditolak. Anda tidak memiliki hak akses untuk membuat Tipe baru.", nil)
 	}
 
+	// Check Duplicate code
+	data, err := s.repo.GetTipeByCode(req.Code)
+	if err != nil {
+		return nil, err
+	}
+	if data != nil {
+		return nil, appErrors.Wrap(http.StatusConflict, "Tipe dengan kode ini sudah ada", nil)
+	}
+
+	// Check Duplicate label
+	data, err = s.repo.GetTipeByLabel(req.Label)
+	if err != nil {
+		return nil, err
+	}
+	if data != nil {
+		return nil, appErrors.Wrap(http.StatusConflict, "Tipe dengan label ini sudah ada", nil)
+	}
+
 	// Buat instance model Tipe baru dengan bidang-bidang yang disesuaikan
 	m := &models.Tipe{
 		Code:        req.Code,
@@ -64,6 +82,62 @@ func (s *service) GetTipeByID(id int64, actor he.AuthContext) (*dto.TipeResponse
 	}
 
 	m, err := s.repo.GetTipeByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if m == nil {
+		return nil, errors.New("Tipe tidak ditemukan")
+	}
+
+	creator := s.buildCreator(m.CreatedBy)
+	updater := s.buildCreator(m.UpdatedBy)
+
+	return dto.ToTipeResponse(dto.TipeResponseParams{
+		Tipe:    m,
+		Creator: creator,
+		Updater: updater,
+	}), nil
+}
+
+func (s *service) GetTipeByCode(code string, actor he.AuthContext) (*dto.TipeResponse, error) {
+	can, err := s.canReadTipe(actor)
+	if err != nil {
+		return nil, appErrors.Internal("gagal cek akses")
+	}
+	if !can {
+		return nil, appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda tidak memiliki hak akses untuk melihat Tipe.", nil)
+	}
+
+	m, err := s.repo.GetTipeByCode(code)
+	if err != nil {
+		return nil, err
+	}
+	if m == nil {
+		return nil, errors.New("Tipe tidak ditemukan")
+	}
+
+	creator := s.buildCreator(m.CreatedBy)
+	updater := s.buildCreator(m.UpdatedBy)
+
+	return dto.ToTipeResponse(dto.TipeResponseParams{
+		Tipe:    m,
+		Creator: creator,
+		Updater: updater,
+	}), nil
+}
+
+func (s *service) GetTipeByLabel(label string, actor he.AuthContext) (*dto.TipeResponse, error) {
+	can, err := s.canReadTipe(actor)
+	if err != nil {
+		return nil, appErrors.Internal("gagal cek akses")
+	}
+	if !can {
+		return nil, appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda tidak memiliki hak akses untuk melihat Tipe.", nil)
+	}
+
+	m, err := s.repo.GetTipeByLabel(label)
 	if err != nil {
 		return nil, err
 	}
@@ -122,6 +196,28 @@ func (s *service) UpdateTipe(id int64, req *dto.UpdateTipeRequest, actor he.Auth
 	}
 	if m == nil {
 		return nil, errors.New("Tipe tidak ditemukan")
+	}
+
+	// Check Duplicate code jika ada perubahan
+	if req.Code != nil && *req.Code != m.Code {
+		data, err := s.repo.GetTipeByCode(*req.Code)
+		if err != nil {
+			return nil, err
+		}
+		if data != nil {
+			return nil, appErrors.Wrap(http.StatusConflict, "Tipe dengan kode ini sudah digunakan", nil)
+		}
+	}
+
+	// Check Duplicate label jika ada perubahan
+	if req.Label != nil && *req.Label != m.Label {
+		data, err := s.repo.GetTipeByLabel(*req.Label)
+		if err != nil {
+			return nil, err
+		}
+		if data != nil {
+			return nil, appErrors.Wrap(http.StatusConflict, "Tipe dengan label ini sudah digunakan", nil)
+		}
 	}
 
 	// Update parsial sesuai pointer/field pada DTO Update

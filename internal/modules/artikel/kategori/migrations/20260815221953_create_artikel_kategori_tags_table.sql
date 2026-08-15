@@ -1,7 +1,7 @@
--- Migration: Create kepegawaian_identifiers table
--- Timestamp: 20260624085035
+-- Migration: Create artikel_kategori_tags table
+-- Timestamp: 20260815221953
 
-CREATE TABLE IF NOT EXISTS kepegawaian_identifiers (
+CREATE TABLE IF NOT EXISTS artikel_kategori_tags (
     id          BIGSERIAL    PRIMARY KEY,
     name        VARCHAR(255) NOT NULL,
     description TEXT,
@@ -12,4 +12,4 @@ CREATE TABLE IF NOT EXISTS kepegawaian_identifiers (
     deleted_at  TIMESTAMPTZ
 );
 
-CREATE INDEX IF NOT EXISTS idx_kepegawaian_identifiers_deleted_at ON kepegawaian_identifiers(deleted_at);
+CREATE INDEX IF NOT EXISTS idx_artikel_kategori_tags_deleted_at ON artikel_kategori_tags(deleted_at);

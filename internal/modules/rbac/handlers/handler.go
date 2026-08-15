@@ -1,11 +1,13 @@
 package handlers
 
 import (
+	"io"
 	"net/http"
 	"strconv"
 
 	"neosim_go/internal/modules/rbac/contracts"
 	"neosim_go/internal/modules/rbac/dto"
+	"neosim_go/internal/shared/binding"
 	"neosim_go/internal/shared/response"
 	"neosim_go/internal/shared/validator"
 
@@ -100,8 +102,13 @@ func (h *RBACHandler) GetPermission(c *echo.Context) error {
 //	@Router			/rbac/permissions [post]
 func (h *RBACHandler) CreatePermission(c *echo.Context) error {
 	var req dto.CreatePermissionRequest
-	if err := c.Bind(&req); err != nil {
-		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Gagal membaca request body", nil, err.Error())
+	}
+
+	if errs := binding.BindErrors(body, &req); len(errs) > 0 {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 	if errs := validator.Validate(req); errs != nil {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
@@ -132,8 +139,13 @@ func (h *RBACHandler) UpdatePermission(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	var req dto.UpdatePermissionRequest
-	if err := c.Bind(&req); err != nil {
-		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Gagal membaca request body", nil, err.Error())
+	}
+
+	if errs := binding.BindErrors(body, &req); len(errs) > 0 {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 	if errs := validator.Validate(req); errs != nil {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
@@ -243,8 +255,13 @@ func (h *RBACHandler) GetRole(c *echo.Context) error {
 //	@Router			/rbac/roles [post]
 func (h *RBACHandler) CreateRole(c *echo.Context) error {
 	var req dto.CreateRoleRequest
-	if err := c.Bind(&req); err != nil {
-		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Gagal membaca request body", nil, err.Error())
+	}
+
+	if errs := binding.BindErrors(body, &req); len(errs) > 0 {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 	if errs := validator.Validate(req); errs != nil {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
@@ -273,8 +290,12 @@ func (h *RBACHandler) UpdateRole(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	var req dto.UpdateRoleRequest
-	if err := c.Bind(&req); err != nil {
-		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Gagal membaca request body", nil, err.Error())
+	}
+	if errs := binding.BindErrors(body, &req); len(errs) > 0 {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 	if errs := validator.Validate(req); errs != nil {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
@@ -362,8 +383,13 @@ func (h *RBACHandler) SyncRolePermissions(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	var req dto.AssignPermissionsRequest
-	if err := c.Bind(&req); err != nil {
-		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Gagal membaca request body", nil, err.Error())
+	}
+
+	if errs := binding.BindErrors(body, &req); len(errs) > 0 {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 	if err := h.service.SyncRolePermissions(id, &req); err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
@@ -390,8 +416,13 @@ func (h *RBACHandler) RevokePermissionsFromRole(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	var req dto.AssignPermissionsRequest
-	if err := c.Bind(&req); err != nil {
-		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Gagal membaca request body", nil, err.Error())
+	}
+
+	if errs := binding.BindErrors(body, &req); len(errs) > 0 {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 	if err := h.service.RevokePermissionsFromRole(id, &req); err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
@@ -453,8 +484,13 @@ func (h *RBACHandler) AssignRolesToUser(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "User ID tidak valid", nil, nil)
 	}
 	var req dto.AssignRolesRequest
-	if err := c.Bind(&req); err != nil {
-		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Gagal membaca request body", nil, err.Error())
+	}
+
+	if errs := binding.BindErrors(body, &req); len(errs) > 0 {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 	if errs := validator.Validate(req); errs != nil {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
@@ -484,8 +520,13 @@ func (h *RBACHandler) SyncUserRoles(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "User ID tidak valid", nil, nil)
 	}
 	var req dto.AssignRolesRequest
-	if err := c.Bind(&req); err != nil {
-		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Gagal membaca request body", nil, err.Error())
+	}
+
+	if errs := binding.BindErrors(body, &req); len(errs) > 0 {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 	if err := h.service.SyncUserRoles(userID, &req, he.GetActorID(c)); err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
@@ -512,8 +553,13 @@ func (h *RBACHandler) RevokeRolesFromUser(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "User ID tidak valid", nil, nil)
 	}
 	var req dto.AssignRolesRequest
-	if err := c.Bind(&req); err != nil {
-		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Gagal membaca request body", nil, err.Error())
+	}
+
+	if errs := binding.BindErrors(body, &req); len(errs) > 0 {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 	if err := h.service.RevokeRolesFromUser(userID, &req); err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
@@ -567,8 +613,13 @@ func (h *RBACHandler) AssignDirectPermission(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "User ID tidak valid", nil, nil)
 	}
 	var req dto.AssignDirectPermissionRequest
-	if err := c.Bind(&req); err != nil {
-		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Gagal membaca request body", nil, err.Error())
+	}
+
+	if errs := binding.BindErrors(body, &req); len(errs) > 0 {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 	if errs := validator.Validate(req); errs != nil {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)

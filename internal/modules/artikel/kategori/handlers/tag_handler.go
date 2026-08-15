@@ -1,12 +1,14 @@
 package handlers
 
 import (
+	"io"
 	"net/http"
 
 	"neosim_go/internal/modules/artikel/kategori/dto"
 	he "neosim_go/internal/shared/httputil"
 	"neosim_go/internal/shared/response"
 	"neosim_go/internal/shared/validator"
+	"neosim_go/internal/shared/binding"
 
 	"github.com/labstack/echo/v5"
 )
@@ -78,11 +80,16 @@ func (h *ArtikelKategoriHandler) GetTagByID(c *echo.Context) error {
 //	@Router			/artikel/kategori/tags [post]
 func (h *ArtikelKategoriHandler) CreateTag(c *echo.Context) error {
 	var req dto.CreateTagRequest
-	if err := c.Bind(&req); err != nil {
-		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Gagal membaca request body", nil, err.Error())
+	}
+
+	if errs := binding.BindErrors(body, &req); len(errs) > 0 {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (binding)", nil, errs)
 	}
 	if errs := validator.Validate(req); errs != nil {
-		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (validator)", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
 	item, err := h.service.CreateTag(&req, actor)
@@ -109,12 +116,18 @@ func (h *ArtikelKategoriHandler) UpdateTag(c *echo.Context) error {
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
+
 	var req dto.UpdateTagRequest
-	if err := c.Bind(&req); err != nil {
-		return response.Response(c, http.StatusBadRequest, false, "Request tidak valid", nil, nil)
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Gagal membaca request body", nil, err.Error())
+	}
+
+	if errs := binding.BindErrors(body, &req); len(errs) > 0 {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (binding)", nil, errs)
 	}
 	if errs := validator.Validate(req); errs != nil {
-		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (validator)", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
 	item, err := h.service.UpdateTag(id, &req, actor)

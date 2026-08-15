@@ -1056,7 +1056,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Menampilkan daftar identifier pegawai dengan filter dan pagination",
+                "description": "Get paginated list of KepegawaianIdentifier",
                 "consumes": [
                     "application/json"
                 ],
@@ -1066,23 +1066,35 @@ const docTemplate = `{
                 "tags": [
                     "kepegawaian/identifier"
                 ],
-                "summary": "Daftar identifier pegawai",
+                "summary": "Get list of KepegawaianIdentifier",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Filter by ID pegawai",
-                        "name": "kepegawaian_id",
+                        "description": "Filter by Pegawai ID",
+                        "name": "pegawai_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by Tipe ID",
+                        "name": "tipe_id",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "Filter by tipe (NIK, STR, SIP, dll)",
-                        "name": "tipe",
+                        "description": "Filter by Nilai / Nomor Identifier (partial match)",
+                        "name": "nilai",
                         "in": "query"
                     },
                     {
                         "type": "boolean",
-                        "description": "Filter by status aktif",
+                        "description": "Filter by Is Primary Status",
+                        "name": "is_primary",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by Is Aktif Status",
                         "name": "is_aktif",
                         "in": "query"
                     },
@@ -1093,20 +1105,14 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "boolean",
-                        "description": "Filter identifier primary",
-                        "name": "is_primary",
-                        "in": "query"
-                    },
-                    {
                         "type": "integer",
-                        "description": "Halaman (default: 1)",
+                        "description": "Page number",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "Jumlah per halaman (default: 10, max: 1000)",
+                        "description": "Page size",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -1125,7 +1131,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.KepegawaianIdentifierResponse"
+                                                "$ref": "#/definitions/dto.KepegawaianIdentifierResponse"
                                             }
                                         }
                                     }
@@ -1141,7 +1147,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Menambahkan identifier baru untuk pegawai (NIK, STR, SIP, dll)",
+                "description": "Create New KepegawaianIdentifier",
                 "consumes": [
                     "application/json"
                 ],
@@ -1151,15 +1157,15 @@ const docTemplate = `{
                 "tags": [
                     "kepegawaian/identifier"
                 ],
-                "summary": "Tambah identifier pegawai",
+                "summary": "Create KepegawaianIdentifier",
                 "parameters": [
                     {
-                        "description": "Data identifier",
+                        "description": "Create Request",
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.CreateKepegawaianIdentifierRequest"
+                            "$ref": "#/definitions/dto.CreateKepegawaianIdentifierRequest"
                         }
                     }
                 ],
@@ -1175,7 +1181,50 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.KepegawaianIdentifierResponse"
+                                            "$ref": "#/definitions/dto.KepegawaianIdentifierResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/identifier/expired": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menampilkan daftar identifier (STR/SIP) yang sudah melewati tanggal expired",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/identifier"
+                ],
+                "summary": "Identifier yang sudah expired",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.KepegawaianIdentifierResponse"
+                                            }
                                         }
                                     }
                                 }
@@ -1225,7 +1274,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.KepegawaianIdentifierResponse"
+                                                "$ref": "#/definitions/dto.KepegawaianIdentifierResponse"
                                             }
                                         }
                                     }
@@ -1512,55 +1561,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/kepegawaian/identifier/types": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Menampilkan semua tipe identifier yang tersedia untuk dropdown UI",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "kepegawaian/identifier"
-                ],
-                "summary": "Daftar tipe identifier",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.MyGoResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/dto.IdentifierMetaResponse"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.MyGoResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/kepegawaian/identifier/{id}": {
             "get": {
                 "security": [
@@ -1568,7 +1568,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Menampilkan detail satu identifier pegawai berdasarkan ID",
+                "description": "Get KepegawaianIdentifier by :id",
                 "consumes": [
                     "application/json"
                 ],
@@ -1578,11 +1578,11 @@ const docTemplate = `{
                 "tags": [
                     "kepegawaian/identifier"
                 ],
-                "summary": "Detail identifier pegawai",
+                "summary": "Get KepegawaianIdentifier",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID identifier",
+                        "description": "KepegawaianIdentifier ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -1600,7 +1600,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.KepegawaianIdentifierResponse"
+                                            "$ref": "#/definitions/dto.KepegawaianIdentifierResponse"
                                         }
                                     }
                                 }
@@ -1615,7 +1615,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Memperbarui data identifier pegawai berdasarkan ID",
+                "description": "Update KepegawaianIdentifier by :id",
                 "consumes": [
                     "application/json"
                 ],
@@ -1625,22 +1625,22 @@ const docTemplate = `{
                 "tags": [
                     "kepegawaian/identifier"
                 ],
-                "summary": "Update identifier pegawai",
+                "summary": "Update KepegawaianIdentifier",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID identifier",
+                        "description": "KepegawaianIdentifier ID",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "Data yang diperbarui",
+                        "description": "Update Request",
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.UpdateKepegawaianIdentifierRequest"
+                            "$ref": "#/definitions/dto.UpdateKepegawaianIdentifierRequest"
                         }
                     }
                 ],
@@ -1656,7 +1656,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.KepegawaianIdentifierResponse"
+                                            "$ref": "#/definitions/dto.KepegawaianIdentifierResponse"
                                         }
                                     }
                                 }
@@ -1671,7 +1671,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Menghapus identifier pegawai berdasarkan ID (soft delete)",
+                "description": "Delete KepegawaianIdentifier by :id (soft delete)",
                 "consumes": [
                     "application/json"
                 ],
@@ -1681,11 +1681,11 @@ const docTemplate = `{
                 "tags": [
                     "kepegawaian/identifier"
                 ],
-                "summary": "Hapus identifier pegawai",
+                "summary": "Delete KepegawaianIdentifier",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID identifier",
+                        "description": "KepegawaianIdentifier ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -1742,7 +1742,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.KepegawaianIdentifierResponse"
+                                                "$ref": "#/definitions/dto.KepegawaianIdentifierResponse"
                                             }
                                         }
                                     }
@@ -7505,6 +7505,43 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.CreateKepegawaianIdentifierRequest": {
+            "type": "object",
+            "required": [
+                "nilai",
+                "pegawai_id",
+                "tipe_id"
+            ],
+            "properties": {
+                "is_aktif": {
+                    "type": "boolean"
+                },
+                "is_primary": {
+                    "type": "boolean"
+                },
+                "nilai": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "pegawai_id": {
+                    "type": "integer"
+                },
+                "tanggal_expired": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-01-01"
+                },
+                "tanggal_terbit": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-01-01"
+                },
+                "tipe_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "dto.CreateKepegawaianKontakRequest": {
             "type": "object",
             "required": [
@@ -7948,32 +7985,6 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.IdentifierMetaResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "fhir_system": {
-                    "type": "string"
-                },
-                "has_expiry": {
-                    "type": "boolean"
-                },
-                "is_nakes": {
-                    "type": "boolean"
-                },
-                "is_required": {
-                    "type": "boolean"
-                },
-                "label": {
-                    "type": "string"
-                },
-                "penerbit": {
-                    "type": "string"
-                }
-            }
-        },
         "dto.KecamatanDetailResponse": {
             "type": "object",
             "properties": {
@@ -8108,6 +8119,64 @@ const docTemplate = `{
                 },
                 "updated_by": {
                     "type": "integer"
+                }
+            }
+        },
+        "dto.KepegawaianIdentifierResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "$ref": "#/definitions/httputil.UserData"
+                },
+                "days_until_expired": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_aktif": {
+                    "type": "boolean"
+                },
+                "is_expired": {
+                    "type": "boolean"
+                },
+                "is_fhir_mappable": {
+                    "type": "boolean"
+                },
+                "is_primary": {
+                    "type": "boolean"
+                },
+                "nilai": {
+                    "type": "string"
+                },
+                "pegawai_id": {
+                    "type": "integer"
+                },
+                "penerbit": {
+                    "type": "string"
+                },
+                "tanggal_expired": {
+                    "$ref": "#/definitions/types.DateOnly"
+                },
+                "tanggal_terbit": {
+                    "$ref": "#/definitions/types.DateOnly"
+                },
+                "tipe": {
+                    "description": "TipeID         int64            ` + "`" + `json:\"tipe_id\"` + "`" + `",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.TipeSimpelResponse"
+                        }
+                    ]
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "$ref": "#/definitions/httputil.UserData"
                 }
             }
         },
@@ -8906,6 +8975,35 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.UpdateKepegawaianIdentifierRequest": {
+            "type": "object",
+            "properties": {
+                "is_aktif": {
+                    "type": "boolean"
+                },
+                "is_primary": {
+                    "type": "boolean"
+                },
+                "nilai": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "tanggal_expired": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-01-01"
+                },
+                "tanggal_terbit": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-01-01"
+                },
+                "tipe_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "dto.UpdateKepegawaianKontakRequest": {
             "type": "object",
             "properties": {
@@ -9416,130 +9514,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "value": {}
-            }
-        },
-        "neosim_go_internal_modules_kepegawaian_identifier_dto.CreateKepegawaianIdentifierRequest": {
-            "type": "object",
-            "required": [
-                "nilai",
-                "pegawai_id",
-                "tipe_id"
-            ],
-            "properties": {
-                "is_aktif": {
-                    "type": "boolean"
-                },
-                "is_primary": {
-                    "type": "boolean"
-                },
-                "nilai": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 1
-                },
-                "pegawai_id": {
-                    "type": "integer"
-                },
-                "tanggal_expired": {
-                    "type": "string",
-                    "format": "date",
-                    "example": "2026-01-01"
-                },
-                "tanggal_terbit": {
-                    "type": "string",
-                    "format": "date",
-                    "example": "2026-01-01"
-                },
-                "tipe_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "neosim_go_internal_modules_kepegawaian_identifier_dto.KepegawaianIdentifierResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "created_by": {
-                    "$ref": "#/definitions/httputil.UserData"
-                },
-                "days_until_expired": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_aktif": {
-                    "type": "boolean"
-                },
-                "is_expired": {
-                    "type": "boolean"
-                },
-                "is_fhir_mappable": {
-                    "type": "boolean"
-                },
-                "is_primary": {
-                    "type": "boolean"
-                },
-                "nilai": {
-                    "type": "string"
-                },
-                "pegawai_id": {
-                    "type": "integer"
-                },
-                "penerbit": {
-                    "type": "string"
-                },
-                "tanggal_expired": {
-                    "$ref": "#/definitions/types.DateOnly"
-                },
-                "tanggal_terbit": {
-                    "$ref": "#/definitions/types.DateOnly"
-                },
-                "tipe": {
-                    "description": "TipeID         int64            ` + "`" + `json:\"tipe_id\"` + "`" + `",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/dto.TipeSimpelResponse"
-                        }
-                    ]
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "updated_by": {
-                    "$ref": "#/definitions/httputil.UserData"
-                }
-            }
-        },
-        "neosim_go_internal_modules_kepegawaian_identifier_dto.UpdateKepegawaianIdentifierRequest": {
-            "type": "object",
-            "properties": {
-                "is_aktif": {
-                    "type": "boolean"
-                },
-                "is_primary": {
-                    "type": "boolean"
-                },
-                "nilai": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 1
-                },
-                "tanggal_expired": {
-                    "type": "string",
-                    "format": "date",
-                    "example": "2026-01-01"
-                },
-                "tanggal_terbit": {
-                    "type": "string",
-                    "format": "date",
-                    "example": "2026-01-01"
-                },
-                "tipe_id": {
-                    "type": "integer"
-                }
             }
         },
         "response.MyGoResponse": {

@@ -32,6 +32,24 @@ func (r *repository) GetTipeByID(id int64) (*models.Tipe, error) {
 	return &m, result.Error
 }
 
+func (r *repository) GetTipeByCode(code string) (*models.Tipe, error) {
+	var m models.Tipe
+	result := r.db.Where("code = ?", code).First(&m)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return &m, result.Error
+}
+
+func (r *repository) GetTipeByLabel(label string) (*models.Tipe, error) {
+	var m models.Tipe
+	result := r.db.Where("label = ?", label).First(&m)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return &m, result.Error
+}
+
 func (r *repository) ListTipe(page, pageSize int, filter *dto.FilterTipeRequest) ([]models.Tipe, int64, error) {
 	var items []models.Tipe
 	var total int64
