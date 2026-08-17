@@ -47,7 +47,10 @@ func (r *repository) GetByID(id int64) (*models.User, error) {
 // GetByIDs retrieves multiple users by their IDs
 func (r *repository) GetByIDs(ids []int64) ([]models.User, error) {
 	var users []models.User
-	err := r.db.Where("id IN ?", ids).Find(&users).Error
+	err := r.db.
+		Select("id", "username", "name").
+		Where("id IN ?", ids).
+		Find(&users).Error
 	return users, err
 }
 

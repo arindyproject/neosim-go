@@ -11,6 +11,7 @@ import (
 	"neosim_go/config"
 	artikelFactories "neosim_go/internal/modules/artikel/artikel/tests/factories"
 	kategoriFactories "neosim_go/internal/modules/artikel/kategori/tests/factories"
+	kepegawaianIdentifierFactories "neosim_go/internal/modules/kepegawaian/identifier/tests/factories"
 
 	"github.com/joho/godotenv"
 	"gorm.io/gorm"
@@ -53,6 +54,20 @@ var registry = map[string]Seeder{
 		Run: func(db *gorm.DB, total, batchSize int) error {
 			factory := kategoriFactories.NewArtikelKategoriFactory()
 			return seedBatch(db, "kategori", total, batchSize, factory.MakeMany)
+		},
+	},
+
+	"tag": {
+		Run: func(db *gorm.DB, total, batchSize int) error {
+			factory := kategoriFactories.NewTagFactory()
+			return seedBatch(db, "tag", total, batchSize, factory.MakeMany)
+		},
+	},
+
+	"kepegawaian_identifier": {
+		Run: func(db *gorm.DB, total, batchSize int) error {
+			factory := kepegawaianIdentifierFactories.NewKepegawaianIdentifierFactory()
+			return seedBatch(db, "kepegawaian_identifier", total, batchSize, factory.MakeMany)
 		},
 	},
 

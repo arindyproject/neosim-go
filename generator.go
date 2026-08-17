@@ -614,11 +614,11 @@ func To{{.ModuleTitle}}ListResponse(
 	for _, m := range items {
 		var creator, updater *he.UserData
 
-		if creatorsMap != nil {
-			creator = creatorsMap[m.ID]
+		if creatorsMap != nil && m.CreatedBy != nil {
+			creator = creatorsMap[*m.CreatedBy]
 		}
-		if updatersMap != nil {
-			updater = updatersMap[m.ID]
+		if updatersMap != nil && m.UpdatedBy != nil {
+			updater = updatersMap[*m.UpdatedBy]
 		}
 
 		responses = append(responses, *To{{.ModuleTitle}}Response({{.ModuleTitle}}ResponseParams{
@@ -690,10 +690,12 @@ import (
 	"gorm.io/gorm"
 )
 
+// ── Create ────────────────────────────────────────────────────────────────────
 func (r *repository) Create{{.MethodSuffix}}(m *models.{{.ModuleTitle}}) error {
 	return r.db.Create(m).Error
 }
 
+// ── GetByID ───────────────────────────────────────────────────────────────────
 func (r *repository) Get{{.MethodSuffix}}ByID(id int64) (*models.{{.ModuleTitle}}, error) {
 	var m models.{{.ModuleTitle}}
 	result := r.db.Where("id = ? AND deleted_at IS NULL", id).First(&m)
@@ -703,6 +705,7 @@ func (r *repository) Get{{.MethodSuffix}}ByID(id int64) (*models.{{.ModuleTitle}
 	return &m, result.Error
 }
 
+// ── List ──────────────────────────────────────────────────────────────────────
 func (r *repository) List{{.MethodSuffix}}(page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request) ([]models.{{.ModuleTitle}}, int64, error) {
 	var items []models.{{.ModuleTitle}}
 	var total int64
@@ -725,10 +728,13 @@ func (r *repository) List{{.MethodSuffix}}(page, pageSize int, filter *dto.Filte
 	return items, total, nil
 }
 
+
+// ── Update ────────────────────────────────────────────────────────────────────
 func (r *repository) Update{{.MethodSuffix}}(m *models.{{.ModuleTitle}}) error {
 	return r.db.Save(m).Error
 }
 
+// ── Delete ────────────────────────────────────────────────────────────────────
 func (r *repository) Delete{{.MethodSuffix}}(id int64) error {
 	return r.db.Where("id = ?", id).Delete(&models.{{.ModuleTitle}}{}).Error
 }
@@ -739,7 +745,7 @@ var tmplMainService = `package services
 import (
 	"{{.ProjectModule}}/config"
 	{{.ModuleName}}Contracts "{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/contracts"
-	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
+	
 
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
 	authContracts "{{.ProjectModule}}/internal/modules/auth/contracts"
@@ -796,66 +802,32 @@ func (s *service) buildCreator(createdBy *int64) *he.UserData {
 }
 
 // ── helper: build creator/updater maps ───────────────────────────────────────
-
 func (s *service) buildAuditMaps(items []models.{{.ModuleTitle}}) (map[int64]*he.UserData, map[int64]*he.UserData) {
-	fetchUser := func(id int64) (*he.UserData, error) {
-		user, err := s.userRepo.GetByID(id)
-		if err != nil || user == nil {
-			return nil, err
-		}
-		return &he.UserData{ID: user.ID, Username: user.Username, Name: user.Name}, nil
-	}
-
-	creatorIDs := make(map[int64]struct{})
-	updaterIDs := make(map[int64]struct{})
+	idSet := make(map[int64]struct{})
 	for _, item := range items {
 		if item.CreatedBy != nil {
-			creatorIDs[*item.CreatedBy] = struct{}{}
+			idSet[*item.CreatedBy] = struct{}{}
 		}
 		if item.UpdatedBy != nil {
-			updaterIDs[*item.UpdatedBy] = struct{}{}
+			idSet[*item.UpdatedBy] = struct{}{}
 		}
+	}
+	ids := make([]int64, 0, len(idSet))
+	for id := range idSet {
+		ids = append(ids, id)
 	}
 
-	creatorsMap := make(map[int64]*he.UserData)
-	for id := range creatorIDs {
-		if data, err := fetchUser(id); err == nil && data != nil {
-			creatorsMap[id] = data
-		}
+	users, err := s.userRepo.GetByIDs(ids) // ← 1 query total, bukan 40
+	if err != nil {
+		return map[int64]*he.UserData{}, map[int64]*he.UserData{}
 	}
 
-	updatersMap := make(map[int64]*he.UserData)
-	for id := range updaterIDs {
-		if data, ok := creatorsMap[id]; ok {
-			updatersMap[id] = data
-		} else if data, err := fetchUser(id); err == nil && data != nil {
-			updatersMap[id] = data
-		}
+	userMap := make(map[int64]*he.UserData, len(users))
+	for _, u := range users {
+		userMap[u.ID] = &he.UserData{ID: u.ID, Username: u.Username, Name: u.Name}
 	}
-
-	return creatorsMap, updatersMap
-}
-// ── helper: convert items to responses ───────────────────────────────────────
-func to{{.ModuleTitle}}Responses(
-	items []models.{{.ModuleTitle}},
-	creatorsMap, updatersMap map[int64]*he.UserData,
-) []dto.{{.ModuleTitle}}Response {
-	responses := make([]dto.{{.ModuleTitle}}Response, 0, len(items))
-	for _, item := range items {
-		var creator, updater *he.UserData
-		if item.CreatedBy != nil {
-			creator = creatorsMap[*item.CreatedBy]
-		}
-		if item.UpdatedBy != nil {
-			updater = updatersMap[*item.UpdatedBy]
-		}
-		responses = append(responses, *dto.To{{.ModuleTitle}}Response(dto.{{.ModuleTitle}}ResponseParams{
-			{{.ModuleTitle}}: &item,
-			Creator: creator,
-			Updater: updater,
-		}))
-	}
-	return responses
+	// creator dan updater sekarang share map yang sama — reuse otomatis, kode lebih pendek juga
+	return userMap, userMap
 }
 
 `
@@ -868,6 +840,8 @@ import (
 	he "{{.ProjectModule}}/internal/shared/httputil"
 )
 
+
+// ── canRead ───────────────────────────────────────────────────────────────────
 func (s *service) canRead{{.ModuleTitle}}(actor he.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
@@ -881,6 +855,8 @@ func (s *service) canRead{{.ModuleTitle}}(actor he.AuthContext) (bool, error) {
 	return false, nil
 }
 
+
+// ── canCreate ─────────────────────────────────────────────────────────────────
 func (s *service) canCreate{{.ModuleTitle}}(actor he.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
@@ -894,6 +870,8 @@ func (s *service) canCreate{{.ModuleTitle}}(actor he.AuthContext) (bool, error) 
 	return false, nil
 }
 
+
+// ── canUpdate ─────────────────────────────────────────────────────────────────
 func (s *service) canUpdate{{.ModuleTitle}}(actor he.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
@@ -907,6 +885,8 @@ func (s *service) canUpdate{{.ModuleTitle}}(actor he.AuthContext) (bool, error) 
 	return false, nil
 }
 
+
+// ── canDelete ─────────────────────────────────────────────────────────────────
 func (s *service) canDelete{{.ModuleTitle}}(actor he.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
@@ -934,6 +914,7 @@ import (
 	he "{{.ProjectModule}}/internal/shared/httputil"
 )
 
+// ── Create ────────────────────────────────────────────────────────────────────
 func (s *service) Create{{.MethodSuffix}}(req *dto.Create{{.ModuleTitle}}Request, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
 	can, err := s.canCreate{{.ModuleTitle}}(actor)
 	if err != nil {
@@ -955,15 +936,16 @@ func (s *service) Create{{.MethodSuffix}}(req *dto.Create{{.ModuleTitle}}Request
 	}
 	
 	creator := s.buildCreator(m.CreatedBy)
-	updater := s.buildCreator(m.UpdatedBy)
 
 	return dto.To{{.ModuleTitle}}Response(dto.{{.ModuleTitle}}ResponseParams{
 		{{.ModuleTitle}}: m,
 		Creator:    creator,
-		Updater:    updater,
+		Updater:    creator,
 	}), nil
 }
 
+
+// ── GetByID ───────────────────────────────────────────────────────────────────
 func (s *service) Get{{.MethodSuffix}}ByID(id int64, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
 	can, err := s.canRead{{.ModuleTitle}}(actor)
 	if err != nil {
@@ -992,6 +974,8 @@ func (s *service) Get{{.MethodSuffix}}ByID(id int64, actor he.AuthContext) (*dto
 	}), nil
 }
 
+
+// ── List ──────────────────────────────────────────────────────────────────────
 func (s *service) List{{.MethodSuffix}}(page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request, actor he.AuthContext) ([]dto.{{.ModuleTitle}}Response, int64, error) {
 	can, err := s.canRead{{.ModuleTitle}}(actor)
 	if err != nil {
@@ -1014,9 +998,11 @@ func (s *service) List{{.MethodSuffix}}(page, pageSize int, filter *dto.Filter{{
 	}
 
 	creatorsMap, updatersMap := s.buildAuditMaps(items)
-	return to{{.ModuleTitle}}Responses(items, creatorsMap, updatersMap), total, nil
+	return dto.To{{.ModuleTitle}}ListResponse(items, creatorsMap, updatersMap), total, nil
 }
 
+
+// ── Update ────────────────────────────────────────────────────────────────────
 func (s *service) Update{{.MethodSuffix}}(id int64, req *dto.Update{{.ModuleTitle}}Request, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
 	can, err := s.canUpdate{{.ModuleTitle}}(actor)
 	if err != nil {
@@ -1057,6 +1043,7 @@ func (s *service) Update{{.MethodSuffix}}(id int64, req *dto.Update{{.ModuleTitl
 	}), nil
 }
 
+// ── Delete ────────────────────────────────────────────────────────────────────
 func (s *service) Delete{{.MethodSuffix}}(id int64, actor he.AuthContext) error {
 	can, err := s.canDelete{{.ModuleTitle}}(actor)
 	if err != nil {
@@ -2531,6 +2518,34 @@ func To{{.ItemTitle}}Response(params {{.ItemTitle}}ResponseParams) *{{.ItemTitle
 		UpdatedAt:   types.CustomTime(params.{{.ItemTitle}}.UpdatedAt),
 	}
 }
+
+// To{{.ItemTitle}}ListResponse mengubah slice model menjadi slice response
+func To{{.ItemTitle}}ListResponse(
+	items []models.{{.ItemTitle}},
+	creatorsMap map[int64]*he.UserData,
+	updatersMap map[int64]*he.UserData,
+) []{{.ItemTitle}}Response {
+	responses := make([]{{.ItemTitle}}Response, 0, len(items))
+
+	for _, m := range items {
+		var creator, updater *he.UserData
+
+		if creatorsMap != nil && m.CreatedBy != nil {
+			creator = creatorsMap[*m.CreatedBy]
+		}
+		if updatersMap != nil && m.UpdatedBy != nil {
+			updater = updatersMap[*m.UpdatedBy]
+		}
+
+		responses = append(responses, *To{{.ItemTitle}}Response({{.ItemTitle}}ResponseParams{
+			{{.ItemTitle}}: &m,
+			Creator:         creator,
+			Updater:         updater,
+		}))
+	}
+
+	return responses
+}
 `
 
 var tmplItemModel = `package models
@@ -2578,10 +2593,12 @@ func New{{.ItemTitle}}Repository(db *gorm.DB) contracts.{{.ItemTitle}}Repository
 	return &repository{db: db}
 }
 
+// ── Create ────────────────────────────────────────────────────────────────────
 func (r *repository) Create{{.ItemTitle}}(m *models.{{.ItemTitle}}) error {
 	return r.db.Create(m).Error
 }
 
+// ── GetByID ───────────────────────────────────────────────────────────────────
 func (r *repository) Get{{.ItemTitle}}ByID(id int64) (*models.{{.ItemTitle}}, error) {
 	var m models.{{.ItemTitle}}
 	result := r.db.Where("id = ? AND deleted_at IS NULL", id).First(&m)
@@ -2591,6 +2608,7 @@ func (r *repository) Get{{.ItemTitle}}ByID(id int64) (*models.{{.ItemTitle}}, er
 	return &m, result.Error
 }
 
+// ── List ──────────────────────────────────────────────────────────────────────
 func (r *repository) List{{.ItemTitle}}(page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request) ([]models.{{.ItemTitle}}, int64, error) {
 	var items []models.{{.ItemTitle}}
 	var total int64
@@ -2609,10 +2627,12 @@ func (r *repository) List{{.ItemTitle}}(page, pageSize int, filter *dto.Filter{{
 	return items, total, nil
 }
 
+// ── Update ────────────────────────────────────────────────────────────────────
 func (r *repository) Update{{.ItemTitle}}(m *models.{{.ItemTitle}}) error {
 	return r.db.Save(m).Error
 }
 
+// ── Delete ────────────────────────────────────────────────────────────────────
 func (r *repository) Delete{{.ItemTitle}}(id int64) error {
 	return r.db.Where("id = ?", id).Delete(&models.{{.ItemTitle}}{}).Error
 }
@@ -2635,6 +2655,7 @@ import (
 // entitas utama (lihat services/service.go). s.repo, s.buildCreator, dan
 // s.buildAuditMaps dipakai ulang langsung — tidak perlu field/param baru.
 
+// ── Create ────────────────────────────────────────────────────────────────────
 func (s *service) Create{{.ItemTitle}}(req *dto.Create{{.ItemTitle}}Request, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error) {
 	can, err := s.canCreate{{.ItemTitle}}(actor)
 	if err != nil {
@@ -2665,6 +2686,8 @@ func (s *service) Create{{.ItemTitle}}(req *dto.Create{{.ItemTitle}}Request, act
 	}), nil
 }
 
+
+// ── GetByID ───────────────────────────────────────────────────────────────────
 func (s *service) Get{{.ItemTitle}}ByID(id int64, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error) {
 	can, err := s.canRead{{.ItemTitle}}(actor)
 	if err != nil {
@@ -2693,6 +2716,8 @@ func (s *service) Get{{.ItemTitle}}ByID(id int64, actor he.AuthContext) (*dto.{{
 	}), nil
 }
 
+
+// ── List ──────────────────────────────────────────────────────────────────────	
 func (s *service) List{{.ItemTitle}}(page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request, actor he.AuthContext) ([]dto.{{.ItemTitle}}Response, int64, error) {
 	can, err := s.canRead{{.ItemTitle}}(actor)
 	if err != nil {
@@ -2715,9 +2740,11 @@ func (s *service) List{{.ItemTitle}}(page, pageSize int, filter *dto.Filter{{.It
 	}
 
 	creatorsMap, updatersMap := s.buildAuditMapsFor{{.ItemTitle}}(items)
-	return to{{.ItemTitle}}Responses(items, creatorsMap, updatersMap), total, nil
+	return dto.To{{.ItemTitle}}ListResponse(items, creatorsMap, updatersMap), total, nil
 }
 
+
+// ── Update ────────────────────────────────────────────────────────────────────
 func (s *service) Update{{.ItemTitle}}(id int64, req *dto.Update{{.ItemTitle}}Request, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error) {
 	can, err := s.canUpdate{{.ItemTitle}}(actor)
 	if err != nil {
@@ -2758,6 +2785,7 @@ func (s *service) Update{{.ItemTitle}}(id int64, req *dto.Update{{.ItemTitle}}Re
 	}), nil
 }
 
+// ── Delete ────────────────────────────────────────────────────────────────────
 func (s *service) Delete{{.ItemTitle}}(id int64, actor he.AuthContext) error {
 	can, err := s.canDelete{{.ItemTitle}}(actor)
 	if err != nil {
@@ -2819,27 +2847,7 @@ func (s *service) buildAuditMapsFor{{.ItemTitle}}(items []models.{{.ItemTitle}})
 	return creatorsMap, updatersMap
 }
 
-func to{{.ItemTitle}}Responses(
-	items []models.{{.ItemTitle}},
-	creatorsMap, updatersMap map[int64]*he.UserData,
-) []dto.{{.ItemTitle}}Response {
-	responses := make([]dto.{{.ItemTitle}}Response, 0, len(items))
-	for _, item := range items {
-		var creator, updater *he.UserData
-		if item.CreatedBy != nil {
-			creator = creatorsMap[*item.CreatedBy]
-		}
-		if item.UpdatedBy != nil {
-			updater = updatersMap[*item.UpdatedBy]
-		}
-		responses = append(responses, *dto.To{{.ItemTitle}}Response(dto.{{.ItemTitle}}ResponseParams{
-			{{.ItemTitle}}: &item,
-			Creator:       creator,
-			Updater:       updater,
-		}))
-	}
-	return responses
-}
+
 `
 
 var tmplItemPermission = `package services
@@ -2850,6 +2858,8 @@ import (
 	he "{{.ProjectModule}}/internal/shared/httputil"
 )
 
+
+// ── CanRead ───────────────────────────────────────────────────────────────────
 func (s *service) canRead{{.ItemTitle}}(actor he.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
@@ -2863,6 +2873,8 @@ func (s *service) canRead{{.ItemTitle}}(actor he.AuthContext) (bool, error) {
 	return false, nil
 }
 
+
+// ── canCreate ─────────────────────────────────────────────────────────────────
 func (s *service) canCreate{{.ItemTitle}}(actor he.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
@@ -2876,6 +2888,8 @@ func (s *service) canCreate{{.ItemTitle}}(actor he.AuthContext) (bool, error) {
 	return false, nil
 }
 
+
+// ── canUpdate ─────────────────────────────────────────────────────────────────
 func (s *service) canUpdate{{.ItemTitle}}(actor he.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
@@ -2889,6 +2903,8 @@ func (s *service) canUpdate{{.ItemTitle}}(actor he.AuthContext) (bool, error) {
 	return false, nil
 }
 
+
+// ── canDelete ─────────────────────────────────────────────────────────────────
 func (s *service) canDelete{{.ItemTitle}}(actor he.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil

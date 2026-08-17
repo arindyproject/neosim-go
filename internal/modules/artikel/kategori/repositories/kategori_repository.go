@@ -9,10 +9,12 @@ import (
 	"gorm.io/gorm"
 )
 
+// ── Create ────────────────────────────────────────────────────────────────────
 func (r *repository) CreateKategori(m *models.ArtikelKategori) error {
 	return r.db.Create(m).Error
 }
 
+// ── GetByID ───────────────────────────────────────────────────────────────────
 func (r *repository) GetKategoriByID(id int64) (*models.ArtikelKategori, error) {
 	var m models.ArtikelKategori
 	result := r.db.Where("id = ? AND deleted_at IS NULL", id).First(&m)
@@ -22,6 +24,7 @@ func (r *repository) GetKategoriByID(id int64) (*models.ArtikelKategori, error) 
 	return &m, result.Error
 }
 
+// ── List ──────────────────────────────────────────────────────────────────────
 func (r *repository) ListKategori(page, pageSize int, filter *dto.FilterArtikelKategoriRequest) ([]models.ArtikelKategori, int64, error) {
 	var items []models.ArtikelKategori
 	var total int64
@@ -44,10 +47,13 @@ func (r *repository) ListKategori(page, pageSize int, filter *dto.FilterArtikelK
 	return items, total, nil
 }
 
+
+// ── Update ────────────────────────────────────────────────────────────────────
 func (r *repository) UpdateKategori(m *models.ArtikelKategori) error {
 	return r.db.Save(m).Error
 }
 
+// ── Delete ────────────────────────────────────────────────────────────────────
 func (r *repository) DeleteKategori(id int64) error {
 	return r.db.Where("id = ?", id).Delete(&models.ArtikelKategori{}).Error
 }

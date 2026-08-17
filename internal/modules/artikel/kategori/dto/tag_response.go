@@ -35,3 +35,31 @@ func ToTagResponse(params TagResponseParams) *TagResponse {
 		UpdatedAt:   types.CustomTime(params.Tag.UpdatedAt),
 	}
 }
+
+// ToTagListResponse mengubah slice model menjadi slice response
+func ToTagListResponse(
+	items []models.Tag,
+	creatorsMap map[int64]*he.UserData,
+	updatersMap map[int64]*he.UserData,
+) []TagResponse {
+	responses := make([]TagResponse, 0, len(items))
+
+	for _, m := range items {
+		var creator, updater *he.UserData
+
+		if creatorsMap != nil && m.CreatedBy != nil {
+			creator = creatorsMap[*m.CreatedBy]
+		}
+		if updatersMap != nil && m.UpdatedBy != nil {
+			updater = updatersMap[*m.UpdatedBy]
+		}
+
+		responses = append(responses, *ToTagResponse(TagResponseParams{
+			Tag: &m,
+			Creator:         creator,
+			Updater:         updater,
+		}))
+	}
+
+	return responses
+}

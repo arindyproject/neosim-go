@@ -9,10 +9,12 @@ import (
 	"gorm.io/gorm"
 )
 
+// ── Create ────────────────────────────────────────────────────────────────────
 func (r *repository) CreateArtikel(m *models.Artikel) error {
 	return r.db.Create(m).Error
 }
 
+// ── GetByID ───────────────────────────────────────────────────────────────────
 func (r *repository) GetArtikelByID(id int64) (*models.Artikel, error) {
 	var m models.Artikel
 	result := r.db.Where("id = ? AND deleted_at IS NULL", id).First(&m)
@@ -22,6 +24,7 @@ func (r *repository) GetArtikelByID(id int64) (*models.Artikel, error) {
 	return &m, result.Error
 }
 
+// ── List ──────────────────────────────────────────────────────────────────────
 func (r *repository) ListArtikel(page, pageSize int, filter *dto.FilterArtikelRequest) ([]models.Artikel, int64, error) {
 	var items []models.Artikel
 	var total int64
@@ -44,10 +47,13 @@ func (r *repository) ListArtikel(page, pageSize int, filter *dto.FilterArtikelRe
 	return items, total, nil
 }
 
+
+// ── Update ────────────────────────────────────────────────────────────────────
 func (r *repository) UpdateArtikel(m *models.Artikel) error {
 	return r.db.Save(m).Error
 }
 
+// ── Delete ────────────────────────────────────────────────────────────────────
 func (r *repository) DeleteArtikel(id int64) error {
 	return r.db.Where("id = ?", id).Delete(&models.Artikel{}).Error
 }

@@ -2336,6 +2336,14 @@ paths:
         name: pegawai_id
         required: true
         type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
       produces:
       - application/json
       responses:

@@ -63,3 +63,25 @@ func ToTipeResponse(params TipeResponseParams) *TipeResponse {
 		UpdatedAt:   types.CustomTime(params.Tipe.UpdatedAt),
 	}
 }
+
+func ToTipeListResponses(
+	items []models.Tipe,
+	creatorsMap, updatersMap map[int64]*he.UserData,
+) []TipeResponse {
+	responses := make([]TipeResponse, 0, len(items))
+	for _, item := range items {
+		var creator, updater *he.UserData
+		if creatorsMap != nil && item.CreatedBy != nil {
+			creator = creatorsMap[*item.CreatedBy]
+		}
+		if updatersMap != nil && item.UpdatedBy != nil {
+			updater = updatersMap[*item.UpdatedBy]
+		}
+		responses = append(responses, *ToTipeResponse(TipeResponseParams{
+			Tipe:    &item,
+			Creator: creator,
+			Updater: updater,
+		}))
+	}
+	return responses
+}

@@ -106,14 +106,31 @@ func (r *repository) ListIdentifier(
 	return items, total, err
 }
 
-func (r *repository) FindByPegawaiID(ctx context.Context, pegawaiID int64) ([]models.KepegawaianIdentifier, error) {
+func (r *repository) FindByPegawaiID(
+	ctx context.Context,
+	pegawaiID int64,
+	page, pageSize int,
+) ([]models.KepegawaianIdentifier, int64, error) {
 	var items []models.KepegawaianIdentifier
-	err := r.db.WithContext(ctx).
+	var total int64
+
+	query := r.db.WithContext(ctx).
+		Model(&models.KepegawaianIdentifier{}).
 		Preload("Tipe").
-		Where("pegawai_id = ? AND deleted_at IS NULL", pegawaiID).
+		Where("pegawai_id = ? AND deleted_at IS NULL", pegawaiID)
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * pageSize
+	err := query.
 		Order("tipe_id ASC, is_primary DESC, created_at DESC").
+		Offset(offset).
+		Limit(pageSize).
 		Find(&items).Error
-	return items, err
+
+	return items, total, err
 }
 
 func (r *repository) FindByPegawaiIDAndTipe(ctx context.Context, pegawaiID, tipeID int64) ([]models.KepegawaianIdentifier, error) {

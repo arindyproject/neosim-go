@@ -22,7 +22,7 @@ type KepegawaianIdentifierRepository interface {
 	ListIdentifier(ctx context.Context, page, pageSize int, filter *dto.FilterKepegawaianIdentifierRequest) ([]models.KepegawaianIdentifier, int64, error)
 
 	// FindByPegawaiID mencari semua identifier milik satu pegawai
-	FindByPegawaiID(ctx context.Context, pegawaiID int64) ([]models.KepegawaianIdentifier, error)
+	FindByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int) ([]models.KepegawaianIdentifier, int64, error)
 
 	// FindByPegawaiIDAndTipe mencari identifier milik pegawai untuk tipe tertentu
 	FindByPegawaiIDAndTipe(ctx context.Context, pegawaiID, tipeID int64) ([]models.KepegawaianIdentifier, error)
@@ -61,7 +61,7 @@ type KepegawaianIdentifierService interface {
 	CreateIdentifier(ctx context.Context, req *dto.CreateKepegawaianIdentifierRequest, actor he.AuthContext) (*dto.KepegawaianIdentifierResponse, error)
 	GetIdentifierByID(ctx context.Context, id int64, actor he.AuthContext) (*dto.KepegawaianIdentifierResponse, error)
 	ListIdentifier(ctx context.Context, page, pageSize int, filter *dto.FilterKepegawaianIdentifierRequest, actor he.AuthContext) ([]dto.KepegawaianIdentifierResponse, int64, error)
-	ListByPegawai(ctx context.Context, pegawaiID int64, actor he.AuthContext) ([]dto.KepegawaianIdentifierResponse, error)
+	ListByPegawai(ctx context.Context, pegawaiID int64, page, pageSize int, actor he.AuthContext) ([]dto.KepegawaianIdentifierResponse, int64, error)
 	UpdateIdentifier(ctx context.Context, id int64, req *dto.UpdateKepegawaianIdentifierRequest, actor he.AuthContext) (*dto.KepegawaianIdentifierResponse, error)
 	DeleteIdentifier(ctx context.Context, id int64, actor he.AuthContext) error
 

@@ -154,24 +154,33 @@ func (s *service) ListIdentifier(
 func (s *service) ListByPegawai(
 	ctx context.Context,
 	pegawaiID int64,
+	page, pageSize int,
 	actor he.AuthContext,
-) ([]dto.KepegawaianIdentifierResponse, error) {
+) ([]dto.KepegawaianIdentifierResponse, int64, error) {
 	can, err := s.canReadKepegawaianIdentifier(actor)
 	if err != nil {
-		return nil, appErrors.Internal("gagal cek akses")
+		return nil, 0, appErrors.Internal("gagal cek akses")
 	}
 	if !can {
-		return nil, appErrors.Wrap(http.StatusForbidden,
+		return nil, 0, appErrors.Wrap(http.StatusForbidden,
 			"Akses ditolak. Anda tidak memiliki hak akses untuk melihat identifier pegawai.", nil)
 	}
 
-	items, err := s.repo.FindByPegawaiID(ctx, pegawaiID)
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > s.cfg.DefaultPageSizeMax {
+		pageSize = s.cfg.DefaultPageSize
+	}
+
+	items, total, err := s.repo.FindByPegawaiID(ctx, pegawaiID, page, pageSize)
+
 	if err != nil {
-		return nil, appErrors.Internal("gagal mengambil identifier pegawai")
+		return nil, 0, appErrors.Internal("gagal mengambil identifier pegawai")
 	}
 
 	creatorsMap, updatersMap := s.buildAuditMaps(items)
-	return dto.ToKepegawaianIdentifierListResponse(items, creatorsMap, updatersMap), nil
+	return dto.ToKepegawaianIdentifierListResponse(items, creatorsMap, updatersMap), total, nil
 }
 
 // ── Update ────────────────────────────────────────────────────────────────────

@@ -1,26 +1,27 @@
 package dto
 
 import (
+
 	"neosim_go/internal/modules/artikel/artikel/models"
-	he "neosim_go/internal/shared/httputil"
 	"neosim_go/internal/shared/types"
+	he "neosim_go/internal/shared/httputil"
 )
 
 // ArtikelResponse response untuk single Artikel
 type ArtikelResponse struct {
-	ID          int64            `json:"id"`
-	Name        string           `json:"name"`
-	Description *string          `json:"description"`
-	CreatedBy   *he.UserData     `json:"created_by"`
-	UpdatedBy   *he.UserData     `json:"updated_by"`
+	ID          int64     `json:"id"`
+	Name        string    `json:"name"`
+	Description *string   `json:"description"`
+	CreatedBy   *he.UserData `json:"created_by"`
+	UpdatedBy   *he.UserData `json:"updated_by"`
 	CreatedAt   types.CustomTime `json:"created_at"`
 	UpdatedAt   types.CustomTime `json:"updated_at"`
 }
 
 type ArtikelResponseParams struct {
 	Artikel *models.Artikel
-	Creator *he.UserData
-	Updater *he.UserData
+	Creator         *he.UserData
+	Updater         *he.UserData
 }
 
 // ToArtikelResponse mengubah model menjadi response
@@ -56,8 +57,8 @@ func ToArtikelListResponse(
 
 		responses = append(responses, *ToArtikelResponse(ArtikelResponseParams{
 			Artikel: &m,
-			Creator: creator,
-			Updater: updater,
+			Creator:    creator,
+			Updater:    updater,
 		}))
 	}
 

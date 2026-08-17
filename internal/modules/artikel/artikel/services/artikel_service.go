@@ -11,6 +11,7 @@ import (
 	he "neosim_go/internal/shared/httputil"
 )
 
+// ── Create ────────────────────────────────────────────────────────────────────
 func (s *service) CreateArtikel(req *dto.CreateArtikelRequest, actor he.AuthContext) (*dto.ArtikelResponse, error) {
 	can, err := s.canCreateArtikel(actor)
 	if err != nil {
@@ -32,15 +33,16 @@ func (s *service) CreateArtikel(req *dto.CreateArtikelRequest, actor he.AuthCont
 	}
 	
 	creator := s.buildCreator(m.CreatedBy)
-	updater := s.buildCreator(m.UpdatedBy)
 
 	return dto.ToArtikelResponse(dto.ArtikelResponseParams{
 		Artikel: m,
 		Creator:    creator,
-		Updater:    updater,
+		Updater:    creator,
 	}), nil
 }
 
+
+// ── GetByID ───────────────────────────────────────────────────────────────────
 func (s *service) GetArtikelByID(id int64, actor he.AuthContext) (*dto.ArtikelResponse, error) {
 	can, err := s.canReadArtikel(actor)
 	if err != nil {
@@ -69,6 +71,8 @@ func (s *service) GetArtikelByID(id int64, actor he.AuthContext) (*dto.ArtikelRe
 	}), nil
 }
 
+
+// ── List ──────────────────────────────────────────────────────────────────────
 func (s *service) ListArtikel(page, pageSize int, filter *dto.FilterArtikelRequest, actor he.AuthContext) ([]dto.ArtikelResponse, int64, error) {
 	can, err := s.canReadArtikel(actor)
 	if err != nil {
@@ -91,9 +95,11 @@ func (s *service) ListArtikel(page, pageSize int, filter *dto.FilterArtikelReque
 	}
 
 	creatorsMap, updatersMap := s.buildAuditMaps(items)
-	return toArtikelResponses(items, creatorsMap, updatersMap), total, nil
+	return dto.ToArtikelListResponse(items, creatorsMap, updatersMap), total, nil
 }
 
+
+// ── Update ────────────────────────────────────────────────────────────────────
 func (s *service) UpdateArtikel(id int64, req *dto.UpdateArtikelRequest, actor he.AuthContext) (*dto.ArtikelResponse, error) {
 	can, err := s.canUpdateArtikel(actor)
 	if err != nil {
@@ -134,6 +140,7 @@ func (s *service) UpdateArtikel(id int64, req *dto.UpdateArtikelRequest, actor h
 	}), nil
 }
 
+// ── Delete ────────────────────────────────────────────────────────────────────
 func (s *service) DeleteArtikel(id int64, actor he.AuthContext) error {
 	can, err := s.canDeleteArtikel(actor)
 	if err != nil {

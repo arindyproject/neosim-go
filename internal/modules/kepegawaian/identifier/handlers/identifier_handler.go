@@ -110,9 +110,12 @@ func (h *KepegawaianIdentifierHandler) GetIdentifierByID(c *echo.Context) error 
 //	@Produce        json
 //	@Security       BearerAuth
 //	@Param          pegawai_id  path        int true    "ID pegawai"
+//	@Param          page        query       int     false   "Page number"
+//	@Param          page_size   query       int     false   "Page size"
 //	@Success        200         {object}    response.MyGoResponse{data=[]dto.KepegawaianIdentifierResponse}
 //	@Router         /kepegawaian/identifier/{pegawai_id}/pegawai [get]
 func (h *KepegawaianIdentifierHandler) ListByPegawai(c *echo.Context) error {
+	page, pageSize := he.ParsePagination(c, h.cfg)
 	actor := he.BuildAuthContext(c)
 
 	pegawaiID, err := parsePegawaiID(c)
@@ -120,7 +123,7 @@ func (h *KepegawaianIdentifierHandler) ListByPegawai(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
 
-	items, err := h.service.ListByPegawai(c.Request().Context(), pegawaiID, actor)
+	items, total, err := h.service.ListByPegawai(c.Request().Context(), pegawaiID, page, pageSize, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -129,7 +132,7 @@ func (h *KepegawaianIdentifierHandler) ListByPegawai(c *echo.Context) error {
 		return response.Response(c, http.StatusNotFound, false, "Data tidak ditemukan", nil, nil)
 	}
 
-	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", items, nil)
+	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data", items, total, page, pageSize)
 }
 
 // ─── CreateIdentifier ──────────────────────────────────────────────────────────

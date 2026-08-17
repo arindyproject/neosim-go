@@ -11,6 +11,7 @@ import (
 	he "neosim_go/internal/shared/httputil"
 )
 
+// ── Create ────────────────────────────────────────────────────────────────────
 func (s *service) CreateKategori(req *dto.CreateArtikelKategoriRequest, actor he.AuthContext) (*dto.ArtikelKategoriResponse, error) {
 	can, err := s.canCreateArtikelKategori(actor)
 	if err != nil {
@@ -32,15 +33,16 @@ func (s *service) CreateKategori(req *dto.CreateArtikelKategoriRequest, actor he
 	}
 	
 	creator := s.buildCreator(m.CreatedBy)
-	updater := s.buildCreator(m.UpdatedBy)
 
 	return dto.ToArtikelKategoriResponse(dto.ArtikelKategoriResponseParams{
 		ArtikelKategori: m,
 		Creator:    creator,
-		Updater:    updater,
+		Updater:    creator,
 	}), nil
 }
 
+
+// ── GetByID ───────────────────────────────────────────────────────────────────
 func (s *service) GetKategoriByID(id int64, actor he.AuthContext) (*dto.ArtikelKategoriResponse, error) {
 	can, err := s.canReadArtikelKategori(actor)
 	if err != nil {
@@ -69,6 +71,8 @@ func (s *service) GetKategoriByID(id int64, actor he.AuthContext) (*dto.ArtikelK
 	}), nil
 }
 
+
+// ── List ──────────────────────────────────────────────────────────────────────
 func (s *service) ListKategori(page, pageSize int, filter *dto.FilterArtikelKategoriRequest, actor he.AuthContext) ([]dto.ArtikelKategoriResponse, int64, error) {
 	can, err := s.canReadArtikelKategori(actor)
 	if err != nil {
@@ -91,9 +95,11 @@ func (s *service) ListKategori(page, pageSize int, filter *dto.FilterArtikelKate
 	}
 
 	creatorsMap, updatersMap := s.buildAuditMaps(items)
-	return toArtikelKategoriResponses(items, creatorsMap, updatersMap), total, nil
+	return dto.ToArtikelKategoriListResponse(items, creatorsMap, updatersMap), total, nil
 }
 
+
+// ── Update ────────────────────────────────────────────────────────────────────
 func (s *service) UpdateKategori(id int64, req *dto.UpdateArtikelKategoriRequest, actor he.AuthContext) (*dto.ArtikelKategoriResponse, error) {
 	can, err := s.canUpdateArtikelKategori(actor)
 	if err != nil {
@@ -134,6 +140,7 @@ func (s *service) UpdateKategori(id int64, req *dto.UpdateArtikelKategoriRequest
 	}), nil
 }
 
+// ── Delete ────────────────────────────────────────────────────────────────────
 func (s *service) DeleteKategori(id int64, actor he.AuthContext) error {
 	can, err := s.canDeleteArtikelKategori(actor)
 	if err != nil {

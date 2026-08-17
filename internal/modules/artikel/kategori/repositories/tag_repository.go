@@ -18,10 +18,12 @@ func NewTagRepository(db *gorm.DB) contracts.TagRepository {
 	return &repository{db: db}
 }
 
+// ── Create ────────────────────────────────────────────────────────────────────
 func (r *repository) CreateTag(m *models.Tag) error {
 	return r.db.Create(m).Error
 }
 
+// ── GetByID ───────────────────────────────────────────────────────────────────
 func (r *repository) GetTagByID(id int64) (*models.Tag, error) {
 	var m models.Tag
 	result := r.db.Where("id = ? AND deleted_at IS NULL", id).First(&m)
@@ -31,6 +33,7 @@ func (r *repository) GetTagByID(id int64) (*models.Tag, error) {
 	return &m, result.Error
 }
 
+// ── List ──────────────────────────────────────────────────────────────────────
 func (r *repository) ListTag(page, pageSize int, filter *dto.FilterTagRequest) ([]models.Tag, int64, error) {
 	var items []models.Tag
 	var total int64
@@ -49,10 +52,12 @@ func (r *repository) ListTag(page, pageSize int, filter *dto.FilterTagRequest) (
 	return items, total, nil
 }
 
+// ── Update ────────────────────────────────────────────────────────────────────
 func (r *repository) UpdateTag(m *models.Tag) error {
 	return r.db.Save(m).Error
 }
 
+// ── Delete ────────────────────────────────────────────────────────────────────
 func (r *repository) DeleteTag(id int64) error {
 	return r.db.Where("id = ?", id).Delete(&models.Tag{}).Error
 }

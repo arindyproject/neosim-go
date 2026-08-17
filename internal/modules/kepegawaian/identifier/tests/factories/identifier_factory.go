@@ -26,7 +26,7 @@ func (f *KepegawaianIdentifierFactory) With(field string, value interface{}) *Ke
 
 func (f *KepegawaianIdentifierFactory) Make() *models.KepegawaianIdentifier {
 	idx := rng.Intn(999999)
-	pegawaiID := int64(rng.Intn(1000) + 1)
+	pegawaiID := int64(rng.Intn(10) + 1)
 	tipeID := int64(rng.Intn(10) + 1)
 	nilai := fmt.Sprintf("3512345678%06d", idx)
 

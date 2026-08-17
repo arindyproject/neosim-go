@@ -3,7 +3,7 @@ package services
 import (
 	"neosim_go/config"
 	artikelContracts "neosim_go/internal/modules/artikel/artikel/contracts"
-	"neosim_go/internal/modules/artikel/artikel/dto"
+	
 
 	"neosim_go/internal/modules/artikel/artikel/models"
 	authContracts "neosim_go/internal/modules/auth/contracts"
@@ -32,7 +32,7 @@ func NewArtikelService(
 	rbacRepo rbacContracts.RBACRepository,
 	authRepo authContracts.AuthRepository,
 	userRepo userContracts.Repository,
-	cfg *config.Config,
+	cfg    *config.Config,
 ) artikelContracts.Service {
 	return &service{
 		repo:     repo,
@@ -60,7 +60,6 @@ func (s *service) buildCreator(createdBy *int64) *he.UserData {
 }
 
 // ── helper: build creator/updater maps ───────────────────────────────────────
-
 func (s *service) buildAuditMaps(items []models.Artikel) (map[int64]*he.UserData, map[int64]*he.UserData) {
 	idSet := make(map[int64]struct{})
 	for _, item := range items {
@@ -89,25 +88,3 @@ func (s *service) buildAuditMaps(items []models.Artikel) (map[int64]*he.UserData
 	return userMap, userMap
 }
 
-// ── helper: convert items to responses ───────────────────────────────────────
-func toArtikelResponses(
-	items []models.Artikel,
-	creatorsMap, updatersMap map[int64]*he.UserData,
-) []dto.ArtikelResponse {
-	responses := make([]dto.ArtikelResponse, 0, len(items))
-	for _, item := range items {
-		var creator, updater *he.UserData
-		if item.CreatedBy != nil {
-			creator = creatorsMap[*item.CreatedBy]
-		}
-		if item.UpdatedBy != nil {
-			updater = updatersMap[*item.UpdatedBy]
-		}
-		responses = append(responses, *dto.ToArtikelResponse(dto.ArtikelResponseParams{
-			Artikel: &item,
-			Creator: creator,
-			Updater: updater,
-		}))
-	}
-	return responses
-}

@@ -1,8 +1,9 @@
 package mocks
 
 import (
-	userDto    "neosim_go/internal/modules/users/dto"
+	userDto "neosim_go/internal/modules/users/dto"
 	userModels "neosim_go/internal/modules/users/models"
+
 	"github.com/stretchr/testify/mock"
 )
 
