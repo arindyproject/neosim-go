@@ -1005,8 +1005,8 @@ func (s *service) List{{.MethodSuffix}}(page, pageSize int, filter *dto.Filter{{
 	if page < 1 {
 		page = 1
 	}
-	if pageSize < 1 || pageSize > 100 {
-		pageSize = 10
+	if pageSize < 1 || pageSize > s.cfg.DefaultPageSizeMax {
+		pageSize = s.cfg.DefaultPageSizeMax
 	}
 	items, total, err := s.repo.List{{.MethodSuffix}}(page, pageSize, filter)
 	if err != nil {
@@ -2706,8 +2706,8 @@ func (s *service) List{{.ItemTitle}}(page, pageSize int, filter *dto.Filter{{.It
 	if page < 1 {
 		page = 1
 	}
-	if pageSize < 1 || pageSize > 100 {
-		pageSize = 10
+	if pageSize < 1 || pageSize > s.cfg.DefaultPageSizeMax {
+		pageSize = s.cfg.DefaultPageSizeMax
 	}
 	items, total, err := s.repo.List{{.ItemTitle}}(page, pageSize, filter)
 	if err != nil {

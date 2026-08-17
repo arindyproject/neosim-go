@@ -12,6 +12,7 @@ import (
 type Repository interface {
 	Create(user *models.User) error
 	GetByID(id int64) (*models.User, error)
+	GetByIDs(ids []int64) ([]models.User, error)
 	GetByUsername(username string) (*models.User, error)
 	GetByEmail(email string) (*models.User, error)
 	List(page, pageSize int, filter *dto.UserFilter) ([]models.User, int64, error)

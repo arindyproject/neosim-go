@@ -29,13 +29,28 @@ func (f *ArtikelFactory) Make() *models.Artikel {
 	name := fmt.Sprintf("Artikel %d", idx)
 	desc := fmt.Sprintf("Deskripsi Artikel %d", idx)
 
+	//random 1 - 10 for createdBy and updatedBy
+	var createdBy int64 = rng.Int63n(10) + 1
+	var updatedBy int64 = rng.Int63n(10) + 1
+
 	if v, ok := f.overrides["name"]; ok {
 		name = v.(string)
+	}
+	if v, ok := f.overrides["description"]; ok {
+		desc = v.(string)
+	}
+	if v, ok := f.overrides["created_by"]; ok {
+		createdBy = v.(int64)
+	}
+	if v, ok := f.overrides["updated_by"]; ok {
+		updatedBy = v.(int64)
 	}
 
 	return &models.Artikel{
 		Name:        name,
 		Description: &desc,
+		CreatedBy:   &createdBy,
+		UpdatedBy:   &updatedBy,
 	}
 }
 

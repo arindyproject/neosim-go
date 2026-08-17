@@ -82,8 +82,8 @@ func (s *service) ListKategori(page, pageSize int, filter *dto.FilterArtikelKate
 	if page < 1 {
 		page = 1
 	}
-	if pageSize < 1 || pageSize > 100 {
-		pageSize = 10
+	if pageSize < 1 || pageSize > s.cfg.DefaultPageSizeMax {
+		pageSize = s.cfg.DefaultPageSizeMax
 	}
 	items, total, err := s.repo.ListKategori(page, pageSize, filter)
 	if err != nil {

@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-//go:embed 20260815221953_create_artikel_kategori_tags_table.sql
+//go:embed 20260817132107_create_artikel_kategori_tags_table.sql
 var tagSQL string
 
 // MigrateTag menjalankan GORM auto-migration

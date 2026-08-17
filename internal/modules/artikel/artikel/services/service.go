@@ -32,7 +32,7 @@ func NewArtikelService(
 	rbacRepo rbacContracts.RBACRepository,
 	authRepo authContracts.AuthRepository,
 	userRepo userContracts.Repository,
-	cfg    *config.Config,
+	cfg *config.Config,
 ) artikelContracts.Service {
 	return &service{
 		repo:     repo,
@@ -62,43 +62,33 @@ func (s *service) buildCreator(createdBy *int64) *he.UserData {
 // ── helper: build creator/updater maps ───────────────────────────────────────
 
 func (s *service) buildAuditMaps(items []models.Artikel) (map[int64]*he.UserData, map[int64]*he.UserData) {
-	fetchUser := func(id int64) (*he.UserData, error) {
-		user, err := s.userRepo.GetByID(id)
-		if err != nil || user == nil {
-			return nil, err
-		}
-		return &he.UserData{ID: user.ID, Username: user.Username, Name: user.Name}, nil
-	}
-
-	creatorIDs := make(map[int64]struct{})
-	updaterIDs := make(map[int64]struct{})
+	idSet := make(map[int64]struct{})
 	for _, item := range items {
 		if item.CreatedBy != nil {
-			creatorIDs[*item.CreatedBy] = struct{}{}
+			idSet[*item.CreatedBy] = struct{}{}
 		}
 		if item.UpdatedBy != nil {
-			updaterIDs[*item.UpdatedBy] = struct{}{}
+			idSet[*item.UpdatedBy] = struct{}{}
 		}
 	}
-
-	creatorsMap := make(map[int64]*he.UserData)
-	for id := range creatorIDs {
-		if data, err := fetchUser(id); err == nil && data != nil {
-			creatorsMap[id] = data
-		}
+	ids := make([]int64, 0, len(idSet))
+	for id := range idSet {
+		ids = append(ids, id)
 	}
 
-	updatersMap := make(map[int64]*he.UserData)
-	for id := range updaterIDs {
-		if data, ok := creatorsMap[id]; ok {
-			updatersMap[id] = data
-		} else if data, err := fetchUser(id); err == nil && data != nil {
-			updatersMap[id] = data
-		}
+	users, err := s.userRepo.GetByIDs(ids) // ← 1 query total, bukan 40
+	if err != nil {
+		return map[int64]*he.UserData{}, map[int64]*he.UserData{}
 	}
 
-	return creatorsMap, updatersMap
+	userMap := make(map[int64]*he.UserData, len(users))
+	for _, u := range users {
+		userMap[u.ID] = &he.UserData{ID: u.ID, Username: u.Username, Name: u.Name}
+	}
+	// creator dan updater sekarang share map yang sama — reuse otomatis, kode lebih pendek juga
+	return userMap, userMap
 }
+
 // ── helper: convert items to responses ───────────────────────────────────────
 func toArtikelResponses(
 	items []models.Artikel,
@@ -121,4 +111,3 @@ func toArtikelResponses(
 	}
 	return responses
 }
-
