@@ -21,6 +21,7 @@ import (
 
 	// Kepegawaian----------------------------------------------------------
 	masterKepegawaianIdentifier "neosim_go/internal/modules/kepegawaian/identifier/tests/seeders"
+	masterKepegawaianKontak "neosim_go/internal/modules/kepegawaian/kontak/tests/seeders"
 	masterKepegawaianPegawai "neosim_go/internal/modules/kepegawaian/pegawai/tests/seeders"
 
 	// Artikel---------------------------------------------------------------
@@ -157,6 +158,30 @@ func main() {
 			log.Fatal("Gagal seed Identifier:", err)
 		}
 	} //------Kepegawaian Identifier-----------------------------------------
+
+	//------Kepegawaian Kontak Tipe------------------------------------------
+	masterKepegawaianKontakTipeSeeder := masterKepegawaianKontak.NewTipeSeeder(db)
+	if *fresh {
+		if err := masterKepegawaianKontakTipeSeeder.Fresh(); err != nil {
+			log.Fatal("Gagal fresh seed Kontak Tipe:", err)
+		}
+	} else {
+		if err := masterKepegawaianKontakTipeSeeder.Run(); err != nil {
+			log.Fatal("Gagal seed Kontak Tipe:", err)
+		}
+	} //------Kepegawaian Kontak Tipe----------------------------------------
+
+	//------Kepegawaian Kontak-----------------------------------------------
+	masterKepegawaianKontakSeeder := masterKepegawaianKontak.NewKepegawaianKontakSeeder(db)
+	if *fresh {
+		if err := masterKepegawaianKontakSeeder.Fresh(); err != nil {
+			log.Fatal("Gagal fresh seed Kontak:", err)
+		}
+	} else {
+		if err := masterKepegawaianKontakSeeder.Run(); err != nil {
+			log.Fatal("Gagal seed Kontak:", err)
+		}
+	} //------Kepegawaian Kontak---------------------------------------------
 	//Kepegawaian------------------------------------------------------------
 
 	// =====================================================================

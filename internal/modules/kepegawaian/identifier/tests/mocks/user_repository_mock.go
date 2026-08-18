@@ -25,6 +25,14 @@ func (m *UserRepositoryMock) GetByID(id int64) (*userModels.User, error) {
 	return args.Get(0).(*userModels.User), args.Error(1)
 }
 
+func (m *UserRepositoryMock) GetByIDs(ids []int64) ([]userModels.User, error) {
+	args := m.Called(ids)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]userModels.User), args.Error(1)
+}
+
 func (m *UserRepositoryMock) GetByUsername(username string) (*userModels.User, error) {
 	args := m.Called(username)
 	if args.Get(0) == nil {

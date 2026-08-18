@@ -1636,6 +1636,14 @@ func (m *{{.ModuleTitle}}RepositoryMock) Get{{.MethodSuffix}}ByID(id int64) (*mo
 	return args.Get(0).(*models.{{.ModuleTitle}}), args.Error(1)
 }
 
+func (m *{{.ModuleTitle}}RepositoryMock) GetByIDs(ids []int64) ([]models.{{.ModuleTitle}}, error) {
+	args := m.Called(ids)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.{{.ModuleTitle}}), args.Error(1)
+}
+
 func (m *{{.ModuleTitle}}RepositoryMock) List{{.MethodSuffix}}(page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request) ([]models.{{.ModuleTitle}}, int64, error) {
 	args := m.Called(page, pageSize, filter)
 	return args.Get(0).([]models.{{.ModuleTitle}}), args.Get(1).(int64), args.Error(2)
@@ -2677,12 +2685,11 @@ func (s *service) Create{{.ItemTitle}}(req *dto.Create{{.ItemTitle}}Request, act
 	}
 
 	creator := s.buildCreator(m.CreatedBy)
-	updater := s.buildCreator(m.UpdatedBy)
 
 	return dto.To{{.ItemTitle}}Response(dto.{{.ItemTitle}}ResponseParams{
 		{{.ItemTitle}}: m,
 		Creator:       creator,
-		Updater:       updater,
+		Updater:       creator, // saat create, creator dan updater sama
 	}), nil
 }
 

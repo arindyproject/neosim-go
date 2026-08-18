@@ -5,6 +5,7 @@ package contracts
 // Item tambahan (mode add-item) di-embed otomatis lewat marker di bawah.
 type Repository interface {
 	KepegawaianKontakRepository
+	TipeRepository
 	// GEN:ITEM_REPOSITORY_INTERFACE
 }
 
@@ -13,5 +14,6 @@ type Repository interface {
 // Item tambahan (mode add-item) di-embed otomatis lewat marker di bawah.
 type Service interface {
 	KepegawaianKontakService
+	TipeService
 	// GEN:ITEM_SERVICE_INTERFACE
 }

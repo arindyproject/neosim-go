@@ -42,12 +42,16 @@ func (f *UserFactory) Make() *models.User {
 	createdBy := int64(1)
 
 	// Default values
+	var id int64 = 0
 	username := fmt.Sprintf("user_%d", idx)
 	email := fmt.Sprintf("user_%d@example.com", idx)
 	name := fmt.Sprintf("User %d", idx)
 	password := "password123"
 
 	// Apply string/numeric overrides
+	if v, ok := f.overrides["id"]; ok {
+		id = v.(int64)
+	}
 	if v, ok := f.overrides["username"]; ok {
 		username = v.(string)
 	}
@@ -71,6 +75,7 @@ func (f *UserFactory) Make() *models.User {
 	}
 
 	user := &models.User{
+		ID:           id,
 		Username:     username,
 		Email:        email,
 		Name:         name,
@@ -225,11 +230,12 @@ func MakeDeletedUser() *models.User {
 func MakeUserList(count int) []models.User {
 	users := make([]models.User, count)
 	for i := 0; i < count; i++ {
-		idx := i + 1
+		idx := i + 1 // Akan menghasilkan ID: 1, 2, 3, ..., count
 		u := NewUserFactory().
-			With("id", int64(idx)).
+			With("id", int64(idx)). // Mengatur ID berurutan
 			With("username", fmt.Sprintf("user%d", idx)).
 			With("email", fmt.Sprintf("user%d@example.com", idx)).
+			With("name", fmt.Sprintf("User %d", idx)).
 			Make()
 		users[i] = *u
 	}

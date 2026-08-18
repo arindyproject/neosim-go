@@ -48,12 +48,14 @@ func (r *registryModule) InitRoutes(e *echo.Echo) {
 		r.cfg.JWTRefreshTokenExpDays,
 	)
 	userRepo := userRepositories.NewRepository(r.db)
-	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo,userRepo, r.cfg).InitRoutes(e)
+	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo, userRepo, r.cfg).InitRoutes(e)
 }
 
 func (r *registryModule) Models() []interface{} {
 	return []interface{}{
+		&models.Tipe{},
 		&models.KepegawaianKontak{},
+
 		// GEN:ITEM_MODELS
 	}
 }
@@ -64,6 +66,9 @@ func (r *registryModule) SeedData(db *gorm.DB) error {
 
 func (r *registryModule) MigrateSQL(sqlDB *sql.DB) error {
 	if err := migrations.MigrateKepegawaianKontakWithSQL(sqlDB); err != nil {
+		return err
+	}
+	if err := migrations.MigrateTipeWithSQL(sqlDB); err != nil {
 		return err
 	}
 	// GEN:ITEM_MIGRATIONS

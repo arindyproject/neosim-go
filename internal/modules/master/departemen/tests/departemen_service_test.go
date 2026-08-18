@@ -47,7 +47,7 @@ type MasterDepartemenServiceTestSuite struct {
 }
 
 func (s *MasterDepartemenServiceTestSuite) SetupTest() {
-	s.repo     = new(mocks.MasterDepartemenRepositoryMock)
+	s.repo = new(mocks.MasterDepartemenRepositoryMock)
 	s.rbacRepo = new(mocks.RBACRepositoryMock)
 	s.authRepo = new(mocks.AuthRepositoryMock)
 	s.svc = services.NewMasterDepartemenService(s.repo, s.rbacRepo, s.authRepo)
@@ -70,7 +70,10 @@ func (s *MasterDepartemenServiceTestSuite) mockHasPermission(perm string, result
 }
 
 func (s *MasterDepartemenServiceTestSuite) mockNoPermissions() {
-	s.rbacRepo.On("HasPermission", regularActor().UserID, mock.Anything, mock.Anything).Return(false, nil)
+	//s.rbacRepo.On("HasPermission", regularActor().UserID, mock.Anything, mock.Anything).Return(false, nil)
+	s.rbacRepo.On("IsSuperadmin", mock.Anything).Return(false, nil)
+	s.rbacRepo.On("HasPermission", mock.Anything, mock.Anything).Return(false, nil)
+	s.rbacRepo.On("GetUserAllPermissions", mock.Anything).Return([]string{}, nil)
 }
 
 func (s *MasterDepartemenServiceTestSuite) Test_Create_Superadmin_Success() {
@@ -169,10 +172,9 @@ func (s *MasterDepartemenServiceTestSuite) Test_GetByID_WithPermission_Success()
 	s.NoError(err)
 	s.NotNil(result)
 }
-
 func (s *MasterDepartemenServiceTestSuite) Test_GetByID_Forbidden() {
 	actor := regularActor()
-	s.mockNoPermissions()
+	s.mockNoPermissions() // Sekarang ini akan bekerja karena canReadMasterDepartemen mengecek RBAC
 
 	result, err := s.svc.GetByID(1, actor)
 
@@ -181,8 +183,10 @@ func (s *MasterDepartemenServiceTestSuite) Test_GetByID_Forbidden() {
 	var appErr *appErrors.AppError
 	s.ErrorAs(err, &appErr)
 	s.Equal(http.StatusForbidden, appErr.Code)
-}
 
+	// Pastikan repo GetByID TIDAK DIPANGGGIL saat forbidden
+	s.repo.AssertNotCalled(s.T(), "GetByID", mock.Anything)
+}
 func (s *MasterDepartemenServiceTestSuite) Test_GetByID_NotFound() {
 	actor := superadminActor()
 

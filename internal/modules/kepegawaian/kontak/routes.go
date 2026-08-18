@@ -17,5 +17,11 @@ func RegisterRoutes(e *echo.Echo, h *handlers.KepegawaianKontakHandler, jwtManag
 	g.POST("", h.CreateKontak)
 	g.PUT("/:id", h.UpdateKontak)
 	g.DELETE("/:id", h.DeleteKontak)
+	gTipe := e.Group("/api/v1/kepegawaian/kontak/tipes", jwt)
+	gTipe.GET("", h.ListTipe)
+	gTipe.GET("/:id", h.GetTipeByID)
+	gTipe.POST("", h.CreateTipe)
+	gTipe.PUT("/:id", h.UpdateTipe)
+	gTipe.DELETE("/:id", h.DeleteTipe)
 	// GEN:ITEM_ROUTES
 }

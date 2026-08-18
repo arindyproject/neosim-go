@@ -330,9 +330,9 @@ func (s *UserServiceTestSuite) TestListUsers_PageNormalization() {
 	users := factories.MakeUserList(1)
 	filter := &dto.UserFilter{}
 
-	// page=0 harus dinormalisasi ke 1
+	// Gunakan users[0].ID agar mock selalu sinkron dengan data factory
 	s.repo.On("List", 1, 10, filter).Return(users, int64(1), nil)
-	s.rbacRepo.On("GetUsersRoles", []int64{1}).Return(map[int64][]rbacModels.Role{}, nil)
+	s.rbacRepo.On("GetUsersRoles", []int64{users[0].ID}).Return(map[int64][]rbacModels.Role{}, nil)
 
 	result, _, err := s.service.ListUsers(0, 10, filter)
 
@@ -799,12 +799,15 @@ func (s *UserServiceTestSuite) TestUpdateLastLogin_NotFound() {
 
 func (s *UserServiceTestSuite) TestListDeletedUsers_Success() {
 	deletedUser := factories.MakeDeletedUser()
+	deletedUser.ID = 99 // Set ID secara eksplisit menjadi 99
+
 	filter := &dto.UserDeletedFilter{}
 
 	s.repo.On("DeletedList", 1, 10, filter).Return([]models.User{*deletedUser}, int64(1), nil)
 	s.rbacRepo.On("GetUsersRoles", []int64{99}).Return(map[int64][]rbacModels.Role{}, nil)
-	// creator dan deleter
-	s.repo.On("GetByID", int64(1)).Return(factories.MakeSuperadminUser(), nil)
+
+	// Sesuaikan juga jika `CreatedBy` atau `DeletedBy` dipanggil oleh s.repo.GetByID
+	s.repo.On("GetByID", mock.Anything).Return(factories.MakeSuperadminUser(), nil)
 
 	result, total, err := s.service.ListDeletedUsers(1, 10, filter, s.superActor)
 

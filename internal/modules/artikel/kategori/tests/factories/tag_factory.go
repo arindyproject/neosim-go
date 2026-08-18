@@ -2,6 +2,7 @@ package factories
 
 import (
 	"fmt"
+	"math/rand"
 
 	"neosim_go/internal/modules/artikel/kategori/models"
 )
@@ -26,7 +27,7 @@ func (f *TagFactory) Make() *models.Tag {
 	idx := rng.Intn(999999)
 	name := fmt.Sprintf("Tag %d", idx)
 	desc := fmt.Sprintf("Deskripsi Tag %d", idx)
-
+	user_id := rand.Int63n(100) + 1 // ID user acak antara 1 dan 300
 	if v, ok := f.overrides["name"]; ok {
 		name = v.(string)
 	}
@@ -34,6 +35,8 @@ func (f *TagFactory) Make() *models.Tag {
 	return &models.Tag{
 		Name:        name,
 		Description: &desc,
+		CreatedBy:   &user_id,
+		UpdatedBy:   &user_id,
 	}
 }
 

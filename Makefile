@@ -225,6 +225,9 @@ test-master: ## Run tests for master module
 test-master-master: ## Run tests for master module
 	@go test -json ./internal/modules/master/master/tests | gotestfmt
 
+test-master-departemen: ## Run tests for master module
+	@go test -json ./internal/modules/master/departemen/tests | gotestfmt
+
 test-master-alamat: ## Run tests for master module
 	@go test -json ./internal/modules/master/alamat/tests | gotestfmt
 

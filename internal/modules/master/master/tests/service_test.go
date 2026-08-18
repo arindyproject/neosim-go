@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -48,11 +49,18 @@ func (s *MasterServiceTestSuite) SetupTest() {
 	s.repo = new(mocks.MasterRepositoryMock)
 	s.rbacRepo = new(mocks.RBACRepositoryMock)
 	s.authRepo = new(mocks.AuthRepositoryMock)
-	// ─── PENYESUAIAN CACHE ───────────────────────────────────────────────────
-	// Kita passing `nil` untuk redis.Client dan `false` untuk cacheEnabled.
-	// Tujuannya agar unit test tidak bergantung pada koneksi Redis yang sebenarnya
-	// dan fokus menguji logika bisnis, validasi, serta permission seperti semula.
-	cacheManager := cache.NewManager(nil, false, 0)
+
+	// 1. INSIALISASI CONFIG (Mencegah nil pointer dereference pada s.cfg)
+	s.cfg = &config.Config{
+		DefaultPageSize:    10,
+		DefaultPageSizeMax: 100,
+	}
+
+	// 2. INSIALISASI CACHE MANAGER
+	// Memakai cacheManager dummy (disabled) agar tidak bergantung Redis
+	cacheManager := cache.NewManager(nil, false, int(5*time.Minute))
+
+	// 3. PASANG KE SERVICE
 	s.svc = services.NewMasterService(s.repo, s.rbacRepo, s.authRepo, cacheManager, s.cfg)
 }
 

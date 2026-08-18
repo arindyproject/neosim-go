@@ -1,34 +1,41 @@
 package dto
 
 import (
-
 	"neosim_go/internal/modules/kepegawaian/kontak/models"
-	"neosim_go/internal/shared/types"
 	he "neosim_go/internal/shared/httputil"
+	"neosim_go/internal/shared/types"
 )
 
 // KepegawaianKontakResponse response untuk single KepegawaianKontak
 type KepegawaianKontakResponse struct {
-	ID          int64     `json:"id"`
-	Name        string    `json:"name"`
-	Description *string   `json:"description"`
-	CreatedBy   *he.UserData `json:"created_by"`
-	UpdatedBy   *he.UserData `json:"updated_by"`
+	ID          int64            `json:"id"`
+	PegawaiID   int64            `json:"pegawai_id"`
+	TipeID      int64            `json:"tipe_id"`
+	Nilai       string           `json:"nilai"`
+	IsPrimary   bool             `json:"is_primary"`
+	IsAktif     bool             `json:"is_aktif"`
+	Description *string          `json:"description"`
+	CreatedBy   *he.UserData     `json:"created_by"`
+	UpdatedBy   *he.UserData     `json:"updated_by"`
 	CreatedAt   types.CustomTime `json:"created_at"`
 	UpdatedAt   types.CustomTime `json:"updated_at"`
 }
 
 type KepegawaianKontakResponseParams struct {
 	KepegawaianKontak *models.KepegawaianKontak
-	Creator         *he.UserData
-	Updater         *he.UserData
+	Creator           *he.UserData
+	Updater           *he.UserData
 }
 
 // ToKepegawaianKontakResponse mengubah model menjadi response
 func ToKepegawaianKontakResponse(params KepegawaianKontakResponseParams) *KepegawaianKontakResponse {
 	return &KepegawaianKontakResponse{
 		ID:          params.KepegawaianKontak.ID,
-		Name:        params.KepegawaianKontak.Name,
+		PegawaiID:   params.KepegawaianKontak.PegawaiID,
+		TipeID:      params.KepegawaianKontak.TipeID,
+		Nilai:       params.KepegawaianKontak.Nilai,
+		IsPrimary:   params.KepegawaianKontak.IsPrimary,
+		IsAktif:     params.KepegawaianKontak.IsAktif,
 		Description: params.KepegawaianKontak.Description,
 		CreatedBy:   params.Creator,
 		UpdatedBy:   params.Updater,
@@ -57,8 +64,8 @@ func ToKepegawaianKontakListResponse(
 
 		responses = append(responses, *ToKepegawaianKontakResponse(KepegawaianKontakResponseParams{
 			KepegawaianKontak: &m,
-			Creator:    creator,
-			Updater:    updater,
+			Creator:           creator,
+			Updater:           updater,
 		}))
 	}
 

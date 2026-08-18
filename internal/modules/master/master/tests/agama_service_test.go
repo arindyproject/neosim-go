@@ -157,7 +157,7 @@ func (s *MasterServiceTestSuite) Test_ListAgama_DefaultPagination() {
 	filter := &dto.FilterMasterAgamaRequest{}
 	items := []models.MasterAgama{*factories.NewAgamaFactory().Make()}
 
-	// FIXED: Typo ListMasterAgama -> ListAgama
+	// Mock Repository (Cache sudah di-disabled via cache.NewManager(nil, false, ...))
 	s.repo.On("ListAgama", 1, 10, filter).Return(items, int64(1), nil)
 
 	_, _, err := s.svc.ListAgama(0, 0, filter)

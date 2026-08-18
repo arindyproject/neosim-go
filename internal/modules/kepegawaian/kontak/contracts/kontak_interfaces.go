@@ -12,6 +12,7 @@ import (
 type KepegawaianKontakRepository interface {
 	CreateKontak(m *models.KepegawaianKontak) error
 	GetKontakByID(id int64) (*models.KepegawaianKontak, error)
+	GetKontakByPegawaiID(pegawaiID int64) ([]models.KepegawaianKontak, error)
 	ListKontak(page, pageSize int, filter *dto.FilterKepegawaianKontakRequest) ([]models.KepegawaianKontak, int64, error)
 	UpdateKontak(m *models.KepegawaianKontak) error
 	DeleteKontak(id int64) error
@@ -23,6 +24,7 @@ type KepegawaianKontakRepository interface {
 type KepegawaianKontakService interface {
 	CreateKontak(req *dto.CreateKepegawaianKontakRequest, actor he.AuthContext) (*dto.KepegawaianKontakResponse, error)
 	GetKontakByID(id int64, actor he.AuthContext) (*dto.KepegawaianKontakResponse, error)
+	GetKontakByPegawaiID(pegawaiID int64, actor he.AuthContext) ([]dto.KepegawaianKontakResponse, error)
 	ListKontak(page, pageSize int, filter *dto.FilterKepegawaianKontakRequest, actor he.AuthContext) ([]dto.KepegawaianKontakResponse, int64, error)
 	UpdateKontak(id int64, req *dto.UpdateKepegawaianKontakRequest, actor he.AuthContext) (*dto.KepegawaianKontakResponse, error)
 	DeleteKontak(id int64, actor he.AuthContext) error

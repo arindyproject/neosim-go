@@ -2,6 +2,7 @@ package mocks
 
 import (
 	rbacModels "neosim_go/internal/modules/rbac/models"
+
 	"github.com/stretchr/testify/mock"
 )
 

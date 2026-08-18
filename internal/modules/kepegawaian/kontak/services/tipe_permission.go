@@ -6,7 +6,9 @@ import (
 	he "neosim_go/internal/shared/httputil"
 )
 
-func (s *service) canReadMasterDepartemen(actor he.AuthContext) (bool, error) {
+
+// ── CanRead ───────────────────────────────────────────────────────────────────
+func (s *service) canReadTipe(actor he.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
 	}
@@ -19,7 +21,9 @@ func (s *service) canReadMasterDepartemen(actor he.AuthContext) (bool, error) {
 	return false, nil
 }
 
-func (s *service) canCreateMasterDepartemen(actor he.AuthContext) (bool, error) {
+
+// ── canCreate ─────────────────────────────────────────────────────────────────
+func (s *service) canCreateTipe(actor he.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
 	}
@@ -32,7 +36,9 @@ func (s *service) canCreateMasterDepartemen(actor he.AuthContext) (bool, error) 
 	return false, nil
 }
 
-func (s *service) canUpdateMasterDepartemen(actor he.AuthContext) (bool, error) {
+
+// ── canUpdate ─────────────────────────────────────────────────────────────────
+func (s *service) canUpdateTipe(actor he.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
 	}
@@ -45,7 +51,9 @@ func (s *service) canUpdateMasterDepartemen(actor he.AuthContext) (bool, error) 
 	return false, nil
 }
 
-func (s *service) canDeleteMasterDepartemen(actor he.AuthContext) (bool, error) {
+
+// ── canDelete ─────────────────────────────────────────────────────────────────
+func (s *service) canDeleteTipe(actor he.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
 	}

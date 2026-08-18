@@ -20,6 +20,7 @@ import (
 
 	identifierContracts "neosim_go/internal/modules/kepegawaian/identifier/contracts"
 	rbacModels "neosim_go/internal/modules/rbac/models"
+	userModels "neosim_go/internal/modules/users/models"
 	appErrors "neosim_go/internal/shared/errors"
 	he "neosim_go/internal/shared/httputil"
 )
@@ -59,6 +60,7 @@ func (s *KepegawaianIdentifierServiceTestSuite) SetupTest() {
 	s.cfg = &config.Config{DefaultPageSize: 10, DefaultPageSizeMax: 100}
 	s.svc = services.NewKepegawaianIdentifierService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.cfg)
 	s.ctx = context.Background()
+	s.userRepo.On("GetByIDs", mock.Anything).Return([]userModels.User{}, nil).Maybe()
 
 	// Stub default agar buildCreator/buildAuditMaps tidak panic saat memanggil userRepo.
 	s.userRepo.On("GetByID", mock.Anything).Return(nil, nil).Maybe()
@@ -360,11 +362,16 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_ListByPegawai_Superadmin_Su
 		*factories.NewKepegawaianIdentifierFactory().With("PegawaiID", int64(10)).Make(),
 	}
 
-	s.repo.On("FindByPegawaiID", s.ctx, int64(10)).Return(items, nil)
+	// Perbaikan: tambahkan argumen 1 (page), 10 (pageSize), dan return int64(1) untuk total
+	s.repo.On("FindByPegawaiID", s.ctx, int64(10), 1, 10).Return(items, int64(1), nil)
 
-	result, err := s.svc.ListByPegawai(s.ctx, 10, actor)
+	// Jangan lupa mock userRepo jika buildAuditMaps memanggil GetByIDs
+	s.userRepo.On("GetByIDs", mock.Anything).Return([]userModels.User{}, nil).Maybe()
+
+	result, total, err := s.svc.ListByPegawai(s.ctx, 10, 1, 10, actor)
 
 	s.NoError(err)
+	s.Equal(int64(1), total)
 	s.Len(result, 1)
 }
 
@@ -372,9 +379,10 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_ListByPegawai_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.ListByPegawai(s.ctx, 10, actor)
+	result, total, err := s.svc.ListByPegawai(s.ctx, 10, 1, 10, actor)
 
 	s.Nil(result)
+	s.Equal(int64(0), total)
 	s.Error(err)
 	var appErr *appErrors.AppError
 	s.ErrorAs(err, &appErr)
@@ -643,6 +651,7 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_GetExpiredIdentifier_Succes
 	actor := superadminActor()
 	items := []models.KepegawaianIdentifier{*factories.NewKepegawaianIdentifierFactory().Make()}
 
+	// 1. Mock Repository Utama
 	s.repo.On("FindExpiredIdentifier", s.ctx).Return(items, nil)
 
 	result, err := s.svc.GetExpiredIdentifier(s.ctx, actor)

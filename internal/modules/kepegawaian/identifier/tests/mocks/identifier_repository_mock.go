@@ -35,12 +35,12 @@ func (m *KepegawaianIdentifierRepositoryMock) ListIdentifier(ctx context.Context
 	return args.Get(0).([]models.KepegawaianIdentifier), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *KepegawaianIdentifierRepositoryMock) FindByPegawaiID(ctx context.Context, pegawaiID int64) ([]models.KepegawaianIdentifier, error) {
-	args := m.Called(ctx, pegawaiID)
+func (m *KepegawaianIdentifierRepositoryMock) FindByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int) ([]models.KepegawaianIdentifier, int64, error) {
+	args := m.Called(ctx, pegawaiID, page, pageSize)
 	if args.Get(0) == nil {
-		return nil, args.Error(1)
+		return nil, args.Get(1).(int64), args.Error(2)
 	}
-	return args.Get(0).([]models.KepegawaianIdentifier), args.Error(1)
+	return args.Get(0).([]models.KepegawaianIdentifier), args.Get(1).(int64), args.Error(2)
 }
 
 func (m *KepegawaianIdentifierRepositoryMock) FindByPegawaiIDAndTipe(ctx context.Context, pegawaiID, tipeID int64) ([]models.KepegawaianIdentifier, error) {

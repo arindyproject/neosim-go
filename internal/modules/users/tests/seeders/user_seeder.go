@@ -1,6 +1,7 @@
 package seeders
 
 import (
+	"fmt"
 	"log"
 
 	"neosim_go/internal/modules/users/models"
@@ -9,17 +10,14 @@ import (
 	"gorm.io/gorm"
 )
 
-// UserSeeder mengelola seeding data user ke database
 type UserSeeder struct {
 	db *gorm.DB
 }
 
-// NewUserSeeder membuat instance UserSeeder baru
 func NewUserSeeder(db *gorm.DB) *UserSeeder {
 	return &UserSeeder{db: db}
 }
 
-// Run menjalankan semua seeder
 func (s *UserSeeder) Run() error {
 	log.Println("🌱 Seeding users...")
 
@@ -35,11 +33,14 @@ func (s *UserSeeder) Run() error {
 		return err
 	}
 
+	if err := s.syncSequence(); err != nil {
+		log.Printf("   ⚠️ Warning: Gagal sinkronisasi sequence: %v", err)
+	}
+
 	log.Println("✅ Users seeding selesai!")
 	return nil
 }
 
-// Fresh menghapus semua data user lalu seed ulang
 func (s *UserSeeder) Fresh() error {
 	log.Println("🗑️  Menghapus semua data user...")
 
@@ -47,7 +48,6 @@ func (s *UserSeeder) Fresh() error {
 		return err
 	}
 
-	// Reset auto increment sequence (PostgreSQL)
 	if err := s.db.Exec("ALTER SEQUENCE users_id_seq RESTART WITH 1").Error; err != nil {
 		log.Printf("Warning: Gagal reset sequence: %v", err)
 	}
@@ -59,13 +59,16 @@ func (s *UserSeeder) Fresh() error {
 // ─── Seeder Methods ────────────────────────────────────────────────────────────
 
 func (s *UserSeeder) seedSuperuser() error {
+	// Khusus Superadmin: Set nama khusus "Super Admin" dan ID = 1
 	user := factories.MakeSuperadminUser()
+	user.ID = 1
+	user.Name = "Super Admin" // 👈 Custom nama spesifik untuk Superadmin
+	user.Username = "superadmin"
 
-	// Skip jika sudah ada
 	var count int64
-	s.db.Model(&models.User{}).Where("username = ?", user.Username).Count(&count)
+	s.db.Model(&models.User{}).Where("id = ? OR username = ?", user.ID, user.Username).Count(&count)
 	if count > 0 {
-		log.Printf("   ⏭️  Superuser '%s' sudah ada, skip.", user.Username)
+		log.Printf("   ⏭️  Superuser '%s' (%s, ID: %d) sudah ada, skip.", user.Name, user.Username, user.ID)
 		return nil
 	}
 
@@ -73,21 +76,23 @@ func (s *UserSeeder) seedSuperuser() error {
 		return err
 	}
 
-	log.Printf("   ✅ Superuser '%s' dibuat.", user.Username)
+	log.Printf("   ✅ Superuser '%s' (%s, ID: %d) dibuat.", user.Name, user.Username, user.ID)
 	return nil
 }
 
 func (s *UserSeeder) seedStaff() error {
-	staffCount := 3
+	staffCount := 50
 
+	// ID 2, 3, 4
 	for i := 1; i <= staffCount; i++ {
+		targetID := int64(1 + i)
 		user := factories.MakeStaffsUser(i)
+		user.ID = targetID
 
-		// Skip jika sudah ada
 		var count int64
-		s.db.Model(&models.User{}).Where("username = ?", user.Username).Count(&count)
+		s.db.Model(&models.User{}).Where("id = ? OR username = ?", user.ID, user.Username).Count(&count)
 		if count > 0 {
-			log.Printf("   ⏭️  Staff '%s' sudah ada, skip.", user.Username)
+			log.Printf("   ⏭️  Staff '%s' (ID: %d) sudah ada, skip.", user.Username, user.ID)
 			continue
 		}
 
@@ -95,24 +100,51 @@ func (s *UserSeeder) seedStaff() error {
 			return err
 		}
 
-		log.Printf("   ✅ Staff '%s' dibuat.", user.Username)
+		log.Printf("   ✅ Staff '%s' (ID: %d) dibuat.", user.Username, user.ID)
 	}
 
 	return nil
 }
 
 func (s *UserSeeder) seedRegularUsers() error {
-	regularCount := 10
+	regularCount := 50
+	startID := int64(5) // ID 5 s/d 14
 
-	users := factories.NewUserFactory().MakeMany(regularCount)
+	for i := 0; i < regularCount; i++ {
+		targetID := startID + int64(i)
+		idx := i + 1
 
-	for _, user := range users {
+		user := factories.NewUserFactory().
+			With("id", targetID).
+			With("username", fmt.Sprintf("user_%d", idx)).
+			With("email", fmt.Sprintf("user_%d@example.com", idx)).
+			With("name", fmt.Sprintf("User %d", idx)).
+			Make()
+
+		var count int64
+		s.db.Model(&models.User{}).Where("id = ? OR username = ?", user.ID, user.Username).Count(&count)
+		if count > 0 {
+			log.Printf("   ⏭️  User '%s' (ID: %d) sudah ada, skip.", user.Username, user.ID)
+			continue
+		}
+
 		if err := s.db.Create(user).Error; err != nil {
 			log.Printf("   ⚠️  Gagal membuat user '%s': %v", user.Username, err)
 			continue
 		}
-		log.Printf("   ✅ User '%s' dibuat.", user.Username)
+		log.Printf("   ✅ User '%s' (ID: %d) dibuat.", user.Username, user.ID)
 	}
 
+	return nil
+}
+
+func (s *UserSeeder) syncSequence() error {
+	var maxID int64
+	s.db.Model(&models.User{}).Select("COALESCE(MAX(id), 0)").Scan(&maxID)
+
+	if maxID > 0 {
+		query := fmt.Sprintf("SELECT setval('users_id_seq', %d, true)", maxID)
+		return s.db.Exec(query).Error
+	}
 	return nil
 }
