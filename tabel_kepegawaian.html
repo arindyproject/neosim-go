@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tabel Kepegawaian SIMRS</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f8f7f4;
+      color: #3d3d3a;
+      padding: 20px;
+    }
+
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid #c2c0b6;
+      background: #fff;
+      color: #73726c;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .btn:hover {
+      background: #f1efe8;
+      color: #3d3d3a;
+    }
+
+    .btn.active {
+      background: #e6f1fb;
+      color: #185fa5;
+      border-color: #185fa5;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #d3d1c7;
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .tbl-name {
+      font-size: 15px;
+      font-weight: 500;
+      margin: 0 0 2px;
+    }
+
+    .fhir {
+      font-size: 12px;
+      color: #888780;
+      margin: 0;
+    }
+
+    .desc {
+      font-size: 14px;
+      color: #73726c;
+      line-height: 1.6;
+      margin: 0 0 16px;
+    }
+
+    .section {
+      font-size: 11px;
+      font-weight: 600;
+      color: #888780;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin: 0 0 8px;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .field-pill {
+      background: #f8f7f4;
+      border: 1px solid #e5e4de;
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 12px;
+    }
+
+    .fn {
+      font-weight: 600;
+      font-family: monospace;
+      color: #3d3d3a;
+    }
+
+    .ft {
+      color: #888780;
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    .badge {
+      font-size: 10px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .pk {
+      background: #faeeda;
+      color: #854f0b;
+    }
+
+    .fk {
+      background: #e6f1fb;
+      color: #185fa5;
+    }
+
+    .req {
+      background: #eaf3de;
+      color: #3b6d11;
+    }
+
+    .opt {
+      background: #f1efe8;
+      color: #73726c;
+      border: 1px solid #d3d1c7;
+    }
+
+    .rels {
+      font-size: 13px;
+      color: #73726c;
+      line-height: 2;
+    }
+
+    .rels span {
+      color: #185fa5;
+      font-family: monospace;
+      font-size: 12px;
+    }
+
+    .ask-btn {
+      margin-top: 16px;
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid #c2c0b6;
+      background: #f8f7f4;
+      color: #73726c;
+      font-size: 13px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .ask-btn:hover {
+      background: #f1efe8;
+      color: #3d3d3a;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="nav" id="nav"></div>
+  <div class="card" id="card"></div>
+  <script>
+    const tables = [
+      {
+        id: 'kepegawaian', icon: '👤', iconBg: '#eeedfe',
+        fhir: 'FHIR R4: Practitioner',
+        desc: 'Tabel inti yang menyimpan biodata lengkap setiap pegawai rumah sakit. Satu baris = satu pegawai. Semua tabel lain berelasi ke tabel ini via kepegawaian_id. Pegawai tidak harus punya akun login — user_id nullable.',
+        fields: [
+          { n: 'id', t: 'int8', note: 'pk' }, { n: 'user_id', t: 'int8', note: 'fk' }, { n: 'organization_id', t: 'int8', note: 'fk' },
+          { n: 'nik', t: 'varchar(16)', note: 'req' }, { n: 'ihs_number', t: 'varchar(50)', note: 'opt' }, { n: 'nomor_pegawai', t: 'varchar(30)', note: 'req' },
+          { n: 'nama_lengkap', t: 'varchar(150)', note: 'req' }, { n: 'jenis_kelamin', t: 'varchar(10)', note: 'req' }, { n: 'jenis_kelamin_fhir', t: 'varchar(10)', note: 'req' },
+          { n: 'tanggal_lahir', t: 'date', note: 'req' }, { n: 'tempat_lahir', t: 'varchar(100)', note: 'req' }, { n: 'golongan_darah', t: 'varchar(5)', note: 'opt' },
+          { n: 'agama', t: 'varchar(20)', note: 'req' }, { n: 'status_perkawinan', t: 'varchar(20)', note: 'req' }, { n: 'kewarganegaraan', t: 'varchar(5)', note: 'req' },
+          { n: 'tanggal_masuk', t: 'date', note: 'req' }, { n: 'tanggal_keluar', t: 'date', note: 'opt' }, { n: 'jenis_kepegawaian', t: 'varchar(30)', note: 'req' },
+          { n: 'status_kepegawaian', t: 'varchar(30)', note: 'req' }, { n: 'foto_url', t: 'varchar(500)', note: 'opt' }, { n: 'is_aktif', t: 'bool', note: 'req' },
+          { n: 'created_by', t: 'int8', note: 'opt' }, { n: 'updated_by', t: 'int8', note: 'opt' }, { n: 'created_at', t: 'timestamptz', note: 'req' },
+          { n: 'updated_at', t: 'timestamptz', note: 'req' }, { n: 'deleted_at', t: 'timestamptz', note: 'opt' },
+        ],
+        rels: [
+          'Terhubung ke <span>users</span> via <span>user_id</span> (nullable — pegawai bisa ada tanpa akun)',
+          'Terhubung ke <span>organizations</span> via <span>organization_id</span> (wajib)',
+          'Induk dari 7 tabel turunan: identifiers, kualifikasi, kontak, kontak_darurat, alamat, jabatan, lampiran',
+        ],
+      },
+      {
+        id: 'identifiers', icon: '🪪', iconBg: '#e6f1fb',
+        fhir: 'FHIR R4: Practitioner.identifier[]',
+        desc: 'Menyimpan semua nomor identifikasi resmi pegawai (NIK, STR, SIP, NPWP, dll) dalam satu tabel dengan pola type+nilai. Mendukung tracking tanggal expired untuk STR dan SIP yang wajib diperpanjang tiap 5 tahun.',
+        fields: [
+          { n: 'id', t: 'int8', note: 'pk' }, { n: 'kepegawaian_id', t: 'int8', note: 'fk' },
+          { n: 'tipe', t: 'varchar(30)', note: 'req' }, { n: 'nilai', t: 'varchar(100)', note: 'req' },
+          { n: 'penerbit', t: 'varchar(100)', note: 'opt' }, { n: 'tanggal_terbit', t: 'date', note: 'opt' },
+          { n: 'tanggal_expired', t: 'date', note: 'opt' }, { n: 'is_primary', t: 'bool', note: 'req' },
+          { n: 'is_aktif', t: 'bool', note: 'req' }, { n: 'created_by', t: 'int8', note: 'opt' },
+          { n: 'updated_by', t: 'int8', note: 'opt' }, { n: 'created_at', t: 'timestamptz', note: 'req' },
+          { n: 'updated_at', t: 'timestamptz', note: 'req' }, { n: 'deleted_at', t: 'timestamptz', note: 'opt' },
+        ],
+        rels: [
+          'Many-to-one ke <span>kepegawaian</span>',
+          'Tipe: <span>NIK</span> | <span>IHS_NUMBER</span> | <span>STR</span> | <span>SIP</span> | <span>NPA_IDI</span> | <span>NPWP</span> | <span>BPJS_KES</span> | <span>BPJS_TK</span>',
+          'Dokter bisa punya 2 baris <span>SIP</span> untuk dua lokasi praktik berbeda',
+          '<span>tanggal_expired</span> wajib diisi untuk tipe STR dan SIP',
+        ],
+      },
+      {
+        id: 'kualifikasi', icon: '🎓', iconBg: '#e1f5ee',
+        fhir: 'FHIR R4: Practitioner.qualification[]',
+        desc: 'Menyimpan riwayat pendidikan formal dan sertifikasi pegawai. Dipakai untuk verifikasi kompetensi tenaga kesehatan, kebutuhan akreditasi RS, dan laporan SDM ke Kemenkes.',
+        fields: [
+          { n: 'id', t: 'int8', note: 'pk' }, { n: 'kepegawaian_id', t: 'int8', note: 'fk' },
+          { n: 'tipe', t: 'varchar(30)', note: 'req' }, { n: 'jenjang', t: 'varchar(20)', note: 'opt' },
+          { n: 'bidang_studi', t: 'varchar(100)', note: 'opt' }, { n: 'nama_institusi', t: 'varchar(150)', note: 'req' },
+          { n: 'nomor_sertifikat', t: 'varchar(100)', note: 'opt' }, { n: 'fhir_code', t: 'varchar(50)', note: 'opt' },
+          { n: 'fhir_system', t: 'varchar(200)', note: 'opt' }, { n: 'tanggal_terbit', t: 'date', note: 'opt' },
+          { n: 'tanggal_expired', t: 'date', note: 'opt' }, { n: 'is_aktif', t: 'bool', note: 'req' },
+          { n: 'created_by', t: 'int8', note: 'opt' }, { n: 'updated_by', t: 'int8', note: 'opt' },
+          { n: 'created_at', t: 'timestamptz', note: 'req' }, { n: 'updated_at', t: 'timestamptz', note: 'req' },
+          { n: 'deleted_at', t: 'timestamptz', note: 'opt' },
+        ],
+        rels: [
+          'Many-to-one ke <span>kepegawaian</span>',
+          'Tipe: <span>pendidikan</span> | <span>sertifikasi</span> | <span>pelatihan</span> | <span>kompetensi</span>',
+          'Jenjang: <span>D3</span> | <span>S1</span> | <span>S2</span> | <span>Profesi</span> | <span>Sp1</span> | <span>Sp2</span>',
+          '<span>fhir_code</span> dan <span>fhir_system</span> dipakai saat sync ke SATUSEHAT',
+        ],
+      },
+      {
+        id: 'kontak', icon: '📱', iconBg: '#faeeda',
+        fhir: 'FHIR R4: Practitioner.telecom[]',
+        desc: 'Menyimpan semua kontak pegawai — nomor HP, telepon, email, WhatsApp — dalam satu tabel fleksibel. Satu pegawai bisa punya banyak kontak berbeda tipe. is_primary menandai kontak utama untuk notifikasi sistem.',
+        fields: [
+          { n: 'id', t: 'int8', note: 'pk' }, { n: 'kepegawaian_id', t: 'int8', note: 'fk' },
+          { n: 'tipe', t: 'varchar(20)', note: 'req' }, { n: 'nilai', t: 'varchar(150)', note: 'req' },
+          { n: 'keterangan', t: 'varchar(100)', note: 'opt' }, { n: 'is_primary', t: 'bool', note: 'req' },
+          { n: 'is_aktif', t: 'bool', note: 'req' }, { n: 'created_by', t: 'int8', note: 'opt' },
+          { n: 'updated_by', t: 'int8', note: 'opt' }, { n: 'created_at', t: 'timestamptz', note: 'req' },
+          { n: 'updated_at', t: 'timestamptz', note: 'req' }, { n: 'deleted_at', t: 'timestamptz', note: 'opt' },
+        ],
+        rels: [
+          'Many-to-one ke <span>kepegawaian</span>',
+          'Tipe: <span>phone</span> | <span>mobile</span> | <span>email</span> | <span>whatsapp</span> | <span>fax</span>',
+          '<span>keterangan</span>: label bebas misal "Rumah", "Kantor"',
+          'FHIR mapping: telecom.system → phone | fax | email | sms | other',
+        ],
+      },
+      {
+        id: 'kontak_darurat', icon: '🚨', iconBg: '#faece7',
+        fhir: 'Non-FHIR (administratif HR)',
+        desc: 'Menyimpan kontak keluarga atau wali yang bisa dihubungi dalam keadaan darurat. Dipisah dari kepegawaian_kontak karena butuh nama kontak, hubungan keluarga, dan alamat.',
+        fields: [
+          { n: 'id', t: 'int8', note: 'pk' }, { n: 'kepegawaian_id', t: 'int8', note: 'fk' },
+          { n: 'nama_kontak', t: 'varchar(150)', note: 'req' }, { n: 'hubungan', t: 'varchar(50)', note: 'req' },
+          { n: 'nomor_telepon', t: 'varchar(20)', note: 'req' }, { n: 'alamat', t: 'text', note: 'opt' },
+          { n: 'is_primary', t: 'bool', note: 'req' }, { n: 'created_by', t: 'int8', note: 'opt' },
+          { n: 'updated_by', t: 'int8', note: 'opt' }, { n: 'created_at', t: 'timestamptz', note: 'req' },
+          { n: 'updated_at', t: 'timestamptz', note: 'req' }, { n: 'deleted_at', t: 'timestamptz', note: 'opt' },
+        ],
+        rels: [
+          'Many-to-one ke <span>kepegawaian</span>',
+          'Hubungan: <span>Suami</span> | <span>Istri</span> | <span>Anak</span> | <span>Orang Tua</span> | <span>Saudara</span>',
+          'Diakses oleh modul SDM, bukan modul klinis',
+          'Berbeda dari <span>kepegawaian_kontak</span> yang menyimpan kontak pegawai sendiri',
+        ],
+      },
+      {
+        id: 'alamat', icon: '🏠', iconBg: '#eaf3de',
+        fhir: 'FHIR R4: Practitioner.address[]',
+        desc: 'Menyimpan alamat pegawai — KTP, domisili, atau sementara. Berelasi ke tabel master alamat 5 level (provinsi → kota → kecamatan → kelurahan). Menyimpan field FHIR terpisah untuk kebutuhan sync ke SATUSEHAT.',
+        fields: [
+          { n: 'id', t: 'int8', note: 'pk' }, { n: 'kepegawaian_id', t: 'int8', note: 'fk' },
+          { n: 'tipe', t: 'varchar(20)', note: 'req' }, { n: 'jalan', t: 'text', note: 'req' },
+          { n: 'rt', t: 'varchar(5)', note: 'opt' }, { n: 'rw', t: 'varchar(5)', note: 'opt' },
+          { n: 'kelurahan_id', t: 'int8', note: 'fk' }, { n: 'kecamatan_id', t: 'int8', note: 'fk' },
+          { n: 'kota_id', t: 'int8', note: 'fk' }, { n: 'provinsi_id', t: 'int8', note: 'fk' },
+          { n: 'kode_pos', t: 'varchar(10)', note: 'opt' }, { n: 'fhir_line', t: 'varchar', note: 'opt' },
+          { n: 'fhir_city', t: 'varchar(100)', note: 'opt' }, { n: 'fhir_state', t: 'varchar(100)', note: 'opt' },
+          { n: 'fhir_country', t: 'varchar(5)', note: 'opt' }, { n: 'is_primary', t: 'bool', note: 'req' },
+          { n: 'created_by', t: 'int8', note: 'opt' }, { n: 'updated_by', t: 'int8', note: 'opt' },
+          { n: 'created_at', t: 'timestamptz', note: 'req' }, { n: 'updated_at', t: 'timestamptz', note: 'req' },
+          { n: 'deleted_at', t: 'timestamptz', note: 'opt' },
+        ],
+        rels: [
+          'Many-to-one ke <span>kepegawaian</span>',
+          'FK ke <span>master_kelurahan</span>, <span>master_kecamatan</span>, <span>master_kota</span>, <span>master_provinsi</span>',
+          'Tipe: <span>ktp</span> | <span>domisili</span> | <span>sementara</span>',
+          'Field <span>fhir_*</span> diisi saat sync SATUSEHAT (format berbeda dengan format alamat Indonesia)',
+        ],
+      },
+      {
+        id: 'jabatan', icon: '🏥', iconBg: '#eeedfe',
+        fhir: 'FHIR R4: PractitionerRole',
+        desc: 'Menyimpan riwayat penugasan pegawai di suatu unit dan jabatan. Tabel historis — saat pegawai mutasi, baris lama di-close dan baris baru dibuat. Satu pegawai bisa punya beberapa jabatan aktif di unit berbeda.',
+        fields: [
+          { n: 'id', t: 'int8', note: 'pk' }, { n: 'kepegawaian_id', t: 'int8', note: 'fk' },
+          { n: 'department_id', t: 'int8', note: 'fk' }, { n: 'position_id', t: 'int8', note: 'fk' },
+          { n: 'job_title_id', t: 'int8', note: 'fk' }, { n: 'specialization_id', t: 'int8', note: 'fk' },
+          { n: 'is_primary', t: 'bool', note: 'req' }, { n: 'tanggal_mulai', t: 'date', note: 'req' },
+          { n: 'tanggal_selesai', t: 'date', note: 'opt' }, { n: 'nomor_sk', t: 'varchar(100)', note: 'opt' },
+          { n: 'tanggal_sk', t: 'date', note: 'opt' }, { n: 'is_aktif', t: 'bool', note: 'req' },
+          { n: 'created_by', t: 'int8', note: 'opt' }, { n: 'updated_by', t: 'int8', note: 'opt' },
+          { n: 'created_at', t: 'timestamptz', note: 'req' }, { n: 'updated_at', t: 'timestamptz', note: 'req' },
+          { n: 'deleted_at', t: 'timestamptz', note: 'opt' },
+        ],
+        rels: [
+          'Many-to-one ke <span>kepegawaian</span>',
+          'FK ke <span>departments</span> — unit tempat bertugas',
+          'FK ke <span>positions</span> — jabatan struktural (Kepala Instalasi, Koordinator)',
+          'FK ke <span>job_titles</span> — jabatan fungsional (Dokter Umum, Perawat)',
+          'FK ke <span>specializations</span> — spesialisasi klinis (nullable, hanya dokter)',
+          '<span>tanggal_selesai NULL</span> = masih aktif di jabatan tersebut',
+        ],
+      },
+      {
+        id: 'lampiran', icon: '📎', iconBg: '#f1efe8',
+        fhir: 'Non-FHIR (administratif HR)',
+        desc: 'Menyimpan metadata dokumen scan milik pegawai — ijazah, STR, SIP, foto, kontrak kerja. File fisik disimpan di object storage (S3/MinIO/GCS), tabel ini hanya menyimpan URL dan metadata.',
+        fields: [
+          { n: 'id', t: 'int8', note: 'pk' }, { n: 'kepegawaian_id', t: 'int8', note: 'fk' },
+          { n: 'tipe', t: 'varchar(30)', note: 'req' }, { n: 'nama_file', t: 'varchar(255)', note: 'req' },
+          { n: 'url', t: 'varchar(500)', note: 'req' }, { n: 'mime_type', t: 'varchar(100)', note: 'opt' },
+          { n: 'ukuran_byte', t: 'int8', note: 'opt' }, { n: 'keterangan', t: 'varchar(255)', note: 'opt' },
+          { n: 'tanggal_upload', t: 'timestamptz', note: 'req' }, { n: 'created_by', t: 'int8', note: 'opt' },
+          { n: 'updated_by', t: 'int8', note: 'opt' }, { n: 'created_at', t: 'timestamptz', note: 'req' },
+          { n: 'updated_at', t: 'timestamptz', note: 'req' }, { n: 'deleted_at', t: 'timestamptz', note: 'opt' },
+        ],
+        rels: [
+          'Many-to-one ke <span>kepegawaian</span>',
+          'Tipe: <span>foto</span> | <span>ktp</span> | <span>ijazah</span> | <span>str</span> | <span>sip</span> | <span>sertifikat</span> | <span>sk_jabatan</span> | <span>kontrak</span> | <span>npwp</span> | <span>bpjs_kes</span> | <span>bpjs_tk</span>',
+          'Kolom <span>url</span> mengarah ke object storage — bukan binary di DB',
+          'Berpasangan dengan <span>kepegawaian_identifiers</span>: identifier menyimpan nomor, lampiran menyimpan scan fisiknya',
+        ],
+      },
+    ];
+
+    const noteClass = { pk: 'pk', fk: 'fk', req: 'req', opt: 'opt' };
+    const noteLabel = { pk: 'PK', fk: 'FK', req: 'Wajib', opt: 'Opsional' };
+
+    function render(i) {
+      document.querySelectorAll('.btn').forEach((b, j) => b.classList.toggle('active', j === i));
+      const t = tables[i];
+      const label = i === 0 ? t.id : 'kepegawaian_' + t.id;
+      document.getElementById('card').innerHTML = `
+    <div class="header">
+      <div class="icon" style="background:${t.iconBg}">${t.icon}</div>
+      <div>
+        <p class="tbl-name">${label}</p>
+        <p class="fhir">${t.fhir}</p>
+      </div>
+    </div>
+    <p class="desc">${t.desc}</p>
+    <p class="section">Kolom</p>
+    <div class="field-grid">
+      ${t.fields.map(f => `<div class="field-pill">
+        <div class="fn">${f.n}</div>
+        <div class="ft">${f.t} <span class="badge ${noteClass[f.note]}">${noteLabel[f.note]}</span></div>
+      </div>`).join('')}
+    </div>
+    <p class="section">Relasi</p>
+    <div class="rels">${t.rels.map(r => `<div>→ ${r}</div>`).join('')}</div>
+  `;
+    }
+
+    const nav = document.getElementById('nav');
+    tables.forEach((t, i) => {
+      const b = document.createElement('button');
+      b.className = 'btn';
+      b.textContent = t.icon + ' ' + t.id;
+      b.onclick = () => render(i);
+      nav.appendChild(b);
+    });
+    render(0);
+  </script>
+</body>
+
+</html>
