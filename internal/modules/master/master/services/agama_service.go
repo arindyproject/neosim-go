@@ -10,18 +10,18 @@ import (
 )
 
 // ─────────────── GetByID ─────────────────────────────────────────────────────────
-func (s *service) GetByIDAgama(id int64) (*dto.MasterAgamaResponse, error) {
-	ctx := context.Background()
+func (s *service) GetByIDAgama(ctx context.Context, id int64) (*dto.MasterAgamaResponse, error) {
+	ctxs := context.Background()
 	cacheKey := cacheKeyAgamaDetail(id)
 
 	// 1. Cek Cache
 	var cachedRes dto.MasterAgamaResponse
-	if s.cache.Get(ctx, cacheKey, &cachedRes) {
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
 		return &cachedRes, nil
 	}
 
 	// 2. Hit Database
-	m, err := s.repo.GetByIDAgama(id)
+	m, err := s.repo.GetByIDAgama(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -32,13 +32,13 @@ func (s *service) GetByIDAgama(id int64) (*dto.MasterAgamaResponse, error) {
 	res := dto.ToMasterAgamaResponse(m)
 
 	// 3. Simpan ke Cache
-	s.cache.SetDefault(ctx, cacheKey, res)
+	s.cache.SetDefault(ctxs, cacheKey, res)
 	return res, nil
 }
 
 // ─────────────── List ────────────────────────────────────────────────────────────
-func (s *service) ListAgama(page, pageSize int, filter *dto.FilterMasterAgamaRequest) ([]dto.MasterAgamaResponse, int64, error) {
-	ctx := context.Background()
+func (s *service) ListAgama(ctx context.Context, page, pageSize int, filter *dto.FilterMasterAgamaRequest) ([]dto.MasterAgamaResponse, int64, error) {
+	ctxs := context.Background()
 	cacheKey := cacheKeyAgamaList(page, pageSize, filter)
 
 	// 1. Cek Cache
@@ -46,7 +46,7 @@ func (s *service) ListAgama(page, pageSize int, filter *dto.FilterMasterAgamaReq
 		Items []dto.MasterAgamaResponse `json:"items"`
 		Total int64                     `json:"total"`
 	}
-	if s.cache.Get(ctx, cacheKey, &cachedRes) {
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
 		if len(cachedRes.Items) == 0 {
 			return nil, 0, appErrors.NotFound("Agama tidak ditemukan")
 		}
@@ -61,7 +61,7 @@ func (s *service) ListAgama(page, pageSize int, filter *dto.FilterMasterAgamaReq
 		pageSize = s.cfg.DefaultPageSize
 	}
 
-	items, total, err := s.repo.ListAgama(page, pageSize, filter)
+	items, total, err := s.repo.ListAgama(ctx, page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -72,7 +72,7 @@ func (s *service) ListAgama(page, pageSize int, filter *dto.FilterMasterAgamaReq
 	res := dto.ToMasterAgamaListResponse(items)
 
 	// 3. Simpan ke Cache
-	s.cache.SetDefault(ctx, cacheKey, struct {
+	s.cache.SetDefault(ctxs, cacheKey, struct {
 		Items []dto.MasterAgamaResponse `json:"items"`
 		Total int64                     `json:"total"`
 	}{Items: res, Total: total})
@@ -81,9 +81,9 @@ func (s *service) ListAgama(page, pageSize int, filter *dto.FilterMasterAgamaReq
 }
 
 // ─────────────── Create ──────────────────────────────────────────────────────────
-func (s *service) CreateAgama(req *dto.CreateMasterAgamaRequest, actor he.AuthContext) (*dto.MasterAgamaResponse, error) {
+func (s *service) CreateAgama(ctx context.Context, req *dto.CreateMasterAgamaRequest, actor he.AuthContext) (*dto.MasterAgamaResponse, error) {
 	// Permission Check
-	can, err := s.canCreateMaster(actor)
+	can, err := s.canCreateMaster(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -93,7 +93,7 @@ func (s *service) CreateAgama(req *dto.CreateMasterAgamaRequest, actor he.AuthCo
 	}
 
 	// Check Duplicate Name
-	data, err := s.repo.GetByNameAgama(req.Name)
+	data, err := s.repo.GetByNameAgama(ctx, req.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (s *service) CreateAgama(req *dto.CreateMasterAgamaRequest, actor he.AuthCo
 		CreatedBy:    &actor.UserID,
 		UpdatedBy:    &actor.UserID,
 	}
-	if err := s.repo.CreateAgama(m); err != nil {
+	if err := s.repo.CreateAgama(ctx, m); err != nil {
 		return nil, err
 	}
 
@@ -123,9 +123,9 @@ func (s *service) CreateAgama(req *dto.CreateMasterAgamaRequest, actor he.AuthCo
 }
 
 // ─────────────── Update ──────────────────────────────────────────────────────────
-func (s *service) UpdateAgama(id int64, req *dto.UpdateMasterAgamaRequest, actor he.AuthContext) (*dto.MasterAgamaResponse, error) {
+func (s *service) UpdateAgama(ctx context.Context, id int64, req *dto.UpdateMasterAgamaRequest, actor he.AuthContext) (*dto.MasterAgamaResponse, error) {
 	// Permission Check
-	can, err := s.canUpdateMaster(actor)
+	can, err := s.canUpdateMaster(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -135,14 +135,14 @@ func (s *service) UpdateAgama(id int64, req *dto.UpdateMasterAgamaRequest, actor
 	}
 
 	// Cek Keberadaan Data
-	existing, err := s.repo.GetByIDAgama(id)
+	existing, err := s.repo.GetByIDAgama(ctx, id)
 	if err != nil || existing == nil {
 		return nil, appErrors.NotFound("Agama tidak ditemukan")
 	}
 
 	// Check Duplicate Name (jika ada perubahan)
 	if req.Name != nil && *req.Name != existing.Name {
-		data, err := s.repo.GetByNameAgama(*req.Name)
+		data, err := s.repo.GetByNameAgama(ctx, *req.Name)
 		if err != nil {
 			return nil, err
 		}
@@ -163,7 +163,7 @@ func (s *service) UpdateAgama(id int64, req *dto.UpdateMasterAgamaRequest, actor
 	}
 	existing.UpdatedBy = &actor.UserID
 
-	if err := s.repo.UpdateAgama(existing); err != nil {
+	if err := s.repo.UpdateAgama(ctx, existing); err != nil {
 		return nil, err
 	}
 
@@ -178,9 +178,9 @@ func (s *service) UpdateAgama(id int64, req *dto.UpdateMasterAgamaRequest, actor
 }
 
 // ─────────────── Delete ──────────────────────────────────────────────────────────
-func (s *service) DeleteAgama(id int64, actor he.AuthContext) error {
+func (s *service) DeleteAgama(ctx context.Context, id int64, actor he.AuthContext) error {
 	// Permission Check
-	can, err := s.canDeleteMaster(actor)
+	can, err := s.canDeleteMaster(ctx, actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
 	}
@@ -190,13 +190,13 @@ func (s *service) DeleteAgama(id int64, actor he.AuthContext) error {
 	}
 
 	// Cek Keberadaan Data
-	existing, err := s.repo.GetByIDAgama(id)
+	existing, err := s.repo.GetByIDAgama(ctx, id)
 	if err != nil || existing == nil {
 		return appErrors.NotFound("Agama tidak ditemukan")
 	}
 
 	// delete
-	err = s.repo.DeleteAgama(id)
+	err = s.repo.DeleteAgama(ctx, id)
 	if err != nil {
 		return err
 	}

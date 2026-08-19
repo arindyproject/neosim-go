@@ -35,7 +35,7 @@ func (h *MasterHandler) ListPekerjaan(c *echo.Context) error {
 		Name:         c.QueryParam("name"),
 	}
 
-	items, total, err := h.service.ListPekerjaan(page, pageSize, &filter)
+	items, total, err := h.service.ListPekerjaan(c.Request().Context(), page, pageSize, &filter)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
 	}
@@ -63,7 +63,7 @@ func (h *MasterHandler) GetByIDPekerjaan(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 
-	item, err := h.service.GetByIDPekerjaan(id)
+	item, err := h.service.GetByIDPekerjaan(c.Request().Context(), id)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -95,7 +95,7 @@ func (h *MasterHandler) CreatePekerjaan(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.CreatePekerjaan(&req, actor)
+	item, err := h.service.CreatePekerjaan(c.Request().Context(), &req, actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
@@ -133,7 +133,7 @@ func (h *MasterHandler) UpdatePekerjaan(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.UpdatePekerjaan(id, &req, actor)
+	item, err := h.service.UpdatePekerjaan(c.Request().Context(), id, &req, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -162,7 +162,7 @@ func (h *MasterHandler) DeletePekerjaan(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	err = h.service.DeletePekerjaan(id, actor)
+	err = h.service.DeletePekerjaan(c.Request().Context(), id, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}

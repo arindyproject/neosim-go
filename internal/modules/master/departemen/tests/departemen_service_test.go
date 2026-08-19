@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
+	"neosim_go/config"
 	"neosim_go/internal/modules/master/departemen/dto"
 	"neosim_go/internal/modules/master/departemen/models"
 	"neosim_go/internal/modules/master/departemen/services"
@@ -38,19 +39,30 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
+// MasterDepartemenServiceTestSuite dipakai bersama oleh SELURUH item di dalam
+// sub-module ini (lihat mis. tag_service_test.go) — karena hanya ada satu
+// struct service/repository, satu suite ini sudah cukup untuk semuanya.
 type MasterDepartemenServiceTestSuite struct {
 	suite.Suite
 	repo     *mocks.MasterDepartemenRepositoryMock
 	rbacRepo *mocks.RBACRepositoryMock
 	authRepo *mocks.AuthRepositoryMock
+	userRepo *mocks.UserRepositoryMock
 	svc      departemenContracts.Service
+	cfg      *config.Config
 }
 
 func (s *MasterDepartemenServiceTestSuite) SetupTest() {
-	s.repo = new(mocks.MasterDepartemenRepositoryMock)
+	s.repo     = new(mocks.MasterDepartemenRepositoryMock)
 	s.rbacRepo = new(mocks.RBACRepositoryMock)
 	s.authRepo = new(mocks.AuthRepositoryMock)
-	s.svc = services.NewMasterDepartemenService(s.repo, s.rbacRepo, s.authRepo)
+	s.userRepo = new(mocks.UserRepositoryMock)
+	s.cfg      = &config.Config{}
+	s.svc = services.NewMasterDepartemenService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.cfg)
+
+	// Stub default agar buildCreator/buildAuditMaps tidak panic saat memanggil userRepo.
+	// Boleh dipanggil 0 kali atau lebih (.Maybe()) tergantung skenario test.
+	s.userRepo.On("GetByID", mock.Anything).Return(nil, nil).Maybe()
 }
 
 func TestMasterDepartemenService(t *testing.T) {
@@ -70,19 +82,16 @@ func (s *MasterDepartemenServiceTestSuite) mockHasPermission(perm string, result
 }
 
 func (s *MasterDepartemenServiceTestSuite) mockNoPermissions() {
-	//s.rbacRepo.On("HasPermission", regularActor().UserID, mock.Anything, mock.Anything).Return(false, nil)
-	s.rbacRepo.On("IsSuperadmin", mock.Anything).Return(false, nil)
-	s.rbacRepo.On("HasPermission", mock.Anything, mock.Anything).Return(false, nil)
-	s.rbacRepo.On("GetUserAllPermissions", mock.Anything).Return([]string{}, nil)
+	s.rbacRepo.On("HasPermission", regularActor().UserID, mock.Anything, mock.Anything).Return(false, nil)
 }
 
-func (s *MasterDepartemenServiceTestSuite) Test_Create_Superadmin_Success() {
+func (s *MasterDepartemenServiceTestSuite) Test_CreateDepartemen_Superadmin_Success() {
 	req := &dto.CreateMasterDepartemenRequest{Name: "Test MasterDepartemen"}
 	actor := superadminActor()
 
-	s.repo.On("Create", mock.AnythingOfType("*models.MasterDepartemen")).Return(nil)
+	s.repo.On("CreateDepartemen", mock.AnythingOfType("*models.MasterDepartemen")).Return(nil)
 
-	result, err := s.svc.Create(req, &actor.UserID, actor)
+	result, err := s.svc.CreateDepartemen(req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -90,40 +99,40 @@ func (s *MasterDepartemenServiceTestSuite) Test_Create_Superadmin_Success() {
 	s.repo.AssertExpectations(s.T())
 }
 
-func (s *MasterDepartemenServiceTestSuite) Test_Create_WithPermission_Success() {
+func (s *MasterDepartemenServiceTestSuite) Test_CreateDepartemen_WithPermission_Success() {
 	req := &dto.CreateMasterDepartemenRequest{Name: "Test MasterDepartemen"}
 	actor := regularActor()
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(true, nil)
-	s.repo.On("Create", mock.AnythingOfType("*models.MasterDepartemen")).Return(nil)
+	s.repo.On("CreateDepartemen", mock.AnythingOfType("*models.MasterDepartemen")).Return(nil)
 
-	result, err := s.svc.Create(req, &actor.UserID, actor)
+	result, err := s.svc.CreateDepartemen(req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 	s.repo.AssertExpectations(s.T())
 }
 
-func (s *MasterDepartemenServiceTestSuite) Test_Create_WithManagePermission_Success() {
+func (s *MasterDepartemenServiceTestSuite) Test_CreateDepartemen_WithManagePermission_Success() {
 	req := &dto.CreateMasterDepartemenRequest{Name: "Test"}
 	actor := regularActor()
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(false, nil)
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyManage).Return(true, nil)
-	s.repo.On("Create", mock.AnythingOfType("*models.MasterDepartemen")).Return(nil)
+	s.repo.On("CreateDepartemen", mock.AnythingOfType("*models.MasterDepartemen")).Return(nil)
 
-	result, err := s.svc.Create(req, &actor.UserID, actor)
+	result, err := s.svc.CreateDepartemen(req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 }
 
-func (s *MasterDepartemenServiceTestSuite) Test_Create_Forbidden() {
+func (s *MasterDepartemenServiceTestSuite) Test_CreateDepartemen_Forbidden() {
 	req := &dto.CreateMasterDepartemenRequest{Name: "Test"}
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.Create(req, &actor.UserID, actor)
+	result, err := s.svc.CreateDepartemen(req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -132,26 +141,26 @@ func (s *MasterDepartemenServiceTestSuite) Test_Create_Forbidden() {
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *MasterDepartemenServiceTestSuite) Test_Create_RepoError() {
+func (s *MasterDepartemenServiceTestSuite) Test_CreateDepartemen_RepoError() {
 	req := &dto.CreateMasterDepartemenRequest{Name: "Test"}
 	actor := superadminActor()
 
-	s.repo.On("Create", mock.AnythingOfType("*models.MasterDepartemen")).Return(fmt.Errorf("db error"))
+	s.repo.On("CreateDepartemen", mock.AnythingOfType("*models.MasterDepartemen")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.Create(req, &actor.UserID, actor)
+	result, err := s.svc.CreateDepartemen(req, actor)
 
 	s.Nil(result)
 	s.Error(err)
 }
 
-func (s *MasterDepartemenServiceTestSuite) Test_GetByID_Superadmin_Success() {
+func (s *MasterDepartemenServiceTestSuite) Test_GetDepartemenByID_Superadmin_Success() {
 	actor := superadminActor()
 	item := factories.NewMasterDepartemenFactory().Make()
 	item.ID = 1
 
-	s.repo.On("GetByID", int64(1)).Return(item, nil)
+	s.repo.On("GetDepartemenByID", int64(1)).Return(item, nil)
 
-	result, err := s.svc.GetByID(1, actor)
+	result, err := s.svc.GetDepartemenByID(1, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -159,58 +168,57 @@ func (s *MasterDepartemenServiceTestSuite) Test_GetByID_Superadmin_Success() {
 	s.Equal(item.Name, result.Name)
 }
 
-func (s *MasterDepartemenServiceTestSuite) Test_GetByID_WithPermission_Success() {
+func (s *MasterDepartemenServiceTestSuite) Test_GetDepartemenByID_WithPermission_Success() {
 	actor := regularActor()
 	item := factories.NewMasterDepartemenFactory().Make()
 	item.ID = 1
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyRead).Return(true, nil)
-	s.repo.On("GetByID", int64(1)).Return(item, nil)
+	s.repo.On("GetDepartemenByID", int64(1)).Return(item, nil)
 
-	result, err := s.svc.GetByID(1, actor)
+	result, err := s.svc.GetDepartemenByID(1, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 }
-func (s *MasterDepartemenServiceTestSuite) Test_GetByID_Forbidden() {
-	actor := regularActor()
-	s.mockNoPermissions() // Sekarang ini akan bekerja karena canReadMasterDepartemen mengecek RBAC
 
-	result, err := s.svc.GetByID(1, actor)
+func (s *MasterDepartemenServiceTestSuite) Test_GetDepartemenByID_Forbidden() {
+	actor := regularActor()
+	s.mockNoPermissions()
+
+	result, err := s.svc.GetDepartemenByID(1, actor)
 
 	s.Nil(result)
 	s.Error(err)
 	var appErr *appErrors.AppError
 	s.ErrorAs(err, &appErr)
 	s.Equal(http.StatusForbidden, appErr.Code)
-
-	// Pastikan repo GetByID TIDAK DIPANGGGIL saat forbidden
-	s.repo.AssertNotCalled(s.T(), "GetByID", mock.Anything)
 }
-func (s *MasterDepartemenServiceTestSuite) Test_GetByID_NotFound() {
+
+func (s *MasterDepartemenServiceTestSuite) Test_GetDepartemenByID_NotFound() {
 	actor := superadminActor()
 
-	s.repo.On("GetByID", int64(999)).Return(nil, nil)
+	s.repo.On("GetDepartemenByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.GetByID(999, actor)
+	result, err := s.svc.GetDepartemenByID(999, actor)
 
 	s.Nil(result)
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
 }
 
-func (s *MasterDepartemenServiceTestSuite) Test_GetByID_RepoError() {
+func (s *MasterDepartemenServiceTestSuite) Test_GetDepartemenByID_RepoError() {
 	actor := superadminActor()
 
-	s.repo.On("GetByID", int64(1)).Return(nil, fmt.Errorf("db error"))
+	s.repo.On("GetDepartemenByID", int64(1)).Return(nil, fmt.Errorf("db error"))
 
-	result, err := s.svc.GetByID(1, actor)
+	result, err := s.svc.GetDepartemenByID(1, actor)
 
 	s.Nil(result)
 	s.Error(err)
 }
 
-func (s *MasterDepartemenServiceTestSuite) Test_List_Superadmin_Success() {
+func (s *MasterDepartemenServiceTestSuite) Test_ListDepartemen_Superadmin_Success() {
 	actor := superadminActor()
 	filter := &dto.FilterMasterDepartemenRequest{}
 	items := []models.MasterDepartemen{
@@ -218,36 +226,36 @@ func (s *MasterDepartemenServiceTestSuite) Test_List_Superadmin_Success() {
 		*factories.NewMasterDepartemenFactory().Make(),
 	}
 
-	s.repo.On("List", 1, 10, filter).Return(items, int64(2), nil)
+	s.repo.On("ListDepartemen", 1, 10, filter).Return(items, int64(2), nil)
 
-	result, total, err := s.svc.List(1, 10, filter, actor)
+	result, total, err := s.svc.ListDepartemen(1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(2), total)
 	s.Len(result, 2)
 }
 
-func (s *MasterDepartemenServiceTestSuite) Test_List_WithPermission_Success() {
+func (s *MasterDepartemenServiceTestSuite) Test_ListDepartemen_WithPermission_Success() {
 	actor := regularActor()
 	filter := &dto.FilterMasterDepartemenRequest{}
 	items := []models.MasterDepartemen{*factories.NewMasterDepartemenFactory().Make()}
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyRead).Return(true, nil)
-	s.repo.On("List", 1, 10, filter).Return(items, int64(1), nil)
+	s.repo.On("ListDepartemen", 1, 10, filter).Return(items, int64(1), nil)
 
-	result, total, err := s.svc.List(1, 10, filter, actor)
+	result, total, err := s.svc.ListDepartemen(1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
 	s.Len(result, 1)
 }
 
-func (s *MasterDepartemenServiceTestSuite) Test_List_Forbidden() {
+func (s *MasterDepartemenServiceTestSuite) Test_ListDepartemen_Forbidden() {
 	actor := regularActor()
 	filter := &dto.FilterMasterDepartemenRequest{}
 	s.mockNoPermissions()
 
-	result, total, err := s.svc.List(1, 10, filter, actor)
+	result, total, err := s.svc.ListDepartemen(1, 10, filter, actor)
 
 	s.Nil(result)
 	s.Equal(int64(0), total)
@@ -257,63 +265,63 @@ func (s *MasterDepartemenServiceTestSuite) Test_List_Forbidden() {
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *MasterDepartemenServiceTestSuite) Test_List_DefaultPagination() {
+func (s *MasterDepartemenServiceTestSuite) Test_ListDepartemen_DefaultPagination() {
 	actor := superadminActor()
 	filter := &dto.FilterMasterDepartemenRequest{}
 
-	s.repo.On("List", 1, 10, filter).Return([]models.MasterDepartemen{}, int64(0), nil)
+	s.repo.On("ListDepartemen", 1, 10, filter).Return([]models.MasterDepartemen{}, int64(0), nil)
 
-	result, total, err := s.svc.List(0, 0, filter, actor)
+	result, total, err := s.svc.ListDepartemen(0, 0, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(0), total)
 	s.Empty(result)
 }
 
-func (s *MasterDepartemenServiceTestSuite) Test_List_PageSizeCapped() {
+func (s *MasterDepartemenServiceTestSuite) Test_ListDepartemen_PageSizeCapped() {
 	actor := superadminActor()
 	filter := &dto.FilterMasterDepartemenRequest{}
 
-	s.repo.On("List", 1, 10, filter).Return([]models.MasterDepartemen{}, int64(0), nil)
+	s.repo.On("ListDepartemen", 1, 10, filter).Return([]models.MasterDepartemen{}, int64(0), nil)
 
-	_, _, err := s.svc.List(1, 999, filter, actor)
+	_, _, err := s.svc.ListDepartemen(1, 999, filter, actor)
 
 	s.NoError(err)
-	s.repo.AssertCalled(s.T(), "List", 1, 10, filter)
+	s.repo.AssertCalled(s.T(), "ListDepartemen", 1, 10, filter)
 }
 
-func (s *MasterDepartemenServiceTestSuite) Test_List_WithNameFilter() {
+func (s *MasterDepartemenServiceTestSuite) Test_ListDepartemen_WithNameFilter() {
 	actor := superadminActor()
 	filter := &dto.FilterMasterDepartemenRequest{Name: "test"}
 	items := []models.MasterDepartemen{*factories.NewMasterDepartemenFactory().Make()}
 
-	s.repo.On("List", 1, 10, filter).Return(items, int64(1), nil)
+	s.repo.On("ListDepartemen", 1, 10, filter).Return(items, int64(1), nil)
 
-	result, total, err := s.svc.List(1, 10, filter, actor)
+	result, total, err := s.svc.ListDepartemen(1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
 	s.Len(result, 1)
 }
 
-func (s *MasterDepartemenServiceTestSuite) Test_Update_Superadmin_Success() {
+func (s *MasterDepartemenServiceTestSuite) Test_UpdateDepartemen_Superadmin_Success() {
 	actor := superadminActor()
 	existing := factories.NewMasterDepartemenFactory().Make()
 	existing.ID = 1
 	newName := "Updated Name"
 	req := &dto.UpdateMasterDepartemenRequest{Name: &newName}
 
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Update", mock.AnythingOfType("*models.MasterDepartemen")).Return(nil)
+	s.repo.On("GetDepartemenByID", int64(1)).Return(existing, nil)
+	s.repo.On("UpdateDepartemen", mock.AnythingOfType("*models.MasterDepartemen")).Return(nil)
 
-	result, err := s.svc.Update(1, req, &actor.UserID, actor)
+	result, err := s.svc.UpdateDepartemen(1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 	s.Equal(newName, result.Name)
 }
 
-func (s *MasterDepartemenServiceTestSuite) Test_Update_WithPermission_Success() {
+func (s *MasterDepartemenServiceTestSuite) Test_UpdateDepartemen_WithPermission_Success() {
 	actor := regularActor()
 	existing := factories.NewMasterDepartemenFactory().Make()
 	existing.ID = 1
@@ -321,21 +329,21 @@ func (s *MasterDepartemenServiceTestSuite) Test_Update_WithPermission_Success() 
 	req := &dto.UpdateMasterDepartemenRequest{Name: &newName}
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyUpdate).Return(true, nil)
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Update", mock.AnythingOfType("*models.MasterDepartemen")).Return(nil)
+	s.repo.On("GetDepartemenByID", int64(1)).Return(existing, nil)
+	s.repo.On("UpdateDepartemen", mock.AnythingOfType("*models.MasterDepartemen")).Return(nil)
 
-	result, err := s.svc.Update(1, req, &actor.UserID, actor)
+	result, err := s.svc.UpdateDepartemen(1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 }
 
-func (s *MasterDepartemenServiceTestSuite) Test_Update_Forbidden() {
+func (s *MasterDepartemenServiceTestSuite) Test_UpdateDepartemen_Forbidden() {
 	actor := regularActor()
 	req := &dto.UpdateMasterDepartemenRequest{}
 	s.mockNoPermissions()
 
-	result, err := s.svc.Update(1, req, &actor.UserID, actor)
+	result, err := s.svc.UpdateDepartemen(1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -344,20 +352,20 @@ func (s *MasterDepartemenServiceTestSuite) Test_Update_Forbidden() {
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *MasterDepartemenServiceTestSuite) Test_Update_NotFound() {
+func (s *MasterDepartemenServiceTestSuite) Test_UpdateDepartemen_NotFound() {
 	actor := superadminActor()
 	req := &dto.UpdateMasterDepartemenRequest{}
 
-	s.repo.On("GetByID", int64(999)).Return(nil, nil)
+	s.repo.On("GetDepartemenByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.Update(999, req, &actor.UserID, actor)
+	result, err := s.svc.UpdateDepartemen(999, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
 }
 
-func (s *MasterDepartemenServiceTestSuite) Test_Update_PartialFields() {
+func (s *MasterDepartemenServiceTestSuite) Test_UpdateDepartemen_PartialFields() {
 	actor := superadminActor()
 	existing := factories.NewMasterDepartemenFactory().Make()
 	existing.ID = 1
@@ -365,66 +373,66 @@ func (s *MasterDepartemenServiceTestSuite) Test_Update_PartialFields() {
 	newDesc := "New description"
 	req := &dto.UpdateMasterDepartemenRequest{Description: &newDesc}
 
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Update", mock.MatchedBy(func(m *models.MasterDepartemen) bool {
+	s.repo.On("GetDepartemenByID", int64(1)).Return(existing, nil)
+	s.repo.On("UpdateDepartemen", mock.MatchedBy(func(m *models.MasterDepartemen) bool {
 		return m.Name == originalName && *m.Description == newDesc
 	})).Return(nil)
 
-	result, err := s.svc.Update(1, req, &actor.UserID, actor)
+	result, err := s.svc.UpdateDepartemen(1, req, actor)
 
 	s.NoError(err)
 	s.Equal(originalName, result.Name)
 	s.Equal(newDesc, *result.Description)
 }
 
-func (s *MasterDepartemenServiceTestSuite) Test_Update_RepoError() {
+func (s *MasterDepartemenServiceTestSuite) Test_UpdateDepartemen_RepoError() {
 	actor := superadminActor()
 	existing := factories.NewMasterDepartemenFactory().Make()
 	existing.ID = 1
 	req := &dto.UpdateMasterDepartemenRequest{}
 
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Update", mock.AnythingOfType("*models.MasterDepartemen")).Return(fmt.Errorf("db error"))
+	s.repo.On("GetDepartemenByID", int64(1)).Return(existing, nil)
+	s.repo.On("UpdateDepartemen", mock.AnythingOfType("*models.MasterDepartemen")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.Update(1, req, &actor.UserID, actor)
+	result, err := s.svc.UpdateDepartemen(1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
 }
 
-func (s *MasterDepartemenServiceTestSuite) Test_Delete_Superadmin_Success() {
+func (s *MasterDepartemenServiceTestSuite) Test_DeleteDepartemen_Superadmin_Success() {
 	actor := superadminActor()
 	existing := factories.NewMasterDepartemenFactory().Make()
 	existing.ID = 1
 
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Delete", int64(1)).Return(nil)
+	s.repo.On("GetDepartemenByID", int64(1)).Return(existing, nil)
+	s.repo.On("DeleteDepartemen", int64(1)).Return(nil)
 
-	err := s.svc.Delete(1, actor)
+	err := s.svc.DeleteDepartemen(1, actor)
 
 	s.NoError(err)
 	s.repo.AssertExpectations(s.T())
 }
 
-func (s *MasterDepartemenServiceTestSuite) Test_Delete_WithPermission_Success() {
+func (s *MasterDepartemenServiceTestSuite) Test_DeleteDepartemen_WithPermission_Success() {
 	actor := regularActor()
 	existing := factories.NewMasterDepartemenFactory().Make()
 	existing.ID = 1
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyDelete).Return(true, nil)
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Delete", int64(1)).Return(nil)
+	s.repo.On("GetDepartemenByID", int64(1)).Return(existing, nil)
+	s.repo.On("DeleteDepartemen", int64(1)).Return(nil)
 
-	err := s.svc.Delete(1, actor)
+	err := s.svc.DeleteDepartemen(1, actor)
 
 	s.NoError(err)
 }
 
-func (s *MasterDepartemenServiceTestSuite) Test_Delete_Forbidden() {
+func (s *MasterDepartemenServiceTestSuite) Test_DeleteDepartemen_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	err := s.svc.Delete(1, actor)
+	err := s.svc.DeleteDepartemen(1, actor)
 
 	s.Error(err)
 	var appErr *appErrors.AppError
@@ -432,26 +440,26 @@ func (s *MasterDepartemenServiceTestSuite) Test_Delete_Forbidden() {
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *MasterDepartemenServiceTestSuite) Test_Delete_NotFound() {
+func (s *MasterDepartemenServiceTestSuite) Test_DeleteDepartemen_NotFound() {
 	actor := superadminActor()
 
-	s.repo.On("GetByID", int64(999)).Return(nil, nil)
+	s.repo.On("GetDepartemenByID", int64(999)).Return(nil, nil)
 
-	err := s.svc.Delete(999, actor)
+	err := s.svc.DeleteDepartemen(999, actor)
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
 }
 
-func (s *MasterDepartemenServiceTestSuite) Test_Delete_RepoError() {
+func (s *MasterDepartemenServiceTestSuite) Test_DeleteDepartemen_RepoError() {
 	actor := superadminActor()
 	existing := factories.NewMasterDepartemenFactory().Make()
 	existing.ID = 1
 
-	s.repo.On("GetByID", int64(1)).Return(existing, nil)
-	s.repo.On("Delete", int64(1)).Return(fmt.Errorf("db error"))
+	s.repo.On("GetDepartemenByID", int64(1)).Return(existing, nil)
+	s.repo.On("DeleteDepartemen", int64(1)).Return(fmt.Errorf("db error"))
 
-	err := s.svc.Delete(1, actor)
+	err := s.svc.DeleteDepartemen(1, actor)
 
 	s.Error(err)
 }

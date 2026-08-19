@@ -35,7 +35,7 @@ func (h *MasterHandler) ListSuku(c *echo.Context) error {
 		Name:         c.QueryParam("name"),
 	}
 
-	items, total, err := h.service.ListSuku(page, pageSize, &filter)
+	items, total, err := h.service.ListSuku(c.Request().Context(), page, pageSize, &filter)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
 	}
@@ -63,7 +63,7 @@ func (h *MasterHandler) GetByIDSuku(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 
-	item, err := h.service.GetByIDSuku(id)
+	item, err := h.service.GetByIDSuku(c.Request().Context(), id)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -95,7 +95,7 @@ func (h *MasterHandler) CreateSuku(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.CreateSuku(&req, actor)
+	item, err := h.service.CreateSuku(c.Request().Context(), &req, actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
@@ -133,7 +133,7 @@ func (h *MasterHandler) UpdateSuku(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.UpdateSuku(id, &req, actor)
+	item, err := h.service.UpdateSuku(c.Request().Context(), id, &req, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -162,7 +162,7 @@ func (h *MasterHandler) DeleteSuku(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	err = h.service.DeleteSuku(id, actor)
+	err = h.service.DeleteSuku(c.Request().Context(), id, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}

@@ -10,18 +10,18 @@ import (
 )
 
 // ─────────────── GetByID ─────────────────────────────────────────────────────────
-func (s *service) GetByIDSuku(id int64) (*dto.MasterSukuResponse, error) {
-	ctx := context.Background()
+func (s *service) GetByIDSuku(ctx context.Context, id int64) (*dto.MasterSukuResponse, error) {
+	ctxs := context.Background()
 	cacheKey := cacheKeySukuDetail(id)
 
 	// 1. Cek Cache
 	var cachedRes dto.MasterSukuResponse
-	if s.cache.Get(ctx, cacheKey, &cachedRes) {
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
 		return &cachedRes, nil
 	}
 
 	// 2. Hit Database
-	m, err := s.repo.GetByIDSuku(id)
+	m, err := s.repo.GetByIDSuku(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -32,13 +32,13 @@ func (s *service) GetByIDSuku(id int64) (*dto.MasterSukuResponse, error) {
 	res := dto.ToMasterSukuResponse(m)
 
 	// 3. Simpan ke Cache
-	s.cache.SetDefault(ctx, cacheKey, res)
+	s.cache.SetDefault(ctxs, cacheKey, res)
 	return res, nil
 }
 
 // ─────────────── List ────────────────────────────────────────────────────────────
-func (s *service) ListSuku(page, pageSize int, filter *dto.FilterMasterSukuRequest) ([]dto.MasterSukuResponse, int64, error) {
-	ctx := context.Background()
+func (s *service) ListSuku(ctx context.Context, page, pageSize int, filter *dto.FilterMasterSukuRequest) ([]dto.MasterSukuResponse, int64, error) {
+	ctxs := context.Background()
 	cacheKey := cacheKeySukuList(page, pageSize, filter)
 
 	// 1. Cek Cache
@@ -46,7 +46,7 @@ func (s *service) ListSuku(page, pageSize int, filter *dto.FilterMasterSukuReque
 		Items []dto.MasterSukuResponse `json:"items"`
 		Total int64                    `json:"total"`
 	}
-	if s.cache.Get(ctx, cacheKey, &cachedRes) {
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
 		if len(cachedRes.Items) == 0 {
 			return nil, 0, appErrors.NotFound("Suku tidak ditemukan")
 		}
@@ -61,7 +61,7 @@ func (s *service) ListSuku(page, pageSize int, filter *dto.FilterMasterSukuReque
 		pageSize = s.cfg.DefaultPageSize
 	}
 
-	items, total, err := s.repo.ListSuku(page, pageSize, filter)
+	items, total, err := s.repo.ListSuku(ctx, page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -72,7 +72,7 @@ func (s *service) ListSuku(page, pageSize int, filter *dto.FilterMasterSukuReque
 	res := dto.ToMasterSukuListResponse(items)
 
 	// 3. Simpan ke Cache
-	s.cache.SetDefault(ctx, cacheKey, struct {
+	s.cache.SetDefault(ctxs, cacheKey, struct {
 		Items []dto.MasterSukuResponse `json:"items"`
 		Total int64                    `json:"total"`
 	}{Items: res, Total: total})
@@ -81,9 +81,9 @@ func (s *service) ListSuku(page, pageSize int, filter *dto.FilterMasterSukuReque
 }
 
 // ─────────────── Create ──────────────────────────────────────────────────────────
-func (s *service) CreateSuku(req *dto.CreateMasterSukuRequest, actor he.AuthContext) (*dto.MasterSukuResponse, error) {
+func (s *service) CreateSuku(ctx context.Context, req *dto.CreateMasterSukuRequest, actor he.AuthContext) (*dto.MasterSukuResponse, error) {
 	// Permission Check
-	can, err := s.canCreateMaster(actor)
+	can, err := s.canCreateMaster(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -93,7 +93,7 @@ func (s *service) CreateSuku(req *dto.CreateMasterSukuRequest, actor he.AuthCont
 	}
 
 	// Check Duplicate Name
-	data, err := s.repo.GetByNameSuku(req.Name)
+	data, err := s.repo.GetByNameSuku(ctx, req.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (s *service) CreateSuku(req *dto.CreateMasterSukuRequest, actor he.AuthCont
 		CreatedBy:    &actor.UserID,
 		UpdatedBy:    &actor.UserID,
 	}
-	if err := s.repo.CreateSuku(m); err != nil {
+	if err := s.repo.CreateSuku(ctx, m); err != nil {
 		return nil, err
 	}
 
@@ -123,9 +123,9 @@ func (s *service) CreateSuku(req *dto.CreateMasterSukuRequest, actor he.AuthCont
 }
 
 // ─────────────── Update ──────────────────────────────────────────────────────────
-func (s *service) UpdateSuku(id int64, req *dto.UpdateMasterSukuRequest, actor he.AuthContext) (*dto.MasterSukuResponse, error) {
+func (s *service) UpdateSuku(ctx context.Context, id int64, req *dto.UpdateMasterSukuRequest, actor he.AuthContext) (*dto.MasterSukuResponse, error) {
 	// Permission Check
-	can, err := s.canUpdateMaster(actor)
+	can, err := s.canUpdateMaster(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -135,14 +135,14 @@ func (s *service) UpdateSuku(id int64, req *dto.UpdateMasterSukuRequest, actor h
 	}
 
 	// Cek Keberadaan Data
-	existing, err := s.repo.GetByIDSuku(id)
+	existing, err := s.repo.GetByIDSuku(ctx, id)
 	if err != nil || existing == nil {
 		return nil, appErrors.NotFound("Suku tidak ditemukan")
 	}
 
 	// Check Duplicate Name (jika ada perubahan)
 	if req.Name != nil && *req.Name != existing.Name {
-		data, err := s.repo.GetByNameSuku(*req.Name)
+		data, err := s.repo.GetByNameSuku(ctx, *req.Name)
 		if err != nil {
 			return nil, err
 		}
@@ -163,7 +163,7 @@ func (s *service) UpdateSuku(id int64, req *dto.UpdateMasterSukuRequest, actor h
 	}
 	existing.UpdatedBy = &actor.UserID
 
-	if err := s.repo.UpdateSuku(existing); err != nil {
+	if err := s.repo.UpdateSuku(ctx, existing); err != nil {
 		return nil, err
 	}
 
@@ -178,9 +178,9 @@ func (s *service) UpdateSuku(id int64, req *dto.UpdateMasterSukuRequest, actor h
 }
 
 // ─────────────── Delete ──────────────────────────────────────────────────────────
-func (s *service) DeleteSuku(id int64, actor he.AuthContext) error {
+func (s *service) DeleteSuku(ctx context.Context, id int64, actor he.AuthContext) error {
 	// Permission Check
-	can, err := s.canDeleteMaster(actor)
+	can, err := s.canDeleteMaster(ctx, actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
 	}
@@ -190,13 +190,13 @@ func (s *service) DeleteSuku(id int64, actor he.AuthContext) error {
 	}
 
 	// Cek Keberadaan Data
-	existing, err := s.repo.GetByIDSuku(id)
+	existing, err := s.repo.GetByIDSuku(ctx, id)
 	if err != nil || existing == nil {
 		return appErrors.NotFound("Suku tidak ditemukan")
 	}
 
 	// delete
-	err = s.repo.DeleteSuku(id)
+	err = s.repo.DeleteSuku(ctx, id)
 	if err != nil {
 		return err
 	}

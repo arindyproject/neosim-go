@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"errors"
 
 	"neosim_go/internal/modules/master/departemen/dto"
@@ -9,24 +10,27 @@ import (
 	"gorm.io/gorm"
 )
 
-func (r *repository) Create(m *models.MasterDepartemen) error {
-	return r.db.Create(m).Error
+// ── Create ────────────────────────────────────────────────────────────────────
+func (r *repository) CreateDepartemen(ctx context.Context, m *models.MasterDepartemen) error {
+	return r.db.WithContext(ctx).Create(m).Error
 }
 
-func (r *repository) GetByID(id int64) (*models.MasterDepartemen, error) {
+// ── GetByID ───────────────────────────────────────────────────────────────────
+func (r *repository) GetDepartemenByID(ctx context.Context, id int64) (*models.MasterDepartemen, error) {
 	var m models.MasterDepartemen
-	result := r.db.Where("id = ? AND deleted_at IS NULL", id).First(&m)
+	result := r.db.WithContext(ctx).Where("id = ? AND deleted_at IS NULL", id).First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
 	return &m, result.Error
 }
 
-func (r *repository) List(page, pageSize int, filter *dto.FilterMasterDepartemenRequest) ([]models.MasterDepartemen, int64, error) {
+// ── List ──────────────────────────────────────────────────────────────────────
+func (r *repository) ListDepartemen(ctx context.Context, page, pageSize int, filter *dto.FilterMasterDepartemenRequest) ([]models.MasterDepartemen, int64, error) {
 	var items []models.MasterDepartemen
 	var total int64
 
-	query := r.db.Model(&models.MasterDepartemen{}).Where("deleted_at IS NULL")
+	query := r.db.WithContext(ctx).Model(&models.MasterDepartemen{}).Where("deleted_at IS NULL")
 
 	if filter.Name != "" {
 		query = query.Where("name ILIKE ?", "%"+filter.Name+"%")
@@ -44,10 +48,13 @@ func (r *repository) List(page, pageSize int, filter *dto.FilterMasterDepartemen
 	return items, total, nil
 }
 
-func (r *repository) Update(m *models.MasterDepartemen) error {
-	return r.db.Save(m).Error
+
+// ── Update ────────────────────────────────────────────────────────────────────
+func (r *repository) UpdateDepartemen(ctx context.Context, m *models.MasterDepartemen) error {
+	return r.db.WithContext(ctx).Save(m).Error
 }
 
-func (r *repository) Delete(id int64) error {
-	return r.db.Where("id = ?", id).Delete(&models.MasterDepartemen{}).Error
+// ── Delete ────────────────────────────────────────────────────────────────────
+func (r *repository) DeleteDepartemen(ctx context.Context, id int64) error {
+	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&models.MasterDepartemen{}).Error
 }

@@ -1,6 +1,7 @@
 package services
 
 import (
+    "context"
 	"neosim_go/config"
 	artikelContracts "neosim_go/internal/modules/artikel/artikel/contracts"
 	
@@ -44,11 +45,11 @@ func NewArtikelService(
 }
 
 // buildCreator mengambil data creator user
-func (s *service) buildCreator(createdBy *int64) *he.UserData {
+func (s *service) buildCreator(ctx context.Context,createdBy *int64) *he.UserData {
 	if createdBy == nil {
 		return nil
 	}
-	creator, err := s.userRepo.GetByID(*createdBy)
+	creator, err := s.userRepo.GetByID(ctx,*createdBy)
 	if err != nil || creator == nil {
 		return nil
 	}
@@ -60,7 +61,7 @@ func (s *service) buildCreator(createdBy *int64) *he.UserData {
 }
 
 // ── helper: build creator/updater maps ───────────────────────────────────────
-func (s *service) buildAuditMaps(items []models.Artikel) (map[int64]*he.UserData, map[int64]*he.UserData) {
+func (s *service) buildAuditMaps(ctx context.Context,items []models.Artikel) (map[int64]*he.UserData, map[int64]*he.UserData) {
 	idSet := make(map[int64]struct{})
 	for _, item := range items {
 		if item.CreatedBy != nil {
@@ -75,7 +76,7 @@ func (s *service) buildAuditMaps(items []models.Artikel) (map[int64]*he.UserData
 		ids = append(ids, id)
 	}
 
-	users, err := s.userRepo.GetByIDs(ids) // ← 1 query total, bukan 40
+	users, err := s.userRepo.GetByIDs(ctx,ids) // ← 1 query total, bukan 40
 	if err != nil {
 		return map[int64]*he.UserData{}, map[int64]*he.UserData{}
 	}

@@ -1,5 +1,5 @@
 -- Migration: Create master_departemens table
--- Timestamp: 20260623100643
+-- Timestamp: 20260819205404
 
 CREATE TABLE IF NOT EXISTS master_departemens (
     id          BIGSERIAL    PRIMARY KEY,

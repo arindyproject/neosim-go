@@ -27,7 +27,7 @@ func (s *KepegawaianKontakSeeder) Run() error {
 			log.Printf("   ⚠️  Gagal membuat KepegawaianKontak: %v", err)
 			continue
 		}
-		log.Printf("   ✅ KepegawaianKontak '%s' dibuat.", item.Name)
+		log.Printf("   ✅ KepegawaianKontak '%s' dibuat.", item.Nilai)
 	}
 
 	log.Println("✅ kepegawaian_kontaks seeding selesai!")

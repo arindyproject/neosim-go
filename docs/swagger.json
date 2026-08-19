@@ -1910,7 +1910,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "kepegawaian/kontak"
+                    "kepegawaian/kontak/tipe"
                 ],
                 "summary": "Get list of Tipe",
                 "parameters": [
@@ -1977,7 +1977,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "kepegawaian/kontak"
+                    "kepegawaian/kontak/tipe"
                 ],
                 "summary": "Create Tipe",
                 "parameters": [
@@ -2028,7 +2028,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "kepegawaian/kontak"
+                    "kepegawaian/kontak/tipe"
                 ],
                 "summary": "Get Tipe",
                 "parameters": [
@@ -2075,7 +2075,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "kepegawaian/kontak"
+                    "kepegawaian/kontak/tipe"
                 ],
                 "summary": "Update Tipe",
                 "parameters": [
@@ -2131,7 +2131,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "kepegawaian/kontak"
+                    "kepegawaian/kontak/tipe"
                 ],
                 "summary": "Delete Tipe",
                 "parameters": [
@@ -8675,7 +8675,7 @@
                     "type": "string"
                 },
                 "created_by": {
-                    "type": "integer"
+                    "$ref": "#/definitions/httputil.UserData"
                 },
                 "description": {
                     "type": "string"
@@ -8690,7 +8690,7 @@
                     "type": "string"
                 },
                 "updated_by": {
-                    "type": "integer"
+                    "$ref": "#/definitions/httputil.UserData"
                 }
             }
         },

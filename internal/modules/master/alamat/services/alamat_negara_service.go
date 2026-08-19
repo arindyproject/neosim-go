@@ -87,7 +87,7 @@ func (s *service) ListNegara(ctx context.Context, page, pageSize int, filter *dt
 // ─────────────── Create ──────────────────────────────────────────────────────────
 func (s *service) CreateNegara(ctx context.Context, req *dto.CreateNegaraRequest, actor he.AuthContext) (*dto.NegaraResponse, error) {
 	// Permission
-	can, err := s.canCreateMasterAlamat(actor)
+	can, err := s.canCreateMasterAlamat(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -129,7 +129,7 @@ func (s *service) CreateNegara(ctx context.Context, req *dto.CreateNegaraRequest
 // ─────────────── Update ──────────────────────────────────────────────────────────
 func (s *service) UpdateNegara(ctx context.Context, id int64, req *dto.UpdateNegaraRequest, actor he.AuthContext) (*dto.NegaraResponse, error) {
 	// Permission
-	can, err := s.canUpdateMasterAlamat(actor)
+	can, err := s.canUpdateMasterAlamat(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -185,7 +185,7 @@ func (s *service) UpdateNegara(ctx context.Context, id int64, req *dto.UpdateNeg
 // ─────────────── Delete ──────────────────────────────────────────────────────────
 func (s *service) DeleteNegara(ctx context.Context, id int64, actor he.AuthContext) error {
 	// Permission
-	can, err := s.canDeleteMasterAlamat(actor)
+	can, err := s.canDeleteMasterAlamat(ctx, actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
 	}

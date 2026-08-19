@@ -715,7 +715,7 @@ definitions:
       created_at:
         type: string
       created_by:
-        type: integer
+        $ref: '#/definitions/httputil.UserData'
       description:
         type: string
       id:
@@ -725,7 +725,7 @@ definitions:
       updated_at:
         type: string
       updated_by:
-        type: integer
+        $ref: '#/definitions/httputil.UserData'
     type: object
   dto.MasterGolonganDarahResponse:
     properties:
@@ -2878,7 +2878,7 @@ paths:
       - BearerAuth: []
       summary: Get list of Tipe
       tags:
-      - kepegawaian/kontak
+      - kepegawaian/kontak/tipe
     post:
       consumes:
       - application/json
@@ -2906,7 +2906,7 @@ paths:
       - BearerAuth: []
       summary: Create Tipe
       tags:
-      - kepegawaian/kontak
+      - kepegawaian/kontak/tipe
   /kepegawaian/kontak/tipes/{id}:
     delete:
       consumes:
@@ -2929,7 +2929,7 @@ paths:
       - BearerAuth: []
       summary: Delete Tipe
       tags:
-      - kepegawaian/kontak
+      - kepegawaian/kontak/tipe
     get:
       consumes:
       - application/json
@@ -2956,7 +2956,7 @@ paths:
       - BearerAuth: []
       summary: Get Tipe
       tags:
-      - kepegawaian/kontak
+      - kepegawaian/kontak/tipe
     put:
       consumes:
       - application/json
@@ -2989,7 +2989,7 @@ paths:
       - BearerAuth: []
       summary: Update Tipe
       tags:
-      - kepegawaian/kontak
+      - kepegawaian/kontak/tipe
   /kepegawaian/pegawai:
     get:
       consumes:

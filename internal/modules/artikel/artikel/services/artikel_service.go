@@ -14,7 +14,7 @@ import (
 
 // ── Create ────────────────────────────────────────────────────────────────────
 func (s *service) CreateArtikel(ctx context.Context,req *dto.CreateArtikelRequest, actor he.AuthContext) (*dto.ArtikelResponse, error) {
-	can, err := s.canCreateArtikel(actor)
+	can, err := s.canCreateArtikel(ctx,actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -33,7 +33,7 @@ func (s *service) CreateArtikel(ctx context.Context,req *dto.CreateArtikelReques
 		return nil, err
 	}
 	
-	creator := s.buildCreator(m.CreatedBy)
+	creator := s.buildCreator(ctx,m.CreatedBy)
 
 	return dto.ToArtikelResponse(dto.ArtikelResponseParams{
 		Artikel: m,
@@ -45,7 +45,7 @@ func (s *service) CreateArtikel(ctx context.Context,req *dto.CreateArtikelReques
 
 // ── GetByID ───────────────────────────────────────────────────────────────────
 func (s *service) GetArtikelByID(ctx context.Context,id int64, actor he.AuthContext) (*dto.ArtikelResponse, error) {
-	can, err := s.canReadArtikel(actor)
+	can, err := s.canReadArtikel(ctx,actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -62,8 +62,8 @@ func (s *service) GetArtikelByID(ctx context.Context,id int64, actor he.AuthCont
 		return nil, errors.New("Artikel tidak ditemukan")
 	}
 	
-	creator := s.buildCreator(m.CreatedBy)
-	updater := s.buildCreator(m.UpdatedBy)
+	creator := s.buildCreator(ctx,m.CreatedBy)
+	updater := s.buildCreator(ctx,m.UpdatedBy)
 
 	return dto.ToArtikelResponse(dto.ArtikelResponseParams{
 		Artikel: m,
@@ -75,7 +75,7 @@ func (s *service) GetArtikelByID(ctx context.Context,id int64, actor he.AuthCont
 
 // ── List ──────────────────────────────────────────────────────────────────────
 func (s *service) ListArtikel(ctx context.Context,page, pageSize int, filter *dto.FilterArtikelRequest, actor he.AuthContext) ([]dto.ArtikelResponse, int64, error) {
-	can, err := s.canReadArtikel(actor)
+	can, err := s.canReadArtikel(ctx,actor)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal cek akses")
 	}
@@ -95,14 +95,14 @@ func (s *service) ListArtikel(ctx context.Context,page, pageSize int, filter *dt
 		return nil, 0, err
 	}
 
-	creatorsMap, updatersMap := s.buildAuditMaps(items)
+	creatorsMap, updatersMap := s.buildAuditMaps(ctx, items)
 	return dto.ToArtikelListResponse(items, creatorsMap, updatersMap), total, nil
 }
 
 
 // ── Update ────────────────────────────────────────────────────────────────────
 func (s *service) UpdateArtikel(ctx context.Context,id int64, req *dto.UpdateArtikelRequest, actor he.AuthContext) (*dto.ArtikelResponse, error) {
-	can, err := s.canUpdateArtikel(actor)
+	can, err := s.canUpdateArtikel(ctx,actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -131,8 +131,8 @@ func (s *service) UpdateArtikel(ctx context.Context,id int64, req *dto.UpdateArt
 		return nil, err
 	}
 	
-	creator := s.buildCreator(m.CreatedBy)
-	updater := s.buildCreator(m.UpdatedBy)
+	creator := s.buildCreator(ctx,m.CreatedBy)
+	updater := s.buildCreator(ctx,m.UpdatedBy)
 
 	return dto.ToArtikelResponse(dto.ArtikelResponseParams{
 		Artikel: m,
@@ -143,7 +143,7 @@ func (s *service) UpdateArtikel(ctx context.Context,id int64, req *dto.UpdateArt
 
 // ── Delete ────────────────────────────────────────────────────────────────────
 func (s *service) DeleteArtikel(ctx context.Context,id int64, actor he.AuthContext) error {
-	can, err := s.canDeleteArtikel(actor)
+	can, err := s.canDeleteArtikel(ctx,actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
 	}

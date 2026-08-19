@@ -35,7 +35,7 @@ func (h *MasterHandler) ListGolonganDarah(c *echo.Context) error {
 		Name:         c.QueryParam("name"),
 	}
 
-	items, total, err := h.service.ListGolonganDarah(page, pageSize, &filter)
+	items, total, err := h.service.ListGolonganDarah(c.Request().Context(), page, pageSize, &filter)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
 	}
@@ -63,7 +63,7 @@ func (h *MasterHandler) GetByIDGolonganDarah(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 
-	item, err := h.service.GetByIDGolonganDarah(id)
+	item, err := h.service.GetByIDGolonganDarah(c.Request().Context(), id)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -95,7 +95,7 @@ func (h *MasterHandler) CreateGolonganDarah(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.CreateGolonganDarah(&req, actor)
+	item, err := h.service.CreateGolonganDarah(c.Request().Context(), &req, actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
@@ -133,7 +133,7 @@ func (h *MasterHandler) UpdateGolonganDarah(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.UpdateGolonganDarah(id, &req, actor)
+	item, err := h.service.UpdateGolonganDarah(c.Request().Context(), id, &req, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -162,7 +162,7 @@ func (h *MasterHandler) DeleteGolonganDarah(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	err = h.service.DeleteGolonganDarah(id, actor)
+	err = h.service.DeleteGolonganDarah(c.Request().Context(), id, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}

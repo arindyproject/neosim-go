@@ -502,7 +502,7 @@ func (s *authService) buildTokenResponse(ctx context.Context, accessToken, refre
 	histories, _ := s.repo.GetUserLoginHistories(ctx, user.ID, 10)
 
 	// 1. Ambil roles dari DB — tanpa preload permissions agar ringan
-	roles, err := s.rbacRepo.GetUserRoles(user.ID)
+	roles, err := s.rbacRepo.GetUserRoles(ctx, user.ID)
 	var roleSimple []rbacDto.RoleSimpleResponse
 	if err == nil {
 		roleSimple = rbacDto.ToRoleSimpleListResponse(roles)
@@ -524,7 +524,7 @@ func (s *authService) buildTokenResponse(ctx context.Context, accessToken, refre
 	}
 
 	// 2b. Direct permissions yang di-grant — override/tambah ke map
-	directPerms, err := s.rbacRepo.GetUserDirectPermissions(user.ID)
+	directPerms, err := s.rbacRepo.GetUserDirectPermissions(ctx, user.ID)
 	if err == nil {
 		for _, up := range directPerms {
 			if !up.IsGranted {
@@ -534,7 +534,7 @@ func (s *authService) buildTokenResponse(ctx context.Context, accessToken, refre
 			}
 			// Direct grant — tambah jika belum ada
 			if _, exists := permMap[up.PermissionID]; !exists {
-				perm, err := s.rbacRepo.GetPermissionByID(up.PermissionID)
+				perm, err := s.rbacRepo.GetPermissionByID(ctx, up.PermissionID)
 				if err == nil && perm != nil {
 					permMap[perm.ID] = *rbacDto.ToPermissionResponse(perm)
 				}

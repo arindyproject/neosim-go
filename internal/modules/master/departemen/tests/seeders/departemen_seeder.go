@@ -1,8 +1,6 @@
 package seeders
 
 import (
-	_ "embed"
-	"encoding/json"
 	"log"
 
 	"neosim_go/internal/modules/master/departemen/models"
@@ -10,15 +8,6 @@ import (
 
 	"gorm.io/gorm"
 )
-
-//go:embed departemen.json
-var departemenJSON []byte
-
-type jsonDepartemen struct {
-	Code         string `json:"code"`
-	Name         string `json:"name"`
-	SystemModule string `json:"system_module"`
-}
 
 // MasterDepartemenSeeder mengelola seeding data MasterDepartemen
 type MasterDepartemenSeeder struct {
@@ -32,32 +21,14 @@ func NewMasterDepartemenSeeder(db *gorm.DB) *MasterDepartemenSeeder {
 func (s *MasterDepartemenSeeder) Run() error {
 	log.Println("🌱 Seeding master_departemens...")
 
-	// 1. Pekerjaan
-	//----------------------------------------------------------------------------------
-	var departemenItems []models.MasterDepartemen
-	if err := json.Unmarshal(departemenJSON, &departemenItems); err != nil {
-		return err
-	}
-	// Peta/Map untuk menyimpan referensi ID berdasarkan Code (guna efisiensi pencarian relasi)
-	mapDepartemen := make(map[string]int64)
-
-	for _, item := range departemenItems {
-		// Cek eksistensi agar tidak duplikat jika dijalankan ulang
-		var existing models.MasterDepartemen
-		err := s.db.Where("name = ?", item.Name).First(&existing).Error
-		if err == gorm.ErrRecordNotFound {
-			if err := s.db.Create(&item).Error; err != nil {
-				log.Printf("   ⚠️  Gagal membuat Departemen: %v", err)
-				continue
-			}
-			mapDepartemen[item.Name] = item.ID
-			log.Printf("   ✅ Departemen '%s' dibuat.", item.Name)
-		} else {
-			mapDepartemen[existing.Name] = existing.ID
+	items := factories.NewMasterDepartemenFactory().MakeMany(10)
+	for _, item := range items {
+		if err := s.db.Create(item).Error; err != nil {
+			log.Printf("   ⚠️  Gagal membuat MasterDepartemen: %v", err)
+			continue
 		}
+		log.Printf("   ✅ MasterDepartemen '%s' dibuat.", item.Name)
 	}
-	log.Println("   ✅ Seeding Departemen selesai.")
-	//----------------------------------------------------------------------------------
 
 	log.Println("✅ master_departemens seeding selesai!")
 	return nil

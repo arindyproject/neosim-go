@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"errors"
 
 	"neosim_go/internal/modules/master/master/dto"
@@ -13,14 +14,14 @@ import (
 // GolonganDarah
 // =====================================================================
 // ------------------Create---------------------------------------------
-func (r *repository) CreateGolonganDarah(m *models.MasterGolonganDarah) error {
-	return r.db.Create(m).Error
+func (r *repository) CreateGolonganDarah(ctx context.Context, m *models.MasterGolonganDarah) error {
+	return r.db.WithContext(ctx).Create(m).Error
 }
 
 // ------------------GetByID--------------------------------------------
-func (r *repository) GetByIDGolonganDarah(id int64) (*models.MasterGolonganDarah, error) {
+func (r *repository) GetByIDGolonganDarah(ctx context.Context, id int64) (*models.MasterGolonganDarah, error) {
 	var m models.MasterGolonganDarah
-	result := r.db.Where("id = ?", id).
+	result := r.db.WithContext(ctx).Where("id = ?", id).
 		Where("master_golongan_darah.deleted_at IS NULL").First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
@@ -29,9 +30,9 @@ func (r *repository) GetByIDGolonganDarah(id int64) (*models.MasterGolonganDarah
 }
 
 // ------------------GetByName------------------------------------------
-func (r *repository) GetByNameGolonganDarah(name string) (*models.MasterGolonganDarah, error) {
+func (r *repository) GetByNameGolonganDarah(ctx context.Context, name string) (*models.MasterGolonganDarah, error) {
 	var m models.MasterGolonganDarah
-	result := r.db.Where("name = ?", name).Where("master_golongan_darah.deleted_at IS NULL").First(&m)
+	result := r.db.WithContext(ctx).Where("name = ?", name).Where("master_golongan_darah.deleted_at IS NULL").First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -39,11 +40,11 @@ func (r *repository) GetByNameGolonganDarah(name string) (*models.MasterGolongan
 }
 
 // ------------------List-----------------------------------------------
-func (r *repository) ListGolonganDarah(page, pageSize int, filter *dto.FilterMasterGolonganDarahRequest) ([]models.MasterGolonganDarah, int64, error) {
+func (r *repository) ListGolonganDarah(ctx context.Context, page, pageSize int, filter *dto.FilterMasterGolonganDarahRequest) ([]models.MasterGolonganDarah, int64, error) {
 	var items []models.MasterGolonganDarah
 	var total int64
 
-	query := r.db.Model(&models.MasterGolonganDarah{}).Where("master_golongan_darah.deleted_at IS NULL")
+	query := r.db.WithContext(ctx).Model(&models.MasterGolonganDarah{}).Where("master_golongan_darah.deleted_at IS NULL")
 
 	if filter != nil && filter.Name != "" {
 		query = query.Where("name ILIKE ?", "%"+filter.Name+"%")
@@ -66,11 +67,11 @@ func (r *repository) ListGolonganDarah(page, pageSize int, filter *dto.FilterMas
 }
 
 // ------------------Update---------------------------------------------
-func (r *repository) UpdateGolonganDarah(m *models.MasterGolonganDarah) error {
-	return r.db.Save(m).Error
+func (r *repository) UpdateGolonganDarah(ctx context.Context, m *models.MasterGolonganDarah) error {
+	return r.db.WithContext(ctx).Save(m).Error
 }
 
 // ------------------Delete---------------------------------------------
-func (r *repository) DeleteGolonganDarah(id int64) error {
-	return r.db.Where("id = ?", id).Delete(&models.MasterGolonganDarah{}).Error
+func (r *repository) DeleteGolonganDarah(ctx context.Context, id int64) error {
+	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&models.MasterGolonganDarah{}).Error
 } // ===================================================================

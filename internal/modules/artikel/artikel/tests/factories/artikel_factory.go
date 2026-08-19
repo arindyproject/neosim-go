@@ -33,9 +33,14 @@ func (f *ArtikelFactory) Make() *models.Artikel {
 		name = v.(string)
 	}
 
+	createdBy := int64(rng.Intn(99) + 1)
+	updatedBy := int64(rng.Intn(99) + 1)
+
 	return &models.Artikel{
 		Name:        name,
 		Description: &desc,
+		CreatedBy:      &createdBy,
+		UpdatedBy:      &updatedBy,
 	}
 }
 

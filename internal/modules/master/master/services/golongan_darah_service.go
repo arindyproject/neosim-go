@@ -10,18 +10,18 @@ import (
 )
 
 // ─────────────── GetByID ─────────────────────────────────────────────────────────
-func (s *service) GetByIDGolonganDarah(id int64) (*dto.MasterGolonganDarahResponse, error) {
-	ctx := context.Background()
+func (s *service) GetByIDGolonganDarah(ctx context.Context, id int64) (*dto.MasterGolonganDarahResponse, error) {
+	ctxs := context.Background()
 	cacheKey := cacheKeyGolonganDarahDetail(id)
 
 	// 1. Cek Cache
 	var cachedRes dto.MasterGolonganDarahResponse
-	if s.cache.Get(ctx, cacheKey, &cachedRes) {
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
 		return &cachedRes, nil
 	}
 
 	// 2. Hit Database
-	m, err := s.repo.GetByIDGolonganDarah(id)
+	m, err := s.repo.GetByIDGolonganDarah(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -32,13 +32,13 @@ func (s *service) GetByIDGolonganDarah(id int64) (*dto.MasterGolonganDarahRespon
 	res := dto.ToMasterGolonganDarahResponse(m)
 
 	// 3. Simpan ke Cache
-	s.cache.SetDefault(ctx, cacheKey, res)
+	s.cache.SetDefault(ctxs, cacheKey, res)
 	return res, nil
 }
 
 // ─────────────── List ────────────────────────────────────────────────────────────
-func (s *service) ListGolonganDarah(page, pageSize int, filter *dto.FilterMasterGolonganDarahRequest) ([]dto.MasterGolonganDarahResponse, int64, error) {
-	ctx := context.Background()
+func (s *service) ListGolonganDarah(ctx context.Context, page, pageSize int, filter *dto.FilterMasterGolonganDarahRequest) ([]dto.MasterGolonganDarahResponse, int64, error) {
+	ctxs := context.Background()
 	cacheKey := cacheKeyGolonganDarahList(page, pageSize, filter)
 
 	// 1. Cek Cache
@@ -46,7 +46,7 @@ func (s *service) ListGolonganDarah(page, pageSize int, filter *dto.FilterMaster
 		Items []dto.MasterGolonganDarahResponse `json:"items"`
 		Total int64                             `json:"total"`
 	}
-	if s.cache.Get(ctx, cacheKey, &cachedRes) {
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
 		if len(cachedRes.Items) == 0 {
 			return nil, 0, appErrors.NotFound("GolonganDarah tidak ditemukan")
 		}
@@ -61,7 +61,7 @@ func (s *service) ListGolonganDarah(page, pageSize int, filter *dto.FilterMaster
 		pageSize = s.cfg.DefaultPageSize
 	}
 
-	items, total, err := s.repo.ListGolonganDarah(page, pageSize, filter)
+	items, total, err := s.repo.ListGolonganDarah(ctx, page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -72,7 +72,7 @@ func (s *service) ListGolonganDarah(page, pageSize int, filter *dto.FilterMaster
 	res := dto.ToMasterGolonganDarahListResponse(items)
 
 	// 3. Simpan ke Cache
-	s.cache.SetDefault(ctx, cacheKey, struct {
+	s.cache.SetDefault(ctxs, cacheKey, struct {
 		Items []dto.MasterGolonganDarahResponse `json:"items"`
 		Total int64                             `json:"total"`
 	}{Items: res, Total: total})
@@ -81,9 +81,9 @@ func (s *service) ListGolonganDarah(page, pageSize int, filter *dto.FilterMaster
 }
 
 // ─────────────── Create ──────────────────────────────────────────────────────────
-func (s *service) CreateGolonganDarah(req *dto.CreateMasterGolonganDarahRequest, actor he.AuthContext) (*dto.MasterGolonganDarahResponse, error) {
+func (s *service) CreateGolonganDarah(ctx context.Context, req *dto.CreateMasterGolonganDarahRequest, actor he.AuthContext) (*dto.MasterGolonganDarahResponse, error) {
 	// Permission Check
-	can, err := s.canCreateMaster(actor)
+	can, err := s.canCreateMaster(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -93,7 +93,7 @@ func (s *service) CreateGolonganDarah(req *dto.CreateMasterGolonganDarahRequest,
 	}
 
 	// Check Duplicate Name
-	data, err := s.repo.GetByNameGolonganDarah(req.Name)
+	data, err := s.repo.GetByNameGolonganDarah(ctx, req.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (s *service) CreateGolonganDarah(req *dto.CreateMasterGolonganDarahRequest,
 		CreatedBy:    &actor.UserID,
 		UpdatedBy:    &actor.UserID,
 	}
-	if err := s.repo.CreateGolonganDarah(m); err != nil {
+	if err := s.repo.CreateGolonganDarah(ctx, m); err != nil {
 		return nil, err
 	}
 
@@ -123,9 +123,9 @@ func (s *service) CreateGolonganDarah(req *dto.CreateMasterGolonganDarahRequest,
 }
 
 // ─────────────── Update ──────────────────────────────────────────────────────────
-func (s *service) UpdateGolonganDarah(id int64, req *dto.UpdateMasterGolonganDarahRequest, actor he.AuthContext) (*dto.MasterGolonganDarahResponse, error) {
+func (s *service) UpdateGolonganDarah(ctx context.Context, id int64, req *dto.UpdateMasterGolonganDarahRequest, actor he.AuthContext) (*dto.MasterGolonganDarahResponse, error) {
 	// Permission Check
-	can, err := s.canUpdateMaster(actor)
+	can, err := s.canUpdateMaster(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -135,14 +135,14 @@ func (s *service) UpdateGolonganDarah(id int64, req *dto.UpdateMasterGolonganDar
 	}
 
 	// Cek Keberadaan Data
-	existing, err := s.repo.GetByIDGolonganDarah(id)
+	existing, err := s.repo.GetByIDGolonganDarah(ctx, id)
 	if err != nil || existing == nil {
 		return nil, appErrors.NotFound("GolonganDarah tidak ditemukan")
 	}
 
 	// Check Duplicate Name (jika ada perubahan)
 	if req.Name != nil && *req.Name != existing.Name {
-		data, err := s.repo.GetByNameGolonganDarah(*req.Name)
+		data, err := s.repo.GetByNameGolonganDarah(ctx, *req.Name)
 		if err != nil {
 			return nil, err
 		}
@@ -163,7 +163,7 @@ func (s *service) UpdateGolonganDarah(id int64, req *dto.UpdateMasterGolonganDar
 	}
 	existing.UpdatedBy = &actor.UserID
 
-	if err := s.repo.UpdateGolonganDarah(existing); err != nil {
+	if err := s.repo.UpdateGolonganDarah(ctx, existing); err != nil {
 		return nil, err
 	}
 
@@ -178,9 +178,9 @@ func (s *service) UpdateGolonganDarah(id int64, req *dto.UpdateMasterGolonganDar
 }
 
 // ─────────────── Delete ──────────────────────────────────────────────────────────
-func (s *service) DeleteGolonganDarah(id int64, actor he.AuthContext) error {
+func (s *service) DeleteGolonganDarah(ctx context.Context, id int64, actor he.AuthContext) error {
 	// Permission Check
-	can, err := s.canDeleteMaster(actor)
+	can, err := s.canDeleteMaster(ctx, actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
 	}
@@ -190,13 +190,13 @@ func (s *service) DeleteGolonganDarah(id int64, actor he.AuthContext) error {
 	}
 
 	// Cek Keberadaan Data
-	existing, err := s.repo.GetByIDGolonganDarah(id)
+	existing, err := s.repo.GetByIDGolonganDarah(ctx, id)
 	if err != nil || existing == nil {
 		return appErrors.NotFound("GolonganDarah tidak ditemukan")
 	}
 
 	// delete
-	err = s.repo.DeleteGolonganDarah(id)
+	err = s.repo.DeleteGolonganDarah(ctx, id)
 	if err != nil {
 		return err
 	}

@@ -14,7 +14,7 @@ import (
 
 // ── Create ────────────────────────────────────────────────────────────────────
 func (s *service) CreateKategori(ctx context.Context,req *dto.CreateArtikelKategoriRequest, actor he.AuthContext) (*dto.ArtikelKategoriResponse, error) {
-	can, err := s.canCreateArtikelKategori(actor)
+	can, err := s.canCreateArtikelKategori(ctx,actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -33,7 +33,7 @@ func (s *service) CreateKategori(ctx context.Context,req *dto.CreateArtikelKateg
 		return nil, err
 	}
 	
-	creator := s.buildCreator(m.CreatedBy)
+	creator := s.buildCreator(ctx,m.CreatedBy)
 
 	return dto.ToArtikelKategoriResponse(dto.ArtikelKategoriResponseParams{
 		ArtikelKategori: m,
@@ -45,7 +45,7 @@ func (s *service) CreateKategori(ctx context.Context,req *dto.CreateArtikelKateg
 
 // ── GetByID ───────────────────────────────────────────────────────────────────
 func (s *service) GetKategoriByID(ctx context.Context,id int64, actor he.AuthContext) (*dto.ArtikelKategoriResponse, error) {
-	can, err := s.canReadArtikelKategori(actor)
+	can, err := s.canReadArtikelKategori(ctx,actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -62,8 +62,8 @@ func (s *service) GetKategoriByID(ctx context.Context,id int64, actor he.AuthCon
 		return nil, errors.New("ArtikelKategori tidak ditemukan")
 	}
 	
-	creator := s.buildCreator(m.CreatedBy)
-	updater := s.buildCreator(m.UpdatedBy)
+	creator := s.buildCreator(ctx,m.CreatedBy)
+	updater := s.buildCreator(ctx,m.UpdatedBy)
 
 	return dto.ToArtikelKategoriResponse(dto.ArtikelKategoriResponseParams{
 		ArtikelKategori: m,
@@ -75,7 +75,7 @@ func (s *service) GetKategoriByID(ctx context.Context,id int64, actor he.AuthCon
 
 // ── List ──────────────────────────────────────────────────────────────────────
 func (s *service) ListKategori(ctx context.Context,page, pageSize int, filter *dto.FilterArtikelKategoriRequest, actor he.AuthContext) ([]dto.ArtikelKategoriResponse, int64, error) {
-	can, err := s.canReadArtikelKategori(actor)
+	can, err := s.canReadArtikelKategori(ctx,actor)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal cek akses")
 	}
@@ -95,14 +95,14 @@ func (s *service) ListKategori(ctx context.Context,page, pageSize int, filter *d
 		return nil, 0, err
 	}
 
-	creatorsMap, updatersMap := s.buildAuditMaps(items)
+	creatorsMap, updatersMap := s.buildAuditMaps(ctx, items)
 	return dto.ToArtikelKategoriListResponse(items, creatorsMap, updatersMap), total, nil
 }
 
 
 // ── Update ────────────────────────────────────────────────────────────────────
 func (s *service) UpdateKategori(ctx context.Context,id int64, req *dto.UpdateArtikelKategoriRequest, actor he.AuthContext) (*dto.ArtikelKategoriResponse, error) {
-	can, err := s.canUpdateArtikelKategori(actor)
+	can, err := s.canUpdateArtikelKategori(ctx,actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -131,8 +131,8 @@ func (s *service) UpdateKategori(ctx context.Context,id int64, req *dto.UpdateAr
 		return nil, err
 	}
 	
-	creator := s.buildCreator(m.CreatedBy)
-	updater := s.buildCreator(m.UpdatedBy)
+	creator := s.buildCreator(ctx,m.CreatedBy)
+	updater := s.buildCreator(ctx,m.UpdatedBy)
 
 	return dto.ToArtikelKategoriResponse(dto.ArtikelKategoriResponseParams{
 		ArtikelKategori: m,
@@ -143,7 +143,7 @@ func (s *service) UpdateKategori(ctx context.Context,id int64, req *dto.UpdateAr
 
 // ── Delete ────────────────────────────────────────────────────────────────────
 func (s *service) DeleteKategori(ctx context.Context,id int64, actor he.AuthContext) error {
-	can, err := s.canDeleteArtikelKategori(actor)
+	can, err := s.canDeleteArtikelKategori(ctx,actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
 	}

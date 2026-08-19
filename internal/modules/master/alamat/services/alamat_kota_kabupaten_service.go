@@ -107,7 +107,7 @@ func (s *service) ListKotaKabupaten(ctx context.Context, page, pageSize int, pro
 // ─────────────── Create ──────────────────────────────────────────────────────────
 func (s *service) CreateKotaKabupaten(ctx context.Context, req *dto.CreateKotaKabupatenRequest, actor he.AuthContext) (*dto.KotaKabupatenResponse, error) {
 	// Permission
-	can, err := s.canCreateMasterAlamat(actor)
+	can, err := s.canCreateMasterAlamat(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -160,7 +160,7 @@ func (s *service) CreateKotaKabupaten(ctx context.Context, req *dto.CreateKotaKa
 // ─────────────── Update ──────────────────────────────────────────────────────────
 func (s *service) UpdateKotaKabupaten(ctx context.Context, id int64, req *dto.UpdateKotaKabupatenRequest, actor he.AuthContext) (*dto.KotaKabupatenResponse, error) {
 	// Permission
-	can, err := s.canUpdateMasterAlamat(actor)
+	can, err := s.canUpdateMasterAlamat(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -219,7 +219,7 @@ func (s *service) UpdateKotaKabupaten(ctx context.Context, id int64, req *dto.Up
 // ─────────────── Delete ──────────────────────────────────────────────────────────
 func (s *service) DeleteKotaKabupaten(ctx context.Context, id int64, actor he.AuthContext) error {
 	// Permission
-	can, err := s.canDeleteMasterAlamat(actor)
+	can, err := s.canDeleteMasterAlamat(ctx, actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
 	}

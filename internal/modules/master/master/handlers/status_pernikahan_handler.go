@@ -35,7 +35,7 @@ func (h *MasterHandler) ListStatusPernikahan(c *echo.Context) error {
 		Name:         c.QueryParam("name"),
 	}
 
-	items, total, err := h.service.ListStatusPernikahan(page, pageSize, &filter)
+	items, total, err := h.service.ListStatusPernikahan(c.Request().Context(), page, pageSize, &filter)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
 	}
@@ -63,7 +63,7 @@ func (h *MasterHandler) GetByIDStatusPernikahan(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 
-	item, err := h.service.GetByIDStatusPernikahan(id)
+	item, err := h.service.GetByIDStatusPernikahan(c.Request().Context(), id)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -95,7 +95,7 @@ func (h *MasterHandler) CreateStatusPernikahan(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.CreateStatusPernikahan(&req, actor)
+	item, err := h.service.CreateStatusPernikahan(c.Request().Context(), &req, actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
@@ -133,7 +133,7 @@ func (h *MasterHandler) UpdateStatusPernikahan(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.UpdateStatusPernikahan(id, &req, actor)
+	item, err := h.service.UpdateStatusPernikahan(c.Request().Context(), id, &req, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -162,7 +162,7 @@ func (h *MasterHandler) DeleteStatusPernikahan(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	err = h.service.DeleteStatusPernikahan(id, actor)
+	err = h.service.DeleteStatusPernikahan(c.Request().Context(), id, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}

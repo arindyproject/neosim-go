@@ -14,7 +14,7 @@ import (
 
 // ─── Create ───────────────────────────────────────────────────────────────────────────────
 func (s *service) CreateKontak(ctx context.Context, req *dto.CreateKepegawaianKontakRequest, actor he.AuthContext) (*dto.KepegawaianKontakResponse, error) {
-	can, err := s.canCreateKepegawaianKontak(actor)
+	can, err := s.canCreateKepegawaianKontak(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -37,7 +37,7 @@ func (s *service) CreateKontak(ctx context.Context, req *dto.CreateKepegawaianKo
 		return nil, err
 	}
 
-	creator := s.buildCreator(m.CreatedBy)
+	creator := s.buildCreator(ctx, m.CreatedBy)
 
 	return dto.ToKepegawaianKontakResponse(dto.KepegawaianKontakResponseParams{
 		KepegawaianKontak: m,
@@ -48,7 +48,7 @@ func (s *service) CreateKontak(ctx context.Context, req *dto.CreateKepegawaianKo
 
 // ─── GetByID ───────────────────────────────────────────────────────────────────────────────
 func (s *service) GetKontakByID(ctx context.Context, id int64, actor he.AuthContext) (*dto.KepegawaianKontakResponse, error) {
-	can, err := s.canReadKepegawaianKontak(actor)
+	can, err := s.canReadKepegawaianKontak(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -65,8 +65,8 @@ func (s *service) GetKontakByID(ctx context.Context, id int64, actor he.AuthCont
 		return nil, errors.New("KepegawaianKontak tidak ditemukan")
 	}
 
-	creator := s.buildCreator(m.CreatedBy)
-	updater := s.buildCreator(m.UpdatedBy)
+	creator := s.buildCreator(ctx, m.CreatedBy)
+	updater := s.buildCreator(ctx, m.UpdatedBy)
 
 	return dto.ToKepegawaianKontakResponse(dto.KepegawaianKontakResponseParams{
 		KepegawaianKontak: m,
@@ -77,7 +77,7 @@ func (s *service) GetKontakByID(ctx context.Context, id int64, actor he.AuthCont
 
 // ─── GetByPegawaiID ───────────────────────────────────────────────────────────────────────────────
 func (s *service) GetKontakByPegawaiID(ctx context.Context, pegawaiID int64, actor he.AuthContext) ([]dto.KepegawaianKontakResponse, error) {
-	can, err := s.canReadKepegawaianKontak(actor)
+	can, err := s.canReadKepegawaianKontak(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -94,13 +94,13 @@ func (s *service) GetKontakByPegawaiID(ctx context.Context, pegawaiID int64, act
 		return nil, errors.New("KepegawaianKontak tidak ditemukan")
 	}
 
-	creatorsMap, updatersMap := s.buildAuditMaps(items)
-	return toKepegawaianKontakResponses(items, creatorsMap, updatersMap), nil
+	creatorsMap, updatersMap := s.buildAuditMaps(ctx, items)
+	return dto.ToKepegawaianKontakListResponse(items, creatorsMap, updatersMap), nil
 }
 
 // ─── List ───────────────────────────────────────────────────────────────────────────────
 func (s *service) ListKontak(ctx context.Context, page, pageSize int, filter *dto.FilterKepegawaianKontakRequest, actor he.AuthContext) ([]dto.KepegawaianKontakResponse, int64, error) {
-	can, err := s.canReadKepegawaianKontak(actor)
+	can, err := s.canReadKepegawaianKontak(ctx, actor)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal cek akses")
 	}
@@ -112,21 +112,21 @@ func (s *service) ListKontak(ctx context.Context, page, pageSize int, filter *dt
 	if page < 1 {
 		page = 1
 	}
-	if pageSize < 1 || pageSize > 100 {
-		pageSize = 10
+	if pageSize < 1 || pageSize > s.cfg.DefaultPageSizeMax {
+		pageSize = s.cfg.DefaultPageSizeMax
 	}
 	items, total, err := s.repo.ListKontak(ctx, page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	creatorsMap, updatersMap := s.buildAuditMaps(items)
+	creatorsMap, updatersMap := s.buildAuditMaps(ctx, items)
 	return dto.ToKepegawaianKontakListResponse(items, creatorsMap, updatersMap), total, nil
 }
 
 // ─── Update ───────────────────────────────────────────────────────────────────────────────
 func (s *service) UpdateKontak(ctx context.Context, id int64, req *dto.UpdateKepegawaianKontakRequest, actor he.AuthContext) (*dto.KepegawaianKontakResponse, error) {
-	can, err := s.canUpdateKepegawaianKontak(actor)
+	can, err := s.canUpdateKepegawaianKontak(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -164,8 +164,8 @@ func (s *service) UpdateKontak(ctx context.Context, id int64, req *dto.UpdateKep
 		return nil, err
 	}
 
-	creator := s.buildCreator(m.CreatedBy)
-	updater := s.buildCreator(m.UpdatedBy)
+	creator := s.buildCreator(ctx, m.CreatedBy)
+	updater := s.buildCreator(ctx, m.UpdatedBy)
 
 	return dto.ToKepegawaianKontakResponse(dto.KepegawaianKontakResponseParams{
 		KepegawaianKontak: m,
@@ -176,7 +176,7 @@ func (s *service) UpdateKontak(ctx context.Context, id int64, req *dto.UpdateKep
 
 // ─── Delete ───────────────────────────────────────────────────────────────────────────────
 func (s *service) DeleteKontak(ctx context.Context, id int64, actor he.AuthContext) error {
-	can, err := s.canDeleteKepegawaianKontak(actor)
+	can, err := s.canDeleteKepegawaianKontak(ctx, actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
 	}

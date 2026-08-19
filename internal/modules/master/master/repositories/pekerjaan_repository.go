@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"errors"
 
 	"neosim_go/internal/modules/master/master/dto"
@@ -13,14 +14,14 @@ import (
 // Pekerjaan
 // =====================================================================
 // ------------------Create---------------------------------------------
-func (r *repository) CreatePekerjaan(m *models.MasterPekerjaan) error {
-	return r.db.Create(m).Error
+func (r *repository) CreatePekerjaan(ctx context.Context, m *models.MasterPekerjaan) error {
+	return r.db.WithContext(ctx).Create(m).Error
 }
 
 // ------------------GetByID--------------------------------------------
-func (r *repository) GetByIDPekerjaan(id int64) (*models.MasterPekerjaan, error) {
+func (r *repository) GetByIDPekerjaan(ctx context.Context, id int64) (*models.MasterPekerjaan, error) {
 	var m models.MasterPekerjaan
-	result := r.db.Where("id = ?", id).
+	result := r.db.WithContext(ctx).Where("id = ?", id).
 		Where("master_pekerjaan.deleted_at IS NULL").First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
@@ -29,9 +30,9 @@ func (r *repository) GetByIDPekerjaan(id int64) (*models.MasterPekerjaan, error)
 }
 
 // ------------------GetByName------------------------------------------
-func (r *repository) GetByNamePekerjaan(name string) (*models.MasterPekerjaan, error) {
+func (r *repository) GetByNamePekerjaan(ctx context.Context, name string) (*models.MasterPekerjaan, error) {
 	var m models.MasterPekerjaan
-	result := r.db.Where("name = ?", name).Where("master_pekerjaan.deleted_at IS NULL").First(&m)
+	result := r.db.WithContext(ctx).Where("name = ?", name).Where("master_pekerjaan.deleted_at IS NULL").First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -39,11 +40,11 @@ func (r *repository) GetByNamePekerjaan(name string) (*models.MasterPekerjaan, e
 }
 
 // ------------------List-----------------------------------------------
-func (r *repository) ListPekerjaan(page, pageSize int, filter *dto.FilterMasterPekerjaanRequest) ([]models.MasterPekerjaan, int64, error) {
+func (r *repository) ListPekerjaan(ctx context.Context, page, pageSize int, filter *dto.FilterMasterPekerjaanRequest) ([]models.MasterPekerjaan, int64, error) {
 	var items []models.MasterPekerjaan
 	var total int64
 
-	query := r.db.Model(&models.MasterPekerjaan{}).Where("master_pekerjaan.deleted_at IS NULL")
+	query := r.db.WithContext(ctx).Model(&models.MasterPekerjaan{}).Where("master_pekerjaan.deleted_at IS NULL")
 
 	if filter != nil && filter.Name != "" {
 		query = query.Where("name ILIKE ?", "%"+filter.Name+"%")
@@ -66,11 +67,11 @@ func (r *repository) ListPekerjaan(page, pageSize int, filter *dto.FilterMasterP
 }
 
 // ------------------Update---------------------------------------------
-func (r *repository) UpdatePekerjaan(m *models.MasterPekerjaan) error {
-	return r.db.Save(m).Error
+func (r *repository) UpdatePekerjaan(ctx context.Context, m *models.MasterPekerjaan) error {
+	return r.db.WithContext(ctx).Save(m).Error
 }
 
 // ------------------Delete---------------------------------------------
-func (r *repository) DeletePekerjaan(id int64) error {
-	return r.db.Where("id = ?", id).Delete(&models.MasterPekerjaan{}).Error
+func (r *repository) DeletePekerjaan(ctx context.Context, id int64) error {
+	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&models.MasterPekerjaan{}).Error
 } // ===================================================================

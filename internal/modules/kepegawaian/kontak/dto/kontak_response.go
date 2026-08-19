@@ -55,11 +55,11 @@ func ToKepegawaianKontakListResponse(
 	for _, m := range items {
 		var creator, updater *he.UserData
 
-		if creatorsMap != nil {
-			creator = creatorsMap[m.ID]
+		if creatorsMap != nil && m.CreatedBy != nil {
+			creator = creatorsMap[*m.CreatedBy]
 		}
-		if updatersMap != nil {
-			updater = updatersMap[m.ID]
+		if updatersMap != nil && m.UpdatedBy != nil {
+			updater = updatersMap[*m.UpdatedBy]
 		}
 
 		responses = append(responses, *ToKepegawaianKontakResponse(KepegawaianKontakResponseParams{

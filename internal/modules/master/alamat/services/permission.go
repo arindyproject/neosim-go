@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	rbacMiddlewares "neosim_go/internal/modules/rbac/middlewares"
 	rbacModels "neosim_go/internal/modules/rbac/models"
 	he "neosim_go/internal/shared/httputil"
@@ -12,40 +13,40 @@ import (
 // Jika suatu saat ada entitas yang butuh permission berbeda,
 // tambahkan fungsi baru di sini tanpa menyentuh file entitas.
 
-func (s *service) canCreateMasterAlamat(actor he.AuthContext) (bool, error) {
+func (s *service) canCreateMasterAlamat(ctx context.Context, actor he.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
 	}
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermMasterCreate); err != nil || has {
+	if has, err := rbacMiddlewares.HasPermission(ctx, s.rbacRepo, actor.UserID, rbacModels.PermMasterCreate); err != nil || has {
 		return has, err
 	}
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermMasterManage); err != nil || has {
+	if has, err := rbacMiddlewares.HasPermission(ctx, s.rbacRepo, actor.UserID, rbacModels.PermMasterManage); err != nil || has {
 		return has, err
 	}
 	return false, nil
 }
 
-func (s *service) canUpdateMasterAlamat(actor he.AuthContext) (bool, error) {
+func (s *service) canUpdateMasterAlamat(ctx context.Context, actor he.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
 	}
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermMasterUpdate); err != nil || has {
+	if has, err := rbacMiddlewares.HasPermission(ctx, s.rbacRepo, actor.UserID, rbacModels.PermMasterUpdate); err != nil || has {
 		return has, err
 	}
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermMasterManage); err != nil || has {
+	if has, err := rbacMiddlewares.HasPermission(ctx, s.rbacRepo, actor.UserID, rbacModels.PermMasterManage); err != nil || has {
 		return has, err
 	}
 	return false, nil
 }
 
-func (s *service) canDeleteMasterAlamat(actor he.AuthContext) (bool, error) {
+func (s *service) canDeleteMasterAlamat(ctx context.Context, actor he.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
 	}
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermMasterDelete); err != nil || has {
+	if has, err := rbacMiddlewares.HasPermission(ctx, s.rbacRepo, actor.UserID, rbacModels.PermMasterDelete); err != nil || has {
 		return has, err
 	}
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermMasterManage); err != nil || has {
+	if has, err := rbacMiddlewares.HasPermission(ctx, s.rbacRepo, actor.UserID, rbacModels.PermMasterManage); err != nil || has {
 		return has, err
 	}
 	return false, nil

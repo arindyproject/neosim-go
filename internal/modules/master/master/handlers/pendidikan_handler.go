@@ -35,7 +35,7 @@ func (h *MasterHandler) ListPendidikan(c *echo.Context) error {
 		Name:         c.QueryParam("name"),
 	}
 
-	items, total, err := h.service.ListPendidikan(page, pageSize, &filter)
+	items, total, err := h.service.ListPendidikan(c.Request().Context(), page, pageSize, &filter)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
 	}
@@ -63,7 +63,7 @@ func (h *MasterHandler) GetByIDPendidikan(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 
-	item, err := h.service.GetByIDPendidikan(id)
+	item, err := h.service.GetByIDPendidikan(c.Request().Context(), id)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -95,7 +95,7 @@ func (h *MasterHandler) CreatePendidikan(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.CreatePendidikan(&req, actor)
+	item, err := h.service.CreatePendidikan(c.Request().Context(), &req, actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
@@ -133,7 +133,7 @@ func (h *MasterHandler) UpdatePendidikan(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.UpdatePendidikan(id, &req, actor)
+	item, err := h.service.UpdatePendidikan(c.Request().Context(), id, &req, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -162,7 +162,7 @@ func (h *MasterHandler) DeletePendidikan(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	err = h.service.DeletePendidikan(id, actor)
+	err = h.service.DeletePendidikan(c.Request().Context(), id, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}

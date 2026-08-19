@@ -33,8 +33,8 @@ func (f *KepegawaianIdentifierFactory) Make() *models.KepegawaianIdentifier {
 	now := time.Now()
 	tanggalTerbit := now.AddDate(-1, 0, 0)
 	tanggalExpired := now.AddDate(4, 0, 0)
-	createdBy := int64(1)
-	updatedBy := int64(1)
+	createdBy := int64(rng.Intn(99) + 1)
+	updatedBy := int64(rng.Intn(99) + 1)
 
 	item := &models.KepegawaianIdentifier{
 		PegawaiID:      pegawaiID,

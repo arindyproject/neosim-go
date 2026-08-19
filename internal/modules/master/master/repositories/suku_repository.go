@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"errors"
 
 	"neosim_go/internal/modules/master/master/dto"
@@ -13,14 +14,14 @@ import (
 // Suku
 // =====================================================================
 // ------------------Create---------------------------------------------
-func (r *repository) CreateSuku(m *models.MasterSuku) error {
-	return r.db.Create(m).Error
+func (r *repository) CreateSuku(ctx context.Context, m *models.MasterSuku) error {
+	return r.db.WithContext(ctx).Create(m).Error
 }
 
 // ------------------GetByID--------------------------------------------
-func (r *repository) GetByIDSuku(id int64) (*models.MasterSuku, error) {
+func (r *repository) GetByIDSuku(ctx context.Context, id int64) (*models.MasterSuku, error) {
 	var m models.MasterSuku
-	result := r.db.Where("id = ?", id).
+	result := r.db.WithContext(ctx).Where("id = ?", id).
 		Where("master_suku.deleted_at IS NULL").First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
@@ -29,9 +30,9 @@ func (r *repository) GetByIDSuku(id int64) (*models.MasterSuku, error) {
 }
 
 // ------------------GetByName------------------------------------------
-func (r *repository) GetByNameSuku(name string) (*models.MasterSuku, error) {
+func (r *repository) GetByNameSuku(ctx context.Context, name string) (*models.MasterSuku, error) {
 	var m models.MasterSuku
-	result := r.db.Where("name = ?", name).Where("master_suku.deleted_at IS NULL").First(&m)
+	result := r.db.WithContext(ctx).Where("name = ?", name).Where("master_suku.deleted_at IS NULL").First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -39,11 +40,11 @@ func (r *repository) GetByNameSuku(name string) (*models.MasterSuku, error) {
 }
 
 // ------------------List-----------------------------------------------
-func (r *repository) ListSuku(page, pageSize int, filter *dto.FilterMasterSukuRequest) ([]models.MasterSuku, int64, error) {
+func (r *repository) ListSuku(ctx context.Context, page, pageSize int, filter *dto.FilterMasterSukuRequest) ([]models.MasterSuku, int64, error) {
 	var items []models.MasterSuku
 	var total int64
 
-	query := r.db.Model(&models.MasterSuku{}).Where("master_suku.deleted_at IS NULL")
+	query := r.db.WithContext(ctx).Model(&models.MasterSuku{}).Where("master_suku.deleted_at IS NULL")
 
 	if filter != nil && filter.Name != "" {
 		query = query.Where("name ILIKE ?", "%"+filter.Name+"%")
@@ -66,11 +67,11 @@ func (r *repository) ListSuku(page, pageSize int, filter *dto.FilterMasterSukuRe
 }
 
 // ------------------Update---------------------------------------------
-func (r *repository) UpdateSuku(m *models.MasterSuku) error {
-	return r.db.Save(m).Error
+func (r *repository) UpdateSuku(ctx context.Context, m *models.MasterSuku) error {
+	return r.db.WithContext(ctx).Save(m).Error
 }
 
 // ------------------Delete---------------------------------------------
-func (r *repository) DeleteSuku(id int64) error {
-	return r.db.Where("id = ?", id).Delete(&models.MasterSuku{}).Error
+func (r *repository) DeleteSuku(ctx context.Context, id int64) error {
+	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&models.MasterSuku{}).Error
 } // ===================================================================

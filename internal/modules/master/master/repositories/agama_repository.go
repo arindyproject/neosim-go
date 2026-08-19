@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"errors"
 
 	"neosim_go/internal/modules/master/master/dto"
@@ -13,14 +14,14 @@ import (
 // Agama
 // =====================================================================
 // ------------------Create---------------------------------------------
-func (r *repository) CreateAgama(m *models.MasterAgama) error {
-	return r.db.Create(m).Error
+func (r *repository) CreateAgama(ctx context.Context, m *models.MasterAgama) error {
+	return r.db.WithContext(ctx).Create(m).Error
 }
 
 // ------------------GetByID--------------------------------------------
-func (r *repository) GetByIDAgama(id int64) (*models.MasterAgama, error) {
+func (r *repository) GetByIDAgama(ctx context.Context, id int64) (*models.MasterAgama, error) {
 	var m models.MasterAgama
-	result := r.db.Where("id = ?", id).
+	result := r.db.WithContext(ctx).Where("id = ?", id).
 		Where("master_agama.deleted_at IS NULL").First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
@@ -29,9 +30,9 @@ func (r *repository) GetByIDAgama(id int64) (*models.MasterAgama, error) {
 }
 
 // ------------------GetByName------------------------------------------
-func (r *repository) GetByNameAgama(name string) (*models.MasterAgama, error) {
+func (r *repository) GetByNameAgama(ctx context.Context, name string) (*models.MasterAgama, error) {
 	var m models.MasterAgama
-	result := r.db.Where("name = ?", name).Where("master_agama.deleted_at IS NULL").First(&m)
+	result := r.db.WithContext(ctx).Where("name = ?", name).Where("master_agama.deleted_at IS NULL").First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -39,11 +40,11 @@ func (r *repository) GetByNameAgama(name string) (*models.MasterAgama, error) {
 }
 
 // ------------------List-----------------------------------------------
-func (r *repository) ListAgama(page, pageSize int, filter *dto.FilterMasterAgamaRequest) ([]models.MasterAgama, int64, error) {
+func (r *repository) ListAgama(ctx context.Context, page, pageSize int, filter *dto.FilterMasterAgamaRequest) ([]models.MasterAgama, int64, error) {
 	var items []models.MasterAgama
 	var total int64
 
-	query := r.db.Model(&models.MasterAgama{}).Where("master_agama.deleted_at IS NULL")
+	query := r.db.WithContext(ctx).Model(&models.MasterAgama{}).Where("master_agama.deleted_at IS NULL")
 
 	if filter != nil && filter.Name != "" {
 		query = query.Where("name ILIKE ?", "%"+filter.Name+"%")
@@ -66,11 +67,11 @@ func (r *repository) ListAgama(page, pageSize int, filter *dto.FilterMasterAgama
 }
 
 // ------------------Update---------------------------------------------
-func (r *repository) UpdateAgama(m *models.MasterAgama) error {
-	return r.db.Save(m).Error
+func (r *repository) UpdateAgama(ctx context.Context, m *models.MasterAgama) error {
+	return r.db.WithContext(ctx).Save(m).Error
 }
 
 // ------------------Delete---------------------------------------------
-func (r *repository) DeleteAgama(id int64) error {
-	return r.db.Where("id = ?", id).Delete(&models.MasterAgama{}).Error
+func (r *repository) DeleteAgama(ctx context.Context, id int64) error {
+	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&models.MasterAgama{}).Error
 } // ===================================================================

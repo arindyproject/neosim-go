@@ -25,7 +25,7 @@ import (
 
 // CreateUser --------------------------------------------------------------------
 func (s *service) CreateUser(ctx context.Context, req *dto.CreateUserRequest, actor he.AuthContext) (*dto.UserSimpleResponse, error) {
-	can, err := s.canCreateUser(actor)
+	can, err := s.canCreateUser(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -82,7 +82,7 @@ func (s *service) CreateUser(ctx context.Context, req *dto.CreateUserRequest, ac
 		return nil, appErrors.Internal("gagal membuat user")
 	}
 
-	roles, _ := s.buildUserRBAC(user.ID)
+	roles, _ := s.buildUserRBAC(ctx, user.ID)
 
 	return dto.ToUserSimpleResponse(dto.UserSimpleResponseParams{
 		User:  user,
@@ -92,7 +92,7 @@ func (s *service) CreateUser(ctx context.Context, req *dto.CreateUserRequest, ac
 
 // GetUserByID -------------------------------------------------------------------
 func (s *service) GetUserByID(ctx context.Context, id int64, actor he.AuthContext) (*dto.UserResponse, error) {
-	can, err := s.canReadUser(actor, id)
+	can, err := s.canReadUser(ctx, actor, id)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -106,13 +106,13 @@ func (s *service) GetUserByID(ctx context.Context, id int64, actor he.AuthContex
 	}
 
 	// Ambil RBAC data
-	roles, permissions := s.buildUserRBAC(user.ID)
+	roles, permissions := s.buildUserRBAC(ctx, user.ID)
 
 	// Ambil creator
 	creator := s.buildCreator(ctx, user.CreatedBy)
 
 	// Ambil login histories
-	histories, _ := s.authRepo.GetUserLoginHistories(user.ID, 10)
+	histories, _ := s.authRepo.GetUserLoginHistories(ctx, user.ID, 10)
 
 	return dto.ToUserResponse(dto.UserResponseParams{
 		User:        user,
@@ -131,14 +131,14 @@ func (s *service) GetUserByUsername(ctx context.Context, username string, actor 
 		return nil, appErrors.NotFound("user tidak ditemukan")
 	}
 
-	can, err := s.canReadUser(actor, user.ID)
+	can, err := s.canReadUser(ctx, actor, user.ID)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
 
-	roles, permissions := s.buildUserRBAC(user.ID)
+	roles, permissions := s.buildUserRBAC(ctx, user.ID)
 	creator := s.buildCreator(ctx, user.CreatedBy)
-	histories, _ := s.authRepo.GetUserLoginHistories(user.ID, 10)
+	histories, _ := s.authRepo.GetUserLoginHistories(ctx, user.ID, 10)
 
 	return dto.ToUserResponse(dto.UserResponseParams{
 		User:        user,
@@ -156,14 +156,14 @@ func (s *service) GetUserByEmail(ctx context.Context, email string, actor he.Aut
 		return nil, appErrors.NotFound("user tidak ditemukan")
 	}
 
-	can, err := s.canReadUser(actor, user.ID)
+	can, err := s.canReadUser(ctx, actor, user.ID)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
 
-	roles, permissions := s.buildUserRBAC(user.ID)
+	roles, permissions := s.buildUserRBAC(ctx, user.ID)
 	creator := s.buildCreator(ctx, user.CreatedBy)
-	histories, _ := s.authRepo.GetUserLoginHistories(user.ID, 10)
+	histories, _ := s.authRepo.GetUserLoginHistories(ctx, user.ID, 10)
 
 	return dto.ToUserResponse(dto.UserResponseParams{
 		User:        user,
@@ -203,14 +203,14 @@ func (s *service) ListUsers(ctx context.Context, page, pageSize int, filter *dto
 	}
 
 	// 2. Ambil data roles secara batch (Hanya 1x query tambahan, bukan N kali)
-	userRolesMap := s.buildUsersRBAC(userIDs)
+	userRolesMap := s.buildUsersRBAC(ctx, userIDs)
 
 	return dto.ToUserListResponse(users, userRolesMap), total, nil
 } // ListUsers -------------------------------------------------------------------
 
 // UpdateUser --------------------------------------------------------------------
 func (s *service) UpdateUser(ctx context.Context, id int64, req *dto.UpdateUserRequest, actor he.AuthContext) (*dto.UserResponse, error) {
-	can, err := s.canUpdateUser(actor, id)
+	can, err := s.canUpdateUser(ctx, actor, id)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -248,9 +248,9 @@ func (s *service) UpdateUser(ctx context.Context, id int64, req *dto.UpdateUserR
 		return nil, appErrors.Internal("gagal mengupdate user")
 	}
 
-	roles, permissions := s.buildUserRBAC(user.ID)
+	roles, permissions := s.buildUserRBAC(ctx, user.ID)
 	creator := s.buildCreator(ctx, user.CreatedBy)
-	histories, _ := s.authRepo.GetUserLoginHistories(user.ID, 10)
+	histories, _ := s.authRepo.GetUserLoginHistories(ctx, user.ID, 10)
 
 	return dto.ToUserResponse(dto.UserResponseParams{
 		User:        user,
@@ -263,7 +263,7 @@ func (s *service) UpdateUser(ctx context.Context, id int64, req *dto.UpdateUserR
 
 // DeleteUser --------------------------------------------------------------------
 func (s *service) DeleteUser(ctx context.Context, id int64, reason string, actor he.AuthContext) error {
-	can, err := s.canDeleteUser(actor)
+	can, err := s.canDeleteUser(ctx, actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
 	}
@@ -286,7 +286,7 @@ func (s *service) DeleteUser(ctx context.Context, id int64, reason string, actor
 
 // ListDeletedUsers --------------------------------------------------------------
 func (s *service) ListDeletedUsers(ctx context.Context, page, pageSize int, filter *dto.UserDeletedFilter, actor he.AuthContext) ([]dto.UserDeletedResponse, int64, error) {
-	can, err := s.canDeleteUser(actor)
+	can, err := s.canDeleteUser(ctx, actor)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal cek akses")
 	}
@@ -320,7 +320,7 @@ func (s *service) ListDeletedUsers(ctx context.Context, page, pageSize int, filt
 	}
 
 	// 2. Ambil data roles secara batch (Hanya 1x query tambahan, bukan N kali)
-	userRolesMap := s.buildUsersRBAC(userIDs)
+	userRolesMap := s.buildUsersRBAC(ctx, userIDs)
 
 	// 3. Ambil data creator dan deleter secara batch untuk semua user yang dihapus
 	creatorsMap := make(map[int64]*models.UserCreator)
@@ -338,7 +338,7 @@ func (s *service) ListDeletedUsers(ctx context.Context, page, pageSize int, filt
 
 // ─── Settings ──────────────────────────────────────────────────────────────────
 func (s *service) GetSettings(ctx context.Context, id int64, actor he.AuthContext) ([]models.UserSetting, error) {
-	can, err := s.canUpdateUser(actor, id)
+	can, err := s.canUpdateUser(ctx, actor, id)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -350,7 +350,7 @@ func (s *service) GetSettings(ctx context.Context, id int64, actor he.AuthContex
 }
 
 func (s *service) UpdateSettings(ctx context.Context, id int64, req *dto.UpdateSettingsRequest, actor he.AuthContext) (*dto.UserResponse, error) {
-	can, err := s.canUpdateUser(actor, id)
+	can, err := s.canUpdateUser(ctx, actor, id)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -380,9 +380,9 @@ func (s *service) UpdateSettings(ctx context.Context, id int64, req *dto.UpdateS
 		return nil, appErrors.NotFound("user tidak ditemukan setelah update settings")
 	}
 
-	roles, permissions := s.buildUserRBAC(user.ID)
+	roles, permissions := s.buildUserRBAC(ctx, user.ID)
 	creator := s.buildCreator(ctx, user.CreatedBy)
-	histories, _ := s.authRepo.GetUserLoginHistories(user.ID, 10)
+	histories, _ := s.authRepo.GetUserLoginHistories(ctx, user.ID, 10)
 
 	return dto.ToUserResponse(dto.UserResponseParams{
 		User:        user,
@@ -422,9 +422,9 @@ func (s *service) ChangePassword(ctx context.Context, id int64, req *dto.ChangeP
 		return nil, appErrors.Internal("gagal mengupdate password")
 	}
 
-	roles, permissions := s.buildUserRBAC(user.ID)
+	roles, permissions := s.buildUserRBAC(ctx, user.ID)
 	creator := s.buildCreator(ctx, user.CreatedBy)
-	histories, _ := s.authRepo.GetUserLoginHistories(user.ID, 10)
+	histories, _ := s.authRepo.GetUserLoginHistories(ctx, user.ID, 10)
 
 	return dto.ToUserResponse(dto.UserResponseParams{
 		User:        user,
@@ -439,7 +439,7 @@ func (s *service) ChangePassword(ctx context.Context, id int64, req *dto.ChangeP
 func (s *service) ResetPassword(ctx context.Context, id int64, actor he.AuthContext) error {
 	cfg := config.LoadConfig()
 
-	can, err := s.canDeleteUser(actor) // Cek akses superadmin
+	can, err := s.canDeleteUser(ctx, actor) // Cek akses superadmin
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
 	}
@@ -466,7 +466,7 @@ func (s *service) ResetPassword(ctx context.Context, id int64, actor he.AuthCont
 
 // ─── Upload Foto ───────────────────────────────────────────────────────────────
 func (s *service) UploadPhoto(ctx context.Context, id int64, filename string, reader io.Reader, actor he.AuthContext) (*dto.UserResponse, error) {
-	can, err := s.canUpdateUser(actor, id)
+	can, err := s.canUpdateUser(ctx, actor, id)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -543,9 +543,9 @@ func (s *service) UploadPhoto(ctx context.Context, id int64, filename string, re
 	// CATATAN: BLOK KODE DI BAWAH INI YANG SEBELUMNYA DUPLIKAT SUDAH DIHAPUS
 	// (s.repo.Update(user) yang kedua dibuang)
 
-	roles, permissions := s.buildUserRBAC(user.ID)
+	roles, permissions := s.buildUserRBAC(ctx, user.ID)
 	creator := s.buildCreator(ctx, user.CreatedBy)
-	histories, _ := s.authRepo.GetUserLoginHistories(user.ID, 10)
+	histories, _ := s.authRepo.GetUserLoginHistories(ctx, user.ID, 10)
 
 	return dto.ToUserResponse(dto.UserResponseParams{
 		User:        user,
@@ -558,7 +558,7 @@ func (s *service) UploadPhoto(ctx context.Context, id int64, filename string, re
 
 // ─── Delete Photo ──────────────────────────────────────────────────────────────
 func (s *service) DeletePhoto(ctx context.Context, id int64, actor he.AuthContext) (*dto.UserResponse, error) {
-	can, err := s.canUpdateUser(actor, id)
+	can, err := s.canUpdateUser(ctx, actor, id)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -601,9 +601,9 @@ func (s *service) DeletePhoto(ctx context.Context, id int64, actor he.AuthContex
 		}
 	}(oldPhoto, oldThumbnail)
 
-	roles, permissions := s.buildUserRBAC(user.ID)
+	roles, permissions := s.buildUserRBAC(ctx, user.ID)
 	creator := s.buildCreator(ctx, user.CreatedBy)
-	histories, _ := s.authRepo.GetUserLoginHistories(user.ID, 10)
+	histories, _ := s.authRepo.GetUserLoginHistories(ctx, user.ID, 10)
 
 	return dto.ToUserResponse(dto.UserResponseParams{
 		User:        user,

@@ -1916,7 +1916,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "kepegawaian/kontak"
+                    "kepegawaian/kontak/tipe"
                 ],
                 "summary": "Get list of Tipe",
                 "parameters": [
@@ -1983,7 +1983,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "kepegawaian/kontak"
+                    "kepegawaian/kontak/tipe"
                 ],
                 "summary": "Create Tipe",
                 "parameters": [
@@ -2034,7 +2034,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "kepegawaian/kontak"
+                    "kepegawaian/kontak/tipe"
                 ],
                 "summary": "Get Tipe",
                 "parameters": [
@@ -2081,7 +2081,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "kepegawaian/kontak"
+                    "kepegawaian/kontak/tipe"
                 ],
                 "summary": "Update Tipe",
                 "parameters": [
@@ -2137,7 +2137,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "kepegawaian/kontak"
+                    "kepegawaian/kontak/tipe"
                 ],
                 "summary": "Delete Tipe",
                 "parameters": [
@@ -8681,7 +8681,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "created_by": {
-                    "type": "integer"
+                    "$ref": "#/definitions/httputil.UserData"
                 },
                 "description": {
                     "type": "string"
@@ -8696,7 +8696,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_by": {
-                    "type": "integer"
+                    "$ref": "#/definitions/httputil.UserData"
                 }
             }
         },

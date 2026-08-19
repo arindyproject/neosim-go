@@ -18,7 +18,7 @@ import (
 
 // ── Create ────────────────────────────────────────────────────────────────────
 func (s *service) CreateTipe(ctx context.Context, req *dto.CreateTipeRequest, actor he.AuthContext) (*dto.TipeResponse, error) {
-	can, err := s.canCreateTipe(actor)
+	can, err := s.canCreateTipe(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -56,7 +56,7 @@ func (s *service) CreateTipe(ctx context.Context, req *dto.CreateTipeRequest, ac
 		return nil, err
 	}
 
-	creator := s.buildCreator(m.CreatedBy)
+	creator := s.buildCreator(ctx, m.CreatedBy)
 
 	return dto.ToTipeResponse(dto.TipeResponseParams{
 		Tipe:    m,
@@ -67,7 +67,7 @@ func (s *service) CreateTipe(ctx context.Context, req *dto.CreateTipeRequest, ac
 
 // ── GetByID ───────────────────────────────────────────────────────────────────
 func (s *service) GetTipeByID(ctx context.Context, id int64, actor he.AuthContext) (*dto.TipeResponse, error) {
-	can, err := s.canReadTipe(actor)
+	can, err := s.canReadTipe(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -84,8 +84,8 @@ func (s *service) GetTipeByID(ctx context.Context, id int64, actor he.AuthContex
 		return nil, errors.New("Tipe tidak ditemukan")
 	}
 
-	creator := s.buildCreator(m.CreatedBy)
-	updater := s.buildCreator(m.UpdatedBy)
+	creator := s.buildCreator(ctx, m.CreatedBy)
+	updater := s.buildCreator(ctx, m.UpdatedBy)
 
 	return dto.ToTipeResponse(dto.TipeResponseParams{
 		Tipe:    m,
@@ -96,7 +96,7 @@ func (s *service) GetTipeByID(ctx context.Context, id int64, actor he.AuthContex
 
 // ── GetByCode ─────────────────────────────────────────────────────────────────
 func (s *service) GetTipeByCode(ctx context.Context, code string, actor he.AuthContext) (*dto.TipeResponse, error) {
-	can, err := s.canReadTipe(actor)
+	can, err := s.canReadTipe(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -113,8 +113,8 @@ func (s *service) GetTipeByCode(ctx context.Context, code string, actor he.AuthC
 		return nil, errors.New("Tipe tidak ditemukan")
 	}
 
-	creator := s.buildCreator(m.CreatedBy)
-	updater := s.buildCreator(m.UpdatedBy)
+	creator := s.buildCreator(ctx, m.CreatedBy)
+	updater := s.buildCreator(ctx, m.UpdatedBy)
 
 	return dto.ToTipeResponse(dto.TipeResponseParams{
 		Tipe:    m,
@@ -125,7 +125,7 @@ func (s *service) GetTipeByCode(ctx context.Context, code string, actor he.AuthC
 
 // ── GetByLabel ────────────────────────────────────────────────────────────────
 func (s *service) GetTipeByLabel(ctx context.Context, label string, actor he.AuthContext) (*dto.TipeResponse, error) {
-	can, err := s.canReadTipe(actor)
+	can, err := s.canReadTipe(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -142,8 +142,8 @@ func (s *service) GetTipeByLabel(ctx context.Context, label string, actor he.Aut
 		return nil, errors.New("Tipe tidak ditemukan")
 	}
 
-	creator := s.buildCreator(m.CreatedBy)
-	updater := s.buildCreator(m.UpdatedBy)
+	creator := s.buildCreator(ctx, m.CreatedBy)
+	updater := s.buildCreator(ctx, m.UpdatedBy)
 
 	return dto.ToTipeResponse(dto.TipeResponseParams{
 		Tipe:    m,
@@ -154,7 +154,7 @@ func (s *service) GetTipeByLabel(ctx context.Context, label string, actor he.Aut
 
 // ── List ──────────────────────────────────────────────────────────────────────
 func (s *service) ListTipe(ctx context.Context, page, pageSize int, filter *dto.FilterTipeRequest, actor he.AuthContext) ([]dto.TipeResponse, int64, error) {
-	can, err := s.canReadTipe(actor)
+	can, err := s.canReadTipe(ctx, actor)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal cek akses")
 	}
@@ -174,13 +174,13 @@ func (s *service) ListTipe(ctx context.Context, page, pageSize int, filter *dto.
 		return nil, 0, err
 	}
 
-	creatorsMap, updatersMap := s.buildAuditMapsForTipe(items)
+	creatorsMap, updatersMap := s.buildAuditMapsForTipe(ctx, items)
 	return dto.ToTipeListResponse(items, creatorsMap, updatersMap), total, nil
 }
 
 // ── Update ────────────────────────────────────────────────────────────────────
 func (s *service) UpdateTipe(ctx context.Context, id int64, req *dto.UpdateTipeRequest, actor he.AuthContext) (*dto.TipeResponse, error) {
-	can, err := s.canUpdateTipe(actor)
+	can, err := s.canUpdateTipe(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -233,8 +233,8 @@ func (s *service) UpdateTipe(ctx context.Context, id int64, req *dto.UpdateTipeR
 		return nil, err
 	}
 
-	creator := s.buildCreator(m.CreatedBy)
-	updater := s.buildCreator(m.UpdatedBy)
+	creator := s.buildCreator(ctx, m.CreatedBy)
+	updater := s.buildCreator(ctx, m.UpdatedBy)
 
 	return dto.ToTipeResponse(dto.TipeResponseParams{
 		Tipe:    m,
@@ -245,7 +245,7 @@ func (s *service) UpdateTipe(ctx context.Context, id int64, req *dto.UpdateTipeR
 
 // ── Delete ────────────────────────────────────────────────────────────────────
 func (s *service) DeleteTipe(ctx context.Context, id int64, actor he.AuthContext) error {
-	can, err := s.canDeleteTipe(actor)
+	can, err := s.canDeleteTipe(ctx, actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
 	}
@@ -266,9 +266,9 @@ func (s *service) DeleteTipe(ctx context.Context, id int64, actor he.AuthContext
 
 // ── helper khusus Tipe (nama fungsi unik agar tidak bentrok) ───────
 
-func (s *service) buildAuditMapsForTipe(items []models.Tipe) (map[int64]*he.UserData, map[int64]*he.UserData) {
+func (s *service) buildAuditMapsForTipe(ctx context.Context, items []models.Tipe) (map[int64]*he.UserData, map[int64]*he.UserData) {
 	fetchUser := func(id int64) (*he.UserData, error) {
-		user, err := s.userRepo.GetByID(id)
+		user, err := s.userRepo.GetByID(ctx, id)
 		if err != nil || user == nil {
 			return nil, err
 		}

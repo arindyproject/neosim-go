@@ -26,16 +26,22 @@ func (f *KepegawaianKontakFactory) With(field string, value interface{}) *Kepega
 
 func (f *KepegawaianKontakFactory) Make() *models.KepegawaianKontak {
 	idx := rng.Intn(999999)
-	name := fmt.Sprintf("KepegawaianKontak %d", idx)
+	pegawaiID := int64(rng.Intn(10) + 1)
+	tipeID := int64(rng.Intn(4) + 1)
+	nilai := fmt.Sprintf("3512345678%06d", idx)
 	desc := fmt.Sprintf("Deskripsi KepegawaianKontak %d", idx)
-
-	if v, ok := f.overrides["name"]; ok {
-		name = v.(string)
-	}
+	createdBy := int64(rng.Intn(99) + 1)
+	updatedBy := int64(rng.Intn(99) + 1)
 
 	return &models.KepegawaianKontak{
-		Name:        name,
+		PegawaiID:   pegawaiID,
+		TipeID:      tipeID,
+		Nilai:       nilai,
+		IsPrimary:   true,
+		IsAktif:     true,
 		Description: &desc,
+		CreatedBy:   &createdBy,
+		UpdatedBy:   &updatedBy,
 	}
 }
 

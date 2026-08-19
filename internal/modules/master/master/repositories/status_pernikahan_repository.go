@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"errors"
 
 	"neosim_go/internal/modules/master/master/dto"
@@ -13,14 +14,14 @@ import (
 // StatusPernikahan
 // =====================================================================
 // ------------------Create---------------------------------------------
-func (r *repository) CreateStatusPernikahan(m *models.MasterStatusPernikahan) error {
-	return r.db.Create(m).Error
+func (r *repository) CreateStatusPernikahan(ctx context.Context, m *models.MasterStatusPernikahan) error {
+	return r.db.WithContext(ctx).Create(m).Error
 }
 
 // ------------------GetByID--------------------------------------------
-func (r *repository) GetByIDStatusPernikahan(id int64) (*models.MasterStatusPernikahan, error) {
+func (r *repository) GetByIDStatusPernikahan(ctx context.Context, id int64) (*models.MasterStatusPernikahan, error) {
 	var m models.MasterStatusPernikahan
-	result := r.db.Where("id = ?", id).
+	result := r.db.WithContext(ctx).Where("id = ?", id).
 		Where("master_status_pernikahan.deleted_at IS NULL").First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
@@ -29,9 +30,9 @@ func (r *repository) GetByIDStatusPernikahan(id int64) (*models.MasterStatusPern
 }
 
 // ------------------GetByName------------------------------------------
-func (r *repository) GetByNameStatusPernikahan(name string) (*models.MasterStatusPernikahan, error) {
+func (r *repository) GetByNameStatusPernikahan(ctx context.Context, name string) (*models.MasterStatusPernikahan, error) {
 	var m models.MasterStatusPernikahan
-	result := r.db.Where("name = ?", name).Where("master_status_pernikahan.deleted_at IS NULL").First(&m)
+	result := r.db.WithContext(ctx).Where("name = ?", name).Where("master_status_pernikahan.deleted_at IS NULL").First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -40,11 +41,11 @@ func (r *repository) GetByNameStatusPernikahan(name string) (*models.MasterStatu
 
 // ------------------List-----------------------------------------------
 // PERBAIKAN TYPO: LisStatusPernikahan -> ListStatusPernikahan
-func (r *repository) ListStatusPernikahan(page, pageSize int, filter *dto.FilterMasterStatusPernikahanRequest) ([]models.MasterStatusPernikahan, int64, error) {
+func (r *repository) ListStatusPernikahan(ctx context.Context, page, pageSize int, filter *dto.FilterMasterStatusPernikahanRequest) ([]models.MasterStatusPernikahan, int64, error) {
 	var items []models.MasterStatusPernikahan
 	var total int64
 
-	query := r.db.Model(&models.MasterStatusPernikahan{}).Where("master_status_pernikahan.deleted_at IS NULL")
+	query := r.db.WithContext(ctx).Model(&models.MasterStatusPernikahan{}).Where("master_status_pernikahan.deleted_at IS NULL")
 
 	if filter != nil && filter.Name != "" {
 		query = query.Where("name ILIKE ?", "%"+filter.Name+"%")
@@ -67,11 +68,11 @@ func (r *repository) ListStatusPernikahan(page, pageSize int, filter *dto.Filter
 }
 
 // ------------------Update---------------------------------------------
-func (r *repository) UpdateStatusPernikahan(m *models.MasterStatusPernikahan) error {
-	return r.db.Save(m).Error
+func (r *repository) UpdateStatusPernikahan(ctx context.Context, m *models.MasterStatusPernikahan) error {
+	return r.db.WithContext(ctx).Save(m).Error
 }
 
 // ------------------Delete---------------------------------------------
-func (r *repository) DeleteStatusPernikahan(id int64) error {
-	return r.db.Where("id = ?", id).Delete(&models.MasterStatusPernikahan{}).Error
+func (r *repository) DeleteStatusPernikahan(ctx context.Context, id int64) error {
+	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&models.MasterStatusPernikahan{}).Error
 } // ===================================================================

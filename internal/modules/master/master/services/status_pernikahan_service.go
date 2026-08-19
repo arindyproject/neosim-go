@@ -10,18 +10,18 @@ import (
 )
 
 // ─────────────── GetByID ─────────────────────────────────────────────────────────
-func (s *service) GetByIDStatusPernikahan(id int64) (*dto.MasterStatusPernikahanResponse, error) {
-	ctx := context.Background()
+func (s *service) GetByIDStatusPernikahan(ctx context.Context, id int64) (*dto.MasterStatusPernikahanResponse, error) {
+	ctxs := context.Background()
 	cacheKey := cacheKeyStatusPernikahanDetail(id)
 
 	// 1. Cek Cache
 	var cachedRes dto.MasterStatusPernikahanResponse
-	if s.cache.Get(ctx, cacheKey, &cachedRes) {
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
 		return &cachedRes, nil
 	}
 
 	// 2. Hit Database
-	m, err := s.repo.GetByIDStatusPernikahan(id)
+	m, err := s.repo.GetByIDStatusPernikahan(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -32,13 +32,13 @@ func (s *service) GetByIDStatusPernikahan(id int64) (*dto.MasterStatusPernikahan
 	res := dto.ToMasterStatusPernikahanResponse(m)
 
 	// 3. Simpan ke Cache
-	s.cache.SetDefault(ctx, cacheKey, res)
+	s.cache.SetDefault(ctxs, cacheKey, res)
 	return res, nil
 }
 
 // ─────────────── List ────────────────────────────────────────────────────────────
-func (s *service) ListStatusPernikahan(page, pageSize int, filter *dto.FilterMasterStatusPernikahanRequest) ([]dto.MasterStatusPernikahanResponse, int64, error) {
-	ctx := context.Background()
+func (s *service) ListStatusPernikahan(ctx context.Context, page, pageSize int, filter *dto.FilterMasterStatusPernikahanRequest) ([]dto.MasterStatusPernikahanResponse, int64, error) {
+	ctxs := context.Background()
 	cacheKey := cacheKeyStatusPernikahanList(page, pageSize, filter)
 
 	// 1. Cek Cache
@@ -46,7 +46,7 @@ func (s *service) ListStatusPernikahan(page, pageSize int, filter *dto.FilterMas
 		Items []dto.MasterStatusPernikahanResponse `json:"items"`
 		Total int64                                `json:"total"`
 	}
-	if s.cache.Get(ctx, cacheKey, &cachedRes) {
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
 		if len(cachedRes.Items) == 0 {
 			return nil, 0, appErrors.NotFound("StatusPernikahan tidak ditemukan")
 		}
@@ -61,7 +61,7 @@ func (s *service) ListStatusPernikahan(page, pageSize int, filter *dto.FilterMas
 		pageSize = s.cfg.DefaultPageSize
 	}
 
-	items, total, err := s.repo.ListStatusPernikahan(page, pageSize, filter)
+	items, total, err := s.repo.ListStatusPernikahan(ctx, page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -72,7 +72,7 @@ func (s *service) ListStatusPernikahan(page, pageSize int, filter *dto.FilterMas
 	res := dto.ToMasterStatusPernikahanListResponse(items)
 
 	// 3. Simpan ke Cache
-	s.cache.SetDefault(ctx, cacheKey, struct {
+	s.cache.SetDefault(ctxs, cacheKey, struct {
 		Items []dto.MasterStatusPernikahanResponse `json:"items"`
 		Total int64                                `json:"total"`
 	}{Items: res, Total: total})
@@ -81,9 +81,9 @@ func (s *service) ListStatusPernikahan(page, pageSize int, filter *dto.FilterMas
 }
 
 // ─────────────── Create ──────────────────────────────────────────────────────────
-func (s *service) CreateStatusPernikahan(req *dto.CreateMasterStatusPernikahanRequest, actor he.AuthContext) (*dto.MasterStatusPernikahanResponse, error) {
+func (s *service) CreateStatusPernikahan(ctx context.Context, req *dto.CreateMasterStatusPernikahanRequest, actor he.AuthContext) (*dto.MasterStatusPernikahanResponse, error) {
 	// Permission Check
-	can, err := s.canCreateMaster(actor)
+	can, err := s.canCreateMaster(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -93,7 +93,7 @@ func (s *service) CreateStatusPernikahan(req *dto.CreateMasterStatusPernikahanRe
 	}
 
 	// Check Duplicate Name
-	data, err := s.repo.GetByNameStatusPernikahan(req.Name)
+	data, err := s.repo.GetByNameStatusPernikahan(ctx, req.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (s *service) CreateStatusPernikahan(req *dto.CreateMasterStatusPernikahanRe
 		CreatedBy:    &actor.UserID,
 		UpdatedBy:    &actor.UserID,
 	}
-	if err := s.repo.CreateStatusPernikahan(m); err != nil {
+	if err := s.repo.CreateStatusPernikahan(ctx, m); err != nil {
 		return nil, err
 	}
 
@@ -123,9 +123,9 @@ func (s *service) CreateStatusPernikahan(req *dto.CreateMasterStatusPernikahanRe
 }
 
 // ─────────────── Update ──────────────────────────────────────────────────────────
-func (s *service) UpdateStatusPernikahan(id int64, req *dto.UpdateMasterStatusPernikahanRequest, actor he.AuthContext) (*dto.MasterStatusPernikahanResponse, error) {
+func (s *service) UpdateStatusPernikahan(ctx context.Context, id int64, req *dto.UpdateMasterStatusPernikahanRequest, actor he.AuthContext) (*dto.MasterStatusPernikahanResponse, error) {
 	// Permission Check
-	can, err := s.canUpdateMaster(actor)
+	can, err := s.canUpdateMaster(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -135,14 +135,14 @@ func (s *service) UpdateStatusPernikahan(id int64, req *dto.UpdateMasterStatusPe
 	}
 
 	// Cek Keberadaan Data
-	existing, err := s.repo.GetByIDStatusPernikahan(id)
+	existing, err := s.repo.GetByIDStatusPernikahan(ctx, id)
 	if err != nil || existing == nil {
 		return nil, appErrors.NotFound("StatusPernikahan tidak ditemukan")
 	}
 
 	// Check Duplicate Name (jika ada perubahan)
 	if req.Name != nil && *req.Name != existing.Name {
-		data, err := s.repo.GetByNameStatusPernikahan(*req.Name)
+		data, err := s.repo.GetByNameStatusPernikahan(ctx, *req.Name)
 		if err != nil {
 			return nil, err
 		}
@@ -163,7 +163,7 @@ func (s *service) UpdateStatusPernikahan(id int64, req *dto.UpdateMasterStatusPe
 	}
 	existing.UpdatedBy = &actor.UserID
 
-	if err := s.repo.UpdateStatusPernikahan(existing); err != nil {
+	if err := s.repo.UpdateStatusPernikahan(ctx, existing); err != nil {
 		return nil, err
 	}
 
@@ -178,9 +178,9 @@ func (s *service) UpdateStatusPernikahan(id int64, req *dto.UpdateMasterStatusPe
 }
 
 // ─────────────── Delete ──────────────────────────────────────────────────────────
-func (s *service) DeleteStatusPernikahan(id int64, actor he.AuthContext) error {
+func (s *service) DeleteStatusPernikahan(ctx context.Context, id int64, actor he.AuthContext) error {
 	// Permission Check
-	can, err := s.canDeleteMaster(actor)
+	can, err := s.canDeleteMaster(ctx, actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
 	}
@@ -190,13 +190,13 @@ func (s *service) DeleteStatusPernikahan(id int64, actor he.AuthContext) error {
 	}
 
 	// Cek Keberadaan Data
-	existing, err := s.repo.GetByIDStatusPernikahan(id)
+	existing, err := s.repo.GetByIDStatusPernikahan(ctx, id)
 	if err != nil || existing == nil {
 		return appErrors.NotFound("StatusPernikahan tidak ditemukan")
 	}
 
 	// delete
-	err = s.repo.DeleteStatusPernikahan(id)
+	err = s.repo.DeleteStatusPernikahan(ctx, id)
 	if err != nil {
 		return err
 	}

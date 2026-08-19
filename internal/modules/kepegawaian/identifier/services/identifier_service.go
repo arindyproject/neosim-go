@@ -18,7 +18,7 @@ func (s *service) CreateIdentifier(
 	req *dto.CreateKepegawaianIdentifierRequest,
 	actor he.AuthContext,
 ) (*dto.KepegawaianIdentifierResponse, error) {
-	can, err := s.canCreateKepegawaianIdentifier(actor)
+	can, err := s.canCreateKepegawaianIdentifier(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -72,8 +72,8 @@ func (s *service) CreateIdentifier(
 	// Attach Tipe master untuk kebutuhan response mapping
 	m.Tipe = tipeMaster
 
-	creator := s.buildCreator(m.CreatedBy)
-	updater := s.buildCreator(m.UpdatedBy)
+	creator := s.buildCreator(ctx, m.CreatedBy)
+	updater := s.buildCreator(ctx, m.UpdatedBy)
 
 	return dto.ToKepegawaianIdentifierResponse(dto.KepegawaianIdentifierResponseParams{
 		KepegawaianIdentifier: m,
@@ -89,7 +89,7 @@ func (s *service) GetIdentifierByID(
 	id int64,
 	actor he.AuthContext,
 ) (*dto.KepegawaianIdentifierResponse, error) {
-	can, err := s.canReadKepegawaianIdentifier(actor)
+	can, err := s.canReadKepegawaianIdentifier(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -106,8 +106,8 @@ func (s *service) GetIdentifierByID(
 		return nil, appErrors.Wrap(http.StatusNotFound, "KepegawaianIdentifier tidak ditemukan.", nil)
 	}
 
-	creator := s.buildCreator(m.CreatedBy)
-	updater := s.buildCreator(m.UpdatedBy)
+	creator := s.buildCreator(ctx, m.CreatedBy)
+	updater := s.buildCreator(ctx, m.UpdatedBy)
 
 	return dto.ToKepegawaianIdentifierResponse(dto.KepegawaianIdentifierResponseParams{
 		KepegawaianIdentifier: m,
@@ -124,7 +124,7 @@ func (s *service) ListIdentifier(
 	filter *dto.FilterKepegawaianIdentifierRequest,
 	actor he.AuthContext,
 ) ([]dto.KepegawaianIdentifierResponse, int64, error) {
-	can, err := s.canReadKepegawaianIdentifier(actor)
+	can, err := s.canReadKepegawaianIdentifier(ctx, actor)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal cek akses")
 	}
@@ -145,7 +145,7 @@ func (s *service) ListIdentifier(
 		return nil, 0, appErrors.Internal("gagal mengambil daftar identifier")
 	}
 
-	creatorsMap, updatersMap := s.buildAuditMaps(items)
+	creatorsMap, updatersMap := s.buildAuditMaps(ctx, items)
 	return dto.ToKepegawaianIdentifierListResponse(items, creatorsMap, updatersMap), total, nil
 }
 
@@ -157,7 +157,7 @@ func (s *service) ListByPegawai(
 	page, pageSize int,
 	actor he.AuthContext,
 ) ([]dto.KepegawaianIdentifierResponse, int64, error) {
-	can, err := s.canReadKepegawaianIdentifier(actor)
+	can, err := s.canReadKepegawaianIdentifier(ctx, actor)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal cek akses")
 	}
@@ -179,7 +179,7 @@ func (s *service) ListByPegawai(
 		return nil, 0, appErrors.Internal("gagal mengambil identifier pegawai")
 	}
 
-	creatorsMap, updatersMap := s.buildAuditMaps(items)
+	creatorsMap, updatersMap := s.buildAuditMaps(ctx, items)
 	return dto.ToKepegawaianIdentifierListResponse(items, creatorsMap, updatersMap), total, nil
 }
 
@@ -191,7 +191,7 @@ func (s *service) UpdateIdentifier(
 	req *dto.UpdateKepegawaianIdentifierRequest,
 	actor he.AuthContext,
 ) (*dto.KepegawaianIdentifierResponse, error) {
-	can, err := s.canUpdateKepegawaianIdentifier(actor)
+	can, err := s.canUpdateKepegawaianIdentifier(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -269,8 +269,8 @@ func (s *service) UpdateIdentifier(
 		return nil, appErrors.Internal("gagal menyimpan perubahan identifier")
 	}
 
-	creator := s.buildCreator(m.CreatedBy)
-	updater := s.buildCreator(m.UpdatedBy)
+	creator := s.buildCreator(ctx, m.CreatedBy)
+	updater := s.buildCreator(ctx, m.UpdatedBy)
 
 	return dto.ToKepegawaianIdentifierResponse(dto.KepegawaianIdentifierResponseParams{
 		KepegawaianIdentifier: m,
@@ -286,7 +286,7 @@ func (s *service) DeleteIdentifier(
 	id int64,
 	actor he.AuthContext,
 ) error {
-	can, err := s.canDeleteKepegawaianIdentifier(actor)
+	can, err := s.canDeleteKepegawaianIdentifier(ctx, actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
 	}
@@ -332,7 +332,7 @@ func (s *service) GetExpiringSoonIdentifier(
 	days int,
 	actor he.AuthContext,
 ) ([]dto.KepegawaianIdentifierResponse, error) {
-	can, err := s.canReadKepegawaianIdentifier(actor)
+	can, err := s.canReadKepegawaianIdentifier(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -349,7 +349,7 @@ func (s *service) GetExpiringSoonIdentifier(
 	if err != nil {
 		return nil, appErrors.Internal("gagal mengambil data identifier yang akan expired")
 	}
-	creatorsMap, updatersMap := s.buildAuditMaps(items)
+	creatorsMap, updatersMap := s.buildAuditMaps(ctx, items)
 	return dto.ToKepegawaianIdentifierListResponse(items, creatorsMap, updatersMap), nil
 }
 
@@ -359,7 +359,7 @@ func (s *service) GetExpiredIdentifier(
 	ctx context.Context,
 	actor he.AuthContext,
 ) ([]dto.KepegawaianIdentifierResponse, error) {
-	can, err := s.canReadKepegawaianIdentifier(actor)
+	can, err := s.canReadKepegawaianIdentifier(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -372,6 +372,6 @@ func (s *service) GetExpiredIdentifier(
 	if err != nil {
 		return nil, appErrors.Internal("gagal mengambil data identifier yang sudah expired")
 	}
-	creatorsMap, updatersMap := s.buildAuditMaps(items)
+	creatorsMap, updatersMap := s.buildAuditMaps(ctx, items)
 	return dto.ToKepegawaianIdentifierListResponse(items, creatorsMap, updatersMap), nil
 }

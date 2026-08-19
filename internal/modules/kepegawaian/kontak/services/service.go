@@ -1,12 +1,12 @@
 package services
 
 import (
+	"context"
 	"neosim_go/config"
 	kontakContracts "neosim_go/internal/modules/kepegawaian/kontak/contracts"
-	"neosim_go/internal/modules/kepegawaian/kontak/dto"
 
-	"neosim_go/internal/modules/kepegawaian/kontak/models"
 	authContracts "neosim_go/internal/modules/auth/contracts"
+	"neosim_go/internal/modules/kepegawaian/kontak/models"
 	rbacContracts "neosim_go/internal/modules/rbac/contracts"
 	userContracts "neosim_go/internal/modules/users/contracts"
 	he "neosim_go/internal/shared/httputil"
@@ -32,7 +32,7 @@ func NewKepegawaianKontakService(
 	rbacRepo rbacContracts.RBACRepository,
 	authRepo authContracts.AuthRepository,
 	userRepo userContracts.Repository,
-	cfg    *config.Config,
+	cfg *config.Config,
 ) kontakContracts.Service {
 	return &service{
 		repo:     repo,
@@ -44,11 +44,11 @@ func NewKepegawaianKontakService(
 }
 
 // buildCreator mengambil data creator user
-func (s *service) buildCreator(createdBy *int64) *he.UserData {
+func (s *service) buildCreator(ctx context.Context, createdBy *int64) *he.UserData {
 	if createdBy == nil {
 		return nil
 	}
-	creator, err := s.userRepo.GetByID(*createdBy)
+	creator, err := s.userRepo.GetByID(ctx, *createdBy)
 	if err != nil || creator == nil {
 		return nil
 	}
@@ -61,9 +61,9 @@ func (s *service) buildCreator(createdBy *int64) *he.UserData {
 
 // ── helper: build creator/updater maps ───────────────────────────────────────
 
-func (s *service) buildAuditMaps(items []models.KepegawaianKontak) (map[int64]*he.UserData, map[int64]*he.UserData) {
+func (s *service) buildAuditMaps(ctx context.Context, items []models.KepegawaianKontak) (map[int64]*he.UserData, map[int64]*he.UserData) {
 	fetchUser := func(id int64) (*he.UserData, error) {
-		user, err := s.userRepo.GetByID(id)
+		user, err := s.userRepo.GetByID(ctx, id)
 		if err != nil || user == nil {
 			return nil, err
 		}
@@ -99,26 +99,3 @@ func (s *service) buildAuditMaps(items []models.KepegawaianKontak) (map[int64]*h
 
 	return creatorsMap, updatersMap
 }
-// ── helper: convert items to responses ───────────────────────────────────────
-func toKepegawaianKontakResponses(
-	items []models.KepegawaianKontak,
-	creatorsMap, updatersMap map[int64]*he.UserData,
-) []dto.KepegawaianKontakResponse {
-	responses := make([]dto.KepegawaianKontakResponse, 0, len(items))
-	for _, item := range items {
-		var creator, updater *he.UserData
-		if item.CreatedBy != nil {
-			creator = creatorsMap[*item.CreatedBy]
-		}
-		if item.UpdatedBy != nil {
-			updater = updatersMap[*item.UpdatedBy]
-		}
-		responses = append(responses, *dto.ToKepegawaianKontakResponse(dto.KepegawaianKontakResponseParams{
-			KepegawaianKontak: &item,
-			Creator: creator,
-			Updater: updater,
-		}))
-	}
-	return responses
-}
-

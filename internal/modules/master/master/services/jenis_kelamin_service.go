@@ -10,18 +10,18 @@ import (
 )
 
 // ─────────────── GetByID ─────────────────────────────────────────────────────────
-func (s *service) GetByIDJenisKelamin(id int64) (*dto.MasterJenisKelaminResponse, error) {
-	ctx := context.Background()
+func (s *service) GetByIDJenisKelamin(ctx context.Context, id int64) (*dto.MasterJenisKelaminResponse, error) {
+	ctxs := context.Background()
 	cacheKey := cacheKeyJenisKelaminDetail(id)
 
 	// 1. Cek Cache
 	var cachedRes dto.MasterJenisKelaminResponse
-	if s.cache.Get(ctx, cacheKey, &cachedRes) {
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
 		return &cachedRes, nil
 	}
 
 	// 2. Hit Database
-	m, err := s.repo.GetByIDJenisKelamin(id)
+	m, err := s.repo.GetByIDJenisKelamin(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -32,13 +32,13 @@ func (s *service) GetByIDJenisKelamin(id int64) (*dto.MasterJenisKelaminResponse
 	res := dto.ToMasterJenisKelaminResponse(m)
 
 	// 3. Simpan ke Cache
-	s.cache.SetDefault(ctx, cacheKey, res)
+	s.cache.SetDefault(ctxs, cacheKey, res)
 	return res, nil
 }
 
 // ─────────────── List ────────────────────────────────────────────────────────────
-func (s *service) ListJenisKelamin(page, pageSize int, filter *dto.FilterMasterJenisKelaminRequest) ([]dto.MasterJenisKelaminResponse, int64, error) {
-	ctx := context.Background()
+func (s *service) ListJenisKelamin(ctx context.Context, page, pageSize int, filter *dto.FilterMasterJenisKelaminRequest) ([]dto.MasterJenisKelaminResponse, int64, error) {
+	ctxs := context.Background()
 	cacheKey := cacheKeyJenisKelaminList(page, pageSize, filter)
 
 	// 1. Cek Cache
@@ -46,7 +46,7 @@ func (s *service) ListJenisKelamin(page, pageSize int, filter *dto.FilterMasterJ
 		Items []dto.MasterJenisKelaminResponse `json:"items"`
 		Total int64                            `json:"total"`
 	}
-	if s.cache.Get(ctx, cacheKey, &cachedRes) {
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
 		if len(cachedRes.Items) == 0 {
 			return nil, 0, appErrors.NotFound("JenisKelamin tidak ditemukan")
 		}
@@ -61,7 +61,7 @@ func (s *service) ListJenisKelamin(page, pageSize int, filter *dto.FilterMasterJ
 		pageSize = s.cfg.DefaultPageSize
 	}
 
-	items, total, err := s.repo.ListJenisKelamin(page, pageSize, filter)
+	items, total, err := s.repo.ListJenisKelamin(ctx, page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -72,7 +72,7 @@ func (s *service) ListJenisKelamin(page, pageSize int, filter *dto.FilterMasterJ
 	res := dto.ToMasterJenisKelaminListResponse(items)
 
 	// 3. Simpan ke Cache
-	s.cache.SetDefault(ctx, cacheKey, struct {
+	s.cache.SetDefault(ctxs, cacheKey, struct {
 		Items []dto.MasterJenisKelaminResponse `json:"items"`
 		Total int64                            `json:"total"`
 	}{Items: res, Total: total})
@@ -81,9 +81,9 @@ func (s *service) ListJenisKelamin(page, pageSize int, filter *dto.FilterMasterJ
 }
 
 // ─────────────── Create ──────────────────────────────────────────────────────────
-func (s *service) CreateJenisKelamin(req *dto.CreateMasterJenisKelaminRequest, actor he.AuthContext) (*dto.MasterJenisKelaminResponse, error) {
+func (s *service) CreateJenisKelamin(ctx context.Context, req *dto.CreateMasterJenisKelaminRequest, actor he.AuthContext) (*dto.MasterJenisKelaminResponse, error) {
 	// Permission Check
-	can, err := s.canCreateMaster(actor)
+	can, err := s.canCreateMaster(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -93,7 +93,7 @@ func (s *service) CreateJenisKelamin(req *dto.CreateMasterJenisKelaminRequest, a
 	}
 
 	// Check Duplicate Name
-	data, err := s.repo.GetByNameJenisKelamin(req.Name)
+	data, err := s.repo.GetByNameJenisKelamin(ctx, req.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (s *service) CreateJenisKelamin(req *dto.CreateMasterJenisKelaminRequest, a
 		CreatedBy:    &actor.UserID,
 		UpdatedBy:    &actor.UserID,
 	}
-	if err := s.repo.CreateJenisKelamin(m); err != nil {
+	if err := s.repo.CreateJenisKelamin(ctx, m); err != nil {
 		return nil, err
 	}
 
@@ -123,9 +123,9 @@ func (s *service) CreateJenisKelamin(req *dto.CreateMasterJenisKelaminRequest, a
 }
 
 // ─────────────── Update ──────────────────────────────────────────────────────────
-func (s *service) UpdateJenisKelamin(id int64, req *dto.UpdateMasterJenisKelaminRequest, actor he.AuthContext) (*dto.MasterJenisKelaminResponse, error) {
+func (s *service) UpdateJenisKelamin(ctx context.Context, id int64, req *dto.UpdateMasterJenisKelaminRequest, actor he.AuthContext) (*dto.MasterJenisKelaminResponse, error) {
 	// Permission Check
-	can, err := s.canUpdateMaster(actor)
+	can, err := s.canUpdateMaster(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -135,14 +135,14 @@ func (s *service) UpdateJenisKelamin(id int64, req *dto.UpdateMasterJenisKelamin
 	}
 
 	// Cek Keberadaan Data
-	existing, err := s.repo.GetByIDJenisKelamin(id)
+	existing, err := s.repo.GetByIDJenisKelamin(ctx, id)
 	if err != nil || existing == nil {
 		return nil, appErrors.NotFound("JenisKelamin tidak ditemukan")
 	}
 
 	// Check Duplicate Name (jika ada perubahan)
 	if req.Name != nil && *req.Name != existing.Name {
-		data, err := s.repo.GetByNameJenisKelamin(*req.Name)
+		data, err := s.repo.GetByNameJenisKelamin(ctx, *req.Name)
 		if err != nil {
 			return nil, err
 		}
@@ -163,7 +163,7 @@ func (s *service) UpdateJenisKelamin(id int64, req *dto.UpdateMasterJenisKelamin
 	}
 	existing.UpdatedBy = &actor.UserID
 
-	if err := s.repo.UpdateJenisKelamin(existing); err != nil {
+	if err := s.repo.UpdateJenisKelamin(ctx, existing); err != nil {
 		return nil, err
 	}
 
@@ -178,9 +178,9 @@ func (s *service) UpdateJenisKelamin(id int64, req *dto.UpdateMasterJenisKelamin
 }
 
 // ─────────────── Delete ──────────────────────────────────────────────────────────
-func (s *service) DeleteJenisKelamin(id int64, actor he.AuthContext) error {
+func (s *service) DeleteJenisKelamin(ctx context.Context, id int64, actor he.AuthContext) error {
 	// Permission Check
-	can, err := s.canDeleteMaster(actor)
+	can, err := s.canDeleteMaster(ctx, actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
 	}
@@ -190,13 +190,13 @@ func (s *service) DeleteJenisKelamin(id int64, actor he.AuthContext) error {
 	}
 
 	// Cek Keberadaan Data
-	existing, err := s.repo.GetByIDJenisKelamin(id)
+	existing, err := s.repo.GetByIDJenisKelamin(ctx, id)
 	if err != nil || existing == nil {
 		return appErrors.NotFound("JenisKelamin tidak ditemukan")
 	}
 
 	// delete
-	err = s.repo.DeleteJenisKelamin(id)
+	err = s.repo.DeleteJenisKelamin(ctx, id)
 	if err != nil {
 		return err
 	}

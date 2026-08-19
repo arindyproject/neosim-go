@@ -109,7 +109,7 @@ func (s *service) ListProvinsi(ctx context.Context, page, pageSize int, negaraID
 // ─────────────── Create ──────────────────────────────────────────────────────────
 func (s *service) CreateProvinsi(ctx context.Context, req *dto.CreateProvinsiRequest, actor he.AuthContext) (*dto.ProvinsiResponse, error) {
 	// Permission
-	can, err := s.canCreateMasterAlamat(actor)
+	can, err := s.canCreateMasterAlamat(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -164,7 +164,7 @@ func (s *service) CreateProvinsi(ctx context.Context, req *dto.CreateProvinsiReq
 // ─────────────── Update ──────────────────────────────────────────────────────────
 func (s *service) UpdateProvinsi(ctx context.Context, id int64, req *dto.UpdateProvinsiRequest, actor he.AuthContext) (*dto.ProvinsiResponse, error) {
 	// Permission
-	can, err := s.canUpdateMasterAlamat(actor)
+	can, err := s.canUpdateMasterAlamat(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -224,7 +224,7 @@ func (s *service) UpdateProvinsi(ctx context.Context, id int64, req *dto.UpdateP
 // ─────────────── Delete ──────────────────────────────────────────────────────────
 func (s *service) DeleteProvinsi(ctx context.Context, id int64, actor he.AuthContext) error {
 	// Permission
-	can, err := s.canDeleteMasterAlamat(actor)
+	can, err := s.canDeleteMasterAlamat(ctx, actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
 	}

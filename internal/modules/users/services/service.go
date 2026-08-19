@@ -39,9 +39,9 @@ func NewUserService(
 // Ganti fungsi buildUserRBAC yang lama dengan ini
 
 // buildUserRBAC mengambil roles (tanpa permissions) dan permissions (object lengkap, deduplicated)
-func (s *service) buildUserRBAC(userID int64) ([]rbacDto.RoleSimpleResponse, []rbacDto.PermissionResponse) {
+func (s *service) buildUserRBAC(ctx context.Context, userID int64) ([]rbacDto.RoleSimpleResponse, []rbacDto.PermissionResponse) {
 	// 1. Ambil roles dari DB — tanpa preload permissions agar ringan
-	roles, err := s.rbacRepo.GetUserRoles(userID)
+	roles, err := s.rbacRepo.GetUserRoles(ctx, userID)
 	var roleSimple []rbacDto.RoleSimpleResponse
 	if err == nil {
 		roleSimple = rbacDto.ToRoleSimpleListResponse(roles)
@@ -63,7 +63,7 @@ func (s *service) buildUserRBAC(userID int64) ([]rbacDto.RoleSimpleResponse, []r
 	}
 
 	// 2b. Direct permissions yang di-grant — override/tambah ke map
-	directPerms, err := s.rbacRepo.GetUserDirectPermissions(userID)
+	directPerms, err := s.rbacRepo.GetUserDirectPermissions(ctx, userID)
 	if err == nil {
 		for _, up := range directPerms {
 			if !up.IsGranted {
@@ -73,7 +73,7 @@ func (s *service) buildUserRBAC(userID int64) ([]rbacDto.RoleSimpleResponse, []r
 			}
 			// Direct grant — tambah jika belum ada
 			if _, exists := permMap[up.PermissionID]; !exists {
-				perm, err := s.rbacRepo.GetPermissionByID(up.PermissionID)
+				perm, err := s.rbacRepo.GetPermissionByID(ctx, up.PermissionID)
 				if err == nil && perm != nil {
 					permMap[perm.ID] = *rbacDto.ToPermissionResponse(perm)
 				}
@@ -90,14 +90,14 @@ func (s *service) buildUserRBAC(userID int64) ([]rbacDto.RoleSimpleResponse, []r
 	return roleSimple, permList
 }
 
-func (s *service) buildUsersRBAC(userIDs []int64) map[int64][]rbacDto.RoleSimpleResponse {
+func (s *service) buildUsersRBAC(ctx context.Context, userIDs []int64) map[int64][]rbacDto.RoleSimpleResponse {
 	userRolesMap := make(map[int64][]rbacDto.RoleSimpleResponse)
 	if len(userIDs) == 0 {
 		return userRolesMap
 	}
 
 	// Menggunakan method batch repository yang sudah ada
-	dbRolesMap, err := s.rbacRepo.GetUsersRoles(userIDs)
+	dbRolesMap, err := s.rbacRepo.GetUsersRoles(ctx, userIDs)
 	if err != nil {
 		return userRolesMap
 	}

@@ -18,7 +18,7 @@ import (
 
 // ── Create ────────────────────────────────────────────────────────────────────
 func (s *service) CreateTag(ctx context.Context,req *dto.CreateTagRequest, actor he.AuthContext) (*dto.TagResponse, error) {
-	can, err := s.canCreateTag(actor)
+	can, err := s.canCreateTag(ctx,actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -37,7 +37,7 @@ func (s *service) CreateTag(ctx context.Context,req *dto.CreateTagRequest, actor
 		return nil, err
 	}
 
-	creator := s.buildCreator(m.CreatedBy)
+	creator := s.buildCreator(ctx,m.CreatedBy)
 
 	return dto.ToTagResponse(dto.TagResponseParams{
 		Tag: m,
@@ -49,7 +49,7 @@ func (s *service) CreateTag(ctx context.Context,req *dto.CreateTagRequest, actor
 
 // ── GetByID ───────────────────────────────────────────────────────────────────
 func (s *service) GetTagByID(ctx context.Context,id int64, actor he.AuthContext) (*dto.TagResponse, error) {
-	can, err := s.canReadTag(actor)
+	can, err := s.canReadTag(ctx,actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -66,8 +66,8 @@ func (s *service) GetTagByID(ctx context.Context,id int64, actor he.AuthContext)
 		return nil, errors.New("Tag tidak ditemukan")
 	}
 
-	creator := s.buildCreator(m.CreatedBy)
-	updater := s.buildCreator(m.UpdatedBy)
+	creator := s.buildCreator(ctx,m.CreatedBy)
+	updater := s.buildCreator(ctx,m.UpdatedBy)
 
 	return dto.ToTagResponse(dto.TagResponseParams{
 		Tag: m,
@@ -79,7 +79,7 @@ func (s *service) GetTagByID(ctx context.Context,id int64, actor he.AuthContext)
 
 // ── List ──────────────────────────────────────────────────────────────────────	
 func (s *service) ListTag(ctx context.Context,page, pageSize int, filter *dto.FilterTagRequest, actor he.AuthContext) ([]dto.TagResponse, int64, error) {
-	can, err := s.canReadTag(actor)
+	can, err := s.canReadTag(ctx, actor)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal cek akses")
 	}
@@ -99,14 +99,14 @@ func (s *service) ListTag(ctx context.Context,page, pageSize int, filter *dto.Fi
 		return nil, 0, err
 	}
 
-	creatorsMap, updatersMap := s.buildAuditMapsForTag(items)
+	creatorsMap, updatersMap := s.buildAuditMapsForTag(ctx,items)
 	return dto.ToTagListResponse(items, creatorsMap, updatersMap), total, nil
 }
 
 
 // ── Update ────────────────────────────────────────────────────────────────────
 func (s *service) UpdateTag(ctx context.Context,id int64, req *dto.UpdateTagRequest, actor he.AuthContext) (*dto.TagResponse, error) {
-	can, err := s.canUpdateTag(actor)
+	can, err := s.canUpdateTag(ctx,actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -135,8 +135,8 @@ func (s *service) UpdateTag(ctx context.Context,id int64, req *dto.UpdateTagRequ
 		return nil, err
 	}
 
-	creator := s.buildCreator(m.CreatedBy)
-	updater := s.buildCreator(m.UpdatedBy)
+	creator := s.buildCreator(ctx,m.CreatedBy)
+	updater := s.buildCreator(ctx,m.UpdatedBy)
 
 	return dto.ToTagResponse(dto.TagResponseParams{
 		Tag: m,
@@ -147,7 +147,7 @@ func (s *service) UpdateTag(ctx context.Context,id int64, req *dto.UpdateTagRequ
 
 // ── Delete ────────────────────────────────────────────────────────────────────
 func (s *service) DeleteTag(ctx context.Context,id int64, actor he.AuthContext) error {
-	can, err := s.canDeleteTag(actor)
+	can, err := s.canDeleteTag(ctx,actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
 	}
@@ -168,43 +168,32 @@ func (s *service) DeleteTag(ctx context.Context,id int64, actor he.AuthContext) 
 
 // ── helper khusus Tag (nama fungsi unik agar tidak bentrok) ───────
 
-func (s *service) buildAuditMapsForTag(items []models.Tag) (map[int64]*he.UserData, map[int64]*he.UserData) {
-	fetchUser := func(id int64) (*he.UserData, error) {
-		user, err := s.userRepo.GetByID(id)
-		if err != nil || user == nil {
-			return nil, err
-		}
-		return &he.UserData{ID: user.ID, Username: user.Username, Name: user.Name}, nil
-	}
-
-	creatorIDs := make(map[int64]struct{})
-	updaterIDs := make(map[int64]struct{})
+func (s *service) buildAuditMapsForTag(ctx context.Context,items []models.Tag) (map[int64]*he.UserData, map[int64]*he.UserData) {
+	idSet := make(map[int64]struct{})
 	for _, item := range items {
 		if item.CreatedBy != nil {
-			creatorIDs[*item.CreatedBy] = struct{}{}
+			idSet[*item.CreatedBy] = struct{}{}
 		}
 		if item.UpdatedBy != nil {
-			updaterIDs[*item.UpdatedBy] = struct{}{}
+			idSet[*item.UpdatedBy] = struct{}{}
 		}
 	}
-
-	creatorsMap := make(map[int64]*he.UserData)
-	for id := range creatorIDs {
-		if data, err := fetchUser(id); err == nil && data != nil {
-			creatorsMap[id] = data
-		}
+	ids := make([]int64, 0, len(idSet))
+	for id := range idSet {
+		ids = append(ids, id)
 	}
 
-	updatersMap := make(map[int64]*he.UserData)
-	for id := range updaterIDs {
-		if data, ok := creatorsMap[id]; ok {
-			updatersMap[id] = data
-		} else if data, err := fetchUser(id); err == nil && data != nil {
-			updatersMap[id] = data
-		}
+	users, err := s.userRepo.GetByIDs(ctx,ids) // ← 1 query total, bukan 40
+	if err != nil {
+		return map[int64]*he.UserData{}, map[int64]*he.UserData{}
 	}
 
-	return creatorsMap, updatersMap
+	userMap := make(map[int64]*he.UserData, len(users))
+	for _, u := range users {
+		userMap[u.ID] = &he.UserData{ID: u.ID, Username: u.Username, Name: u.Name}
+	}
+	// creator dan updater sekarang share map yang sama — reuse otomatis, kode lebih pendek juga
+	return userMap, userMap
 }
 
 

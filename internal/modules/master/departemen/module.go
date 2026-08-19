@@ -1,6 +1,7 @@
 package departemen
 
 import (
+	"neosim_go/config"
 	"neosim_go/internal/modules/master/departemen/contracts"
 	"neosim_go/internal/modules/master/departemen/handlers"
 	"neosim_go/internal/modules/master/departemen/repositories"
@@ -9,6 +10,7 @@ import (
 
 	authContracts "neosim_go/internal/modules/auth/contracts"
 	rbacContracts "neosim_go/internal/modules/rbac/contracts"
+	userContracts "neosim_go/internal/modules/users/contracts"
 
 	"github.com/labstack/echo/v5"
 	"gorm.io/gorm"
@@ -27,10 +29,12 @@ func NewModule(
 	jwtManager *utils.JWTManager,
 	rbacRepo rbacContracts.RBACRepository,
 	authRepo authContracts.AuthRepository,
+	userRepo userContracts.Repository,
+	cfg *config.Config,
 ) *Module {
 	repo := repositories.NewMasterDepartemenRepository(db)
-	svc := services.NewMasterDepartemenService(repo, rbacRepo, authRepo)
-	handler := handlers.NewMasterDepartemenHandler(svc)
+	svc := services.NewMasterDepartemenService(repo, rbacRepo, authRepo,userRepo, cfg)
+	handler := handlers.NewMasterDepartemenHandler(svc, cfg)
 
 	return &Module{
 		db:         db,

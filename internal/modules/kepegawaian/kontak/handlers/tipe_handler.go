@@ -22,7 +22,7 @@ import (
 //
 //	@Summary		Get list of Tipe
 //	@Description	Get paginated list of Tipe
-//	@Tags			kepegawaian/kontak
+//	@Tags			kepegawaian/kontak/tipe
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
@@ -48,7 +48,7 @@ func (h *KepegawaianKontakHandler) ListTipe(c *echo.Context) error {
 //
 //	@Summary		Get Tipe
 //	@Description	Get Tipe by :id
-//	@Tags			kepegawaian/kontak
+//	@Tags			kepegawaian/kontak/tipe
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
@@ -72,7 +72,7 @@ func (h *KepegawaianKontakHandler) GetTipeByID(c *echo.Context) error {
 //
 //	@Summary		Create Tipe
 //	@Description	Create New Tipe
-//	@Tags			kepegawaian/kontak
+//	@Tags			kepegawaian/kontak/tipe
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
@@ -104,7 +104,7 @@ func (h *KepegawaianKontakHandler) CreateTipe(c *echo.Context) error {
 //
 //	@Summary		Update Tipe
 //	@Description	Update Tipe by :id
-//	@Tags			kepegawaian/kontak
+//	@Tags			kepegawaian/kontak/tipe
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
@@ -146,7 +146,7 @@ func (h *KepegawaianKontakHandler) UpdateTipe(c *echo.Context) error {
 //
 //	@Summary		Delete Tipe
 //	@Description	Delete Tipe by :id
-//	@Tags			kepegawaian/kontak
+//	@Tags			kepegawaian/kontak/tipe
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth

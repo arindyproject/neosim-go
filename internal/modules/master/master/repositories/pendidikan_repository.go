@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"errors"
 
 	"neosim_go/internal/modules/master/master/dto"
@@ -13,14 +14,14 @@ import (
 // Pendidikan
 // =====================================================================
 // ------------------Create---------------------------------------------
-func (r *repository) CreatePendidikan(m *models.MasterPendidikan) error {
-	return r.db.Create(m).Error
+func (r *repository) CreatePendidikan(ctx context.Context, m *models.MasterPendidikan) error {
+	return r.db.WithContext(ctx).Create(m).Error
 }
 
 // ------------------GetByID--------------------------------------------
-func (r *repository) GetByIDPendidikan(id int64) (*models.MasterPendidikan, error) {
+func (r *repository) GetByIDPendidikan(ctx context.Context, id int64) (*models.MasterPendidikan, error) {
 	var m models.MasterPendidikan
-	result := r.db.Where("id = ?", id).
+	result := r.db.WithContext(ctx).Where("id = ?", id).
 		Where("master_pendidikan.deleted_at IS NULL").First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
@@ -29,9 +30,9 @@ func (r *repository) GetByIDPendidikan(id int64) (*models.MasterPendidikan, erro
 }
 
 // ------------------GetByName------------------------------------------
-func (r *repository) GetByNamePendidikan(name string) (*models.MasterPendidikan, error) {
+func (r *repository) GetByNamePendidikan(ctx context.Context, name string) (*models.MasterPendidikan, error) {
 	var m models.MasterPendidikan
-	result := r.db.Where("name = ?", name).Where("master_pendidikan.deleted_at IS NULL").First(&m)
+	result := r.db.WithContext(ctx).Where("name = ?", name).Where("master_pendidikan.deleted_at IS NULL").First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -39,11 +40,11 @@ func (r *repository) GetByNamePendidikan(name string) (*models.MasterPendidikan,
 }
 
 // ------------------List-----------------------------------------------
-func (r *repository) ListPendidikan(page, pageSize int, filter *dto.FilterMasterPendidikanRequest) ([]models.MasterPendidikan, int64, error) {
+func (r *repository) ListPendidikan(ctx context.Context, page, pageSize int, filter *dto.FilterMasterPendidikanRequest) ([]models.MasterPendidikan, int64, error) {
 	var items []models.MasterPendidikan
 	var total int64
 
-	query := r.db.Model(&models.MasterPendidikan{}).Where("master_pendidikan.deleted_at IS NULL")
+	query := r.db.WithContext(ctx).Model(&models.MasterPendidikan{}).Where("master_pendidikan.deleted_at IS NULL")
 
 	if filter != nil && filter.Name != "" {
 		query = query.Where("name ILIKE ?", "%"+filter.Name+"%")
@@ -66,11 +67,11 @@ func (r *repository) ListPendidikan(page, pageSize int, filter *dto.FilterMaster
 }
 
 // ------------------Update---------------------------------------------
-func (r *repository) UpdatePendidikan(m *models.MasterPendidikan) error {
-	return r.db.Save(m).Error
+func (r *repository) UpdatePendidikan(ctx context.Context, m *models.MasterPendidikan) error {
+	return r.db.WithContext(ctx).Save(m).Error
 }
 
 // ------------------Delete---------------------------------------------
-func (r *repository) DeletePendidikan(id int64) error {
-	return r.db.Where("id = ?", id).Delete(&models.MasterPendidikan{}).Error
+func (r *repository) DeletePendidikan(ctx context.Context, id int64) error {
+	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&models.MasterPendidikan{}).Error
 } // ===================================================================

@@ -745,6 +745,7 @@ func (r *repository) Delete{{.MethodSuffix}}(ctx context.Context, id int64) erro
 var tmplMainService = `package services
 
 import (
+    "context"
 	"{{.ProjectModule}}/config"
 	{{.ModuleName}}Contracts "{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/contracts"
 	
@@ -788,11 +789,11 @@ func New{{.ModuleTitle}}Service(
 }
 
 // buildCreator mengambil data creator user
-func (s *service) buildCreator(createdBy *int64) *he.UserData {
+func (s *service) buildCreator(ctx context.Context,createdBy *int64) *he.UserData {
 	if createdBy == nil {
 		return nil
 	}
-	creator, err := s.userRepo.GetByID(*createdBy)
+	creator, err := s.userRepo.GetByID(ctx,*createdBy)
 	if err != nil || creator == nil {
 		return nil
 	}
@@ -804,7 +805,7 @@ func (s *service) buildCreator(createdBy *int64) *he.UserData {
 }
 
 // ── helper: build creator/updater maps ───────────────────────────────────────
-func (s *service) buildAuditMaps(items []models.{{.ModuleTitle}}) (map[int64]*he.UserData, map[int64]*he.UserData) {
+func (s *service) buildAuditMaps(ctx context.Context,items []models.{{.ModuleTitle}}) (map[int64]*he.UserData, map[int64]*he.UserData) {
 	idSet := make(map[int64]struct{})
 	for _, item := range items {
 		if item.CreatedBy != nil {
@@ -819,7 +820,7 @@ func (s *service) buildAuditMaps(items []models.{{.ModuleTitle}}) (map[int64]*he
 		ids = append(ids, id)
 	}
 
-	users, err := s.userRepo.GetByIDs(ids) // ← 1 query total, bukan 40
+	users, err := s.userRepo.GetByIDs(ctx,ids) // ← 1 query total, bukan 40
 	if err != nil {
 		return map[int64]*he.UserData{}, map[int64]*he.UserData{}
 	}
@@ -837,6 +838,7 @@ func (s *service) buildAuditMaps(items []models.{{.ModuleTitle}}) (map[int64]*he
 var tmplPermissionService = `package services
 
 import (
+	"context"
 	rbacMiddlewares "{{.ProjectModule}}/internal/modules/rbac/middlewares"
 	rbacModels "{{.ProjectModule}}/internal/modules/rbac/models"
 	he "{{.ProjectModule}}/internal/shared/httputil"
@@ -844,14 +846,14 @@ import (
 
 
 // ── canRead ───────────────────────────────────────────────────────────────────
-func (s *service) canRead{{.ModuleTitle}}(actor he.AuthContext) (bool, error) {
+func (s *service) canRead{{.ModuleTitle}}(ctx context.Context,actor he.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
 	}
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyRead); err != nil || has {
+	if has, err := rbacMiddlewares.HasPermission(ctx,s.rbacRepo, actor.UserID, rbacModels.PermAnyRead); err != nil || has {
 		return has, err
 	}
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
+	if has, err := rbacMiddlewares.HasPermission(ctx,s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
 		return has, err
 	}
 	return false, nil
@@ -859,14 +861,14 @@ func (s *service) canRead{{.ModuleTitle}}(actor he.AuthContext) (bool, error) {
 
 
 // ── canCreate ─────────────────────────────────────────────────────────────────
-func (s *service) canCreate{{.ModuleTitle}}(actor he.AuthContext) (bool, error) {
+func (s *service) canCreate{{.ModuleTitle}}(ctx context.Context,actor he.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
 	}
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyCreate); err != nil || has {
+	if has, err := rbacMiddlewares.HasPermission(ctx,s.rbacRepo, actor.UserID, rbacModels.PermAnyCreate); err != nil || has {
 		return has, err
 	}
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
+	if has, err := rbacMiddlewares.HasPermission(ctx,s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
 		return has, err
 	}
 	return false, nil
@@ -874,14 +876,14 @@ func (s *service) canCreate{{.ModuleTitle}}(actor he.AuthContext) (bool, error) 
 
 
 // ── canUpdate ─────────────────────────────────────────────────────────────────
-func (s *service) canUpdate{{.ModuleTitle}}(actor he.AuthContext) (bool, error) {
+func (s *service) canUpdate{{.ModuleTitle}}(ctx context.Context,actor he.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
 	}
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyUpdate); err != nil || has {
+	if has, err := rbacMiddlewares.HasPermission(ctx,s.rbacRepo, actor.UserID, rbacModels.PermAnyUpdate); err != nil || has {
 		return has, err
 	}
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
+	if has, err := rbacMiddlewares.HasPermission(ctx,s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
 		return has, err
 	}
 	return false, nil
@@ -889,14 +891,14 @@ func (s *service) canUpdate{{.ModuleTitle}}(actor he.AuthContext) (bool, error) 
 
 
 // ── canDelete ─────────────────────────────────────────────────────────────────
-func (s *service) canDelete{{.ModuleTitle}}(actor he.AuthContext) (bool, error) {
+func (s *service) canDelete{{.ModuleTitle}}(ctx context.Context,actor he.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
 	}
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyDelete); err != nil || has {
+	if has, err := rbacMiddlewares.HasPermission(ctx,s.rbacRepo, actor.UserID, rbacModels.PermAnyDelete); err != nil || has {
 		return has, err
 	}
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
+	if has, err := rbacMiddlewares.HasPermission(ctx,s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
 		return has, err
 	}
 	return false, nil
@@ -919,7 +921,7 @@ import (
 
 // ── Create ────────────────────────────────────────────────────────────────────
 func (s *service) Create{{.MethodSuffix}}(ctx context.Context,req *dto.Create{{.ModuleTitle}}Request, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
-	can, err := s.canCreate{{.ModuleTitle}}(actor)
+	can, err := s.canCreate{{.ModuleTitle}}(ctx,actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -938,7 +940,7 @@ func (s *service) Create{{.MethodSuffix}}(ctx context.Context,req *dto.Create{{.
 		return nil, err
 	}
 	
-	creator := s.buildCreator(m.CreatedBy)
+	creator := s.buildCreator(ctx,m.CreatedBy)
 
 	return dto.To{{.ModuleTitle}}Response(dto.{{.ModuleTitle}}ResponseParams{
 		{{.ModuleTitle}}: m,
@@ -950,7 +952,7 @@ func (s *service) Create{{.MethodSuffix}}(ctx context.Context,req *dto.Create{{.
 
 // ── GetByID ───────────────────────────────────────────────────────────────────
 func (s *service) Get{{.MethodSuffix}}ByID(ctx context.Context,id int64, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
-	can, err := s.canRead{{.ModuleTitle}}(actor)
+	can, err := s.canRead{{.ModuleTitle}}(ctx,actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -967,8 +969,8 @@ func (s *service) Get{{.MethodSuffix}}ByID(ctx context.Context,id int64, actor h
 		return nil, errors.New("{{.ModuleTitle}} tidak ditemukan")
 	}
 	
-	creator := s.buildCreator(m.CreatedBy)
-	updater := s.buildCreator(m.UpdatedBy)
+	creator := s.buildCreator(ctx,m.CreatedBy)
+	updater := s.buildCreator(ctx,m.UpdatedBy)
 
 	return dto.To{{.ModuleTitle}}Response(dto.{{.ModuleTitle}}ResponseParams{
 		{{.ModuleTitle}}: m,
@@ -980,7 +982,7 @@ func (s *service) Get{{.MethodSuffix}}ByID(ctx context.Context,id int64, actor h
 
 // ── List ──────────────────────────────────────────────────────────────────────
 func (s *service) List{{.MethodSuffix}}(ctx context.Context,page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request, actor he.AuthContext) ([]dto.{{.ModuleTitle}}Response, int64, error) {
-	can, err := s.canRead{{.ModuleTitle}}(actor)
+	can, err := s.canRead{{.ModuleTitle}}(ctx,actor)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal cek akses")
 	}
@@ -1000,14 +1002,14 @@ func (s *service) List{{.MethodSuffix}}(ctx context.Context,page, pageSize int, 
 		return nil, 0, err
 	}
 
-	creatorsMap, updatersMap := s.buildAuditMaps(items)
+	creatorsMap, updatersMap := s.buildAuditMaps(ctx, items)
 	return dto.To{{.ModuleTitle}}ListResponse(items, creatorsMap, updatersMap), total, nil
 }
 
 
 // ── Update ────────────────────────────────────────────────────────────────────
 func (s *service) Update{{.MethodSuffix}}(ctx context.Context,id int64, req *dto.Update{{.ModuleTitle}}Request, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
-	can, err := s.canUpdate{{.ModuleTitle}}(actor)
+	can, err := s.canUpdate{{.ModuleTitle}}(ctx,actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -1036,8 +1038,8 @@ func (s *service) Update{{.MethodSuffix}}(ctx context.Context,id int64, req *dto
 		return nil, err
 	}
 	
-	creator := s.buildCreator(m.CreatedBy)
-	updater := s.buildCreator(m.UpdatedBy)
+	creator := s.buildCreator(ctx,m.CreatedBy)
+	updater := s.buildCreator(ctx,m.UpdatedBy)
 
 	return dto.To{{.ModuleTitle}}Response(dto.{{.ModuleTitle}}ResponseParams{
 		{{.ModuleTitle}}: m,
@@ -1048,7 +1050,7 @@ func (s *service) Update{{.MethodSuffix}}(ctx context.Context,id int64, req *dto
 
 // ── Delete ────────────────────────────────────────────────────────────────────
 func (s *service) Delete{{.MethodSuffix}}(ctx context.Context,id int64, actor he.AuthContext) error {
-	can, err := s.canDelete{{.ModuleTitle}}(actor)
+	can, err := s.canDelete{{.ModuleTitle}}(ctx,actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
 	}
@@ -1348,9 +1350,14 @@ func (f *{{.ModuleTitle}}Factory) Make() *models.{{.ModuleTitle}} {
 		name = v.(string)
 	}
 
+	createdBy := int64(rng.Intn(99) + 1)
+	updatedBy := int64(rng.Intn(99) + 1)
+
 	return &models.{{.ModuleTitle}}{
 		Name:        name,
 		Description: &desc,
+		CreatedBy:      &createdBy,
+		UpdatedBy:      &updatedBy,
 	}
 }
 
@@ -2671,7 +2678,7 @@ import (
 
 // ── Create ────────────────────────────────────────────────────────────────────
 func (s *service) Create{{.ItemTitle}}(ctx context.Context,req *dto.Create{{.ItemTitle}}Request, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error) {
-	can, err := s.canCreate{{.ItemTitle}}(actor)
+	can, err := s.canCreate{{.ItemTitle}}(ctx,actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -2690,7 +2697,7 @@ func (s *service) Create{{.ItemTitle}}(ctx context.Context,req *dto.Create{{.Ite
 		return nil, err
 	}
 
-	creator := s.buildCreator(m.CreatedBy)
+	creator := s.buildCreator(ctx,m.CreatedBy)
 
 	return dto.To{{.ItemTitle}}Response(dto.{{.ItemTitle}}ResponseParams{
 		{{.ItemTitle}}: m,
@@ -2702,7 +2709,7 @@ func (s *service) Create{{.ItemTitle}}(ctx context.Context,req *dto.Create{{.Ite
 
 // ── GetByID ───────────────────────────────────────────────────────────────────
 func (s *service) Get{{.ItemTitle}}ByID(ctx context.Context,id int64, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error) {
-	can, err := s.canRead{{.ItemTitle}}(actor)
+	can, err := s.canRead{{.ItemTitle}}(ctx,actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -2719,8 +2726,8 @@ func (s *service) Get{{.ItemTitle}}ByID(ctx context.Context,id int64, actor he.A
 		return nil, errors.New("{{.ItemTitle}} tidak ditemukan")
 	}
 
-	creator := s.buildCreator(m.CreatedBy)
-	updater := s.buildCreator(m.UpdatedBy)
+	creator := s.buildCreator(ctx,m.CreatedBy)
+	updater := s.buildCreator(ctx,m.UpdatedBy)
 
 	return dto.To{{.ItemTitle}}Response(dto.{{.ItemTitle}}ResponseParams{
 		{{.ItemTitle}}: m,
@@ -2732,7 +2739,7 @@ func (s *service) Get{{.ItemTitle}}ByID(ctx context.Context,id int64, actor he.A
 
 // ── List ──────────────────────────────────────────────────────────────────────	
 func (s *service) List{{.ItemTitle}}(ctx context.Context,page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request, actor he.AuthContext) ([]dto.{{.ItemTitle}}Response, int64, error) {
-	can, err := s.canRead{{.ItemTitle}}(actor)
+	can, err := s.canRead{{.ItemTitle}}(ctx, actor)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal cek akses")
 	}
@@ -2752,14 +2759,14 @@ func (s *service) List{{.ItemTitle}}(ctx context.Context,page, pageSize int, fil
 		return nil, 0, err
 	}
 
-	creatorsMap, updatersMap := s.buildAuditMapsFor{{.ItemTitle}}(items)
+	creatorsMap, updatersMap := s.buildAuditMapsFor{{.ItemTitle}}(ctx,items)
 	return dto.To{{.ItemTitle}}ListResponse(items, creatorsMap, updatersMap), total, nil
 }
 
 
 // ── Update ────────────────────────────────────────────────────────────────────
 func (s *service) Update{{.ItemTitle}}(ctx context.Context,id int64, req *dto.Update{{.ItemTitle}}Request, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error) {
-	can, err := s.canUpdate{{.ItemTitle}}(actor)
+	can, err := s.canUpdate{{.ItemTitle}}(ctx,actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -2788,8 +2795,8 @@ func (s *service) Update{{.ItemTitle}}(ctx context.Context,id int64, req *dto.Up
 		return nil, err
 	}
 
-	creator := s.buildCreator(m.CreatedBy)
-	updater := s.buildCreator(m.UpdatedBy)
+	creator := s.buildCreator(ctx,m.CreatedBy)
+	updater := s.buildCreator(ctx,m.UpdatedBy)
 
 	return dto.To{{.ItemTitle}}Response(dto.{{.ItemTitle}}ResponseParams{
 		{{.ItemTitle}}: m,
@@ -2800,7 +2807,7 @@ func (s *service) Update{{.ItemTitle}}(ctx context.Context,id int64, req *dto.Up
 
 // ── Delete ────────────────────────────────────────────────────────────────────
 func (s *service) Delete{{.ItemTitle}}(ctx context.Context,id int64, actor he.AuthContext) error {
-	can, err := s.canDelete{{.ItemTitle}}(actor)
+	can, err := s.canDelete{{.ItemTitle}}(ctx,actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
 	}
@@ -2821,43 +2828,32 @@ func (s *service) Delete{{.ItemTitle}}(ctx context.Context,id int64, actor he.Au
 
 // ── helper khusus {{.ItemTitle}} (nama fungsi unik agar tidak bentrok) ───────
 
-func (s *service) buildAuditMapsFor{{.ItemTitle}}(items []models.{{.ItemTitle}}) (map[int64]*he.UserData, map[int64]*he.UserData) {
-	fetchUser := func(id int64) (*he.UserData, error) {
-		user, err := s.userRepo.GetByID(id)
-		if err != nil || user == nil {
-			return nil, err
-		}
-		return &he.UserData{ID: user.ID, Username: user.Username, Name: user.Name}, nil
-	}
-
-	creatorIDs := make(map[int64]struct{})
-	updaterIDs := make(map[int64]struct{})
+func (s *service) buildAuditMapsFor{{.ItemTitle}}(ctx context.Context,items []models.{{.ItemTitle}}) (map[int64]*he.UserData, map[int64]*he.UserData) {
+	idSet := make(map[int64]struct{})
 	for _, item := range items {
 		if item.CreatedBy != nil {
-			creatorIDs[*item.CreatedBy] = struct{}{}
+			idSet[*item.CreatedBy] = struct{}{}
 		}
 		if item.UpdatedBy != nil {
-			updaterIDs[*item.UpdatedBy] = struct{}{}
+			idSet[*item.UpdatedBy] = struct{}{}
 		}
 	}
-
-	creatorsMap := make(map[int64]*he.UserData)
-	for id := range creatorIDs {
-		if data, err := fetchUser(id); err == nil && data != nil {
-			creatorsMap[id] = data
-		}
+	ids := make([]int64, 0, len(idSet))
+	for id := range idSet {
+		ids = append(ids, id)
 	}
 
-	updatersMap := make(map[int64]*he.UserData)
-	for id := range updaterIDs {
-		if data, ok := creatorsMap[id]; ok {
-			updatersMap[id] = data
-		} else if data, err := fetchUser(id); err == nil && data != nil {
-			updatersMap[id] = data
-		}
+	users, err := s.userRepo.GetByIDs(ctx,ids) // ← 1 query total, bukan 40
+	if err != nil {
+		return map[int64]*he.UserData{}, map[int64]*he.UserData{}
 	}
 
-	return creatorsMap, updatersMap
+	userMap := make(map[int64]*he.UserData, len(users))
+	for _, u := range users {
+		userMap[u.ID] = &he.UserData{ID: u.ID, Username: u.Username, Name: u.Name}
+	}
+	// creator dan updater sekarang share map yang sama — reuse otomatis, kode lebih pendek juga
+	return userMap, userMap
 }
 
 
@@ -2866,6 +2862,7 @@ func (s *service) buildAuditMapsFor{{.ItemTitle}}(items []models.{{.ItemTitle}})
 var tmplItemPermission = `package services
 
 import (
+	"context"
 	rbacMiddlewares "{{.ProjectModule}}/internal/modules/rbac/middlewares"
 	rbacModels "{{.ProjectModule}}/internal/modules/rbac/models"
 	he "{{.ProjectModule}}/internal/shared/httputil"
@@ -2873,14 +2870,14 @@ import (
 
 
 // ── CanRead ───────────────────────────────────────────────────────────────────
-func (s *service) canRead{{.ItemTitle}}(actor he.AuthContext) (bool, error) {
+func (s *service) canRead{{.ItemTitle}}(ctx context.Context,actor he.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
 	}
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyRead); err != nil || has {
+	if has, err := rbacMiddlewares.HasPermission(ctx,s.rbacRepo, actor.UserID, rbacModels.PermAnyRead); err != nil || has {
 		return has, err
 	}
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
+	if has, err := rbacMiddlewares.HasPermission(ctx,s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
 		return has, err
 	}
 	return false, nil
@@ -2888,14 +2885,14 @@ func (s *service) canRead{{.ItemTitle}}(actor he.AuthContext) (bool, error) {
 
 
 // ── canCreate ─────────────────────────────────────────────────────────────────
-func (s *service) canCreate{{.ItemTitle}}(actor he.AuthContext) (bool, error) {
+func (s *service) canCreate{{.ItemTitle}}(ctx context.Context,actor he.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
 	}
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyCreate); err != nil || has {
+	if has, err := rbacMiddlewares.HasPermission(ctx,s.rbacRepo, actor.UserID, rbacModels.PermAnyCreate); err != nil || has {
 		return has, err
 	}
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
+	if has, err := rbacMiddlewares.HasPermission(ctx,s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
 		return has, err
 	}
 	return false, nil
@@ -2903,14 +2900,14 @@ func (s *service) canCreate{{.ItemTitle}}(actor he.AuthContext) (bool, error) {
 
 
 // ── canUpdate ─────────────────────────────────────────────────────────────────
-func (s *service) canUpdate{{.ItemTitle}}(actor he.AuthContext) (bool, error) {
+func (s *service) canUpdate{{.ItemTitle}}(ctx context.Context,actor he.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
 	}
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyUpdate); err != nil || has {
+	if has, err := rbacMiddlewares.HasPermission(ctx,s.rbacRepo, actor.UserID, rbacModels.PermAnyUpdate); err != nil || has {
 		return has, err
 	}
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
+	if has, err := rbacMiddlewares.HasPermission(ctx,s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
 		return has, err
 	}
 	return false, nil
@@ -2918,14 +2915,14 @@ func (s *service) canUpdate{{.ItemTitle}}(actor he.AuthContext) (bool, error) {
 
 
 // ── canDelete ─────────────────────────────────────────────────────────────────
-func (s *service) canDelete{{.ItemTitle}}(actor he.AuthContext) (bool, error) {
+func (s *service) canDelete{{.ItemTitle}}(ctx context.Context,actor he.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
 	}
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyDelete); err != nil || has {
+	if has, err := rbacMiddlewares.HasPermission(ctx,s.rbacRepo, actor.UserID, rbacModels.PermAnyDelete); err != nil || has {
 		return has, err
 	}
-	if has, err := rbacMiddlewares.HasPermission(s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
+	if has, err := rbacMiddlewares.HasPermission(ctx,s.rbacRepo, actor.UserID, rbacModels.PermAnyManage); err != nil || has {
 		return has, err
 	}
 	return false, nil
