@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"errors"
 
 	"neosim_go/internal/modules/users/contracts"
@@ -24,17 +25,17 @@ func NewRepository(db *gorm.DB) contracts.Repository {
 // ─── End Init ──────────────────────────────────────────────────────────────────
 
 // Create creates a new user
-func (r *repository) Create(user *models.User) error {
-	if err := r.db.Create(user).Error; err != nil {
+func (r *repository) Create(ctx context.Context, user *models.User) error {
+	if err := r.db.WithContext(ctx).Create(user).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
 // GetByID retrieves a user by ID
-func (r *repository) GetByID(id int64) (*models.User, error) {
+func (r *repository) GetByID(ctx context.Context, id int64) (*models.User, error) {
 	var user models.User
-	if err := r.db.Where("id = ?", id).Where("deleted_at IS NULL").First(&user).Error; err != nil {
+	if err := r.db.WithContext(ctx).Where("id = ?", id).Where("deleted_at IS NULL").First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -45,9 +46,10 @@ func (r *repository) GetByID(id int64) (*models.User, error) {
 }
 
 // GetByIDs retrieves multiple users by their IDs
-func (r *repository) GetByIDs(ids []int64) ([]models.User, error) {
+func (r *repository) GetByIDs(ctx context.Context, ids []int64) ([]models.User, error) {
 	var users []models.User
 	err := r.db.
+		WithContext(ctx).
 		Select("id", "username", "name").
 		Where("id IN ?", ids).
 		Find(&users).Error
@@ -55,9 +57,9 @@ func (r *repository) GetByIDs(ids []int64) ([]models.User, error) {
 }
 
 // GetByUsername retrieves a user by username
-func (r *repository) GetByUsername(username string) (*models.User, error) {
+func (r *repository) GetByUsername(ctx context.Context, username string) (*models.User, error) {
 	var user models.User
-	if err := r.db.Where("username = ?", username).Where("deleted_at IS NULL").First(&user).Error; err != nil {
+	if err := r.db.WithContext(ctx).Where("username = ?", username).Where("deleted_at IS NULL").First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -67,9 +69,9 @@ func (r *repository) GetByUsername(username string) (*models.User, error) {
 }
 
 // GetByEmail retrieves a user by email
-func (r *repository) GetByEmail(email string) (*models.User, error) {
+func (r *repository) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	var user models.User
-	if err := r.db.Where("email = ?", email).Where("deleted_at IS NULL").First(&user).Error; err != nil {
+	if err := r.db.WithContext(ctx).Where("email = ?", email).Where("deleted_at IS NULL").First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -79,12 +81,12 @@ func (r *repository) GetByEmail(email string) (*models.User, error) {
 }
 
 // List retrieves paginated list of users
-func (r *repository) List(page, pageSize int, filter *dto.UserFilter) ([]models.User, int64, error) {
+func (r *repository) List(ctx context.Context, page, pageSize int, filter *dto.UserFilter) ([]models.User, int64, error) {
 	var users []models.User
 	var total int64
 
 	// 1. Inisialisasi basis query & pastikan record yang di-soft delete tidak ikut terbawa
-	query := r.db.Model(&models.User{}).Where("deleted_at IS NULL")
+	query := r.db.WithContext(ctx).Model(&models.User{}).Where("deleted_at IS NULL")
 
 	// 2. Filter Teks (Menggunakan ILIKE untuk case-insensitive)
 	if filter.Name != "" {
@@ -123,8 +125,8 @@ func (r *repository) List(page, pageSize int, filter *dto.UserFilter) ([]models.
 }
 
 // Update updates an existing user
-func (r *repository) Update(user *models.User) error {
-	if err := r.db.Save(user).Error; err != nil {
+func (r *repository) Update(ctx context.Context, user *models.User) error {
+	if err := r.db.WithContext(ctx).Save(user).Error; err != nil {
 		return err
 	}
 	return nil
@@ -132,9 +134,9 @@ func (r *repository) Update(user *models.User) error {
 
 // Delete soft deletes a user
 // Delete soft deletes a user dengan mencatat pengedit dan alasan
-func (r *repository) Delete(id int64, deletedBy int64, reason string) error {
+func (r *repository) Delete(ctx context.Context, id int64, deletedBy int64, reason string) error {
 	// Jalankan dalam Transaction agar kedua proses (update & delete) aman dan atomik
-	return r.db.Transaction(func(tx *gorm.DB) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 
 		// 1. Update kolom deleted_by dan delete_reason terlebih dahulu
 		dataUpdate := map[string]interface{}{
@@ -157,13 +159,13 @@ func (r *repository) Delete(id int64, deletedBy int64, reason string) error {
 }
 
 // DeletedList retrieves paginated list of soft-deleted users based on filter
-func (r *repository) DeletedList(page, pageSize int, filter *dto.UserDeletedFilter) ([]models.User, int64, error) {
+func (r *repository) DeletedList(ctx context.Context, page, pageSize int, filter *dto.UserDeletedFilter) ([]models.User, int64, error) {
 	var users []models.User
 	var total int64
 
 	// 1. Menggunakan Unscoped() untuk menembus proteksi soft delete GORM
 	//    dan filter hanya yang deleted_at TIDAK NULL
-	query := r.db.Unscoped().Model(&models.User{}).Where("deleted_at IS NOT NULL")
+	query := r.db.WithContext(ctx).Unscoped().Model(&models.User{}).Where("deleted_at IS NOT NULL")
 
 	// 2. Filter Teks Dinamis
 	if filter.Name != "" {
@@ -191,8 +193,8 @@ func (r *repository) DeletedList(page, pageSize int, filter *dto.UserDeletedFilt
 }
 
 // GetSettings retrieves user settings
-func (r *repository) GetSettings(id int64) ([]models.UserSetting, error) {
-	user, err := r.GetByID(id)
+func (r *repository) GetSettings(ctx context.Context, id int64) ([]models.UserSetting, error) {
+	user, err := r.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -203,8 +205,8 @@ func (r *repository) GetSettings(id int64) ([]models.UserSetting, error) {
 }
 
 // UpdateSettings updates user settings
-func (r *repository) UpdateSettings(id int64, settings []models.UserSetting) error {
-	user, err := r.GetByID(id)
+func (r *repository) UpdateSettings(ctx context.Context, id int64, settings []models.UserSetting) error {
+	user, err := r.GetByID(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -216,5 +218,5 @@ func (r *repository) UpdateSettings(id int64, settings []models.UserSetting) err
 		return err
 	}
 
-	return r.Update(user)
+	return r.Update(ctx, user)
 }

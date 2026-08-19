@@ -1,5 +1,5 @@
 -- Migration: Create artikels table
--- Timestamp: 20260817190435
+-- Timestamp: 20260819102243
 
 CREATE TABLE IF NOT EXISTS artikels (
     id          BIGSERIAL    PRIMARY KEY,

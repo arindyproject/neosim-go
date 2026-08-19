@@ -1,6 +1,7 @@
 package contracts
 
 import (
+	"context"
 	"neosim_go/internal/modules/rbac/dto"
 	"neosim_go/internal/modules/rbac/models"
 )
@@ -8,80 +9,80 @@ import (
 // ─── Repository ────────────────────────────────────────────────────────────────
 
 type RBACRepository interface {
-	IsSuperadmin(userID int64) (bool, error)
+	IsSuperadmin(ctx context.Context, userID int64) (bool, error)
 	// Permission
-	CreatePermission(p *models.Permission) error
-	GetPermissionByID(id int64) (*models.Permission, error)
-	GetPermissionByName(name string) (*models.Permission, error)
-	ListPermissions(page, pageSize int) ([]models.Permission, int64, error)
-	UpdatePermission(p *models.Permission) error
-	DeletePermission(id int64) error
+	CreatePermission(ctx context.Context, p *models.Permission) error
+	GetPermissionByID(ctx context.Context, id int64) (*models.Permission, error)
+	GetPermissionByName(ctx context.Context, name string) (*models.Permission, error)
+	ListPermissions(ctx context.Context, page, pageSize int) ([]models.Permission, int64, error)
+	UpdatePermission(ctx context.Context, p *models.Permission) error
+	DeletePermission(ctx context.Context, id int64) error
 
 	// Role
-	CreateRole(r *models.Role) error
-	GetRoleByID(id int64) (*models.Role, error)
-	GetRoleByName(name string) (*models.Role, error)
-	ListRoles(page, pageSize int) ([]models.Role, int64, error)
-	UpdateRole(r *models.Role) error
-	DeleteRole(id int64) error
-	GetUsersRoles(userIDs []int64) (map[int64][]models.Role, error)
+	CreateRole(ctx context.Context, r *models.Role) error
+	GetRoleByID(ctx context.Context, id int64) (*models.Role, error)
+	GetRoleByName(ctx context.Context, name string) (*models.Role, error)
+	ListRoles(ctx context.Context, page, pageSize int) ([]models.Role, int64, error)
+	UpdateRole(ctx context.Context, r *models.Role) error
+	DeleteRole(ctx context.Context, id int64) error
+	GetUsersRoles(ctx context.Context, userIDs []int64) (map[int64][]models.Role, error)
 
 	// Role ↔ Permission
-	AssignPermissionsToRole(roleID int64, permissionIDs []int64) error
-	RevokePermissionsFromRole(roleID int64, permissionIDs []int64) error
-	GetRolePermissions(roleID int64) ([]models.Permission, error)
-	SyncRolePermissions(roleID int64, permissionIDs []int64) error
+	AssignPermissionsToRole(ctx context.Context, roleID int64, permissionIDs []int64) error
+	RevokePermissionsFromRole(ctx context.Context, roleID int64, permissionIDs []int64) error
+	GetRolePermissions(ctx context.Context, roleID int64) ([]models.Permission, error)
+	SyncRolePermissions(ctx context.Context, roleID int64, permissionIDs []int64) error
 
 	// User ↔ Role
-	AssignRolesToUser(userID int64, roleIDs []int64, assignedBy *int64) error
-	RevokeRolesFromUser(userID int64, roleIDs []int64) error
-	GetUserRoles(userID int64) ([]models.Role, error)
-	SyncUserRoles(userID int64, roleIDs []int64, assignedBy *int64) error
+	AssignRolesToUser(ctx context.Context, userID int64, roleIDs []int64, assignedBy *int64) error
+	RevokeRolesFromUser(ctx context.Context, userID int64, roleIDs []int64) error
+	GetUserRoles(ctx context.Context, userID int64) ([]models.Role, error)
+	SyncUserRoles(ctx context.Context, userID int64, roleIDs []int64, assignedBy *int64) error
 
 	// User ↔ Permission (direct)
-	AssignDirectPermission(userID, permissionID int64, isGranted bool, assignedBy *int64) error
-	RevokeDirectPermission(userID, permissionID int64) error
-	GetUserDirectPermissions(userID int64) ([]models.UserPermission, error)
+	AssignDirectPermission(ctx context.Context, userID, permissionID int64, isGranted bool, assignedBy *int64) error
+	RevokeDirectPermission(ctx context.Context, userID, permissionID int64) error
+	GetUserDirectPermissions(ctx context.Context, userID int64) ([]models.UserPermission, error)
 
 	// Check
-	GetUserAllPermissions(userID int64) ([]string, error) // gabungan dari role + direct
-	HasPermission(userID int64, permission string) (bool, error)
+	GetUserAllPermissions(ctx context.Context, userID int64) ([]string, error) // gabungan dari role + direct
+	HasPermission(ctx context.Context, userID int64, permission string) (bool, error)
 }
 
 // ─── Service ───────────────────────────────────────────────────────────────────
 
 type RBACService interface {
 	// Permission CRUD
-	CreatePermission(req *dto.CreatePermissionRequest, createdBy *int64) (*dto.PermissionResponse, error)
-	GetPermissionByID(id int64) (*dto.PermissionResponse, error)
-	ListPermissions(page, pageSize int) ([]dto.PermissionResponse, int64, error)
-	UpdatePermission(id int64, req *dto.UpdatePermissionRequest, updatedBy *int64) (*dto.PermissionResponse, error)
-	DeletePermission(id int64) error
+	CreatePermission(ctx context.Context, req *dto.CreatePermissionRequest, createdBy *int64) (*dto.PermissionResponse, error)
+	GetPermissionByID(ctx context.Context, id int64) (*dto.PermissionResponse, error)
+	ListPermissions(ctx context.Context, page, pageSize int) ([]dto.PermissionResponse, int64, error)
+	UpdatePermission(ctx context.Context, id int64, req *dto.UpdatePermissionRequest, updatedBy *int64) (*dto.PermissionResponse, error)
+	DeletePermission(ctx context.Context, id int64) error
 
 	// Role CRUD
-	CreateRole(req *dto.CreateRoleRequest, createdBy *int64) (*dto.RoleResponse, error)
-	GetRoleByID(id int64) (*dto.RoleResponse, error)
-	ListRoles(page, pageSize int) ([]dto.RoleResponse, int64, error)
-	UpdateRole(id int64, req *dto.UpdateRoleRequest, updatedBy *int64) (*dto.RoleResponse, error)
-	DeleteRole(id int64) error
+	CreateRole(ctx context.Context, req *dto.CreateRoleRequest, createdBy *int64) (*dto.RoleResponse, error)
+	GetRoleByID(ctx context.Context, id int64) (*dto.RoleResponse, error)
+	ListRoles(ctx context.Context, page, pageSize int) ([]dto.RoleResponse, int64, error)
+	UpdateRole(ctx context.Context, id int64, req *dto.UpdateRoleRequest, updatedBy *int64) (*dto.RoleResponse, error)
+	DeleteRole(ctx context.Context, id int64) error
 
 	// Role ↔ Permission
-	AssignPermissionsToRole(roleID int64, req *dto.AssignPermissionsRequest) error
-	RevokePermissionsFromRole(roleID int64, req *dto.AssignPermissionsRequest) error
-	SyncRolePermissions(roleID int64, req *dto.AssignPermissionsRequest) error
+	AssignPermissionsToRole(ctx context.Context, roleID int64, req *dto.AssignPermissionsRequest) error
+	RevokePermissionsFromRole(ctx context.Context, roleID int64, req *dto.AssignPermissionsRequest) error
+	SyncRolePermissions(ctx context.Context, roleID int64, req *dto.AssignPermissionsRequest) error
 
 	// User ↔ Role
-	AssignRolesToUser(userID int64, req *dto.AssignRolesRequest, assignedBy *int64) error
-	RevokeRolesFromUser(userID int64, req *dto.AssignRolesRequest) error
-	SyncUserRoles(userID int64, req *dto.AssignRolesRequest, assignedBy *int64) error
-	GetUserRoles(userID int64) ([]dto.RoleResponse, error)
+	AssignRolesToUser(ctx context.Context, userID int64, req *dto.AssignRolesRequest, assignedBy *int64) error
+	RevokeRolesFromUser(ctx context.Context, userID int64, req *dto.AssignRolesRequest) error
+	SyncUserRoles(ctx context.Context, userID int64, req *dto.AssignRolesRequest, assignedBy *int64) error
+	GetUserRoles(ctx context.Context, userID int64) ([]dto.RoleResponse, error)
 
 	// User ↔ Permission (direct)
-	AssignDirectPermission(userID int64, req *dto.AssignDirectPermissionRequest, assignedBy *int64) error
-	RevokeDirectPermission(userID, permissionID int64) error
-	GetUserDirectPermissions(userID int64) ([]dto.DirectPermissionResponse, error)
+	AssignDirectPermission(ctx context.Context, userID int64, req *dto.AssignDirectPermissionRequest, assignedBy *int64) error
+	RevokeDirectPermission(ctx context.Context, userID, permissionID int64) error
+	GetUserDirectPermissions(ctx context.Context, userID int64) ([]dto.DirectPermissionResponse, error)
 
 	// Check
-	GetUserAllPermissions(userID int64) ([]string, error)
-	HasPermission(userID int64, permission string) (bool, error)
+	GetUserAllPermissions(ctx context.Context, userID int64) ([]string, error)
+	HasPermission(ctx context.Context, userID int64, permission string) (bool, error)
 }

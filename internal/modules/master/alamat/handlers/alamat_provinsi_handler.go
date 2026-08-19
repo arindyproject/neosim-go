@@ -39,7 +39,7 @@ func (h *MasterAlamatHandler) ListProvinsi(c *echo.Context) error {
 		Name: c.QueryParam("name"),
 	}
 
-	items, total, err := h.service.ListProvinsi(page, pageSize, negaraID, &filter)
+	items, total, err := h.service.ListProvinsi(c.Request().Context(), page, pageSize, negaraID, &filter)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
 	}
@@ -67,7 +67,7 @@ func (h *MasterAlamatHandler) GetByIDProvinsi(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 
-	item, err := h.service.GetByIDProvinsi(id)
+	item, err := h.service.GetByIDProvinsi(c.Request().Context(), id)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -104,7 +104,7 @@ func (h *MasterAlamatHandler) CreateProvinsi(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.CreateProvinsi(&req, actor)
+	item, err := h.service.CreateProvinsi(c.Request().Context(), &req, actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
@@ -147,7 +147,7 @@ func (h *MasterAlamatHandler) UpdateProvinsi(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.UpdateProvinsi(id, &req, actor)
+	item, err := h.service.UpdateProvinsi(c.Request().Context(), id, &req, actor)
 	if err != nil {
 		return response.Response(c, he.NotFoundStatus(err, "Provinsi tidak ditemukan"), false, err.Error(), nil, nil)
 	}
@@ -176,7 +176,7 @@ func (h *MasterAlamatHandler) DeleteProvinsi(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	if err := h.service.DeleteProvinsi(id, actor); err != nil {
+	if err := h.service.DeleteProvinsi(c.Request().Context(), id, actor); err != nil {
 		return response.Response(c, he.NotFoundStatus(err, "Provinsi tidak ditemukan"), false, err.Error(), nil, nil)
 	}
 

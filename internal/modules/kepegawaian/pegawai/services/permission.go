@@ -6,6 +6,8 @@ import (
 	he "neosim_go/internal/shared/httputil"
 )
 
+
+// ── canRead ───────────────────────────────────────────────────────────────────
 func (s *service) canReadKepegawaianPegawai(actor he.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
@@ -19,6 +21,8 @@ func (s *service) canReadKepegawaianPegawai(actor he.AuthContext) (bool, error) 
 	return false, nil
 }
 
+
+// ── canCreate ─────────────────────────────────────────────────────────────────
 func (s *service) canCreateKepegawaianPegawai(actor he.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
@@ -32,6 +36,8 @@ func (s *service) canCreateKepegawaianPegawai(actor he.AuthContext) (bool, error
 	return false, nil
 }
 
+
+// ── canUpdate ─────────────────────────────────────────────────────────────────
 func (s *service) canUpdateKepegawaianPegawai(actor he.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil
@@ -45,6 +51,8 @@ func (s *service) canUpdateKepegawaianPegawai(actor he.AuthContext) (bool, error
 	return false, nil
 }
 
+
+// ── canDelete ─────────────────────────────────────────────────────────────────
 func (s *service) canDeleteKepegawaianPegawai(actor he.AuthContext) (bool, error) {
 	if actor.IsSuperadmin {
 		return true, nil

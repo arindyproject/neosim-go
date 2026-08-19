@@ -37,7 +37,7 @@ func (h *KepegawaianKontakHandler) ListTipe(c *echo.Context) error {
 	page, pageSize := he.ParsePagination(c, h.cfg)
 
 	actor := he.BuildAuthContext(c)
-	items, total, err := h.service.ListTipe(page, pageSize, &filter, actor)
+	items, total, err := h.service.ListTipe(c.Request().Context(), page, pageSize, &filter, actor)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
 	}
@@ -61,7 +61,7 @@ func (h *KepegawaianKontakHandler) GetTipeByID(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.GetTipeByID(id, actor)
+	item, err := h.service.GetTipeByID(c.Request().Context(), id, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -93,7 +93,7 @@ func (h *KepegawaianKontakHandler) CreateTipe(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (validator)", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.CreateTipe(&req, actor)
+	item, err := h.service.CreateTipe(c.Request().Context(), &req, actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
@@ -131,7 +131,7 @@ func (h *KepegawaianKontakHandler) UpdateTipe(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (validator)", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.UpdateTipe(id, &req, actor)
+	item, err := h.service.UpdateTipe(c.Request().Context(), id, &req, actor)
 	if err != nil {
 		status := http.StatusBadRequest
 		if err.Error() == "Tipe tidak ditemukan" {
@@ -159,7 +159,7 @@ func (h *KepegawaianKontakHandler) DeleteTipe(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	if err := h.service.DeleteTipe(id, actor); err != nil {
+	if err := h.service.DeleteTipe(c.Request().Context(), id, actor); err != nil {
 		status := http.StatusInternalServerError
 		if err.Error() == "Tipe tidak ditemukan" {
 			status = http.StatusNotFound

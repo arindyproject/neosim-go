@@ -28,7 +28,7 @@ func (s *service) CreateIdentifier(
 	}
 
 	// validasi keberadaan master Tipe
-	tipeMaster, err := s.repo.GetTipeByID(req.TipeID)
+	tipeMaster, err := s.repo.GetTipeByID(ctx, req.TipeID)
 	if err != nil {
 		return nil, appErrors.Internal("gagal mengambil master tipe identifier")
 	}
@@ -236,7 +236,7 @@ func (s *service) UpdateIdentifier(
 
 	// update parsial jika pointer dikirimkan (not nil)
 	if req.TipeID != nil {
-		tipeMaster, err := s.repo.GetTipeByID(*req.TipeID)
+		tipeMaster, err := s.repo.GetTipeByID(ctx, *req.TipeID)
 		if err != nil {
 			return nil, appErrors.Internal("gagal mengambil master tipe identifier")
 		}

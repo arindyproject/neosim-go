@@ -45,7 +45,7 @@ func (h *Handler) CreateUserHandler(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	user, err := h.service.CreateUser(&req, actor)
+	user, err := h.service.CreateUser(c.Request().Context(), &req, actor)
 	if err != nil {
 		if appErr, ok := err.(interface{ StatusCode() int }); ok {
 			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
@@ -77,7 +77,7 @@ func (h *Handler) GetUserHandler(c *echo.Context) error {
 
 	actor := he.BuildAuthContext(c)
 
-	user, err := h.service.GetUserByID(id, actor)
+	user, err := h.service.GetUserByID(c.Request().Context(), id, actor)
 
 	if err != nil {
 		if appErr, ok := err.(interface{ StatusCode() int }); ok {
@@ -110,7 +110,7 @@ func (h *Handler) GetByUsernameHandler(c *echo.Context) error {
 
 	actor := he.BuildAuthContext(c)
 
-	user, err := h.service.GetUserByUsername(username, actor)
+	user, err := h.service.GetUserByUsername(c.Request().Context(), username, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -179,7 +179,7 @@ func (h *Handler) ListUsersHandler(c *echo.Context) error {
 		}
 	}
 
-	users, total, err := h.service.ListUsers(page, pageSize, &filter)
+	users, total, err := h.service.ListUsers(c.Request().Context(), page, pageSize, &filter)
 	if err != nil {
 		// ─── CEK JENIS ERROR UNTUK RESPONS 404 ───────────────────────────
 		if err.Error() == "user tidak ditemukan" {
@@ -234,7 +234,7 @@ func (h *Handler) UpdateUserHandler(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	user, err := h.service.UpdateUser(id, &req, actor)
+	user, err := h.service.UpdateUser(c.Request().Context(), id, &req, actor)
 	if err != nil {
 		if appErr, ok := err.(interface{ StatusCode() int }); ok {
 			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
@@ -280,7 +280,7 @@ func (h *Handler) DeleteUserHandler(c *echo.Context) error {
 	actor := he.BuildAuthContext(c)
 
 	// Kirim req.Reason ke service
-	if err := h.service.DeleteUser(id, req.Reason, actor); err != nil {
+	if err := h.service.DeleteUser(c.Request().Context(), id, req.Reason, actor); err != nil {
 		if appErr, ok := err.(interface{ StatusCode() int }); ok {
 			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
 		}
@@ -330,7 +330,7 @@ func (h *Handler) ListDeletedUsersHandler(c *echo.Context) error {
 	}
 
 	// Eksekusi ke Service
-	users, total, err := h.service.ListDeletedUsers(page, pageSize, &filter, actor)
+	users, total, err := h.service.ListDeletedUsers(c.Request().Context(), page, pageSize, &filter, actor)
 	if err != nil {
 		// Jika data memang tidak ada/tidak cocok dengan filter
 		if err.Error() == "data sampah user kosong" {
@@ -364,7 +364,7 @@ func (h *Handler) GetSettingsHandler(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	settings, err := h.service.GetSettings(id, actor)
+	settings, err := h.service.GetSettings(c.Request().Context(), id, actor)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, err.Error(), nil, nil)
 	}
@@ -404,7 +404,7 @@ func (h *Handler) UpdateSettingsHandler(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	user, err := h.service.UpdateSettings(id, &req, actor)
+	user, err := h.service.UpdateSettings(c.Request().Context(), id, &req, actor)
 	if err != nil {
 		if appErr, ok := err.(interface{ StatusCode() int }); ok {
 			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
@@ -454,7 +454,7 @@ func (h *Handler) ChangePasswordHandler(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	user, err := h.service.ChangePassword(id, &req, actor)
+	user, err := h.service.ChangePassword(c.Request().Context(), id, &req, actor)
 	if err != nil {
 		if appErr, ok := err.(interface{ StatusCode() int }); ok {
 			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
@@ -484,7 +484,7 @@ func (h *Handler) ResetPasswordHandler(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	if err := h.service.ResetPassword(id, actor); err != nil {
+	if err := h.service.ResetPassword(c.Request().Context(), id, actor); err != nil {
 		if appErr, ok := err.(interface{ StatusCode() int }); ok {
 			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
 		}
@@ -528,7 +528,7 @@ func (h *Handler) UploadPhoto(c *echo.Context) error {
 	defer src.Close()
 
 	actor := he.BuildAuthContext(c)
-	result, err := h.service.UploadPhoto(id, file.Filename, src, actor)
+	result, err := h.service.UploadPhoto(c.Request().Context(), id, file.Filename, src, actor)
 	if err != nil {
 		if appErr, ok := err.(interface{ StatusCode() int }); ok {
 			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
@@ -561,7 +561,7 @@ func (h *Handler) DeletePhoto(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	result, err := h.service.DeletePhoto(id, actor)
+	result, err := h.service.DeletePhoto(c.Request().Context(), id, actor)
 	if err != nil {
 		if appErr, ok := err.(interface{ StatusCode() int }); ok {
 			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)

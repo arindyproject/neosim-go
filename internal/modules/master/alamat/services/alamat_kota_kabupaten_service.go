@@ -15,18 +15,18 @@ import (
 // Kota/Kabupaten ==================================================================
 
 // ─────────────── GetByID ─────────────────────────────────────────────────────────
-func (s *service) GetByIDKotaKabupaten(id int64) (*dto.KotaKabupatenDetailResponse, error) {
-	ctx := context.Background()
+func (s *service) GetByIDKotaKabupaten(ctx context.Context, id int64) (*dto.KotaKabupatenDetailResponse, error) {
+	ctxs := context.Background()
 	cacheKey := cacheKeyKotaDetail(id)
 
 	// 1. Cek Cache
 	var cachedRes dto.KotaKabupatenDetailResponse
-	if s.cache.Get(ctx, cacheKey, &cachedRes) {
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
 		return &cachedRes, nil
 	}
 
 	// 2. Ambil dari DB
-	m, err := s.repo.GetByIDKotaKabupaten(id)
+	m, err := s.repo.GetByIDKotaKabupaten(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -34,11 +34,11 @@ func (s *service) GetByIDKotaKabupaten(id int64) (*dto.KotaKabupatenDetailRespon
 		return nil, appErrors.NotFound("Kota/Kabupaten tidak ditemukan")
 	}
 
-	totalKecamatan, err := s.repo.CountKecamatanByKotaID(m.ID)
+	totalKecamatan, err := s.repo.CountKecamatanByKotaID(ctx, m.ID)
 	if err != nil {
 		return nil, err
 	}
-	totalDesa, err := s.repo.CountDesaByKotaID(m.ID)
+	totalDesa, err := s.repo.CountDesaByKotaID(ctx, m.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -56,13 +56,13 @@ func (s *service) GetByIDKotaKabupaten(id int64) (*dto.KotaKabupatenDetailRespon
 	}
 
 	// 3. Simpan ke Cache
-	s.cache.SetDefault(ctx, cacheKey, res)
+	s.cache.SetDefault(ctxs, cacheKey, res)
 	return res, nil
 }
 
 // ─────────────── List ────────────────────────────────────────────────────────────
-func (s *service) ListKotaKabupaten(page, pageSize int, provinsiID *int64, filter *dto.FilterKotaKabupatenRequest) ([]dto.KotaKabupatenResponse, int64, error) {
-	ctx := context.Background()
+func (s *service) ListKotaKabupaten(ctx context.Context, page, pageSize int, provinsiID *int64, filter *dto.FilterKotaKabupatenRequest) ([]dto.KotaKabupatenResponse, int64, error) {
+	ctxs := context.Background()
 	cacheKey := cacheKeyKotaList(page, pageSize, provinsiID, filter)
 
 	// 1. Cek Cache
@@ -70,7 +70,7 @@ func (s *service) ListKotaKabupaten(page, pageSize int, provinsiID *int64, filte
 		Items []dto.KotaKabupatenResponse `json:"items"`
 		Total int64                       `json:"total"`
 	}
-	if s.cache.Get(ctx, cacheKey, &cachedRes) {
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
 		if len(cachedRes.Items) == 0 {
 			return nil, 0, appErrors.NotFound("Kota/Kabupaten tidak ditemukan")
 		}
@@ -85,7 +85,7 @@ func (s *service) ListKotaKabupaten(page, pageSize int, provinsiID *int64, filte
 		pageSize = 10
 	}
 
-	items, total, err := s.repo.ListKotaKabupaten(page, pageSize, provinsiID, filter)
+	items, total, err := s.repo.ListKotaKabupaten(ctx, page, pageSize, provinsiID, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -96,7 +96,7 @@ func (s *service) ListKotaKabupaten(page, pageSize int, provinsiID *int64, filte
 	res := dto.ToKotaKabupatenListResponse(items)
 
 	// 3. Simpan ke Cache
-	s.cache.SetDefault(ctx, cacheKey, struct {
+	s.cache.SetDefault(ctxs, cacheKey, struct {
 		Items []dto.KotaKabupatenResponse `json:"items"`
 		Total int64                       `json:"total"`
 	}{Items: res, Total: total})
@@ -105,7 +105,7 @@ func (s *service) ListKotaKabupaten(page, pageSize int, provinsiID *int64, filte
 }
 
 // ─────────────── Create ──────────────────────────────────────────────────────────
-func (s *service) CreateKotaKabupaten(req *dto.CreateKotaKabupatenRequest, actor he.AuthContext) (*dto.KotaKabupatenResponse, error) {
+func (s *service) CreateKotaKabupaten(ctx context.Context, req *dto.CreateKotaKabupatenRequest, actor he.AuthContext) (*dto.KotaKabupatenResponse, error) {
 	// Permission
 	can, err := s.canCreateMasterAlamat(actor)
 	if err != nil {
@@ -117,7 +117,7 @@ func (s *service) CreateKotaKabupaten(req *dto.CreateKotaKabupatenRequest, actor
 	}
 
 	// Cek duplikat code
-	exists, err := s.repo.ExistsKotaKabupatenByCode(req.Code, nil)
+	exists, err := s.repo.ExistsKotaKabupatenByCode(ctx, req.Code, nil)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek duplikat code")
 	}
@@ -127,7 +127,7 @@ func (s *service) CreateKotaKabupaten(req *dto.CreateKotaKabupatenRequest, actor
 	}
 
 	// Logic
-	provinsi, err := s.repo.GetByIDProvinsi(req.ProvinsiID)
+	provinsi, err := s.repo.GetByIDProvinsi(ctx, req.ProvinsiID)
 	if err != nil {
 		return nil, err
 	}
@@ -142,23 +142,23 @@ func (s *service) CreateKotaKabupaten(req *dto.CreateKotaKabupatenRequest, actor
 		CreatedBy:  &actor.UserID,
 		UpdatedBy:  &actor.UserID,
 	}
-	if err := s.repo.CreateKotaKabupaten(m); err != nil {
+	if err := s.repo.CreateKotaKabupaten(ctx, m); err != nil {
 		return nil, err
 	}
 
 	res := dto.ToKotaKabupatenResponse(m)
 
 	// Invalidate Cache
-	ctx := context.Background()
-	s.cache.InvalidateList(ctx, cachePrefixKotaList)
-	s.cache.InvalidateList(ctx, cachePrefixKecamatanList)
-	s.cache.InvalidateList(ctx, cachePrefixDesaList)
+	ctxs := context.Background()
+	s.cache.InvalidateList(ctxs, cachePrefixKotaList)
+	s.cache.InvalidateList(ctxs, cachePrefixKecamatanList)
+	s.cache.InvalidateList(ctxs, cachePrefixDesaList)
 
 	return res, nil
 }
 
 // ─────────────── Update ──────────────────────────────────────────────────────────
-func (s *service) UpdateKotaKabupaten(id int64, req *dto.UpdateKotaKabupatenRequest, actor he.AuthContext) (*dto.KotaKabupatenResponse, error) {
+func (s *service) UpdateKotaKabupaten(ctx context.Context, id int64, req *dto.UpdateKotaKabupatenRequest, actor he.AuthContext) (*dto.KotaKabupatenResponse, error) {
 	// Permission
 	can, err := s.canUpdateMasterAlamat(actor)
 	if err != nil {
@@ -170,7 +170,7 @@ func (s *service) UpdateKotaKabupaten(id int64, req *dto.UpdateKotaKabupatenRequ
 	}
 
 	// Logic
-	m, err := s.repo.GetByIDKotaKabupaten(id)
+	m, err := s.repo.GetByIDKotaKabupaten(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +183,7 @@ func (s *service) UpdateKotaKabupaten(id int64, req *dto.UpdateKotaKabupatenRequ
 	}
 	if req.Code != nil {
 		// Cek duplikat code, exclude diri sendiri
-		exists, err := s.repo.ExistsKotaKabupatenByCode(*req.Code, &id)
+		exists, err := s.repo.ExistsKotaKabupatenByCode(ctx, *req.Code, &id)
 		if err != nil {
 			return nil, appErrors.Internal("gagal cek duplikat code")
 		}
@@ -199,25 +199,25 @@ func (s *service) UpdateKotaKabupaten(id int64, req *dto.UpdateKotaKabupatenRequ
 	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()
 
-	if err := s.repo.UpdateKotaKabupaten(m); err != nil {
+	if err := s.repo.UpdateKotaKabupaten(ctx, m); err != nil {
 		return nil, err
 	}
 
 	res := dto.ToKotaKabupatenResponse(m)
 
 	// Invalidate Cache
-	ctx := context.Background()
-	s.cache.InvalidateDetail(ctx, cacheKeyKotaDetail(id))
-	s.cache.InvalidateDetail(ctx, cacheKeyKotaGetDetail(id))
-	s.cache.InvalidateList(ctx, cachePrefixKotaList)
-	s.cache.InvalidateList(ctx, cachePrefixKecamatanList)
-	s.cache.InvalidateList(ctx, cachePrefixDesaList)
+	ctxs := context.Background()
+	s.cache.InvalidateDetail(ctxs, cacheKeyKotaDetail(id))
+	s.cache.InvalidateDetail(ctxs, cacheKeyKotaGetDetail(id))
+	s.cache.InvalidateList(ctxs, cachePrefixKotaList)
+	s.cache.InvalidateList(ctxs, cachePrefixKecamatanList)
+	s.cache.InvalidateList(ctxs, cachePrefixDesaList)
 
 	return res, nil
 }
 
 // ─────────────── Delete ──────────────────────────────────────────────────────────
-func (s *service) DeleteKotaKabupaten(id int64, actor he.AuthContext) error {
+func (s *service) DeleteKotaKabupaten(ctx context.Context, id int64, actor he.AuthContext) error {
 	// Permission
 	can, err := s.canDeleteMasterAlamat(actor)
 	if err != nil {
@@ -229,7 +229,7 @@ func (s *service) DeleteKotaKabupaten(id int64, actor he.AuthContext) error {
 	}
 
 	// Logic
-	m, err := s.repo.GetByIDKotaKabupaten(id)
+	m, err := s.repo.GetByIDKotaKabupaten(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -237,15 +237,15 @@ func (s *service) DeleteKotaKabupaten(id int64, actor he.AuthContext) error {
 		return appErrors.NotFound("Kota/Kabupaten tidak ditemukan")
 	}
 
-	err = s.repo.DeleteKotaKabupaten(id)
+	err = s.repo.DeleteKotaKabupaten(ctx, id)
 	if err == nil {
 		// Invalidate Cache
-		ctx := context.Background()
-		s.cache.InvalidateDetail(ctx, cacheKeyKotaDetail(id))
-		s.cache.InvalidateDetail(ctx, cacheKeyKotaGetDetail(id))
-		s.cache.InvalidateList(ctx, cachePrefixKotaList)
-		s.cache.InvalidateList(ctx, cachePrefixKecamatanList)
-		s.cache.InvalidateList(ctx, cachePrefixDesaList)
+		ctxs := context.Background()
+		s.cache.InvalidateDetail(ctxs, cacheKeyKotaDetail(id))
+		s.cache.InvalidateDetail(ctxs, cacheKeyKotaGetDetail(id))
+		s.cache.InvalidateList(ctxs, cachePrefixKotaList)
+		s.cache.InvalidateList(ctxs, cachePrefixKecamatanList)
+		s.cache.InvalidateList(ctxs, cachePrefixDesaList)
 	}
 	return err
 }

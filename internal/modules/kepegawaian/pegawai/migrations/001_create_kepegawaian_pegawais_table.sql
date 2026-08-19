@@ -1,5 +1,5 @@
 -- Migration: Create kepegawaian_pegawais table
--- Timestamp: 20260623112948
+-- Timestamp: 20260819114029
 
 CREATE TABLE IF NOT EXISTS kepegawaian_pegawais (
     id          BIGSERIAL    PRIMARY KEY,

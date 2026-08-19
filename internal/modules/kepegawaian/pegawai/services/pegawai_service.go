@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"time"
@@ -11,7 +12,8 @@ import (
 	he "neosim_go/internal/shared/httputil"
 )
 
-func (s *service) Create(req *dto.CreateKepegawaianPegawaiRequest, createdBy *int64, actor he.AuthContext) (*dto.KepegawaianPegawaiResponse, error) {
+// ── Create ────────────────────────────────────────────────────────────────────
+func (s *service) CreatePegawai(ctx context.Context,req *dto.CreateKepegawaianPegawaiRequest, actor he.AuthContext) (*dto.KepegawaianPegawaiResponse, error) {
 	can, err := s.canCreateKepegawaianPegawai(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -24,16 +26,25 @@ func (s *service) Create(req *dto.CreateKepegawaianPegawaiRequest, createdBy *in
 	m := &models.KepegawaianPegawai{
 		Name:        req.Name,
 		Description: req.Description,
-		CreatedBy:   createdBy,
-		UpdatedBy:   createdBy,
+		CreatedBy:   &actor.UserID,
+		UpdatedBy:   &actor.UserID,
 	}
-	if err := s.repo.Create(m); err != nil {
+	if err := s.repo.CreatePegawai(ctx,m); err != nil {
 		return nil, err
 	}
-	return dto.ToKepegawaianPegawaiResponse(m), nil
+	
+	creator := s.buildCreator(m.CreatedBy)
+
+	return dto.ToKepegawaianPegawaiResponse(dto.KepegawaianPegawaiResponseParams{
+		KepegawaianPegawai: m,
+		Creator:    creator,
+		Updater:    creator,
+	}), nil
 }
 
-func (s *service) GetByID(id int64, actor he.AuthContext) (*dto.KepegawaianPegawaiResponse, error) {
+
+// ── GetByID ───────────────────────────────────────────────────────────────────
+func (s *service) GetPegawaiByID(ctx context.Context,id int64, actor he.AuthContext) (*dto.KepegawaianPegawaiResponse, error) {
 	can, err := s.canReadKepegawaianPegawai(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -43,17 +54,27 @@ func (s *service) GetByID(id int64, actor he.AuthContext) (*dto.KepegawaianPegaw
 			"Akses ditolak. Anda tidak memiliki hak akses untuk Melihat KepegawaianPegawai.", nil)
 	}
 
-	m, err := s.repo.GetByID(id)
+	m, err := s.repo.GetPegawaiByID(ctx,id)
 	if err != nil {
 		return nil, err
 	}
 	if m == nil {
 		return nil, errors.New("KepegawaianPegawai tidak ditemukan")
 	}
-	return dto.ToKepegawaianPegawaiResponse(m), nil
+	
+	creator := s.buildCreator(m.CreatedBy)
+	updater := s.buildCreator(m.UpdatedBy)
+
+	return dto.ToKepegawaianPegawaiResponse(dto.KepegawaianPegawaiResponseParams{
+		KepegawaianPegawai: m,
+		Creator:    creator,
+		Updater:    updater,
+	}), nil
 }
 
-func (s *service) List(page, pageSize int, filter *dto.FilterKepegawaianPegawaiRequest, actor he.AuthContext) ([]dto.KepegawaianPegawaiResponse, int64, error) {
+
+// ── List ──────────────────────────────────────────────────────────────────────
+func (s *service) ListPegawai(ctx context.Context,page, pageSize int, filter *dto.FilterKepegawaianPegawaiRequest, actor he.AuthContext) ([]dto.KepegawaianPegawaiResponse, int64, error) {
 	can, err := s.canReadKepegawaianPegawai(actor)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal cek akses")
@@ -66,17 +87,21 @@ func (s *service) List(page, pageSize int, filter *dto.FilterKepegawaianPegawaiR
 	if page < 1 {
 		page = 1
 	}
-	if pageSize < 1 || pageSize > 100 {
-		pageSize = 10
+	if pageSize < 1 || pageSize > s.cfg.DefaultPageSizeMax {
+		pageSize = s.cfg.DefaultPageSizeMax
 	}
-	items, total, err := s.repo.List(page, pageSize, filter)
+	items, total, err := s.repo.ListPegawai(ctx,page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}
-	return dto.ToKepegawaianPegawaiListResponse(items), total, nil
+
+	creatorsMap, updatersMap := s.buildAuditMaps(items)
+	return dto.ToKepegawaianPegawaiListResponse(items, creatorsMap, updatersMap), total, nil
 }
 
-func (s *service) Update(id int64, req *dto.UpdateKepegawaianPegawaiRequest, updatedBy *int64, actor he.AuthContext) (*dto.KepegawaianPegawaiResponse, error) {
+
+// ── Update ────────────────────────────────────────────────────────────────────
+func (s *service) UpdatePegawai(ctx context.Context,id int64, req *dto.UpdateKepegawaianPegawaiRequest, actor he.AuthContext) (*dto.KepegawaianPegawaiResponse, error) {
 	can, err := s.canUpdateKepegawaianPegawai(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -86,7 +111,7 @@ func (s *service) Update(id int64, req *dto.UpdateKepegawaianPegawaiRequest, upd
 			"Akses ditolak. Anda tidak memiliki hak akses untuk mengubah KepegawaianPegawai.", nil)
 	}
 
-	m, err := s.repo.GetByID(id)
+	m, err := s.repo.GetPegawaiByID(ctx,id)
 	if err != nil {
 		return nil, err
 	}
@@ -99,16 +124,25 @@ func (s *service) Update(id int64, req *dto.UpdateKepegawaianPegawaiRequest, upd
 	if req.Description != nil {
 		m.Description = req.Description
 	}
-	m.UpdatedBy = updatedBy
+	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()
 
-	if err := s.repo.Update(m); err != nil {
+	if err := s.repo.UpdatePegawai(ctx,m); err != nil {
 		return nil, err
 	}
-	return dto.ToKepegawaianPegawaiResponse(m), nil
+	
+	creator := s.buildCreator(m.CreatedBy)
+	updater := s.buildCreator(m.UpdatedBy)
+
+	return dto.ToKepegawaianPegawaiResponse(dto.KepegawaianPegawaiResponseParams{
+		KepegawaianPegawai: m,
+		Creator:    creator,
+		Updater:    updater,
+	}), nil
 }
 
-func (s *service) Delete(id int64, actor he.AuthContext) error {
+// ── Delete ────────────────────────────────────────────────────────────────────
+func (s *service) DeletePegawai(ctx context.Context,id int64, actor he.AuthContext) error {
 	can, err := s.canDeleteKepegawaianPegawai(actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
@@ -118,12 +152,12 @@ func (s *service) Delete(id int64, actor he.AuthContext) error {
 			"Akses ditolak. Anda tidak memiliki hak akses untuk menghapus KepegawaianPegawai.", nil)
 	}
 
-	m, err := s.repo.GetByID(id)
+	m, err := s.repo.GetPegawaiByID(ctx,id)
 	if err != nil {
 		return err
 	}
 	if m == nil {
 		return errors.New("KepegawaianPegawai tidak ditemukan")
 	}
-	return s.repo.Delete(id)
+	return s.repo.DeletePegawai(ctx,id)
 }

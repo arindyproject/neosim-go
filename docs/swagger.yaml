@@ -171,12 +171,21 @@ definitions:
       description:
         maxLength: 500
         type: string
-      name:
-        maxLength: 255
-        minLength: 1
+      is_aktif:
+        type: boolean
+      is_primary:
+        type: boolean
+      nilai:
+        maxLength: 225
         type: string
+      pegawai_id:
+        type: integer
+      tipe_id:
+        type: integer
     required:
-    - name
+    - nilai
+    - pegawai_id
+    - tipe_id
     type: object
   dto.CreateKepegawaianPegawaiRequest:
     properties:
@@ -414,35 +423,6 @@ definitions:
     required:
     - name
     type: object
-  dto.CreateTipeRequest:
-    properties:
-      code:
-        maxLength: 100
-        minLength: 1
-        type: string
-      description:
-        maxLength: 500
-        type: string
-      fhir_system:
-        maxLength: 255
-        type: string
-      has_expiry:
-        type: boolean
-      is_nakes:
-        type: boolean
-      is_required:
-        type: boolean
-      label:
-        maxLength: 255
-        minLength: 1
-        type: string
-      penerbit:
-        maxLength: 255
-        type: string
-    required:
-    - code
-    - label
-    type: object
   dto.CreateUserRequest:
     properties:
       email:
@@ -623,8 +603,16 @@ definitions:
         type: string
       id:
         type: integer
-      name:
+      is_aktif:
+        type: boolean
+      is_primary:
+        type: boolean
+      nilai:
         type: string
+      pegawai_id:
+        type: integer
+      tipe_id:
+        type: integer
       updated_at:
         type: string
       updated_by:
@@ -635,7 +623,7 @@ definitions:
       created_at:
         type: string
       created_by:
-        type: integer
+        $ref: '#/definitions/httputil.UserData'
       description:
         type: string
       id:
@@ -645,7 +633,7 @@ definitions:
       updated_at:
         type: string
       updated_by:
-        type: integer
+        $ref: '#/definitions/httputil.UserData'
     type: object
   dto.KotaKabupatenDetailResponse:
     properties:
@@ -1027,35 +1015,6 @@ definitions:
       updated_by:
         $ref: '#/definitions/httputil.UserData'
     type: object
-  dto.TipeResponse:
-    properties:
-      code:
-        type: string
-      created_at:
-        type: string
-      created_by:
-        $ref: '#/definitions/httputil.UserData'
-      description:
-        type: string
-      fhir_system:
-        type: string
-      has_expiry:
-        type: boolean
-      id:
-        type: integer
-      is_nakes:
-        type: boolean
-      is_required:
-        type: boolean
-      label:
-        type: string
-      penerbit:
-        type: string
-      updated_at:
-        type: string
-      updated_by:
-        $ref: '#/definitions/httputil.UserData'
-    type: object
   dto.TipeSimpelResponse:
     properties:
       code:
@@ -1167,10 +1126,15 @@ definitions:
       description:
         maxLength: 500
         type: string
-      name:
-        maxLength: 255
-        minLength: 1
+      is_aktif:
+        type: boolean
+      is_primary:
+        type: boolean
+      nilai:
+        maxLength: 225
         type: string
+      tipe_id:
+        type: integer
     type: object
   dto.UpdateKepegawaianPegawaiRequest:
     properties:
@@ -1352,32 +1316,6 @@ definitions:
         minLength: 1
         type: string
     type: object
-  dto.UpdateTipeRequest:
-    properties:
-      code:
-        maxLength: 100
-        minLength: 1
-        type: string
-      description:
-        maxLength: 500
-        type: string
-      fhir_system:
-        maxLength: 255
-        type: string
-      has_expiry:
-        type: boolean
-      is_nakes:
-        type: boolean
-      is_required:
-        type: boolean
-      label:
-        maxLength: 255
-        minLength: 1
-        type: string
-      penerbit:
-        maxLength: 255
-        type: string
-    type: object
   dto.UpdateUserRequest:
     properties:
       email:
@@ -1518,6 +1456,132 @@ definitions:
       type:
         type: string
       value: {}
+    type: object
+  neosim_go_internal_modules_kepegawaian_identifier_dto.CreateTipeRequest:
+    properties:
+      code:
+        maxLength: 100
+        minLength: 1
+        type: string
+      description:
+        maxLength: 500
+        type: string
+      fhir_system:
+        maxLength: 255
+        type: string
+      has_expiry:
+        type: boolean
+      is_nakes:
+        type: boolean
+      is_required:
+        type: boolean
+      label:
+        maxLength: 255
+        minLength: 1
+        type: string
+      penerbit:
+        maxLength: 255
+        type: string
+    required:
+    - code
+    - label
+    type: object
+  neosim_go_internal_modules_kepegawaian_identifier_dto.TipeResponse:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        $ref: '#/definitions/httputil.UserData'
+      description:
+        type: string
+      fhir_system:
+        type: string
+      has_expiry:
+        type: boolean
+      id:
+        type: integer
+      is_nakes:
+        type: boolean
+      is_required:
+        type: boolean
+      label:
+        type: string
+      penerbit:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        $ref: '#/definitions/httputil.UserData'
+    type: object
+  neosim_go_internal_modules_kepegawaian_identifier_dto.UpdateTipeRequest:
+    properties:
+      code:
+        maxLength: 100
+        minLength: 1
+        type: string
+      description:
+        maxLength: 500
+        type: string
+      fhir_system:
+        maxLength: 255
+        type: string
+      has_expiry:
+        type: boolean
+      is_nakes:
+        type: boolean
+      is_required:
+        type: boolean
+      label:
+        maxLength: 255
+        minLength: 1
+        type: string
+      penerbit:
+        maxLength: 255
+        type: string
+    type: object
+  neosim_go_internal_modules_kepegawaian_kontak_dto.CreateTipeRequest:
+    properties:
+      code:
+        maxLength: 255
+        minLength: 1
+        type: string
+      label:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - code
+    - label
+    type: object
+  neosim_go_internal_modules_kepegawaian_kontak_dto.TipeResponse:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        $ref: '#/definitions/httputil.UserData'
+      id:
+        type: integer
+      label:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        $ref: '#/definitions/httputil.UserData'
+    type: object
+  neosim_go_internal_modules_kepegawaian_kontak_dto.UpdateTipeRequest:
+    properties:
+      code:
+        maxLength: 255
+        minLength: 1
+        type: string
+      label:
+        maxLength: 255
+        minLength: 1
+        type: string
     type: object
   response.MyGoResponse:
     description: Standard JSON response
@@ -2463,7 +2527,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/dto.TipeResponse'
+                    $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.TipeResponse'
                   type: array
               type: object
       security:
@@ -2481,7 +2545,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateTipeRequest'
+          $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.CreateTipeRequest'
       produces:
       - application/json
       responses:
@@ -2492,7 +2556,7 @@ paths:
             - $ref: '#/definitions/response.MyGoResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/dto.TipeResponse'
+                  $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.TipeResponse'
               type: object
       security:
       - BearerAuth: []
@@ -2542,7 +2606,7 @@ paths:
             - $ref: '#/definitions/response.MyGoResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/dto.TipeResponse'
+                  $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.TipeResponse'
               type: object
       security:
       - BearerAuth: []
@@ -2564,7 +2628,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.UpdateTipeRequest'
+          $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.UpdateTipeRequest'
       produces:
       - application/json
       responses:
@@ -2575,7 +2639,7 @@ paths:
             - $ref: '#/definitions/response.MyGoResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/dto.TipeResponse'
+                  $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.TipeResponse'
               type: object
       security:
       - BearerAuth: []
@@ -2588,10 +2652,26 @@ paths:
       - application/json
       description: Get paginated list of KepegawaianKontak
       parameters:
-      - description: Filter by name (partial match)
+      - description: Filter by Pegawai ID
         in: query
-        name: name
+        name: pegawai_id
+        type: integer
+      - description: Filter by Tipe ID
+        in: query
+        name: tipe_id
+        type: integer
+      - description: Filter by Nilai / Nomor Identifier (partial match)
+        in: query
+        name: nilai
         type: string
+      - description: Filter by Is Primary Status
+        in: query
+        name: is_primary
+        type: boolean
+      - description: Filter by Is Aktif Status
+        in: query
+        name: is_aktif
+        type: boolean
       - description: Page number
         in: query
         name: page
@@ -2728,6 +2808,186 @@ paths:
       security:
       - BearerAuth: []
       summary: Update KepegawaianKontak
+      tags:
+      - kepegawaian/kontak
+  /kepegawaian/kontak/{pegawai_id}/pegawai:
+    get:
+      consumes:
+      - application/json
+      description: Get KepegawaianKontak by :id
+      parameters:
+      - description: ID pegawai
+        in: path
+        name: pegawai_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KepegawaianKontakResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get KepegawaianKontak
+      tags:
+      - kepegawaian/kontak
+  /kepegawaian/kontak/tipes:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of Tipe
+      parameters:
+      - description: Filter by code (partial match)
+        in: query
+        name: code
+        type: string
+      - description: Filter by label (partial match)
+        in: query
+        name: label
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_kontak_dto.TipeResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Tipe
+      tags:
+      - kepegawaian/kontak
+    post:
+      consumes:
+      - application/json
+      description: Create New Tipe
+      parameters:
+      - description: Create Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_kontak_dto.CreateTipeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_kontak_dto.TipeResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create Tipe
+      tags:
+      - kepegawaian/kontak
+  /kepegawaian/kontak/tipes/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Tipe by :id
+      parameters:
+      - description: Tipe ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete Tipe
+      tags:
+      - kepegawaian/kontak
+    get:
+      consumes:
+      - application/json
+      description: Get Tipe by :id
+      parameters:
+      - description: Tipe ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_kontak_dto.TipeResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get Tipe
+      tags:
+      - kepegawaian/kontak
+    put:
+      consumes:
+      - application/json
+      description: Update Tipe by :id
+      parameters:
+      - description: Tipe ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_kontak_dto.UpdateTipeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_kontak_dto.TipeResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update Tipe
       tags:
       - kepegawaian/kontak
   /kepegawaian/pegawai:

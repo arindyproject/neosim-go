@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"errors"
 
 	"neosim_go/internal/modules/artikel/kategori/contracts"
@@ -19,14 +20,14 @@ func NewTagRepository(db *gorm.DB) contracts.TagRepository {
 }
 
 // ── Create ────────────────────────────────────────────────────────────────────
-func (r *repository) CreateTag(m *models.Tag) error {
-	return r.db.Create(m).Error
+func (r *repository) CreateTag(ctx context.Context,m *models.Tag) error {
+	return r.db.WithContext(ctx).Create(m).Error
 }
 
 // ── GetByID ───────────────────────────────────────────────────────────────────
-func (r *repository) GetTagByID(id int64) (*models.Tag, error) {
+func (r *repository) GetTagByID(ctx context.Context,id int64) (*models.Tag, error) {
 	var m models.Tag
-	result := r.db.Where("id = ? AND deleted_at IS NULL", id).First(&m)
+	result := r.db.WithContext(ctx).Where("id = ? AND deleted_at IS NULL", id).First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -34,11 +35,11 @@ func (r *repository) GetTagByID(id int64) (*models.Tag, error) {
 }
 
 // ── List ──────────────────────────────────────────────────────────────────────
-func (r *repository) ListTag(page, pageSize int, filter *dto.FilterTagRequest) ([]models.Tag, int64, error) {
+func (r *repository) ListTag(ctx context.Context,page, pageSize int, filter *dto.FilterTagRequest) ([]models.Tag, int64, error) {
 	var items []models.Tag
 	var total int64
 
-	query := r.db.Model(&models.Tag{}).Where("deleted_at IS NULL")
+	query := r.db.WithContext(ctx).Model(&models.Tag{}).Where("deleted_at IS NULL")
 	if filter.Name != "" {
 		query = query.Where("name ILIKE ?", "%"+filter.Name+"%")
 	}
@@ -53,11 +54,11 @@ func (r *repository) ListTag(page, pageSize int, filter *dto.FilterTagRequest) (
 }
 
 // ── Update ────────────────────────────────────────────────────────────────────
-func (r *repository) UpdateTag(m *models.Tag) error {
-	return r.db.Save(m).Error
+func (r *repository) UpdateTag(ctx context.Context,m *models.Tag) error {
+	return r.db.WithContext(ctx).Save(m).Error
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
-func (r *repository) DeleteTag(id int64) error {
+func (r *repository) DeleteTag(ctx context.Context,id int64) error {
 	return r.db.Where("id = ?", id).Delete(&models.Tag{}).Error
 }

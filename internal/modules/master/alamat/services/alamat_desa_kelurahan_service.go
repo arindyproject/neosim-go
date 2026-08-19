@@ -14,18 +14,18 @@ import (
 // Kelurahan/Desa ==================================================================
 
 // ─────────────── GetByID ─────────────────────────────────────────────────────────
-func (s *service) GetByIDKelurahanDesa(id int64) (*dto.KelurahanDesaDetailResponse, error) {
-	ctx := context.Background()
+func (s *service) GetByIDKelurahanDesa(ctx context.Context, id int64) (*dto.KelurahanDesaDetailResponse, error) {
+	ctxs := context.Background()
 	cacheKey := cacheKeyDesaDetail(id)
 
 	// 1. Cek Cache
 	var cachedRes dto.KelurahanDesaDetailResponse
-	if s.cache.Get(ctx, cacheKey, &cachedRes) {
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
 		return &cachedRes, nil
 	}
 
 	// 2. Ambil dari DB
-	m, err := s.repo.GetByIDKelurahanDesa(id)
+	m, err := s.repo.GetByIDKelurahanDesa(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -49,13 +49,13 @@ func (s *service) GetByIDKelurahanDesa(id int64) (*dto.KelurahanDesaDetailRespon
 	}
 
 	// 3. Simpan ke Cache
-	s.cache.SetDefault(ctx, cacheKey, res)
+	s.cache.SetDefault(ctxs, cacheKey, res)
 	return res, nil
 }
 
 // ─────────────── List ────────────────────────────────────────────────────────────
-func (s *service) ListKelurahanDesa(page, pageSize int, kecamatanID *int64, filter *dto.FilterKelurahanDesaRequest) ([]dto.KelurahanDesaResponse, int64, error) {
-	ctx := context.Background()
+func (s *service) ListKelurahanDesa(ctx context.Context, page, pageSize int, kecamatanID *int64, filter *dto.FilterKelurahanDesaRequest) ([]dto.KelurahanDesaResponse, int64, error) {
+	ctxs := context.Background()
 	cacheKey := cacheKeyDesaList(page, pageSize, kecamatanID, filter)
 
 	// 1. Cek Cache
@@ -63,7 +63,7 @@ func (s *service) ListKelurahanDesa(page, pageSize int, kecamatanID *int64, filt
 		Items []dto.KelurahanDesaResponse `json:"items"`
 		Total int64                       `json:"total"`
 	}
-	if s.cache.Get(ctx, cacheKey, &cachedRes) {
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
 		if len(cachedRes.Items) == 0 {
 			return nil, 0, appErrors.NotFound("Kelurahan/Desa tidak ditemukan")
 		}
@@ -78,7 +78,7 @@ func (s *service) ListKelurahanDesa(page, pageSize int, kecamatanID *int64, filt
 		pageSize = 10
 	}
 
-	items, total, err := s.repo.ListKelurahanDesa(page, pageSize, kecamatanID, filter)
+	items, total, err := s.repo.ListKelurahanDesa(ctx, page, pageSize, kecamatanID, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -89,7 +89,7 @@ func (s *service) ListKelurahanDesa(page, pageSize int, kecamatanID *int64, filt
 	res := dto.ToKelurahanDesaListResponse(items)
 
 	// 3. Simpan ke Cache
-	s.cache.SetDefault(ctx, cacheKey, struct {
+	s.cache.SetDefault(ctxs, cacheKey, struct {
 		Items []dto.KelurahanDesaResponse `json:"items"`
 		Total int64                       `json:"total"`
 	}{Items: res, Total: total})
@@ -98,7 +98,7 @@ func (s *service) ListKelurahanDesa(page, pageSize int, kecamatanID *int64, filt
 }
 
 // ─────────────── Create ──────────────────────────────────────────────────────────
-func (s *service) CreateKelurahanDesa(req *dto.CreateKelurahanDesaRequest, actor he.AuthContext) (*dto.KelurahanDesaResponse, error) {
+func (s *service) CreateKelurahanDesa(ctx context.Context, req *dto.CreateKelurahanDesaRequest, actor he.AuthContext) (*dto.KelurahanDesaResponse, error) {
 	// Permission
 	can, err := s.canCreateMasterAlamat(actor)
 	if err != nil {
@@ -110,7 +110,7 @@ func (s *service) CreateKelurahanDesa(req *dto.CreateKelurahanDesaRequest, actor
 	}
 
 	// Cek duplikat code
-	exists, err := s.repo.ExistsKelurahanDesaByCode(req.Code, nil)
+	exists, err := s.repo.ExistsKelurahanDesaByCode(ctx, req.Code, nil)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek duplikat code")
 	}
@@ -120,7 +120,7 @@ func (s *service) CreateKelurahanDesa(req *dto.CreateKelurahanDesaRequest, actor
 	}
 
 	// Logic
-	kecamatan, err := s.repo.GetByIDKecamatan(req.KecamatanID)
+	kecamatan, err := s.repo.GetByIDKecamatan(ctx, req.KecamatanID)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +136,7 @@ func (s *service) CreateKelurahanDesa(req *dto.CreateKelurahanDesaRequest, actor
 		CreatedBy:   &actor.UserID,
 		UpdatedBy:   &actor.UserID,
 	}
-	if err := s.repo.CreateKelurahanDesa(m); err != nil {
+	if err := s.repo.CreateKelurahanDesa(ctx, m); err != nil {
 		return nil, err
 	}
 
@@ -149,7 +149,7 @@ func (s *service) CreateKelurahanDesa(req *dto.CreateKelurahanDesaRequest, actor
 }
 
 // ─────────────── Update ──────────────────────────────────────────────────────────
-func (s *service) UpdateKelurahanDesa(id int64, req *dto.UpdateKelurahanDesaRequest, actor he.AuthContext) (*dto.KelurahanDesaResponse, error) {
+func (s *service) UpdateKelurahanDesa(ctx context.Context, id int64, req *dto.UpdateKelurahanDesaRequest, actor he.AuthContext) (*dto.KelurahanDesaResponse, error) {
 	// Permission
 	can, err := s.canUpdateMasterAlamat(actor)
 	if err != nil {
@@ -161,7 +161,7 @@ func (s *service) UpdateKelurahanDesa(id int64, req *dto.UpdateKelurahanDesaRequ
 	}
 
 	// Logic
-	m, err := s.repo.GetByIDKelurahanDesa(id)
+	m, err := s.repo.GetByIDKelurahanDesa(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -174,7 +174,7 @@ func (s *service) UpdateKelurahanDesa(id int64, req *dto.UpdateKelurahanDesaRequ
 	}
 	if req.Code != nil {
 		// Cek duplikat code, exclude diri sendiri
-		exists, err := s.repo.ExistsKelurahanDesaByCode(*req.Code, &id)
+		exists, err := s.repo.ExistsKelurahanDesaByCode(ctx, *req.Code, &id)
 		if err != nil {
 			return nil, appErrors.Internal("gagal cek duplikat code")
 		}
@@ -193,23 +193,23 @@ func (s *service) UpdateKelurahanDesa(id int64, req *dto.UpdateKelurahanDesaRequ
 	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()
 
-	if err := s.repo.UpdateKelurahanDesa(m); err != nil {
+	if err := s.repo.UpdateKelurahanDesa(ctx, m); err != nil {
 		return nil, err
 	}
 
 	res := dto.ToKelurahanDesaResponse(m)
 
 	// Invalidate Cache
-	ctx := context.Background()
-	s.cache.InvalidateDetail(ctx, cacheKeyDesaDetail(id))
-	s.cache.InvalidateDetail(ctx, cacheKeyDesaGetDetail(id))
-	s.cache.InvalidateList(ctx, cachePrefixDesaList)
+	ctxs := context.Background()
+	s.cache.InvalidateDetail(ctxs, cacheKeyDesaDetail(id))
+	s.cache.InvalidateDetail(ctxs, cacheKeyDesaGetDetail(id))
+	s.cache.InvalidateList(ctxs, cachePrefixDesaList)
 
 	return res, nil
 }
 
 // ─────────────── Delete ──────────────────────────────────────────────────────────
-func (s *service) DeleteKelurahanDesa(id int64, actor he.AuthContext) error {
+func (s *service) DeleteKelurahanDesa(ctx context.Context, id int64, actor he.AuthContext) error {
 	// Permission
 	can, err := s.canDeleteMasterAlamat(actor)
 	if err != nil {
@@ -221,7 +221,7 @@ func (s *service) DeleteKelurahanDesa(id int64, actor he.AuthContext) error {
 	}
 
 	// Logic
-	m, err := s.repo.GetByIDKelurahanDesa(id)
+	m, err := s.repo.GetByIDKelurahanDesa(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -229,13 +229,13 @@ func (s *service) DeleteKelurahanDesa(id int64, actor he.AuthContext) error {
 		return appErrors.NotFound("Kelurahan/Desa tidak ditemukan")
 	}
 
-	err = s.repo.DeleteKelurahanDesa(id)
+	err = s.repo.DeleteKelurahanDesa(ctx, id)
 	if err == nil {
 		// Invalidate Cache
-		ctx := context.Background()
-		s.cache.InvalidateDetail(ctx, cacheKeyDesaDetail(id))
-		s.cache.InvalidateDetail(ctx, cacheKeyDesaGetDetail(id))
-		s.cache.InvalidateList(ctx, cachePrefixDesaList)
+		ctxs := context.Background()
+		s.cache.InvalidateDetail(ctxs, cacheKeyDesaDetail(id))
+		s.cache.InvalidateDetail(ctxs, cacheKeyDesaGetDetail(id))
+		s.cache.InvalidateList(ctxs, cachePrefixDesaList)
 	}
 	return err
 }

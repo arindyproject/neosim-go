@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"time"
@@ -12,7 +13,7 @@ import (
 )
 
 // ─── Create ───────────────────────────────────────────────────────────────────────────────
-func (s *service) CreateKontak(req *dto.CreateKepegawaianKontakRequest, actor he.AuthContext) (*dto.KepegawaianKontakResponse, error) {
+func (s *service) CreateKontak(ctx context.Context, req *dto.CreateKepegawaianKontakRequest, actor he.AuthContext) (*dto.KepegawaianKontakResponse, error) {
 	can, err := s.canCreateKepegawaianKontak(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -32,7 +33,7 @@ func (s *service) CreateKontak(req *dto.CreateKepegawaianKontakRequest, actor he
 		CreatedBy:   &actor.UserID,
 		UpdatedBy:   &actor.UserID,
 	}
-	if err := s.repo.CreateKontak(m); err != nil {
+	if err := s.repo.CreateKontak(ctx, m); err != nil {
 		return nil, err
 	}
 
@@ -46,7 +47,7 @@ func (s *service) CreateKontak(req *dto.CreateKepegawaianKontakRequest, actor he
 }
 
 // ─── GetByID ───────────────────────────────────────────────────────────────────────────────
-func (s *service) GetKontakByID(id int64, actor he.AuthContext) (*dto.KepegawaianKontakResponse, error) {
+func (s *service) GetKontakByID(ctx context.Context, id int64, actor he.AuthContext) (*dto.KepegawaianKontakResponse, error) {
 	can, err := s.canReadKepegawaianKontak(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -56,7 +57,7 @@ func (s *service) GetKontakByID(id int64, actor he.AuthContext) (*dto.Kepegawaia
 			"Akses ditolak. Anda tidak memiliki hak akses untuk Melihat KepegawaianKontak.", nil)
 	}
 
-	m, err := s.repo.GetKontakByID(id)
+	m, err := s.repo.GetKontakByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +76,7 @@ func (s *service) GetKontakByID(id int64, actor he.AuthContext) (*dto.Kepegawaia
 }
 
 // ─── GetByPegawaiID ───────────────────────────────────────────────────────────────────────────────
-func (s *service) GetKontakByPegawaiID(pegawaiID int64, actor he.AuthContext) ([]dto.KepegawaianKontakResponse, error) {
+func (s *service) GetKontakByPegawaiID(ctx context.Context, pegawaiID int64, actor he.AuthContext) ([]dto.KepegawaianKontakResponse, error) {
 	can, err := s.canReadKepegawaianKontak(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -85,7 +86,7 @@ func (s *service) GetKontakByPegawaiID(pegawaiID int64, actor he.AuthContext) ([
 			"Akses ditolak. Anda tidak memiliki hak akses untuk Melihat KepegawaianKontak.", nil)
 	}
 
-	items, err := s.repo.GetKontakByPegawaiID(pegawaiID)
+	items, err := s.repo.GetKontakByPegawaiID(ctx, pegawaiID)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +99,7 @@ func (s *service) GetKontakByPegawaiID(pegawaiID int64, actor he.AuthContext) ([
 }
 
 // ─── List ───────────────────────────────────────────────────────────────────────────────
-func (s *service) ListKontak(page, pageSize int, filter *dto.FilterKepegawaianKontakRequest, actor he.AuthContext) ([]dto.KepegawaianKontakResponse, int64, error) {
+func (s *service) ListKontak(ctx context.Context, page, pageSize int, filter *dto.FilterKepegawaianKontakRequest, actor he.AuthContext) ([]dto.KepegawaianKontakResponse, int64, error) {
 	can, err := s.canReadKepegawaianKontak(actor)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal cek akses")
@@ -114,7 +115,7 @@ func (s *service) ListKontak(page, pageSize int, filter *dto.FilterKepegawaianKo
 	if pageSize < 1 || pageSize > 100 {
 		pageSize = 10
 	}
-	items, total, err := s.repo.ListKontak(page, pageSize, filter)
+	items, total, err := s.repo.ListKontak(ctx, page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -124,7 +125,7 @@ func (s *service) ListKontak(page, pageSize int, filter *dto.FilterKepegawaianKo
 }
 
 // ─── Update ───────────────────────────────────────────────────────────────────────────────
-func (s *service) UpdateKontak(id int64, req *dto.UpdateKepegawaianKontakRequest, actor he.AuthContext) (*dto.KepegawaianKontakResponse, error) {
+func (s *service) UpdateKontak(ctx context.Context, id int64, req *dto.UpdateKepegawaianKontakRequest, actor he.AuthContext) (*dto.KepegawaianKontakResponse, error) {
 	can, err := s.canUpdateKepegawaianKontak(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -134,7 +135,7 @@ func (s *service) UpdateKontak(id int64, req *dto.UpdateKepegawaianKontakRequest
 			"Akses ditolak. Anda tidak memiliki hak akses untuk mengubah KepegawaianKontak.", nil)
 	}
 
-	m, err := s.repo.GetKontakByID(id)
+	m, err := s.repo.GetKontakByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -159,7 +160,7 @@ func (s *service) UpdateKontak(id int64, req *dto.UpdateKepegawaianKontakRequest
 	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()
 
-	if err := s.repo.UpdateKontak(m); err != nil {
+	if err := s.repo.UpdateKontak(ctx, m); err != nil {
 		return nil, err
 	}
 
@@ -174,7 +175,7 @@ func (s *service) UpdateKontak(id int64, req *dto.UpdateKepegawaianKontakRequest
 }
 
 // ─── Delete ───────────────────────────────────────────────────────────────────────────────
-func (s *service) DeleteKontak(id int64, actor he.AuthContext) error {
+func (s *service) DeleteKontak(ctx context.Context, id int64, actor he.AuthContext) error {
 	can, err := s.canDeleteKepegawaianKontak(actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
@@ -184,12 +185,12 @@ func (s *service) DeleteKontak(id int64, actor he.AuthContext) error {
 			"Akses ditolak. Anda tidak memiliki hak akses untuk menghapus KepegawaianKontak.", nil)
 	}
 
-	m, err := s.repo.GetKontakByID(id)
+	m, err := s.repo.GetKontakByID(ctx, id)
 	if err != nil {
 		return err
 	}
 	if m == nil {
 		return errors.New("KepegawaianKontak tidak ditemukan")
 	}
-	return s.repo.DeleteKontak(id)
+	return s.repo.DeleteKontak(ctx, id)
 }

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -23,7 +24,7 @@ import (
 // ─── CRUD ──────────────────────────────────────────────────────────────────────
 
 // CreateUser --------------------------------------------------------------------
-func (s *service) CreateUser(req *dto.CreateUserRequest, actor he.AuthContext) (*dto.UserSimpleResponse, error) {
+func (s *service) CreateUser(ctx context.Context, req *dto.CreateUserRequest, actor he.AuthContext) (*dto.UserSimpleResponse, error) {
 	can, err := s.canCreateUser(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -33,10 +34,10 @@ func (s *service) CreateUser(req *dto.CreateUserRequest, actor he.AuthContext) (
 			"Akses ditolak. Anda tidak memiliki hak akses untuk membuat user baru.", nil)
 	}
 
-	if existing, _ := s.repo.GetByUsername(req.Username); existing != nil {
+	if existing, _ := s.repo.GetByUsername(ctx, req.Username); existing != nil {
 		return nil, appErrors.BadRequest("username sudah digunakan")
 	}
-	if existing, _ := s.repo.GetByEmail(req.Email); existing != nil {
+	if existing, _ := s.repo.GetByEmail(ctx, req.Email); existing != nil {
 		return nil, appErrors.BadRequest("email sudah digunakan")
 	}
 
@@ -77,7 +78,7 @@ func (s *service) CreateUser(req *dto.CreateUserRequest, actor he.AuthContext) (
 		UpdatedBy:    &actor.UserID,
 	}
 
-	if err := s.repo.Create(user); err != nil {
+	if err := s.repo.Create(ctx, user); err != nil {
 		return nil, appErrors.Internal("gagal membuat user")
 	}
 
@@ -90,13 +91,13 @@ func (s *service) CreateUser(req *dto.CreateUserRequest, actor he.AuthContext) (
 } // CreateUser ------------------------------------------------------------------
 
 // GetUserByID -------------------------------------------------------------------
-func (s *service) GetUserByID(id int64, actor he.AuthContext) (*dto.UserResponse, error) {
+func (s *service) GetUserByID(ctx context.Context, id int64, actor he.AuthContext) (*dto.UserResponse, error) {
 	can, err := s.canReadUser(actor, id)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
 
-	user, err := s.repo.GetByID(id)
+	user, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +109,7 @@ func (s *service) GetUserByID(id int64, actor he.AuthContext) (*dto.UserResponse
 	roles, permissions := s.buildUserRBAC(user.ID)
 
 	// Ambil creator
-	creator := s.buildCreator(user.CreatedBy)
+	creator := s.buildCreator(ctx, user.CreatedBy)
 
 	// Ambil login histories
 	histories, _ := s.authRepo.GetUserLoginHistories(user.ID, 10)
@@ -123,9 +124,9 @@ func (s *service) GetUserByID(id int64, actor he.AuthContext) (*dto.UserResponse
 } // GetUserByID -----------------------------------------------------------------
 
 // GetUserByUsername -------------------------------------------------------------
-func (s *service) GetUserByUsername(username string, actor he.AuthContext) (*dto.UserResponse, error) {
+func (s *service) GetUserByUsername(ctx context.Context, username string, actor he.AuthContext) (*dto.UserResponse, error) {
 
-	user, err := s.repo.GetByUsername(username)
+	user, err := s.repo.GetByUsername(ctx, username)
 	if err != nil || user == nil {
 		return nil, appErrors.NotFound("user tidak ditemukan")
 	}
@@ -136,7 +137,7 @@ func (s *service) GetUserByUsername(username string, actor he.AuthContext) (*dto
 	}
 
 	roles, permissions := s.buildUserRBAC(user.ID)
-	creator := s.buildCreator(user.CreatedBy)
+	creator := s.buildCreator(ctx, user.CreatedBy)
 	histories, _ := s.authRepo.GetUserLoginHistories(user.ID, 10)
 
 	return dto.ToUserResponse(dto.UserResponseParams{
@@ -149,8 +150,8 @@ func (s *service) GetUserByUsername(username string, actor he.AuthContext) (*dto
 } // GetUserByUsername -----------------------------------------------------------
 
 // GetUserByEmail ----------------------------------------------------------------
-func (s *service) GetUserByEmail(email string, actor he.AuthContext) (*dto.UserResponse, error) {
-	user, err := s.repo.GetByEmail(email)
+func (s *service) GetUserByEmail(ctx context.Context, email string, actor he.AuthContext) (*dto.UserResponse, error) {
+	user, err := s.repo.GetByEmail(ctx, email)
 	if err != nil || user == nil {
 		return nil, appErrors.NotFound("user tidak ditemukan")
 	}
@@ -161,7 +162,7 @@ func (s *service) GetUserByEmail(email string, actor he.AuthContext) (*dto.UserR
 	}
 
 	roles, permissions := s.buildUserRBAC(user.ID)
-	creator := s.buildCreator(user.CreatedBy)
+	creator := s.buildCreator(ctx, user.CreatedBy)
 	histories, _ := s.authRepo.GetUserLoginHistories(user.ID, 10)
 
 	return dto.ToUserResponse(dto.UserResponseParams{
@@ -174,7 +175,7 @@ func (s *service) GetUserByEmail(email string, actor he.AuthContext) (*dto.UserR
 } // GetUserByEmail --------------------------------------------------------------
 
 // ListUsers ---------------------------------------------------------------------
-func (s *service) ListUsers(page, pageSize int, filter *dto.UserFilter) ([]dto.UserSimpleResponse, int64, error) {
+func (s *service) ListUsers(ctx context.Context, page, pageSize int, filter *dto.UserFilter) ([]dto.UserSimpleResponse, int64, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -182,7 +183,7 @@ func (s *service) ListUsers(page, pageSize int, filter *dto.UserFilter) ([]dto.U
 		pageSize = 10
 	}
 
-	users, total, err := s.repo.List(page, pageSize, filter)
+	users, total, err := s.repo.List(ctx, page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -208,7 +209,7 @@ func (s *service) ListUsers(page, pageSize int, filter *dto.UserFilter) ([]dto.U
 } // ListUsers -------------------------------------------------------------------
 
 // UpdateUser --------------------------------------------------------------------
-func (s *service) UpdateUser(id int64, req *dto.UpdateUserRequest, actor he.AuthContext) (*dto.UserResponse, error) {
+func (s *service) UpdateUser(ctx context.Context, id int64, req *dto.UpdateUserRequest, actor he.AuthContext) (*dto.UserResponse, error) {
 	can, err := s.canUpdateUser(actor, id)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -218,7 +219,7 @@ func (s *service) UpdateUser(id int64, req *dto.UpdateUserRequest, actor he.Auth
 			"Akses ditolak. Anda Tidak bisa mengubah data ini.", nil)
 	}
 
-	user, err := s.repo.GetByID(id)
+	user, err := s.repo.GetByID(ctx, id)
 	if err != nil || user == nil {
 		return nil, appErrors.NotFound("user tidak ditemukan")
 	}
@@ -227,14 +228,14 @@ func (s *service) UpdateUser(id int64, req *dto.UpdateUserRequest, actor he.Auth
 		user.Name = *req.Name
 	}
 	if req.Email != nil {
-		if existing, _ := s.repo.GetByEmail(*req.Email); existing != nil && existing.ID != id {
+		if existing, _ := s.repo.GetByEmail(ctx, *req.Email); existing != nil && existing.ID != id {
 			return nil, appErrors.BadRequest("email sudah digunakan")
 		}
 		user.Email = *req.Email
 	}
 
 	if req.Username != nil {
-		if existing, _ := s.repo.GetByUsername(*req.Username); existing != nil && existing.ID != id {
+		if existing, _ := s.repo.GetByUsername(ctx, *req.Username); existing != nil && existing.ID != id {
 			return nil, appErrors.BadRequest("username sudah digunakan")
 		}
 		user.Username = *req.Username
@@ -243,12 +244,12 @@ func (s *service) UpdateUser(id int64, req *dto.UpdateUserRequest, actor he.Auth
 	user.UpdatedBy = &actor.UserID
 	user.UpdatedAt = time.Now()
 
-	if err := s.repo.Update(user); err != nil {
+	if err := s.repo.Update(ctx, user); err != nil {
 		return nil, appErrors.Internal("gagal mengupdate user")
 	}
 
 	roles, permissions := s.buildUserRBAC(user.ID)
-	creator := s.buildCreator(user.CreatedBy)
+	creator := s.buildCreator(ctx, user.CreatedBy)
 	histories, _ := s.authRepo.GetUserLoginHistories(user.ID, 10)
 
 	return dto.ToUserResponse(dto.UserResponseParams{
@@ -261,7 +262,7 @@ func (s *service) UpdateUser(id int64, req *dto.UpdateUserRequest, actor he.Auth
 } // UpdateUser ------------------------------------------------------------------
 
 // DeleteUser --------------------------------------------------------------------
-func (s *service) DeleteUser(id int64, reason string, actor he.AuthContext) error {
+func (s *service) DeleteUser(ctx context.Context, id int64, reason string, actor he.AuthContext) error {
 	can, err := s.canDeleteUser(actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
@@ -271,7 +272,7 @@ func (s *service) DeleteUser(id int64, reason string, actor he.AuthContext) erro
 			"Akses ditolak. Anda tidak bisa menghapus user.", nil)
 	}
 
-	user, err := s.repo.GetByID(id)
+	user, err := s.repo.GetByID(ctx, id)
 	if err != nil || user == nil {
 		return appErrors.NotFound("user tidak ditemukan")
 	}
@@ -280,11 +281,11 @@ func (s *service) DeleteUser(id int64, reason string, actor he.AuthContext) erro
 	}
 
 	// Teruskan ID, ID Penghapus (Actor), dan Alasan ke repository
-	return s.repo.Delete(id, actor.UserID, reason)
+	return s.repo.Delete(ctx, id, actor.UserID, reason)
 } // DeleteUser ------------------------------------------------------------------
 
 // ListDeletedUsers --------------------------------------------------------------
-func (s *service) ListDeletedUsers(page, pageSize int, filter *dto.UserDeletedFilter, actor he.AuthContext) ([]dto.UserDeletedResponse, int64, error) {
+func (s *service) ListDeletedUsers(ctx context.Context, page, pageSize int, filter *dto.UserDeletedFilter, actor he.AuthContext) ([]dto.UserDeletedResponse, int64, error) {
 	can, err := s.canDeleteUser(actor)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal cek akses")
@@ -302,7 +303,7 @@ func (s *service) ListDeletedUsers(page, pageSize int, filter *dto.UserDeletedFi
 	}
 
 	// Panggil repo khusus deleted list
-	users, total, err := s.repo.DeletedList(page, pageSize, filter)
+	users, total, err := s.repo.DeletedList(ctx, page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -325,8 +326,8 @@ func (s *service) ListDeletedUsers(page, pageSize int, filter *dto.UserDeletedFi
 	creatorsMap := make(map[int64]*models.UserCreator)
 	deletersMap := make(map[int64]*models.UserCreator)
 	for _, u := range users {
-		creatorsMap[u.ID] = s.buildCreator(u.CreatedBy)
-		deletersMap[u.ID] = s.buildCreator(u.DeletedBy)
+		creatorsMap[u.ID] = s.buildCreator(ctx, u.CreatedBy)
+		deletersMap[u.ID] = s.buildCreator(ctx, u.DeletedBy)
 	}
 
 	// 4. Convert ke response DTO dengan data lengkap (roles, creator, deleter)
@@ -336,7 +337,7 @@ func (s *service) ListDeletedUsers(page, pageSize int, filter *dto.UserDeletedFi
 } // ListDeletedUsers ------------------------------------------------------------
 
 // ─── Settings ──────────────────────────────────────────────────────────────────
-func (s *service) GetSettings(id int64, actor he.AuthContext) ([]models.UserSetting, error) {
+func (s *service) GetSettings(ctx context.Context, id int64, actor he.AuthContext) ([]models.UserSetting, error) {
 	can, err := s.canUpdateUser(actor, id)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -345,10 +346,10 @@ func (s *service) GetSettings(id int64, actor he.AuthContext) ([]models.UserSett
 		return nil, appErrors.Wrap(http.StatusForbidden,
 			"Akses ditolak. Anda Tidak bisa mengubah data ini.", nil)
 	}
-	return s.repo.GetSettings(id)
+	return s.repo.GetSettings(ctx, id)
 }
 
-func (s *service) UpdateSettings(id int64, req *dto.UpdateSettingsRequest, actor he.AuthContext) (*dto.UserResponse, error) {
+func (s *service) UpdateSettings(ctx context.Context, id int64, req *dto.UpdateSettingsRequest, actor he.AuthContext) (*dto.UserResponse, error) {
 	can, err := s.canUpdateUser(actor, id)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -358,29 +359,29 @@ func (s *service) UpdateSettings(id int64, req *dto.UpdateSettingsRequest, actor
 			"Akses ditolak. Anda Tidak bisa mengubah data ini.", nil)
 	}
 
-	user, err := s.repo.GetByID(id)
+	user, err := s.repo.GetByID(ctx, id)
 	if err != nil || user == nil {
 		return nil, appErrors.NotFound("user tidak ditemukan")
 	}
 
-	if err := s.repo.UpdateSettings(id, req.Settings); err != nil {
+	if err := s.repo.UpdateSettings(ctx, id, req.Settings); err != nil {
 		return nil, appErrors.Internal("gagal mengupdate settings user")
 	}
 
 	user.UpdatedBy = &actor.UserID
 	user.UpdatedAt = time.Now()
-	if err := s.repo.Update(user); err != nil {
+	if err := s.repo.Update(ctx, user); err != nil {
 		return nil, appErrors.Internal("gagal mengupdate user setelah update settings")
 	}
 
 	// Refresh data user setelah update settings
-	user, err = s.repo.GetByID(id)
+	user, err = s.repo.GetByID(ctx, id)
 	if err != nil || user == nil {
 		return nil, appErrors.NotFound("user tidak ditemukan setelah update settings")
 	}
 
 	roles, permissions := s.buildUserRBAC(user.ID)
-	creator := s.buildCreator(user.CreatedBy)
+	creator := s.buildCreator(ctx, user.CreatedBy)
 	histories, _ := s.authRepo.GetUserLoginHistories(user.ID, 10)
 
 	return dto.ToUserResponse(dto.UserResponseParams{
@@ -393,12 +394,12 @@ func (s *service) UpdateSettings(id int64, req *dto.UpdateSettingsRequest, actor
 } // ─── Settings ────────────────────────────────────────────────────────────────
 
 // ─── Password ──────────────────────────────────────────────────────────────────
-func (s *service) ChangePassword(id int64, req *dto.ChangePasswordRequest, actor he.AuthContext) (*dto.UserResponse, error) {
+func (s *service) ChangePassword(ctx context.Context, id int64, req *dto.ChangePasswordRequest, actor he.AuthContext) (*dto.UserResponse, error) {
 	if !actor.IsSuperadmin && actor.UserID != id {
 		return nil, appErrors.Wrap(http.StatusForbidden, "Akses ditolak. Hanya bisa mengubah password sendiri.", nil)
 	}
 
-	user, err := s.repo.GetByID(id)
+	user, err := s.repo.GetByID(ctx, id)
 	if err != nil || user == nil {
 		return nil, appErrors.NotFound("user tidak ditemukan")
 	}
@@ -417,12 +418,12 @@ func (s *service) ChangePassword(id int64, req *dto.ChangePasswordRequest, actor
 	user.UpdatedBy = &actor.UserID
 	user.UpdatedAt = time.Now()
 
-	if err := s.repo.Update(user); err != nil {
+	if err := s.repo.Update(ctx, user); err != nil {
 		return nil, appErrors.Internal("gagal mengupdate password")
 	}
 
 	roles, permissions := s.buildUserRBAC(user.ID)
-	creator := s.buildCreator(user.CreatedBy)
+	creator := s.buildCreator(ctx, user.CreatedBy)
 	histories, _ := s.authRepo.GetUserLoginHistories(user.ID, 10)
 
 	return dto.ToUserResponse(dto.UserResponseParams{
@@ -435,7 +436,7 @@ func (s *service) ChangePassword(id int64, req *dto.ChangePasswordRequest, actor
 } // ─── Password ────────────────────────────────────────────────────────────────
 
 // ─── Reset Password ────────────────────────────────────────────────────────────
-func (s *service) ResetPassword(id int64, actor he.AuthContext) error {
+func (s *service) ResetPassword(ctx context.Context, id int64, actor he.AuthContext) error {
 	cfg := config.LoadConfig()
 
 	can, err := s.canDeleteUser(actor) // Cek akses superadmin
@@ -447,7 +448,7 @@ func (s *service) ResetPassword(id int64, actor he.AuthContext) error {
 			"Akses ditolak. Anda tidak bisa mereset password.", nil)
 	}
 
-	user, err := s.repo.GetByID(id)
+	user, err := s.repo.GetByID(ctx, id)
 	if err != nil || user == nil {
 		return appErrors.NotFound("user tidak ditemukan")
 	}
@@ -460,11 +461,11 @@ func (s *service) ResetPassword(id int64, actor he.AuthContext) error {
 	user.Password = hashed
 	user.PasswordChangedAt = func() *time.Time { t := time.Now(); return &t }()
 
-	return s.repo.Update(user)
+	return s.repo.Update(ctx, user)
 }
 
 // ─── Upload Foto ───────────────────────────────────────────────────────────────
-func (s *service) UploadPhoto(id int64, filename string, reader io.Reader, actor he.AuthContext) (*dto.UserResponse, error) {
+func (s *service) UploadPhoto(ctx context.Context, id int64, filename string, reader io.Reader, actor he.AuthContext) (*dto.UserResponse, error) {
 	can, err := s.canUpdateUser(actor, id)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -474,7 +475,7 @@ func (s *service) UploadPhoto(id int64, filename string, reader io.Reader, actor
 			"Akses ditolak. Anda Tidak bisa mengubah data ini.", nil)
 	}
 
-	user, err := s.repo.GetByID(id)
+	user, err := s.repo.GetByID(ctx, id)
 	if err != nil || user == nil {
 		return nil, appErrors.NotFound("user tidak ditemukan")
 	}
@@ -525,7 +526,7 @@ func (s *service) UploadPhoto(id int64, filename string, reader io.Reader, actor
 	// ─── END UPDATE FOTO ───────────────────────────────────────────────────────
 
 	// 6. Simpan Perubahan ke Database
-	if err := s.repo.Update(user); err != nil {
+	if err := s.repo.Update(ctx, user); err != nil {
 		// ROLLBACK FISIK: Hapus file baru di storage jika DB gagal menyimpan data
 		_ = s.storageService.DeleteImageMultiple(origURL, thumbURL)
 		return nil, appErrors.Internal("gagal mengupdate foto user")
@@ -543,7 +544,7 @@ func (s *service) UploadPhoto(id int64, filename string, reader io.Reader, actor
 	// (s.repo.Update(user) yang kedua dibuang)
 
 	roles, permissions := s.buildUserRBAC(user.ID)
-	creator := s.buildCreator(user.CreatedBy)
+	creator := s.buildCreator(ctx, user.CreatedBy)
 	histories, _ := s.authRepo.GetUserLoginHistories(user.ID, 10)
 
 	return dto.ToUserResponse(dto.UserResponseParams{
@@ -556,7 +557,7 @@ func (s *service) UploadPhoto(id int64, filename string, reader io.Reader, actor
 }
 
 // ─── Delete Photo ──────────────────────────────────────────────────────────────
-func (s *service) DeletePhoto(id int64, actor he.AuthContext) (*dto.UserResponse, error) {
+func (s *service) DeletePhoto(ctx context.Context, id int64, actor he.AuthContext) (*dto.UserResponse, error) {
 	can, err := s.canUpdateUser(actor, id)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -566,7 +567,7 @@ func (s *service) DeletePhoto(id int64, actor he.AuthContext) (*dto.UserResponse
 			"Akses ditolak. Anda Tidak bisa mengubah data ini.", nil)
 	}
 
-	user, err := s.repo.GetByID(id)
+	user, err := s.repo.GetByID(ctx, id)
 	if err != nil || user == nil {
 		return nil, appErrors.NotFound("user tidak ditemukan")
 	}
@@ -589,7 +590,7 @@ func (s *service) DeletePhoto(id int64, actor he.AuthContext) (*dto.UserResponse
 	}
 	user.UpdatedAt = time.Now()
 
-	if err := s.repo.Update(user); err != nil {
+	if err := s.repo.Update(ctx, user); err != nil {
 		return nil, appErrors.Internal("gagal menghapus foto user")
 	}
 
@@ -601,7 +602,7 @@ func (s *service) DeletePhoto(id int64, actor he.AuthContext) (*dto.UserResponse
 	}(oldPhoto, oldThumbnail)
 
 	roles, permissions := s.buildUserRBAC(user.ID)
-	creator := s.buildCreator(user.CreatedBy)
+	creator := s.buildCreator(ctx, user.CreatedBy)
 	histories, _ := s.authRepo.GetUserLoginHistories(user.ID, 10)
 
 	return dto.ToUserResponse(dto.UserResponseParams{
@@ -614,14 +615,14 @@ func (s *service) DeletePhoto(id int64, actor he.AuthContext) (*dto.UserResponse
 }
 
 // ─── Private Helpers ───────────────────────────────────────────────────────────
-func (s *service) UpdateLastLogin(id int64) error {
-	user, err := s.repo.GetByID(id)
+func (s *service) UpdateLastLogin(ctx context.Context, id int64) error {
+	user, err := s.repo.GetByID(ctx, id)
 	if err != nil || user == nil {
 		return errors.New("user tidak ditemukan")
 	}
 	now := time.Now()
 	user.LastLoginAt = &now
-	return s.repo.Update(user)
+	return s.repo.Update(ctx, user)
 }
 
 func (s *service) verifyPassword(password, hash string) bool {

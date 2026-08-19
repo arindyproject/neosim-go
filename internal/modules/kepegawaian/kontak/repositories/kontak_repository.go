@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"errors"
 
 	"neosim_go/internal/modules/kepegawaian/kontak/dto"
@@ -10,14 +11,14 @@ import (
 )
 
 // ── Create ────────────────────────────────────────────────────────────────────
-func (r *repository) CreateKontak(m *models.KepegawaianKontak) error {
-	return r.db.Create(m).Error
+func (r *repository) CreateKontak(ctx context.Context, m *models.KepegawaianKontak) error {
+	return r.db.WithContext(ctx).Create(m).Error
 }
 
 // ── GetByID ───────────────────────────────────────────────────────────────────
-func (r *repository) GetKontakByID(id int64) (*models.KepegawaianKontak, error) {
+func (r *repository) GetKontakByID(ctx context.Context, id int64) (*models.KepegawaianKontak, error) {
 	var m models.KepegawaianKontak
-	result := r.db.Where("id = ? AND deleted_at IS NULL", id).First(&m)
+	result := r.db.WithContext(ctx).Where("id = ? AND deleted_at IS NULL", id).First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -25,9 +26,9 @@ func (r *repository) GetKontakByID(id int64) (*models.KepegawaianKontak, error) 
 }
 
 // ── GetByPegawaiID ───────────────────────────────────────────────────────────────
-func (r *repository) GetKontakByPegawaiID(pegawaiID int64) ([]models.KepegawaianKontak, error) {
+func (r *repository) GetKontakByPegawaiID(ctx context.Context, pegawaiID int64) ([]models.KepegawaianKontak, error) {
 	var items []models.KepegawaianKontak
-	result := r.db.Where("pegawai_id = ? AND deleted_at IS NULL", pegawaiID).Find(&items)
+	result := r.db.WithContext(ctx).Where("pegawai_id = ? AND deleted_at IS NULL", pegawaiID).Find(&items)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -35,11 +36,11 @@ func (r *repository) GetKontakByPegawaiID(pegawaiID int64) ([]models.Kepegawaian
 }
 
 // ── List ──────────────────────────────────────────────────────────────────────
-func (r *repository) ListKontak(page, pageSize int, filter *dto.FilterKepegawaianKontakRequest) ([]models.KepegawaianKontak, int64, error) {
+func (r *repository) ListKontak(ctx context.Context, page, pageSize int, filter *dto.FilterKepegawaianKontakRequest) ([]models.KepegawaianKontak, int64, error) {
 	var items []models.KepegawaianKontak
 	var total int64
 
-	query := r.db.Model(&models.KepegawaianKontak{}).Where("deleted_at IS NULL")
+	query := r.db.WithContext(ctx).Model(&models.KepegawaianKontak{}).Where("deleted_at IS NULL")
 
 	if filter.PegawaiID != nil {
 		query = query.Where("pegawai_id = ?", *filter.PegawaiID)
@@ -70,11 +71,11 @@ func (r *repository) ListKontak(page, pageSize int, filter *dto.FilterKepegawaia
 }
 
 // ── Update ───────────────────────────────────────────────────────────────────
-func (r *repository) UpdateKontak(m *models.KepegawaianKontak) error {
-	return r.db.Save(m).Error
+func (r *repository) UpdateKontak(ctx context.Context, m *models.KepegawaianKontak) error {
+	return r.db.WithContext(ctx).Save(m).Error
 }
 
 // ── Delete ───────────────────────────────────────────────────────────────────
-func (r *repository) DeleteKontak(id int64) error {
-	return r.db.Where("id = ?", id).Delete(&models.KepegawaianKontak{}).Error
+func (r *repository) DeleteKontak(ctx context.Context, id int64) error {
+	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&models.KepegawaianKontak{}).Error
 }

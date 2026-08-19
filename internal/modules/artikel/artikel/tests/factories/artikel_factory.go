@@ -29,8 +29,6 @@ func (f *ArtikelFactory) Make() *models.Artikel {
 	name := fmt.Sprintf("Artikel %d", idx)
 	desc := fmt.Sprintf("Deskripsi Artikel %d", idx)
 
-	user_id := rand.Int63n(100) + 1 // ID user acak antara 1 dan 300
-
 	if v, ok := f.overrides["name"]; ok {
 		name = v.(string)
 	}
@@ -38,8 +36,6 @@ func (f *ArtikelFactory) Make() *models.Artikel {
 	return &models.Artikel{
 		Name:        name,
 		Description: &desc,
-		CreatedBy:   &user_id,
-		UpdatedBy:   &user_id,
 	}
 }
 

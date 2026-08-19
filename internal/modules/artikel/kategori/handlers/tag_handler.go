@@ -36,7 +36,7 @@ func (h *ArtikelKategoriHandler) ListTag(c *echo.Context) error {
 	page, pageSize := he.ParsePagination(c, h.cfg)
 
 	actor := he.BuildAuthContext(c)
-	items, total, err := h.service.ListTag(page, pageSize, &filter, actor)
+	items, total, err := h.service.ListTag(c.Request().Context(),page, pageSize, &filter, actor)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
 	}
@@ -60,7 +60,7 @@ func (h *ArtikelKategoriHandler) GetTagByID(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.GetTagByID(id, actor)
+	item, err := h.service.GetTagByID(c.Request().Context(),id, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -92,7 +92,7 @@ func (h *ArtikelKategoriHandler) CreateTag(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (validator)", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.CreateTag(&req, actor)
+	item, err := h.service.CreateTag(c.Request().Context(),&req, actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
@@ -130,7 +130,7 @@ func (h *ArtikelKategoriHandler) UpdateTag(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (validator)", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.UpdateTag(id, &req, actor)
+	item, err := h.service.UpdateTag(c.Request().Context(),id, &req, actor)
 	if err != nil {
 		status := http.StatusBadRequest
 		if err.Error() == "Tag tidak ditemukan" {
@@ -158,7 +158,7 @@ func (h *ArtikelKategoriHandler) DeleteTag(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	if err := h.service.DeleteTag(id, actor); err != nil {
+	if err := h.service.DeleteTag(c.Request().Context(),id, actor); err != nil {
 		status := http.StatusInternalServerError
 		if err.Error() == "Tag tidak ditemukan" {
 			status = http.StatusNotFound

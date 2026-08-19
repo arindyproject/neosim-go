@@ -14,18 +14,18 @@ import (
 // Provinsi ========================================================================
 
 // ─────────────── GetByID ─────────────────────────────────────────────────────────
-func (s *service) GetByIDProvinsi(id int64) (*dto.ProvinsiDetailResponse, error) {
-	ctx := context.Background()
+func (s *service) GetByIDProvinsi(ctx context.Context, id int64) (*dto.ProvinsiDetailResponse, error) {
+	ctxs := context.Background()
 	cacheKey := cacheKeyProvinsiDetail(id)
 
 	// 1. Cek Cache
 	var cachedRes dto.ProvinsiDetailResponse
-	if s.cache.Get(ctx, cacheKey, &cachedRes) {
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
 		return &cachedRes, nil
 	}
 
 	// 2. Ambil dari DB
-	m, err := s.repo.GetByIDProvinsi(id)
+	m, err := s.repo.GetByIDProvinsi(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -33,15 +33,15 @@ func (s *service) GetByIDProvinsi(id int64) (*dto.ProvinsiDetailResponse, error)
 		return nil, appErrors.NotFound("Provinsi tidak ditemukan")
 	}
 
-	totalKota, err := s.repo.CountKotaByProvinsiID(m.ID)
+	totalKota, err := s.repo.CountKotaByProvinsiID(ctx, m.ID)
 	if err != nil {
 		return nil, err
 	}
-	totalKecamatan, err := s.repo.CountKecamatanByProvinsiID(m.ID)
+	totalKecamatan, err := s.repo.CountKecamatanByProvinsiID(ctx, m.ID)
 	if err != nil {
 		return nil, err
 	}
-	totalDesa, err := s.repo.CountDesaByProvinsiID(m.ID)
+	totalDesa, err := s.repo.CountDesaByProvinsiID(ctx, m.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -58,13 +58,13 @@ func (s *service) GetByIDProvinsi(id int64) (*dto.ProvinsiDetailResponse, error)
 	}
 
 	// 3. Simpan ke Cache
-	s.cache.SetDefault(ctx, cacheKey, res)
+	s.cache.SetDefault(ctxs, cacheKey, res)
 	return res, nil
 }
 
 // ─────────────── List ────────────────────────────────────────────────────────────
-func (s *service) ListProvinsi(page, pageSize int, negaraID *int64, filter *dto.FilterProvinsiRequest) ([]dto.ProvinsiResponse, int64, error) {
-	ctx := context.Background()
+func (s *service) ListProvinsi(ctx context.Context, page, pageSize int, negaraID *int64, filter *dto.FilterProvinsiRequest) ([]dto.ProvinsiResponse, int64, error) {
+	ctxs := context.Background()
 	cacheKey := cacheKeyProvinsiList(page, pageSize, negaraID, filter)
 
 	// 1. Cek Cache
@@ -72,7 +72,7 @@ func (s *service) ListProvinsi(page, pageSize int, negaraID *int64, filter *dto.
 		Items []dto.ProvinsiResponse `json:"items"`
 		Total int64                  `json:"total"`
 	}
-	if s.cache.Get(ctx, cacheKey, &cachedRes) {
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
 		if len(cachedRes.Items) == 0 {
 			return nil, 0, appErrors.NotFound("Provinsi tidak ditemukan")
 		}
@@ -87,7 +87,7 @@ func (s *service) ListProvinsi(page, pageSize int, negaraID *int64, filter *dto.
 		pageSize = 10
 	}
 
-	items, total, err := s.repo.ListProvinsi(page, pageSize, negaraID, filter)
+	items, total, err := s.repo.ListProvinsi(ctx, page, pageSize, negaraID, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -98,7 +98,7 @@ func (s *service) ListProvinsi(page, pageSize int, negaraID *int64, filter *dto.
 	res := dto.ToProvinsiListResponse(items)
 
 	// 3. Simpan ke Cache
-	s.cache.SetDefault(ctx, cacheKey, struct {
+	s.cache.SetDefault(ctxs, cacheKey, struct {
 		Items []dto.ProvinsiResponse `json:"items"`
 		Total int64                  `json:"total"`
 	}{Items: res, Total: total})
@@ -107,7 +107,7 @@ func (s *service) ListProvinsi(page, pageSize int, negaraID *int64, filter *dto.
 }
 
 // ─────────────── Create ──────────────────────────────────────────────────────────
-func (s *service) CreateProvinsi(req *dto.CreateProvinsiRequest, actor he.AuthContext) (*dto.ProvinsiResponse, error) {
+func (s *service) CreateProvinsi(ctx context.Context, req *dto.CreateProvinsiRequest, actor he.AuthContext) (*dto.ProvinsiResponse, error) {
 	// Permission
 	can, err := s.canCreateMasterAlamat(actor)
 	if err != nil {
@@ -119,7 +119,7 @@ func (s *service) CreateProvinsi(req *dto.CreateProvinsiRequest, actor he.AuthCo
 	}
 
 	// Cek duplikat code
-	exists, err := s.repo.ExistsProvinsiByCode(req.Code, nil)
+	exists, err := s.repo.ExistsProvinsiByCode(ctx, req.Code, nil)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek duplikat code")
 	}
@@ -129,7 +129,7 @@ func (s *service) CreateProvinsi(req *dto.CreateProvinsiRequest, actor he.AuthCo
 	}
 
 	// Logic
-	negara, err := s.repo.GetByIDNegara(req.NegaraID)
+	negara, err := s.repo.GetByIDNegara(ctx, req.NegaraID)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +144,7 @@ func (s *service) CreateProvinsi(req *dto.CreateProvinsiRequest, actor he.AuthCo
 		CreatedBy: &actor.UserID,
 		UpdatedBy: &actor.UserID,
 	}
-	if err := s.repo.CreateProvinsi(m); err != nil {
+	if err := s.repo.CreateProvinsi(ctx, m); err != nil {
 		return nil, err
 	}
 
@@ -152,17 +152,17 @@ func (s *service) CreateProvinsi(req *dto.CreateProvinsiRequest, actor he.AuthCo
 
 	// Invalidate Cache
 	// Provinsi baru mempengaruhi list child (kota, kecamatan, desa) jika mereka embed nama provinsi
-	ctx := context.Background()
-	s.cache.InvalidateList(ctx, cachePrefixProvinsiList)
-	s.cache.InvalidateList(ctx, cachePrefixKotaList)
-	s.cache.InvalidateList(ctx, cachePrefixKecamatanList)
-	s.cache.InvalidateList(ctx, cachePrefixDesaList)
+	ctxs := context.Background()
+	s.cache.InvalidateList(ctxs, cachePrefixProvinsiList)
+	s.cache.InvalidateList(ctxs, cachePrefixKotaList)
+	s.cache.InvalidateList(ctxs, cachePrefixKecamatanList)
+	s.cache.InvalidateList(ctxs, cachePrefixDesaList)
 
 	return res, nil
 }
 
 // ─────────────── Update ──────────────────────────────────────────────────────────
-func (s *service) UpdateProvinsi(id int64, req *dto.UpdateProvinsiRequest, actor he.AuthContext) (*dto.ProvinsiResponse, error) {
+func (s *service) UpdateProvinsi(ctx context.Context, id int64, req *dto.UpdateProvinsiRequest, actor he.AuthContext) (*dto.ProvinsiResponse, error) {
 	// Permission
 	can, err := s.canUpdateMasterAlamat(actor)
 	if err != nil {
@@ -174,7 +174,7 @@ func (s *service) UpdateProvinsi(id int64, req *dto.UpdateProvinsiRequest, actor
 	}
 
 	// Logic
-	m, err := s.repo.GetByIDProvinsi(id)
+	m, err := s.repo.GetByIDProvinsi(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -187,7 +187,7 @@ func (s *service) UpdateProvinsi(id int64, req *dto.UpdateProvinsiRequest, actor
 	}
 	if req.Code != nil {
 		// Cek duplikat code, exclude diri sendiri
-		exists, err := s.repo.ExistsProvinsiByCode(*req.Code, &id)
+		exists, err := s.repo.ExistsProvinsiByCode(ctx, *req.Code, &id)
 		if err != nil {
 			return nil, appErrors.Internal("gagal cek duplikat code")
 		}
@@ -203,26 +203,26 @@ func (s *service) UpdateProvinsi(id int64, req *dto.UpdateProvinsiRequest, actor
 	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()
 
-	if err := s.repo.UpdateProvinsi(m); err != nil {
+	if err := s.repo.UpdateProvinsi(ctx, m); err != nil {
 		return nil, err
 	}
 
 	res := dto.ToProvinsiResponse(m)
 
 	// Invalidate Cache
-	ctx := context.Background()
-	s.cache.InvalidateDetail(ctx, cacheKeyProvinsiDetail(id))
-	s.cache.InvalidateDetail(ctx, cacheKeyProvinsiGetDetail(id))
-	s.cache.InvalidateList(ctx, cachePrefixProvinsiList)
-	s.cache.InvalidateList(ctx, cachePrefixKotaList)
-	s.cache.InvalidateList(ctx, cachePrefixKecamatanList)
-	s.cache.InvalidateList(ctx, cachePrefixDesaList)
+	ctxs := context.Background()
+	s.cache.InvalidateDetail(ctxs, cacheKeyProvinsiDetail(id))
+	s.cache.InvalidateDetail(ctxs, cacheKeyProvinsiGetDetail(id))
+	s.cache.InvalidateList(ctxs, cachePrefixProvinsiList)
+	s.cache.InvalidateList(ctxs, cachePrefixKotaList)
+	s.cache.InvalidateList(ctxs, cachePrefixKecamatanList)
+	s.cache.InvalidateList(ctxs, cachePrefixDesaList)
 
 	return res, nil
 }
 
 // ─────────────── Delete ──────────────────────────────────────────────────────────
-func (s *service) DeleteProvinsi(id int64, actor he.AuthContext) error {
+func (s *service) DeleteProvinsi(ctx context.Context, id int64, actor he.AuthContext) error {
 	// Permission
 	can, err := s.canDeleteMasterAlamat(actor)
 	if err != nil {
@@ -234,7 +234,7 @@ func (s *service) DeleteProvinsi(id int64, actor he.AuthContext) error {
 	}
 
 	// Logic
-	m, err := s.repo.GetByIDProvinsi(id)
+	m, err := s.repo.GetByIDProvinsi(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -242,16 +242,16 @@ func (s *service) DeleteProvinsi(id int64, actor he.AuthContext) error {
 		return appErrors.NotFound("Provinsi tidak ditemukan")
 	}
 
-	err = s.repo.DeleteProvinsi(id)
+	err = s.repo.DeleteProvinsi(ctx, id)
 	if err == nil {
 		// Invalidate Cache
-		ctx := context.Background()
-		s.cache.InvalidateDetail(ctx, cacheKeyProvinsiDetail(id))
-		s.cache.InvalidateDetail(ctx, cacheKeyProvinsiGetDetail(id))
-		s.cache.InvalidateList(ctx, cachePrefixProvinsiList)
-		s.cache.InvalidateList(ctx, cachePrefixKotaList)
-		s.cache.InvalidateList(ctx, cachePrefixKecamatanList)
-		s.cache.InvalidateList(ctx, cachePrefixDesaList)
+		ctxs := context.Background()
+		s.cache.InvalidateDetail(ctxs, cacheKeyProvinsiDetail(id))
+		s.cache.InvalidateDetail(ctxs, cacheKeyProvinsiGetDetail(id))
+		s.cache.InvalidateList(ctxs, cachePrefixProvinsiList)
+		s.cache.InvalidateList(ctxs, cachePrefixKotaList)
+		s.cache.InvalidateList(ctxs, cachePrefixKecamatanList)
+		s.cache.InvalidateList(ctxs, cachePrefixDesaList)
 	}
 	return err
 }

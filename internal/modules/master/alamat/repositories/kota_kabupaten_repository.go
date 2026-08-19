@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"errors"
 
 	"neosim_go/internal/modules/master/alamat/dto"
@@ -12,13 +13,13 @@ import (
 // =====================================================================
 // Kota / Kabupaten
 // =====================================================================
-func (r *repository) CreateKotaKabupaten(m *models.MasterAlamatKotaKabupaten) error {
-	return r.db.Create(m).Error
+func (r *repository) CreateKotaKabupaten(ctx context.Context, m *models.MasterAlamatKotaKabupaten) error {
+	return r.db.WithContext(ctx).Create(m).Error
 }
 
-func (r *repository) GetByIDKotaKabupaten(id int64) (*models.MasterAlamatKotaKabupaten, error) {
+func (r *repository) GetByIDKotaKabupaten(ctx context.Context, id int64) (*models.MasterAlamatKotaKabupaten, error) {
 	var m models.MasterAlamatKotaKabupaten
-	result := r.db.Preload("Provinsi").Where("id = ?", id).
+	result := r.db.WithContext(ctx).Preload("Provinsi").Where("id = ?", id).
 		Where("master_alamat_kota_kabupaten.deleted_at IS NULL").First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
@@ -26,11 +27,11 @@ func (r *repository) GetByIDKotaKabupaten(id int64) (*models.MasterAlamatKotaKab
 	return &m, result.Error
 }
 
-func (r *repository) ListKotaKabupaten(page, pageSize int, provinsiID *int64, filter *dto.FilterKotaKabupatenRequest) ([]models.MasterAlamatKotaKabupaten, int64, error) {
+func (r *repository) ListKotaKabupaten(ctx context.Context, page, pageSize int, provinsiID *int64, filter *dto.FilterKotaKabupatenRequest) ([]models.MasterAlamatKotaKabupaten, int64, error) {
 	var items []models.MasterAlamatKotaKabupaten
 	var total int64
 
-	query := r.db.Model(&models.MasterAlamatKotaKabupaten{}).
+	query := r.db.WithContext(ctx).Model(&models.MasterAlamatKotaKabupaten{}).
 		Where("master_alamat_kota_kabupaten.deleted_at IS NULL")
 
 	if provinsiID != nil {
@@ -52,17 +53,17 @@ func (r *repository) ListKotaKabupaten(page, pageSize int, provinsiID *int64, fi
 	return items, total, nil
 }
 
-func (r *repository) UpdateKotaKabupaten(m *models.MasterAlamatKotaKabupaten) error {
-	return r.db.Save(m).Error
+func (r *repository) UpdateKotaKabupaten(ctx context.Context, m *models.MasterAlamatKotaKabupaten) error {
+	return r.db.WithContext(ctx).Save(m).Error
 }
 
-func (r *repository) DeleteKotaKabupaten(id int64) error {
+func (r *repository) DeleteKotaKabupaten(ctx context.Context, id int64) error {
 	return r.db.Where("id = ?", id).Delete(&models.MasterAlamatKotaKabupaten{}).Error
 }
 
-func (r *repository) ExistsKotaKabupatenByCode(code string, excludeID *int64) (bool, error) {
+func (r *repository) ExistsKotaKabupatenByCode(ctx context.Context, code string, excludeID *int64) (bool, error) {
 	var count int64
-	q := r.db.Model(&models.MasterAlamatKotaKabupaten{}).Where("code = ?", code)
+	q := r.db.WithContext(ctx).Model(&models.MasterAlamatKotaKabupaten{}).Where("code = ?", code)
 	if excludeID != nil {
 		q = q.Where("id != ?", *excludeID)
 	}
@@ -74,9 +75,9 @@ func (r *repository) ExistsKotaKabupatenByCode(code string, excludeID *int64) (b
 // CountDesaByKotaID menghitung jumlah desa/kelurahan di satu kota/kabupaten
 // (lintas 1 level: kecamatan -> kota)
 // CountKecamatanByKotaID menghitung jumlah kecamatan di satu kota/kabupaten
-func (r *repository) CountKecamatanByKotaID(kotaID int64) (int64, error) {
+func (r *repository) CountKecamatanByKotaID(ctx context.Context, kotaID int64) (int64, error) {
 	var count int64
-	err := r.db.Model(&models.MasterAlamatKecamatan{}).
+	err := r.db.WithContext(ctx).Model(&models.MasterAlamatKecamatan{}).
 		Where("kota_kabupaten_id = ?", kotaID).
 		// Tambahkan kondisi deleted_at IS NULL untuk tabel utama
 		Where("master_alamat_kecamatan.deleted_at IS NULL").
@@ -86,9 +87,9 @@ func (r *repository) CountKecamatanByKotaID(kotaID int64) (int64, error) {
 
 // CountDesaByKotaID menghitung jumlah desa/kelurahan di satu kota/kabupaten
 // (lintas 1 level: kecamatan -> kota)
-func (r *repository) CountDesaByKotaID(kotaID int64) (int64, error) {
+func (r *repository) CountDesaByKotaID(ctx context.Context, kotaID int64) (int64, error) {
 	var count int64
-	err := r.db.Model(&models.MasterAlamatKelurahanDesa{}).
+	err := r.db.WithContext(ctx).Model(&models.MasterAlamatKelurahanDesa{}).
 		Joins("JOIN master_alamat_kecamatan ON master_alamat_kecamatan.id = master_alamat_kelurahan_desa.kecamatan_id").
 		Where("master_alamat_kecamatan.kota_kabupaten_id = ?", kotaID).
 		// Tambahkan kondisi deleted_at IS NULL untuk tabel utama dan tabel yang di-join

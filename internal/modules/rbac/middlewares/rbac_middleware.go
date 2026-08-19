@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 
@@ -23,7 +24,7 @@ func RequirePermission(repo contracts.RBACRepository, permission string) echo.Mi
 			if !ok {
 				return response.Response(c, http.StatusUnauthorized, false, "Autentikasi diperlukan", nil, nil)
 			}
-			has, err := repo.HasPermission(userID, permission)
+			has, err := repo.HasPermission(c.Request().Context(), userID, permission)
 			if err != nil {
 				return response.Response(c, http.StatusInternalServerError, false, "Gagal cek permission", nil, nil)
 			}
@@ -47,7 +48,7 @@ func RequireAnyPermission(repo contracts.RBACRepository, permissions ...string) 
 			if !ok {
 				return response.Response(c, http.StatusUnauthorized, false, "Autentikasi diperlukan", nil, nil)
 			}
-			userPerms, err := repo.GetUserAllPermissions(userID)
+			userPerms, err := repo.GetUserAllPermissions(c.Request().Context(), userID)
 			if err != nil {
 				return response.Response(c, http.StatusInternalServerError, false, "Gagal cek permission", nil, nil)
 			}
@@ -73,7 +74,7 @@ func RequireRole(repo contracts.RBACRepository, roleName string) echo.Middleware
 			if !ok {
 				return response.Response(c, http.StatusUnauthorized, false, "Autentikasi diperlukan", nil, nil)
 			}
-			has, err := HasRole(repo, userID, roleName)
+			has, err := HasRole(c.Request().Context(), repo, userID, roleName)
 			if err != nil {
 				return response.Response(c, http.StatusInternalServerError, false, "Gagal cek role", nil, nil)
 			}
@@ -149,7 +150,7 @@ func RequireSelfOrPermission(repo contracts.RBACRepository, permission string) e
 			}
 
 			// Jika bukan data sendiri, cek apakah punya permission
-			has, err := repo.HasPermission(userID, permission)
+			has, err := repo.HasPermission(c.Request().Context(), userID, permission)
 			if err != nil {
 				return response.Response(c, http.StatusInternalServerError, false, "Gagal cek permission", nil, nil)
 			}
@@ -183,7 +184,7 @@ func RequireSelfOrRole(repo contracts.RBACRepository, roleName string) echo.Midd
 			}
 
 			// Jika bukan data sendiri, cek apakah punya role
-			has, err := HasRole(repo, userID, roleName)
+			has, err := HasRole(c.Request().Context(), repo, userID, roleName)
 			if err != nil {
 				return response.Response(c, http.StatusInternalServerError, false, "Gagal cek role", nil, nil)
 			}
@@ -229,12 +230,12 @@ func IsSelf(c *echo.Context) bool {
 
 // ─── Programmatic Helpers (untuk service/handler) ─────────────────────────────
 
-func HasPermission(repo contracts.RBACRepository, userID int64, permission string) (bool, error) {
-	return repo.HasPermission(userID, permission)
+func HasPermission(ctx context.Context, repo contracts.RBACRepository, userID int64, permission string) (bool, error) {
+	return repo.HasPermission(ctx, userID, permission)
 }
 
-func HasRole(repo contracts.RBACRepository, userID int64, roleName string) (bool, error) {
-	roles, err := repo.GetUserRoles(userID)
+func HasRole(ctx context.Context, repo contracts.RBACRepository, userID int64, roleName string) (bool, error) {
+	roles, err := repo.GetUserRoles(ctx, userID)
 	if err != nil {
 		return false, err
 	}
@@ -246,8 +247,8 @@ func HasRole(repo contracts.RBACRepository, userID int64, roleName string) (bool
 	return false, nil
 }
 
-func HasAnyRole(repo contracts.RBACRepository, userID int64, roleNames ...string) (bool, error) {
-	roles, err := repo.GetUserRoles(userID)
+func HasAnyRole(ctx context.Context, repo contracts.RBACRepository, userID int64, roleNames ...string) (bool, error) {
+	roles, err := repo.GetUserRoles(ctx, userID)
 	if err != nil {
 		return false, err
 	}

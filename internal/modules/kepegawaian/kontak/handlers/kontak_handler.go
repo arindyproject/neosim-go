@@ -63,7 +63,7 @@ func (h *KepegawaianKontakHandler) ListKontak(c *echo.Context) error {
 	page, pageSize := he.ParsePagination(c, h.cfg)
 
 	actor := he.BuildAuthContext(c)
-	items, total, err := h.service.ListKontak(page, pageSize, &filter, actor)
+	items, total, err := h.service.ListKontak(c.Request().Context(), page, pageSize, &filter, actor)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
 	}
@@ -87,7 +87,7 @@ func (h *KepegawaianKontakHandler) GetKontakByID(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.GetKontakByID(id, actor)
+	item, err := h.service.GetKontakByID(c.Request().Context(), id, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -113,7 +113,7 @@ func (h *KepegawaianKontakHandler) ListKontakByPegawai(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
 
-	item, err := h.service.GetKontakByPegawaiID(pegawaiID, actor)
+	item, err := h.service.GetKontakByPegawaiID(c.Request().Context(), pegawaiID, actor)
 
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
@@ -147,7 +147,7 @@ func (h *KepegawaianKontakHandler) CreateKontak(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.CreateKontak(&req, actor)
+	item, err := h.service.CreateKontak(c.Request().Context(), &req, actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
@@ -179,7 +179,7 @@ func (h *KepegawaianKontakHandler) UpdateKontak(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.UpdateKontak(id, &req, actor)
+	item, err := h.service.UpdateKontak(c.Request().Context(), id, &req, actor)
 	if err != nil {
 		status := http.StatusBadRequest
 		if err.Error() == "KepegawaianKontak tidak ditemukan" {
@@ -207,7 +207,7 @@ func (h *KepegawaianKontakHandler) DeleteKontak(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	if err := h.service.DeleteKontak(id, actor); err != nil {
+	if err := h.service.DeleteKontak(c.Request().Context(), id, actor); err != nil {
 		status := http.StatusInternalServerError
 		if err.Error() == "KepegawaianKontak tidak ditemukan" {
 			status = http.StatusNotFound

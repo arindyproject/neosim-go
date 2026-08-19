@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"errors"
 
 	"neosim_go/internal/modules/master/alamat/dto"
@@ -12,13 +13,13 @@ import (
 // =====================================================================
 // Desa / Kelurahan
 // =====================================================================
-func (r *repository) CreateKelurahanDesa(m *models.MasterAlamatKelurahanDesa) error {
-	return r.db.Create(m).Error
+func (r *repository) CreateKelurahanDesa(ctx context.Context, m *models.MasterAlamatKelurahanDesa) error {
+	return r.db.WithContext(ctx).Create(m).Error
 }
 
-func (r *repository) GetByIDKelurahanDesa(id int64) (*models.MasterAlamatKelurahanDesa, error) {
+func (r *repository) GetByIDKelurahanDesa(ctx context.Context, id int64) (*models.MasterAlamatKelurahanDesa, error) {
 	var m models.MasterAlamatKelurahanDesa
-	result := r.db.Preload("Kecamatan").Where("id = ?", id).
+	result := r.db.WithContext(ctx).Preload("Kecamatan").Where("id = ?", id).
 		Where("master_alamat_kelurahan_desa.deleted_at IS NULL").First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
@@ -26,11 +27,11 @@ func (r *repository) GetByIDKelurahanDesa(id int64) (*models.MasterAlamatKelurah
 	return &m, result.Error
 }
 
-func (r *repository) ListKelurahanDesa(page, pageSize int, kecamatanID *int64, filter *dto.FilterKelurahanDesaRequest) ([]models.MasterAlamatKelurahanDesa, int64, error) {
+func (r *repository) ListKelurahanDesa(ctx context.Context, page, pageSize int, kecamatanID *int64, filter *dto.FilterKelurahanDesaRequest) ([]models.MasterAlamatKelurahanDesa, int64, error) {
 	var items []models.MasterAlamatKelurahanDesa
 	var total int64
 
-	query := r.db.Model(&models.MasterAlamatKelurahanDesa{}).
+	query := r.db.WithContext(ctx).Model(&models.MasterAlamatKelurahanDesa{}).
 		Where("master_alamat_kelurahan_desa.deleted_at IS NULL")
 
 	if kecamatanID != nil {
@@ -52,17 +53,17 @@ func (r *repository) ListKelurahanDesa(page, pageSize int, kecamatanID *int64, f
 	return items, total, nil
 }
 
-func (r *repository) UpdateKelurahanDesa(m *models.MasterAlamatKelurahanDesa) error {
-	return r.db.Save(m).Error
+func (r *repository) UpdateKelurahanDesa(ctx context.Context, m *models.MasterAlamatKelurahanDesa) error {
+	return r.db.WithContext(ctx).Save(m).Error
 }
 
-func (r *repository) DeleteKelurahanDesa(id int64) error {
-	return r.db.Where("id = ?", id).Delete(&models.MasterAlamatKelurahanDesa{}).Error
+func (r *repository) DeleteKelurahanDesa(ctx context.Context, id int64) error {
+	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&models.MasterAlamatKelurahanDesa{}).Error
 }
 
-func (r *repository) ExistsKelurahanDesaByCode(code string, excludeID *int64) (bool, error) {
+func (r *repository) ExistsKelurahanDesaByCode(ctx context.Context, code string, excludeID *int64) (bool, error) {
 	var count int64
-	q := r.db.Model(&models.MasterAlamatKelurahanDesa{}).Where("code = ?", code)
+	q := r.db.WithContext(ctx).Model(&models.MasterAlamatKelurahanDesa{}).Where("code = ?", code)
 	if excludeID != nil {
 		q = q.Where("id != ?", *excludeID)
 	}

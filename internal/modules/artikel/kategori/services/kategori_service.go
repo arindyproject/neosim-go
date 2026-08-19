@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"time"
@@ -12,7 +13,7 @@ import (
 )
 
 // ── Create ────────────────────────────────────────────────────────────────────
-func (s *service) CreateKategori(req *dto.CreateArtikelKategoriRequest, actor he.AuthContext) (*dto.ArtikelKategoriResponse, error) {
+func (s *service) CreateKategori(ctx context.Context,req *dto.CreateArtikelKategoriRequest, actor he.AuthContext) (*dto.ArtikelKategoriResponse, error) {
 	can, err := s.canCreateArtikelKategori(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -28,7 +29,7 @@ func (s *service) CreateKategori(req *dto.CreateArtikelKategoriRequest, actor he
 		CreatedBy:   &actor.UserID,
 		UpdatedBy:   &actor.UserID,
 	}
-	if err := s.repo.CreateKategori(m); err != nil {
+	if err := s.repo.CreateKategori(ctx,m); err != nil {
 		return nil, err
 	}
 	
@@ -43,7 +44,7 @@ func (s *service) CreateKategori(req *dto.CreateArtikelKategoriRequest, actor he
 
 
 // ── GetByID ───────────────────────────────────────────────────────────────────
-func (s *service) GetKategoriByID(id int64, actor he.AuthContext) (*dto.ArtikelKategoriResponse, error) {
+func (s *service) GetKategoriByID(ctx context.Context,id int64, actor he.AuthContext) (*dto.ArtikelKategoriResponse, error) {
 	can, err := s.canReadArtikelKategori(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -53,7 +54,7 @@ func (s *service) GetKategoriByID(id int64, actor he.AuthContext) (*dto.ArtikelK
 			"Akses ditolak. Anda tidak memiliki hak akses untuk Melihat ArtikelKategori.", nil)
 	}
 
-	m, err := s.repo.GetKategoriByID(id)
+	m, err := s.repo.GetKategoriByID(ctx,id)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +74,7 @@ func (s *service) GetKategoriByID(id int64, actor he.AuthContext) (*dto.ArtikelK
 
 
 // ── List ──────────────────────────────────────────────────────────────────────
-func (s *service) ListKategori(page, pageSize int, filter *dto.FilterArtikelKategoriRequest, actor he.AuthContext) ([]dto.ArtikelKategoriResponse, int64, error) {
+func (s *service) ListKategori(ctx context.Context,page, pageSize int, filter *dto.FilterArtikelKategoriRequest, actor he.AuthContext) ([]dto.ArtikelKategoriResponse, int64, error) {
 	can, err := s.canReadArtikelKategori(actor)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal cek akses")
@@ -89,7 +90,7 @@ func (s *service) ListKategori(page, pageSize int, filter *dto.FilterArtikelKate
 	if pageSize < 1 || pageSize > s.cfg.DefaultPageSizeMax {
 		pageSize = s.cfg.DefaultPageSizeMax
 	}
-	items, total, err := s.repo.ListKategori(page, pageSize, filter)
+	items, total, err := s.repo.ListKategori(ctx,page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -100,7 +101,7 @@ func (s *service) ListKategori(page, pageSize int, filter *dto.FilterArtikelKate
 
 
 // ── Update ────────────────────────────────────────────────────────────────────
-func (s *service) UpdateKategori(id int64, req *dto.UpdateArtikelKategoriRequest, actor he.AuthContext) (*dto.ArtikelKategoriResponse, error) {
+func (s *service) UpdateKategori(ctx context.Context,id int64, req *dto.UpdateArtikelKategoriRequest, actor he.AuthContext) (*dto.ArtikelKategoriResponse, error) {
 	can, err := s.canUpdateArtikelKategori(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -110,7 +111,7 @@ func (s *service) UpdateKategori(id int64, req *dto.UpdateArtikelKategoriRequest
 			"Akses ditolak. Anda tidak memiliki hak akses untuk mengubah ArtikelKategori.", nil)
 	}
 
-	m, err := s.repo.GetKategoriByID(id)
+	m, err := s.repo.GetKategoriByID(ctx,id)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +127,7 @@ func (s *service) UpdateKategori(id int64, req *dto.UpdateArtikelKategoriRequest
 	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()
 
-	if err := s.repo.UpdateKategori(m); err != nil {
+	if err := s.repo.UpdateKategori(ctx,m); err != nil {
 		return nil, err
 	}
 	
@@ -141,7 +142,7 @@ func (s *service) UpdateKategori(id int64, req *dto.UpdateArtikelKategoriRequest
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
-func (s *service) DeleteKategori(id int64, actor he.AuthContext) error {
+func (s *service) DeleteKategori(ctx context.Context,id int64, actor he.AuthContext) error {
 	can, err := s.canDeleteArtikelKategori(actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
@@ -151,12 +152,12 @@ func (s *service) DeleteKategori(id int64, actor he.AuthContext) error {
 			"Akses ditolak. Anda tidak memiliki hak akses untuk menghapus ArtikelKategori.", nil)
 	}
 
-	m, err := s.repo.GetKategoriByID(id)
+	m, err := s.repo.GetKategoriByID(ctx,id)
 	if err != nil {
 		return err
 	}
 	if m == nil {
 		return errors.New("ArtikelKategori tidak ditemukan")
 	}
-	return s.repo.DeleteKategori(id)
+	return s.repo.DeleteKategori(ctx,id)
 }

@@ -14,18 +14,18 @@ import (
 // Negara ==========================================================================
 
 // ─────────────── GetByID ─────────────────────────────────────────────────────────
-func (s *service) GetByIDNegara(id int64) (*dto.NegaraResponse, error) {
-	ctx := context.Background()
+func (s *service) GetByIDNegara(ctx context.Context, id int64) (*dto.NegaraResponse, error) {
+	ctxs := context.Background()
 	cacheKey := cacheKeyNegaraDetail(id)
 
 	// 1. Cek Cache
 	var cachedRes dto.NegaraResponse
-	if s.cache.Get(ctx, cacheKey, &cachedRes) {
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
 		return &cachedRes, nil
 	}
 
 	// 2. Ambil dari DB
-	m, err := s.repo.GetByIDNegara(id)
+	m, err := s.repo.GetByIDNegara(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -36,13 +36,13 @@ func (s *service) GetByIDNegara(id int64) (*dto.NegaraResponse, error) {
 	res := dto.ToNegaraResponse(m)
 
 	// 3. Simpan ke Cache
-	s.cache.SetDefault(ctx, cacheKey, res)
+	s.cache.SetDefault(ctxs, cacheKey, res)
 	return res, nil
 }
 
 // ─────────────── List ────────────────────────────────────────────────────────────
-func (s *service) ListNegara(page, pageSize int, filter *dto.FilterNegaraRequest) ([]dto.NegaraResponse, int64, error) {
-	ctx := context.Background()
+func (s *service) ListNegara(ctx context.Context, page, pageSize int, filter *dto.FilterNegaraRequest) ([]dto.NegaraResponse, int64, error) {
+	ctxs := context.Background()
 	cacheKey := cacheKeyNegaraList(page, pageSize, filter)
 
 	// 1. Cek Cache
@@ -50,7 +50,7 @@ func (s *service) ListNegara(page, pageSize int, filter *dto.FilterNegaraRequest
 		Items []dto.NegaraResponse `json:"items"`
 		Total int64                `json:"total"`
 	}
-	if s.cache.Get(ctx, cacheKey, &cachedRes) {
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
 		if len(cachedRes.Items) == 0 {
 			return nil, 0, appErrors.NotFound("Negara tidak ditemukan")
 		}
@@ -65,7 +65,7 @@ func (s *service) ListNegara(page, pageSize int, filter *dto.FilterNegaraRequest
 		pageSize = 10
 	}
 
-	items, total, err := s.repo.ListNegara(page, pageSize, filter)
+	items, total, err := s.repo.ListNegara(ctx, page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -76,7 +76,7 @@ func (s *service) ListNegara(page, pageSize int, filter *dto.FilterNegaraRequest
 	res := dto.ToNegaraListResponse(items)
 
 	// 3. Simpan ke Cache
-	s.cache.SetDefault(ctx, cacheKey, struct {
+	s.cache.SetDefault(ctxs, cacheKey, struct {
 		Items []dto.NegaraResponse `json:"items"`
 		Total int64                `json:"total"`
 	}{Items: res, Total: total})
@@ -85,7 +85,7 @@ func (s *service) ListNegara(page, pageSize int, filter *dto.FilterNegaraRequest
 }
 
 // ─────────────── Create ──────────────────────────────────────────────────────────
-func (s *service) CreateNegara(req *dto.CreateNegaraRequest, actor he.AuthContext) (*dto.NegaraResponse, error) {
+func (s *service) CreateNegara(ctx context.Context, req *dto.CreateNegaraRequest, actor he.AuthContext) (*dto.NegaraResponse, error) {
 	// Permission
 	can, err := s.canCreateMasterAlamat(actor)
 	if err != nil {
@@ -97,7 +97,7 @@ func (s *service) CreateNegara(req *dto.CreateNegaraRequest, actor he.AuthContex
 	}
 
 	// Cek duplikat code
-	exists, err := s.repo.ExistsNegaraByCode(req.Code, nil)
+	exists, err := s.repo.ExistsNegaraByCode(ctx, req.Code, nil)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek duplikat code")
 	}
@@ -114,7 +114,7 @@ func (s *service) CreateNegara(req *dto.CreateNegaraRequest, actor he.AuthContex
 		CreatedBy:   &actor.UserID,
 		UpdatedBy:   &actor.UserID,
 	}
-	if err := s.repo.CreateNegara(m); err != nil {
+	if err := s.repo.CreateNegara(ctx, m); err != nil {
 		return nil, err
 	}
 
@@ -127,7 +127,7 @@ func (s *service) CreateNegara(req *dto.CreateNegaraRequest, actor he.AuthContex
 }
 
 // ─────────────── Update ──────────────────────────────────────────────────────────
-func (s *service) UpdateNegara(id int64, req *dto.UpdateNegaraRequest, actor he.AuthContext) (*dto.NegaraResponse, error) {
+func (s *service) UpdateNegara(ctx context.Context, id int64, req *dto.UpdateNegaraRequest, actor he.AuthContext) (*dto.NegaraResponse, error) {
 	// Permission
 	can, err := s.canUpdateMasterAlamat(actor)
 	if err != nil {
@@ -139,7 +139,7 @@ func (s *service) UpdateNegara(id int64, req *dto.UpdateNegaraRequest, actor he.
 	}
 
 	// Logic
-	m, err := s.repo.GetByIDNegara(id)
+	m, err := s.repo.GetByIDNegara(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +149,7 @@ func (s *service) UpdateNegara(id int64, req *dto.UpdateNegaraRequest, actor he.
 
 	if req.Code != nil {
 		// Cek duplikat code, exclude diri sendiri
-		exists, err := s.repo.ExistsNegaraByCode(*req.Code, &id)
+		exists, err := s.repo.ExistsNegaraByCode(ctx, *req.Code, &id)
 		if err != nil {
 			return nil, appErrors.Internal("gagal cek duplikat code")
 		}
@@ -168,22 +168,22 @@ func (s *service) UpdateNegara(id int64, req *dto.UpdateNegaraRequest, actor he.
 	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()
 
-	if err := s.repo.UpdateNegara(m); err != nil {
+	if err := s.repo.UpdateNegara(ctx, m); err != nil {
 		return nil, err
 	}
 
 	res := dto.ToNegaraResponse(m)
 
 	// Invalidate Cache
-	ctx := context.Background()
-	s.cache.InvalidateDetail(ctx, cacheKeyNegaraDetail(id))
-	s.cache.InvalidateList(ctx, cachePrefixNegaraList)
+	ctxs := context.Background()
+	s.cache.InvalidateDetail(ctxs, cacheKeyNegaraDetail(id))
+	s.cache.InvalidateList(ctxs, cachePrefixNegaraList)
 
 	return res, nil
 }
 
 // ─────────────── Delete ──────────────────────────────────────────────────────────
-func (s *service) DeleteNegara(id int64, actor he.AuthContext) error {
+func (s *service) DeleteNegara(ctx context.Context, id int64, actor he.AuthContext) error {
 	// Permission
 	can, err := s.canDeleteMasterAlamat(actor)
 	if err != nil {
@@ -195,7 +195,7 @@ func (s *service) DeleteNegara(id int64, actor he.AuthContext) error {
 	}
 
 	// Logic
-	m, err := s.repo.GetByIDNegara(id)
+	m, err := s.repo.GetByIDNegara(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -203,12 +203,12 @@ func (s *service) DeleteNegara(id int64, actor he.AuthContext) error {
 		return appErrors.NotFound("Negara tidak ditemukan")
 	}
 
-	err = s.repo.DeleteNegara(id)
+	err = s.repo.DeleteNegara(ctx, id)
 	if err == nil {
 		// Invalidate Cache
-		ctx := context.Background()
-		s.cache.InvalidateDetail(ctx, cacheKeyNegaraDetail(id))
-		s.cache.InvalidateList(ctx, cachePrefixNegaraList)
+		ctxs := context.Background()
+		s.cache.InvalidateDetail(ctxs, cacheKeyNegaraDetail(id))
+		s.cache.InvalidateList(ctxs, cachePrefixNegaraList)
 	}
 	return err
 }

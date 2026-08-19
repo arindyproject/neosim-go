@@ -27,6 +27,14 @@ func (m *ArtikelKategoriRepositoryMock) GetKategoriByID(id int64) (*models.Artik
 	return args.Get(0).(*models.ArtikelKategori), args.Error(1)
 }
 
+func (m *ArtikelKategoriRepositoryMock) GetByIDs(ids []int64) ([]models.ArtikelKategori, error) {
+	args := m.Called(ids)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.ArtikelKategori), args.Error(1)
+}
+
 func (m *ArtikelKategoriRepositoryMock) ListKategori(page, pageSize int, filter *dto.FilterArtikelKategoriRequest) ([]models.ArtikelKategori, int64, error) {
 	args := m.Called(page, pageSize, filter)
 	return args.Get(0).([]models.ArtikelKategori), args.Get(1).(int64), args.Error(2)

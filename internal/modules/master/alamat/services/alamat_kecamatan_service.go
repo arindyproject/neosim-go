@@ -14,18 +14,18 @@ import (
 // Kecamatan =======================================================================
 
 // ─────────────── GetByID ─────────────────────────────────────────────────────────
-func (s *service) GetByIDKecamatan(id int64) (*dto.KecamatanDetailResponse, error) {
-	ctx := context.Background()
+func (s *service) GetByIDKecamatan(ctx context.Context, id int64) (*dto.KecamatanDetailResponse, error) {
+	ctxs := context.Background()
 	cacheKey := cacheKeyKecamatanDetail(id)
 
 	// 1. Cek Cache
 	var cachedRes dto.KecamatanDetailResponse
-	if s.cache.Get(ctx, cacheKey, &cachedRes) {
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
 		return &cachedRes, nil
 	}
 
 	// 2. Ambil dari DB
-	m, err := s.repo.GetByIDKecamatan(id)
+	m, err := s.repo.GetByIDKecamatan(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +33,7 @@ func (s *service) GetByIDKecamatan(id int64) (*dto.KecamatanDetailResponse, erro
 		return nil, appErrors.NotFound("Kecamatan tidak ditemukan")
 	}
 
-	totalDesa, err := s.repo.CountDesaByKecamatanID(m.ID)
+	totalDesa, err := s.repo.CountDesaByKecamatanID(ctx, m.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -52,13 +52,13 @@ func (s *service) GetByIDKecamatan(id int64) (*dto.KecamatanDetailResponse, erro
 	}
 
 	// 3. Simpan ke Cache
-	s.cache.SetDefault(ctx, cacheKey, res)
+	s.cache.SetDefault(ctxs, cacheKey, res)
 	return res, nil
 }
 
 // ─────────────── List ────────────────────────────────────────────────────────────
-func (s *service) ListKecamatan(page, pageSize int, kotaKabupatenID *int64, filter *dto.FilterKecamatanRequest) ([]dto.KecamatanResponse, int64, error) {
-	ctx := context.Background()
+func (s *service) ListKecamatan(ctx context.Context, page, pageSize int, kotaKabupatenID *int64, filter *dto.FilterKecamatanRequest) ([]dto.KecamatanResponse, int64, error) {
+	ctxs := context.Background()
 	cacheKey := cacheKeyKecamatanList(page, pageSize, kotaKabupatenID, filter)
 
 	// 1. Cek Cache
@@ -66,7 +66,7 @@ func (s *service) ListKecamatan(page, pageSize int, kotaKabupatenID *int64, filt
 		Items []dto.KecamatanResponse `json:"items"`
 		Total int64                   `json:"total"`
 	}
-	if s.cache.Get(ctx, cacheKey, &cachedRes) {
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
 		if len(cachedRes.Items) == 0 {
 			return nil, 0, appErrors.NotFound("Kecamatan tidak ditemukan")
 		}
@@ -81,7 +81,7 @@ func (s *service) ListKecamatan(page, pageSize int, kotaKabupatenID *int64, filt
 		pageSize = 10
 	}
 
-	items, total, err := s.repo.ListKecamatan(page, pageSize, kotaKabupatenID, filter)
+	items, total, err := s.repo.ListKecamatan(ctx, page, pageSize, kotaKabupatenID, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -92,7 +92,7 @@ func (s *service) ListKecamatan(page, pageSize int, kotaKabupatenID *int64, filt
 	res := dto.ToKecamatanListResponse(items)
 
 	// 3. Simpan ke Cache
-	s.cache.SetDefault(ctx, cacheKey, struct {
+	s.cache.SetDefault(ctxs, cacheKey, struct {
 		Items []dto.KecamatanResponse `json:"items"`
 		Total int64                   `json:"total"`
 	}{Items: res, Total: total})
@@ -101,7 +101,7 @@ func (s *service) ListKecamatan(page, pageSize int, kotaKabupatenID *int64, filt
 }
 
 // ─────────────── Create ──────────────────────────────────────────────────────────
-func (s *service) CreateKecamatan(req *dto.CreateKecamatanRequest, actor he.AuthContext) (*dto.KecamatanResponse, error) {
+func (s *service) CreateKecamatan(ctx context.Context, req *dto.CreateKecamatanRequest, actor he.AuthContext) (*dto.KecamatanResponse, error) {
 	// Permission
 	can, err := s.canCreateMasterAlamat(actor)
 	if err != nil {
@@ -113,7 +113,7 @@ func (s *service) CreateKecamatan(req *dto.CreateKecamatanRequest, actor he.Auth
 	}
 
 	// Cek duplikat code
-	exists, err := s.repo.ExistsKecamatanByCode(req.Code, nil)
+	exists, err := s.repo.ExistsKecamatanByCode(ctx, req.Code, nil)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek duplikat code")
 	}
@@ -123,7 +123,7 @@ func (s *service) CreateKecamatan(req *dto.CreateKecamatanRequest, actor he.Auth
 	}
 
 	// Logic
-	kota, err := s.repo.GetByIDKotaKabupaten(req.KotaKabupatenID)
+	kota, err := s.repo.GetByIDKotaKabupaten(ctx, req.KotaKabupatenID)
 	if err != nil {
 		return nil, err
 	}
@@ -138,22 +138,22 @@ func (s *service) CreateKecamatan(req *dto.CreateKecamatanRequest, actor he.Auth
 		CreatedBy:       &actor.UserID,
 		UpdatedBy:       &actor.UserID,
 	}
-	if err := s.repo.CreateKecamatan(m); err != nil {
+	if err := s.repo.CreateKecamatan(ctx, m); err != nil {
 		return nil, err
 	}
 
 	res := dto.ToKecamatanResponse(m)
 
 	// Invalidate Cache
-	ctx := context.Background()
-	s.cache.InvalidateList(ctx, cachePrefixKecamatanList)
-	s.cache.InvalidateList(ctx, cachePrefixDesaList)
+	ctxs := context.Background()
+	s.cache.InvalidateList(ctxs, cachePrefixKecamatanList)
+	s.cache.InvalidateList(ctxs, cachePrefixDesaList)
 
 	return res, nil
 }
 
 // ─────────────── Update ──────────────────────────────────────────────────────────
-func (s *service) UpdateKecamatan(id int64, req *dto.UpdateKecamatanRequest, actor he.AuthContext) (*dto.KecamatanResponse, error) {
+func (s *service) UpdateKecamatan(ctx context.Context, id int64, req *dto.UpdateKecamatanRequest, actor he.AuthContext) (*dto.KecamatanResponse, error) {
 	// Permission
 	can, err := s.canUpdateMasterAlamat(actor)
 	if err != nil {
@@ -165,7 +165,7 @@ func (s *service) UpdateKecamatan(id int64, req *dto.UpdateKecamatanRequest, act
 	}
 
 	// Logic
-	m, err := s.repo.GetByIDKecamatan(id)
+	m, err := s.repo.GetByIDKecamatan(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +178,7 @@ func (s *service) UpdateKecamatan(id int64, req *dto.UpdateKecamatanRequest, act
 	}
 	if req.Code != nil {
 		// Cek duplikat code, exclude diri sendiri
-		exists, err := s.repo.ExistsKecamatanByCode(*req.Code, &id)
+		exists, err := s.repo.ExistsKecamatanByCode(ctx, *req.Code, &id)
 		if err != nil {
 			return nil, appErrors.Internal("gagal cek duplikat code")
 		}
@@ -194,24 +194,24 @@ func (s *service) UpdateKecamatan(id int64, req *dto.UpdateKecamatanRequest, act
 	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()
 
-	if err := s.repo.UpdateKecamatan(m); err != nil {
+	if err := s.repo.UpdateKecamatan(ctx, m); err != nil {
 		return nil, err
 	}
 
 	res := dto.ToKecamatanResponse(m)
 
 	// Invalidate Cache
-	ctx := context.Background()
-	s.cache.InvalidateDetail(ctx, cacheKeyKecamatanDetail(id))
-	s.cache.InvalidateDetail(ctx, cacheKeyKecamatanGetDetail(id))
-	s.cache.InvalidateList(ctx, cachePrefixKecamatanList)
-	s.cache.InvalidateList(ctx, cachePrefixDesaList)
+	ctxs := context.Background()
+	s.cache.InvalidateDetail(ctxs, cacheKeyKecamatanDetail(id))
+	s.cache.InvalidateDetail(ctxs, cacheKeyKecamatanGetDetail(id))
+	s.cache.InvalidateList(ctxs, cachePrefixKecamatanList)
+	s.cache.InvalidateList(ctxs, cachePrefixDesaList)
 
 	return res, nil
 }
 
 // ─────────────── Delete ──────────────────────────────────────────────────────────
-func (s *service) DeleteKecamatan(id int64, actor he.AuthContext) error {
+func (s *service) DeleteKecamatan(ctx context.Context, id int64, actor he.AuthContext) error {
 	// Permission
 	can, err := s.canDeleteMasterAlamat(actor)
 	if err != nil {
@@ -223,7 +223,7 @@ func (s *service) DeleteKecamatan(id int64, actor he.AuthContext) error {
 	}
 
 	// Logic
-	m, err := s.repo.GetByIDKecamatan(id)
+	m, err := s.repo.GetByIDKecamatan(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -231,14 +231,14 @@ func (s *service) DeleteKecamatan(id int64, actor he.AuthContext) error {
 		return appErrors.NotFound("Kecamatan tidak ditemukan")
 	}
 
-	err = s.repo.DeleteKecamatan(id)
+	err = s.repo.DeleteKecamatan(ctx, id)
 	if err == nil {
 		// Invalidate Cache
-		ctx := context.Background()
-		s.cache.InvalidateDetail(ctx, cacheKeyKecamatanDetail(id))
-		s.cache.InvalidateDetail(ctx, cacheKeyKecamatanGetDetail(id))
-		s.cache.InvalidateList(ctx, cachePrefixKecamatanList)
-		s.cache.InvalidateList(ctx, cachePrefixDesaList)
+		ctxs := context.Background()
+		s.cache.InvalidateDetail(ctxs, cacheKeyKecamatanDetail(id))
+		s.cache.InvalidateDetail(ctxs, cacheKeyKecamatanGetDetail(id))
+		s.cache.InvalidateList(ctxs, cachePrefixKecamatanList)
+		s.cache.InvalidateList(ctxs, cachePrefixDesaList)
 	}
 	return err
 }

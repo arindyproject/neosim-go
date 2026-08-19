@@ -53,7 +53,7 @@ func (h *AuthHandler) Login(c *echo.Context) error {
 	ip := c.RealIP()
 	userAgent := c.Request().UserAgent()
 
-	result, err := h.service.Login(&req, ip, userAgent)
+	result, err := h.service.Login(c.Request().Context(), &req, ip, userAgent)
 	if err != nil {
 		return handleAuthError(c, err)
 	}
@@ -84,7 +84,7 @@ func (h *AuthHandler) Register(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 
-	result, err := h.service.Register(&req)
+	result, err := h.service.Register(c.Request().Context(), &req)
 	if err != nil {
 		return handleAuthError(c, err)
 	}
@@ -115,7 +115,7 @@ func (h *AuthHandler) RefreshToken(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 
-	result, err := h.service.RefreshToken(&req)
+	result, err := h.service.RefreshToken(c.Request().Context(), &req)
 	if err != nil {
 		return handleAuthError(c, err)
 	}
@@ -147,7 +147,7 @@ func (h *AuthHandler) ForgotPassword(c *echo.Context) error {
 	}
 
 	// Selalu return 200 — jangan bocorkan apakah identifier terdaftar
-	h.service.ForgotPassword(&req)
+	h.service.ForgotPassword(c.Request().Context(), &req)
 
 	return response.Response(c, http.StatusOK, true,
 		"Jika email terdaftar, kami telah mengirimkan instruksi reset password.", nil, nil)
@@ -176,7 +176,7 @@ func (h *AuthHandler) ResetPassword(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 
-	if err := h.service.ResetPassword(&req); err != nil {
+	if err := h.service.ResetPassword(c.Request().Context(), &req); err != nil {
 		return handleAuthError(c, err)
 	}
 
@@ -206,7 +206,7 @@ func (h *AuthHandler) Logout(c *echo.Context) error {
 
 	// Logout tidak return error meski token sudah expired/tidak valid
 	// untuk mencegah informasi bocor
-	h.service.Logout(&req)
+	h.service.Logout(c.Request().Context(), &req)
 
 	return response.Response(c, http.StatusOK, true, "Logout berhasil", nil, nil)
 }
@@ -227,7 +227,7 @@ func (h *AuthHandler) LogoutAll(c *echo.Context) error {
 		return response.Response(c, http.StatusUnauthorized, false, "Autentikasi diperlukan", nil, nil)
 	}
 
-	if err := h.service.LogoutAll(userID); err != nil {
+	if err := h.service.LogoutAll(c.Request().Context(), userID); err != nil {
 		return handleAuthError(c, err)
 	}
 

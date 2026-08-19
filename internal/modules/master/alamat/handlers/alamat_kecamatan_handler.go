@@ -39,7 +39,7 @@ func (h *MasterAlamatHandler) ListKecamatan(c *echo.Context) error {
 		Name: c.QueryParam("name"),
 	}
 
-	items, total, err := h.service.ListKecamatan(page, pageSize, kotaKabupatenID, &filter)
+	items, total, err := h.service.ListKecamatan(c.Request().Context(), page, pageSize, kotaKabupatenID, &filter)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
 	}
@@ -67,7 +67,7 @@ func (h *MasterAlamatHandler) GetByIDKecamatan(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 
-	item, err := h.service.GetByIDKecamatan(id)
+	item, err := h.service.GetByIDKecamatan(c.Request().Context(), id)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -104,7 +104,7 @@ func (h *MasterAlamatHandler) CreateKecamatan(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.CreateKecamatan(&req, actor)
+	item, err := h.service.CreateKecamatan(c.Request().Context(), &req, actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
@@ -147,7 +147,7 @@ func (h *MasterAlamatHandler) UpdateKecamatan(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.UpdateKecamatan(id, &req, actor)
+	item, err := h.service.UpdateKecamatan(c.Request().Context(), id, &req, actor)
 	if err != nil {
 		return response.Response(c, he.NotFoundStatus(err, "Kecamatan tidak ditemukan"), false, err.Error(), nil, nil)
 	}
@@ -176,7 +176,7 @@ func (h *MasterAlamatHandler) DeleteKecamatan(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	if err := h.service.DeleteKecamatan(id, actor); err != nil {
+	if err := h.service.DeleteKecamatan(c.Request().Context(), id, actor); err != nil {
 		return response.Response(c, he.NotFoundStatus(err, "Kecamatan tidak ditemukan"), false, err.Error(), nil, nil)
 	}
 

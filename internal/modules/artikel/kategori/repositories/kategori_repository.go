@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"errors"
 
 	"neosim_go/internal/modules/artikel/kategori/dto"
@@ -10,14 +11,14 @@ import (
 )
 
 // ── Create ────────────────────────────────────────────────────────────────────
-func (r *repository) CreateKategori(m *models.ArtikelKategori) error {
-	return r.db.Create(m).Error
+func (r *repository) CreateKategori(ctx context.Context, m *models.ArtikelKategori) error {
+	return r.db.WithContext(ctx).Create(m).Error
 }
 
 // ── GetByID ───────────────────────────────────────────────────────────────────
-func (r *repository) GetKategoriByID(id int64) (*models.ArtikelKategori, error) {
+func (r *repository) GetKategoriByID(ctx context.Context, id int64) (*models.ArtikelKategori, error) {
 	var m models.ArtikelKategori
-	result := r.db.Where("id = ? AND deleted_at IS NULL", id).First(&m)
+	result := r.db.WithContext(ctx).Where("id = ? AND deleted_at IS NULL", id).First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -25,11 +26,11 @@ func (r *repository) GetKategoriByID(id int64) (*models.ArtikelKategori, error) 
 }
 
 // ── List ──────────────────────────────────────────────────────────────────────
-func (r *repository) ListKategori(page, pageSize int, filter *dto.FilterArtikelKategoriRequest) ([]models.ArtikelKategori, int64, error) {
+func (r *repository) ListKategori(ctx context.Context, page, pageSize int, filter *dto.FilterArtikelKategoriRequest) ([]models.ArtikelKategori, int64, error) {
 	var items []models.ArtikelKategori
 	var total int64
 
-	query := r.db.Model(&models.ArtikelKategori{}).Where("deleted_at IS NULL")
+	query := r.db.WithContext(ctx).Model(&models.ArtikelKategori{}).Where("deleted_at IS NULL")
 
 	if filter.Name != "" {
 		query = query.Where("name ILIKE ?", "%"+filter.Name+"%")
@@ -49,11 +50,11 @@ func (r *repository) ListKategori(page, pageSize int, filter *dto.FilterArtikelK
 
 
 // ── Update ────────────────────────────────────────────────────────────────────
-func (r *repository) UpdateKategori(m *models.ArtikelKategori) error {
-	return r.db.Save(m).Error
+func (r *repository) UpdateKategori(ctx context.Context, m *models.ArtikelKategori) error {
+	return r.db.WithContext(ctx).Save(m).Error
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
-func (r *repository) DeleteKategori(id int64) error {
-	return r.db.Where("id = ?", id).Delete(&models.ArtikelKategori{}).Error
+func (r *repository) DeleteKategori(ctx context.Context, id int64) error {
+	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&models.ArtikelKategori{}).Error
 }

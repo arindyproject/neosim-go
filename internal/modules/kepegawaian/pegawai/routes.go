@@ -12,9 +12,10 @@ import (
 func RegisterRoutes(e *echo.Echo, h *handlers.KepegawaianPegawaiHandler, jwtManager *utils.JWTManager, db *gorm.DB) {
 	jwt := authMiddlewares.JWTMiddleware(jwtManager, db)
 	g := e.Group("/api/v1/kepegawaian/pegawai", jwt)
-	g.GET("", h.List)
-	g.GET("/:id", h.GetByID)
-	g.POST("", h.Create)
-	g.PUT("/:id", h.Update)
-	g.DELETE("/:id", h.Delete)
+	g.GET("", h.ListPegawai)
+	g.GET("/:id", h.GetPegawaiByID)
+	g.POST("", h.CreatePegawai)
+	g.PUT("/:id", h.UpdatePegawai)
+	g.DELETE("/:id", h.DeletePegawai)
+	// GEN:ITEM_ROUTES
 }

@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"errors"
 
 	"neosim_go/internal/modules/kepegawaian/identifier/contracts"
@@ -18,44 +19,44 @@ func NewTipeRepository(db *gorm.DB) contracts.TipeRepository {
 	return &repository{db: db}
 }
 
-func (r *repository) CreateTipe(m *models.Tipe) error {
+func (r *repository) CreateTipe(ctx context.Context, m *models.Tipe) error {
 	return r.db.Create(m).Error
 }
 
-func (r *repository) GetTipeByID(id int64) (*models.Tipe, error) {
+func (r *repository) GetTipeByID(ctx context.Context, id int64) (*models.Tipe, error) {
 	var m models.Tipe
 	// GORM otomatis menambahkan 'deleted_at IS NULL'
-	result := r.db.First(&m, id)
+	result := r.db.WithContext(ctx).First(&m, id)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
 	return &m, result.Error
 }
 
-func (r *repository) GetTipeByCode(code string) (*models.Tipe, error) {
+func (r *repository) GetTipeByCode(ctx context.Context, code string) (*models.Tipe, error) {
 	var m models.Tipe
-	result := r.db.Where("code = ?", code).First(&m)
+	result := r.db.WithContext(ctx).Where("code = ?", code).First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
 	return &m, result.Error
 }
 
-func (r *repository) GetTipeByLabel(label string) (*models.Tipe, error) {
+func (r *repository) GetTipeByLabel(ctx context.Context, label string) (*models.Tipe, error) {
 	var m models.Tipe
-	result := r.db.Where("label = ?", label).First(&m)
+	result := r.db.WithContext(ctx).Where("label = ?", label).First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
 	return &m, result.Error
 }
 
-func (r *repository) ListTipe(page, pageSize int, filter *dto.FilterTipeRequest) ([]models.Tipe, int64, error) {
+func (r *repository) ListTipe(ctx context.Context, page, pageSize int, filter *dto.FilterTipeRequest) ([]models.Tipe, int64, error) {
 	var items []models.Tipe
 	var total int64
 
 	// GORM otomatis menangani soft delete
-	query := r.db.Model(&models.Tipe{})
+	query := r.db.WithContext(ctx).Model(&models.Tipe{})
 
 	if filter != nil {
 		// Disesuaikan dengan field Label atau Code (misal pencarian kata kunci)
@@ -90,10 +91,10 @@ func (r *repository) ListTipe(page, pageSize int, filter *dto.FilterTipeRequest)
 	return items, total, nil
 }
 
-func (r *repository) UpdateTipe(m *models.Tipe) error {
-	return r.db.Save(m).Error
+func (r *repository) UpdateTipe(ctx context.Context, m *models.Tipe) error {
+	return r.db.WithContext(ctx).Save(m).Error
 }
 
-func (r *repository) DeleteTipe(id int64) error {
-	return r.db.Delete(&models.Tipe{}, id).Error
+func (r *repository) DeleteTipe(ctx context.Context, id int64) error {
+	return r.db.WithContext(ctx).Delete(&models.Tipe{}, id).Error
 }

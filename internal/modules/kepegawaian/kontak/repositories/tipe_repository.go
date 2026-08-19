@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"errors"
 
 	"neosim_go/internal/modules/kepegawaian/kontak/contracts"
@@ -19,14 +20,14 @@ func NewTipeRepository(db *gorm.DB) contracts.TipeRepository {
 }
 
 // ── Create ────────────────────────────────────────────────────────────────────
-func (r *repository) CreateTipe(m *models.Tipe) error {
-	return r.db.Create(m).Error
+func (r *repository) CreateTipe(ctx context.Context, m *models.Tipe) error {
+	return r.db.WithContext(ctx).Create(m).Error
 }
 
 // ── GetByID ───────────────────────────────────────────────────────────────────
-func (r *repository) GetTipeByID(id int64) (*models.Tipe, error) {
+func (r *repository) GetTipeByID(ctx context.Context, id int64) (*models.Tipe, error) {
 	var m models.Tipe
-	result := r.db.Where("id = ? AND deleted_at IS NULL", id).First(&m)
+	result := r.db.WithContext(ctx).Where("id = ? AND deleted_at IS NULL", id).First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -34,9 +35,9 @@ func (r *repository) GetTipeByID(id int64) (*models.Tipe, error) {
 }
 
 // ── GetByCode ─────────────────────────────────────────────────────────────────
-func (r *repository) GetTipeByCode(code string) (*models.Tipe, error) {
+func (r *repository) GetTipeByCode(ctx context.Context, code string) (*models.Tipe, error) {
 	var m models.Tipe
-	result := r.db.Where("code = ? AND deleted_at IS NULL", code).First(&m)
+	result := r.db.WithContext(ctx).Where("code = ? AND deleted_at IS NULL", code).First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -44,9 +45,9 @@ func (r *repository) GetTipeByCode(code string) (*models.Tipe, error) {
 }
 
 // ── GetByLabel ────────────────────────────────────────────────────────────────
-func (r *repository) GetTipeByLabel(label string) (*models.Tipe, error) {
+func (r *repository) GetTipeByLabel(ctx context.Context, label string) (*models.Tipe, error) {
 	var m models.Tipe
-	result := r.db.Where("label = ? AND deleted_at IS NULL", label).First(&m)
+	result := r.db.WithContext(ctx).Where("label = ? AND deleted_at IS NULL", label).First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -54,11 +55,11 @@ func (r *repository) GetTipeByLabel(label string) (*models.Tipe, error) {
 }
 
 // ── List ──────────────────────────────────────────────────────────────────────
-func (r *repository) ListTipe(page, pageSize int, filter *dto.FilterTipeRequest) ([]models.Tipe, int64, error) {
+func (r *repository) ListTipe(ctx context.Context, page, pageSize int, filter *dto.FilterTipeRequest) ([]models.Tipe, int64, error) {
 	var items []models.Tipe
 	var total int64
 
-	query := r.db.Model(&models.Tipe{}).Where("deleted_at IS NULL")
+	query := r.db.WithContext(ctx).Model(&models.Tipe{}).Where("deleted_at IS NULL")
 	if filter.Code != "" {
 		query = query.Where("code ILIKE ?", "%"+filter.Code+"%")
 	}
@@ -76,11 +77,11 @@ func (r *repository) ListTipe(page, pageSize int, filter *dto.FilterTipeRequest)
 }
 
 // ── Update ────────────────────────────────────────────────────────────────────
-func (r *repository) UpdateTipe(m *models.Tipe) error {
-	return r.db.Save(m).Error
+func (r *repository) UpdateTipe(ctx context.Context, m *models.Tipe) error {
+	return r.db.WithContext(ctx).Save(m).Error
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
-func (r *repository) DeleteTipe(id int64) error {
-	return r.db.Where("id = ?", id).Delete(&models.Tipe{}).Error
+func (r *repository) DeleteTipe(ctx context.Context, id int64) error {
+	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&models.Tipe{}).Error
 }

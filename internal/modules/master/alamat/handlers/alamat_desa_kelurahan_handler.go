@@ -41,7 +41,7 @@ func (h *MasterAlamatHandler) ListKelurahanDesa(c *echo.Context) error {
 		PostalCode: c.QueryParam("postal_code"),
 	}
 
-	items, total, err := h.service.ListKelurahanDesa(page, pageSize, kecamatanID, &filter)
+	items, total, err := h.service.ListKelurahanDesa(c.Request().Context(), page, pageSize, kecamatanID, &filter)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
 	}
@@ -69,7 +69,7 @@ func (h *MasterAlamatHandler) GetByIDKelurahanDesa(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 
-	item, err := h.service.GetByIDKelurahanDesa(id)
+	item, err := h.service.GetByIDKelurahanDesa(c.Request().Context(), id)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -106,7 +106,7 @@ func (h *MasterAlamatHandler) CreateKelurahanDesa(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.CreateKelurahanDesa(&req, actor)
+	item, err := h.service.CreateKelurahanDesa(c.Request().Context(), &req, actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
@@ -150,7 +150,7 @@ func (h *MasterAlamatHandler) UpdateKelurahanDesa(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.UpdateKelurahanDesa(id, &req, actor)
+	item, err := h.service.UpdateKelurahanDesa(c.Request().Context(), id, &req, actor)
 	if err != nil {
 		return response.Response(c, he.NotFoundStatus(err, "Kelurahan/Desa tidak ditemukan"), false, err.Error(), nil, nil)
 	}
@@ -179,7 +179,7 @@ func (h *MasterAlamatHandler) DeleteKelurahanDesa(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	if err := h.service.DeleteKelurahanDesa(id, actor); err != nil {
+	if err := h.service.DeleteKelurahanDesa(c.Request().Context(), id, actor); err != nil {
 		return response.Response(c, he.NotFoundStatus(err, "Kelurahan/Desa tidak ditemukan"), false, err.Error(), nil, nil)
 	}
 

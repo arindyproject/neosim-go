@@ -73,30 +73,30 @@ func NewAuthService(
 
 // ─── Login ─────────────────────────────────────────────────────────────────────
 
-func (s *authService) Login(req *dto.LoginRequest, ip, userAgent string) (*dto.TokenResponse, error) {
-	ctx := context.Background()
+func (s *authService) Login(ctx context.Context, req *dto.LoginRequest, ip, userAgent string) (*dto.TokenResponse, error) {
+	ctxs := context.Background()
 	identifier := strings.TrimSpace(req.Identifier)
 
 	// 1. Cari user by username atau email
-	user, err := s.findUserByIdentifier(identifier)
+	user, err := s.findUserByIdentifier(ctx, identifier)
 	if err != nil || user == nil {
-		s.saveLoginHistory(nil, identifier, ip, userAgent, models.LoginStatusFailed, "identifier_not_found")
+		s.saveLoginHistory(ctx, nil, identifier, ip, userAgent, models.LoginStatusFailed, "identifier_not_found")
 		return nil, NewAuthError(401, "Username atau email tidak terdaftar.")
 	}
 
 	// 2. Cek is_active
 	if !user.IsActive {
-		s.saveLoginHistory(&user.ID, identifier, ip, userAgent, models.LoginStatusFailed, "account_inactive")
+		s.saveLoginHistory(ctx, &user.ID, identifier, ip, userAgent, models.LoginStatusFailed, "account_inactive")
 		return nil, NewAuthError(403, "Akun Anda tidak aktif. Hubungi administrator.")
 	}
 
 	// 3. Cek IP blacklist
-	if exists, _ := s.redis.Exists(ctx, utils.KeyIPBlacklist(ip)).Result(); exists > 0 {
+	if exists, _ := s.redis.Exists(ctxs, utils.KeyIPBlacklist(ip)).Result(); exists > 0 {
 		return nil, NewAuthError(429, fmt.Sprintf("IP Anda (%s) telah diblokir sementara karena terlalu banyak percobaan login.", ip))
 	}
 
 	// 4. Cek login lock
-	if ttl, err := s.redis.TTL(ctx, utils.KeyLoginLock(identifier)).Result(); err == nil && ttl > 0 {
+	if ttl, err := s.redis.TTL(ctxs, utils.KeyLoginLock(identifier)).Result(); err == nil && ttl > 0 {
 		minutesLeft := int(math.Ceil(ttl.Minutes()))
 		return nil, NewAuthError(429, fmt.Sprintf(
 			"Terlalu banyak percobaan login. Coba lagi dalam %d menit.", minutesLeft,
@@ -105,13 +105,13 @@ func (s *authService) Login(req *dto.LoginRequest, ip, userAgent string) (*dto.T
 
 	// 5. Verifikasi password
 	if !utils.VerifyPassword(req.Password, user.Password) {
-		s.handleFailedLogin(ctx, identifier, ip, &user.ID, userAgent)
-		remaining := s.getRemainingAttempts(ctx, identifier)
+		s.handleFailedLogin(ctxs, identifier, ip, &user.ID, userAgent)
+		remaining := s.getRemainingAttempts(ctxs, identifier)
 		return nil, NewAuthError(401, fmt.Sprintf("Password salah. Tersisa %d percobaan.", remaining))
 	}
 
 	// 6. Cek concurrent sessions
-	activeCount, err := s.repo.CountActiveTokens(user.ID)
+	activeCount, err := s.repo.CountActiveTokens(ctx, user.ID)
 	if err != nil {
 		return nil, NewAuthError(500, "Terjadi kesalahan sistem.")
 	}
@@ -134,7 +134,7 @@ func (s *authService) Login(req *dto.LoginRequest, ip, userAgent string) (*dto.T
 
 	deviceInfo := userAgent
 	ipCopy := ip
-	if err := s.repo.SaveToken(&models.AuthToken{
+	if err := s.repo.SaveToken(ctx, &models.AuthToken{
 		UserID:      user.ID,
 		JTI:         jti,
 		TokenType:   "refresh",
@@ -147,16 +147,16 @@ func (s *authService) Login(req *dto.LoginRequest, ip, userAgent string) (*dto.T
 	}
 
 	// 8. Cleanup & update
-	s.redis.Del(ctx, utils.KeyLoginAttempts(identifier))
-	s.updateLastLogin(user)
-	s.saveLoginHistory(&user.ID, identifier, ip, userAgent, models.LoginStatusSuccess, "")
+	s.redis.Del(ctxs, utils.KeyLoginAttempts(identifier))
+	s.updateLastLogin(ctx, user)
+	s.saveLoginHistory(ctx, &user.ID, identifier, ip, userAgent, models.LoginStatusSuccess, "")
 
-	return s.buildTokenResponse(accessToken, refreshToken, user), nil
+	return s.buildTokenResponse(ctx, accessToken, refreshToken, user), nil
 }
 
 // ─── Register ──────────────────────────────────────────────────────────────────
 
-func (s *authService) Register(req *dto.RegisterRequest) (*dto.RegisterResponse, error) {
+func (s *authService) Register(ctx context.Context, req *dto.RegisterRequest) (*dto.RegisterResponse, error) {
 	// 1. Cek setting registrasi
 	if !s.cfg.IsRegistrationActive {
 		return nil, NewAuthError(403, "Registrasi sedang tidak tersedia.")
@@ -169,10 +169,10 @@ func (s *authService) Register(req *dto.RegisterRequest) (*dto.RegisterResponse,
 
 	// 3. Cek duplikat bersamaan via users repository
 	var fieldErrors []string
-	if existing, _ := s.userRepo.GetByUsername(req.Username); existing != nil {
+	if existing, _ := s.userRepo.GetByUsername(ctx, req.Username); existing != nil {
 		fieldErrors = append(fieldErrors, "username sudah digunakan")
 	}
-	if existing, _ := s.userRepo.GetByEmail(req.Email); existing != nil {
+	if existing, _ := s.userRepo.GetByEmail(ctx, req.Email); existing != nil {
 		fieldErrors = append(fieldErrors, "email sudah digunakan")
 	}
 	if len(fieldErrors) > 0 {
@@ -210,12 +210,12 @@ func (s *authService) Register(req *dto.RegisterRequest) (*dto.RegisterResponse,
 	}
 
 	// Simpan via users repository
-	if err := s.userRepo.Create(user); err != nil {
+	if err := s.userRepo.Create(ctx, user); err != nil {
 		return nil, NewAuthError(500, "Gagal membuat akun.")
 	}
 
 	// 7. Simpan password history
-	s.repo.SavePasswordHistory(&models.PasswordHistory{
+	s.repo.SavePasswordHistory(ctx, &models.PasswordHistory{
 		UserID:       user.ID,
 		PasswordHash: hashedPassword,
 	})
@@ -238,7 +238,7 @@ func (s *authService) Register(req *dto.RegisterRequest) (*dto.RegisterResponse,
 
 // ─── Refresh Token ─────────────────────────────────────────────────────────────
 
-func (s *authService) RefreshToken(req *dto.RefreshTokenRequest) (*dto.TokenResponse, error) {
+func (s *authService) RefreshToken(ctx context.Context, req *dto.RefreshTokenRequest) (*dto.TokenResponse, error) {
 	// 1. Parse & validasi JWT
 	claims, err := s.cfg.JWTManager.ParseToken(req.RefreshToken)
 	if err != nil {
@@ -249,7 +249,7 @@ func (s *authService) RefreshToken(req *dto.RefreshTokenRequest) (*dto.TokenResp
 	}
 
 	// 2. Cek JTI di database
-	authToken, err := s.repo.GetTokenByJTI(claims.ID)
+	authToken, err := s.repo.GetTokenByJTI(ctx, claims.ID)
 	if err != nil || authToken == nil {
 		return nil, NewAuthError(401, "Token tidak ditemukan.")
 	}
@@ -261,13 +261,13 @@ func (s *authService) RefreshToken(req *dto.RefreshTokenRequest) (*dto.TokenResp
 	}
 
 	// 3. Ambil user via users repository
-	user, err := s.userRepo.GetByID(claims.UserID)
+	user, err := s.userRepo.GetByID(ctx, claims.UserID)
 	if err != nil || user == nil {
 		return nil, NewAuthError(401, "User tidak ditemukan.")
 	}
 
 	// 4. Token rotation: blacklist lama, buat baru
-	if err := s.repo.BlacklistToken(claims.ID); err != nil {
+	if err := s.repo.BlacklistToken(ctx, claims.ID); err != nil {
 		return nil, NewAuthError(500, "Gagal memproses token.")
 	}
 
@@ -284,7 +284,7 @@ func (s *authService) RefreshToken(req *dto.RefreshTokenRequest) (*dto.TokenResp
 	}
 
 	deviceInfo := ""
-	if err := s.repo.SaveToken(&models.AuthToken{
+	if err := s.repo.SaveToken(ctx, &models.AuthToken{
 		UserID:      user.ID,
 		JTI:         jti,
 		TokenType:   "refresh",
@@ -295,16 +295,16 @@ func (s *authService) RefreshToken(req *dto.RefreshTokenRequest) (*dto.TokenResp
 		return nil, NewAuthError(500, "Gagal menyimpan token baru.")
 	}
 
-	return s.buildTokenResponse(accessToken, refreshToken, user), nil
+	return s.buildTokenResponse(ctx, accessToken, refreshToken, user), nil
 }
 
 // ─── Forgot Password ───────────────────────────────────────────────────────────
 
-func (s *authService) ForgotPassword(req *dto.ForgotPasswordRequest) error {
-	ctx := context.Background()
+func (s *authService) ForgotPassword(ctx context.Context, req *dto.ForgotPasswordRequest) error {
+	ctxs := context.Background()
 
 	// Selalu return nil — jangan bocorkan apakah identifier terdaftar
-	user, _ := s.findUserByIdentifier(req.Identifier)
+	user, _ := s.findUserByIdentifier(ctx, req.Identifier)
 	if user == nil {
 		return nil
 	}
@@ -317,7 +317,7 @@ func (s *authService) ForgotPassword(req *dto.ForgotPasswordRequest) error {
 	token := hex.EncodeToString(tokenBytes)
 
 	ttl := time.Duration(s.cfg.MailResetTokenExpMinutes) * time.Minute
-	s.redis.Set(ctx, utils.KeyResetPassword(token), user.ID, ttl)
+	s.redis.Set(ctxs, utils.KeyResetPassword(token), user.ID, ttl)
 
 	if s.cfg.Mailer != nil {
 		resetURL := fmt.Sprintf("%s/reset-password?token=%s", s.cfg.AppFrontendURL, token)
@@ -329,8 +329,8 @@ func (s *authService) ForgotPassword(req *dto.ForgotPasswordRequest) error {
 
 // ─── Reset Password ────────────────────────────────────────────────────────────
 
-func (s *authService) ResetPassword(req *dto.ResetPasswordRequest) error {
-	ctx := context.Background()
+func (s *authService) ResetPassword(ctx context.Context, req *dto.ResetPasswordRequest) error {
+	ctxs := context.Background()
 
 	// 1. Validasi password policy
 	if errs := s.cfg.PasswordPolicy.Validate(req.NewPassword); len(errs) > 0 {
@@ -344,7 +344,7 @@ func (s *authService) ResetPassword(req *dto.ResetPasswordRequest) error {
 
 	// 3. Ambil user_id dari Redis
 	key := utils.KeyResetPassword(req.Token)
-	userIDStr, err := s.redis.Get(ctx, key).Result()
+	userIDStr, err := s.redis.Get(ctxs, key).Result()
 	if err != nil {
 		return NewAuthError(400, "Token tidak valid atau sudah kedaluwarsa.")
 	}
@@ -353,13 +353,13 @@ func (s *authService) ResetPassword(req *dto.ResetPasswordRequest) error {
 	fmt.Sscanf(userIDStr, "%d", &userID)
 
 	// 4. Ambil user via users repository
-	user, err := s.userRepo.GetByID(userID)
+	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil || user == nil {
 		return NewAuthError(400, "Token tidak valid.")
 	}
 
 	// 5. Cek password history
-	histories, _ := s.repo.GetPasswordHistories(userID, s.cfg.PasswordHistoryCount)
+	histories, _ := s.repo.GetPasswordHistories(ctx, userID, s.cfg.PasswordHistoryCount)
 	hashes := make([]string, len(histories))
 	for i, h := range histories {
 		hashes[i] = h.PasswordHash
@@ -378,19 +378,19 @@ func (s *authService) ResetPassword(req *dto.ResetPasswordRequest) error {
 	user.Password = hashed
 	user.PasswordChangedAt = &now
 
-	if err := s.userRepo.Update(user); err != nil {
+	if err := s.userRepo.Update(ctx, user); err != nil {
 		return NewAuthError(500, "Gagal mengupdate password.")
 	}
 
 	// 7. Simpan password history
-	s.repo.SavePasswordHistory(&models.PasswordHistory{
+	s.repo.SavePasswordHistory(ctx, &models.PasswordHistory{
 		UserID:       userID,
 		PasswordHash: hashed,
 	})
 
 	// 8. Blacklist semua token user & hapus Redis key
-	s.repo.BlacklistAllUserTokens(userID)
-	s.redis.Del(ctx, key)
+	s.repo.BlacklistAllUserTokens(ctx, userID)
+	s.redis.Del(ctxs, key)
 
 	return nil
 }
@@ -398,7 +398,7 @@ func (s *authService) ResetPassword(req *dto.ResetPasswordRequest) error {
 // ─── Logout ────────────────────────────────────────────────────────────────────
 
 // Logout memblacklist refresh token dari device saat ini
-func (s *authService) Logout(req *dto.LogoutRequest) error {
+func (s *authService) Logout(ctx context.Context, req *dto.LogoutRequest) error {
 	// Parse token untuk ambil JTI
 	claims, err := s.cfg.JWTManager.ParseToken(req.RefreshToken)
 	if err != nil {
@@ -407,14 +407,14 @@ func (s *authService) Logout(req *dto.LogoutRequest) error {
 	}
 
 	// Cek token ada di DB
-	authToken, err := s.repo.GetTokenByJTI(claims.ID)
+	authToken, err := s.repo.GetTokenByJTI(ctx, claims.ID)
 	if err != nil || authToken == nil {
 		// Token tidak ditemukan — anggap sudah logout
 		return nil
 	}
 
 	// Blacklist token
-	if err := s.repo.BlacklistToken(claims.ID); err != nil {
+	if err := s.repo.BlacklistToken(ctx, claims.ID); err != nil {
 		return NewAuthError(500, "Gagal logout. Coba lagi.")
 	}
 
@@ -422,8 +422,8 @@ func (s *authService) Logout(req *dto.LogoutRequest) error {
 }
 
 // LogoutAll memblacklist semua refresh token user (logout dari semua device)
-func (s *authService) LogoutAll(userID int64) error {
-	if err := s.repo.BlacklistAllUserTokens(userID); err != nil {
+func (s *authService) LogoutAll(ctx context.Context, userID int64) error {
+	if err := s.repo.BlacklistAllUserTokens(ctx, userID); err != nil {
 		return NewAuthError(500, "Gagal logout dari semua perangkat.")
 	}
 	return nil
@@ -432,15 +432,15 @@ func (s *authService) LogoutAll(userID int64) error {
 // ─── Private Helpers ───────────────────────────────────────────────────────────
 
 // findUserByIdentifier mencari user by username atau email
-func (s *authService) findUserByIdentifier(identifier string) (*userModels.User, error) {
-	user, err := s.userRepo.GetByUsername(identifier)
+func (s *authService) findUserByIdentifier(ctx context.Context, identifier string) (*userModels.User, error) {
+	user, err := s.userRepo.GetByUsername(ctx, identifier)
 	if err != nil {
 		return nil, err
 	}
 	if user != nil {
 		return user, nil
 	}
-	return s.userRepo.GetByEmail(identifier)
+	return s.userRepo.GetByEmail(ctx, identifier)
 }
 
 func (s *authService) handleFailedLogin(ctx context.Context, identifier, ip string, userID *int64, userAgent string) {
@@ -462,7 +462,7 @@ func (s *authService) handleFailedLogin(ctx context.Context, identifier, ip stri
 		s.redis.Set(ctx, utils.KeyIPBlacklist(ip), 1, lockDuration)
 	}
 
-	s.saveLoginHistory(userID, identifier, ip, userAgent, models.LoginStatusFailed, "wrong_password")
+	s.saveLoginHistory(ctx, userID, identifier, ip, userAgent, models.LoginStatusFailed, "wrong_password")
 }
 
 func (s *authService) getRemainingAttempts(ctx context.Context, identifier string) int {
@@ -474,7 +474,7 @@ func (s *authService) getRemainingAttempts(ctx context.Context, identifier strin
 	return remaining
 }
 
-func (s *authService) saveLoginHistory(userID *int64, identifier, ip, userAgent, status, failureReason string) {
+func (s *authService) saveLoginHistory(ctx context.Context, userID *int64, identifier, ip, userAgent, status, failureReason string) {
 	ua := userAgent
 	history := &models.LoginHistory{
 		UserID:     userID,
@@ -486,20 +486,20 @@ func (s *authService) saveLoginHistory(userID *int64, identifier, ip, userAgent,
 	if failureReason != "" {
 		history.FailureReason = &failureReason
 	}
-	s.repo.SaveLoginHistory(history)
+	s.repo.SaveLoginHistory(ctx, history)
 }
 
 // updateLastLogin mengupdate last_login_at via users repository
-func (s *authService) updateLastLogin(user *userModels.User) {
+func (s *authService) updateLastLogin(ctx context.Context, user *userModels.User) {
 	now := time.Now()
 	user.LastLoginAt = &now
-	s.userRepo.Update(user)
+	s.userRepo.Update(ctx, user)
 }
 
 // buildTokenResponse membangun response token dari user model
-func (s *authService) buildTokenResponse(accessToken, refreshToken string, user *userModels.User) *dto.TokenResponse {
+func (s *authService) buildTokenResponse(ctx context.Context, accessToken, refreshToken string, user *userModels.User) *dto.TokenResponse {
 	settings, _ := user.GetSettings()
-	histories, _ := s.repo.GetUserLoginHistories(user.ID, 10)
+	histories, _ := s.repo.GetUserLoginHistories(ctx, user.ID, 10)
 
 	// 1. Ambil roles dari DB — tanpa preload permissions agar ringan
 	roles, err := s.rbacRepo.GetUserRoles(user.ID)
@@ -545,7 +545,7 @@ func (s *authService) buildTokenResponse(accessToken, refreshToken string, user 
 	// 2. Ambil data creator jika CreatedBy tidak nil
 	var creatorDTO *userModels.UserCreator
 	if user.CreatedBy != nil {
-		creatorUser, err := s.userRepo.GetByID(*user.CreatedBy)
+		creatorUser, err := s.userRepo.GetByID(ctx, *user.CreatedBy)
 		if err == nil && creatorUser != nil {
 			creatorDTO = &userModels.UserCreator{
 				ID:       creatorUser.ID,

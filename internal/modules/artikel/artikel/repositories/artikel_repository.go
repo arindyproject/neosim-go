@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"errors"
 
 	"neosim_go/internal/modules/artikel/artikel/dto"
@@ -10,14 +11,14 @@ import (
 )
 
 // ── Create ────────────────────────────────────────────────────────────────────
-func (r *repository) CreateArtikel(m *models.Artikel) error {
-	return r.db.Create(m).Error
+func (r *repository) CreateArtikel(ctx context.Context, m *models.Artikel) error {
+	return r.db.WithContext(ctx).Create(m).Error
 }
 
 // ── GetByID ───────────────────────────────────────────────────────────────────
-func (r *repository) GetArtikelByID(id int64) (*models.Artikel, error) {
+func (r *repository) GetArtikelByID(ctx context.Context, id int64) (*models.Artikel, error) {
 	var m models.Artikel
-	result := r.db.Where("id = ? AND deleted_at IS NULL", id).First(&m)
+	result := r.db.WithContext(ctx).Where("id = ? AND deleted_at IS NULL", id).First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -25,11 +26,11 @@ func (r *repository) GetArtikelByID(id int64) (*models.Artikel, error) {
 }
 
 // ── List ──────────────────────────────────────────────────────────────────────
-func (r *repository) ListArtikel(page, pageSize int, filter *dto.FilterArtikelRequest) ([]models.Artikel, int64, error) {
+func (r *repository) ListArtikel(ctx context.Context, page, pageSize int, filter *dto.FilterArtikelRequest) ([]models.Artikel, int64, error) {
 	var items []models.Artikel
 	var total int64
 
-	query := r.db.Model(&models.Artikel{}).Where("deleted_at IS NULL")
+	query := r.db.WithContext(ctx).Model(&models.Artikel{}).Where("deleted_at IS NULL")
 
 	if filter.Name != "" {
 		query = query.Where("name ILIKE ?", "%"+filter.Name+"%")
@@ -49,11 +50,11 @@ func (r *repository) ListArtikel(page, pageSize int, filter *dto.FilterArtikelRe
 
 
 // ── Update ────────────────────────────────────────────────────────────────────
-func (r *repository) UpdateArtikel(m *models.Artikel) error {
-	return r.db.Save(m).Error
+func (r *repository) UpdateArtikel(ctx context.Context, m *models.Artikel) error {
+	return r.db.WithContext(ctx).Save(m).Error
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
-func (r *repository) DeleteArtikel(id int64) error {
-	return r.db.Where("id = ?", id).Delete(&models.Artikel{}).Error
+func (r *repository) DeleteArtikel(ctx context.Context, id int64) error {
+	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&models.Artikel{}).Error
 }

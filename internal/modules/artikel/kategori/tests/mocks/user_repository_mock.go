@@ -1,9 +1,8 @@
 package mocks
 
 import (
-	userDto "neosim_go/internal/modules/users/dto"
+	userDto    "neosim_go/internal/modules/users/dto"
 	userModels "neosim_go/internal/modules/users/models"
-
 	"github.com/stretchr/testify/mock"
 )
 
@@ -23,14 +22,6 @@ func (m *UserRepositoryMock) GetByID(id int64) (*userModels.User, error) {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*userModels.User), args.Error(1)
-}
-
-func (m *UserRepositoryMock) GetByIDs(ids []int64) ([]userModels.User, error) {
-	args := m.Called(ids)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]userModels.User), args.Error(1)
 }
 
 func (m *UserRepositoryMock) GetByUsername(username string) (*userModels.User, error) {

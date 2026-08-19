@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"time"
@@ -16,7 +17,7 @@ import (
 // s.buildAuditMaps dipakai ulang langsung — tidak perlu field/param baru.
 
 // ── Create ────────────────────────────────────────────────────────────────────
-func (s *service) CreateTipe(req *dto.CreateTipeRequest, actor he.AuthContext) (*dto.TipeResponse, error) {
+func (s *service) CreateTipe(ctx context.Context, req *dto.CreateTipeRequest, actor he.AuthContext) (*dto.TipeResponse, error) {
 	can, err := s.canCreateTipe(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -27,7 +28,7 @@ func (s *service) CreateTipe(req *dto.CreateTipeRequest, actor he.AuthContext) (
 	}
 
 	//ceck duplicate code
-	data, err := s.repo.GetTipeByCode(req.Code)
+	data, err := s.repo.GetTipeByCode(ctx, req.Code)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +37,7 @@ func (s *service) CreateTipe(req *dto.CreateTipeRequest, actor he.AuthContext) (
 	}
 
 	//ceck duplicate label
-	data, err = s.repo.GetTipeByLabel(req.Label)
+	data, err = s.repo.GetTipeByLabel(ctx, req.Label)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +52,7 @@ func (s *service) CreateTipe(req *dto.CreateTipeRequest, actor he.AuthContext) (
 		CreatedBy: &actor.UserID,
 		UpdatedBy: &actor.UserID,
 	}
-	if err := s.repo.CreateTipe(m); err != nil {
+	if err := s.repo.CreateTipe(ctx, m); err != nil {
 		return nil, err
 	}
 
@@ -65,7 +66,7 @@ func (s *service) CreateTipe(req *dto.CreateTipeRequest, actor he.AuthContext) (
 }
 
 // ── GetByID ───────────────────────────────────────────────────────────────────
-func (s *service) GetTipeByID(id int64, actor he.AuthContext) (*dto.TipeResponse, error) {
+func (s *service) GetTipeByID(ctx context.Context, id int64, actor he.AuthContext) (*dto.TipeResponse, error) {
 	can, err := s.canReadTipe(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -75,7 +76,7 @@ func (s *service) GetTipeByID(id int64, actor he.AuthContext) (*dto.TipeResponse
 			"Akses ditolak. Anda tidak memiliki hak akses untuk melihat Tipe.", nil)
 	}
 
-	m, err := s.repo.GetTipeByID(id)
+	m, err := s.repo.GetTipeByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +95,7 @@ func (s *service) GetTipeByID(id int64, actor he.AuthContext) (*dto.TipeResponse
 }
 
 // ── GetByCode ─────────────────────────────────────────────────────────────────
-func (s *service) GetTipeByCode(code string, actor he.AuthContext) (*dto.TipeResponse, error) {
+func (s *service) GetTipeByCode(ctx context.Context, code string, actor he.AuthContext) (*dto.TipeResponse, error) {
 	can, err := s.canReadTipe(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -104,7 +105,7 @@ func (s *service) GetTipeByCode(code string, actor he.AuthContext) (*dto.TipeRes
 			"Akses ditolak. Anda tidak memiliki hak akses untuk melihat Tipe.", nil)
 	}
 
-	m, err := s.repo.GetTipeByCode(code)
+	m, err := s.repo.GetTipeByCode(ctx, code)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +124,7 @@ func (s *service) GetTipeByCode(code string, actor he.AuthContext) (*dto.TipeRes
 }
 
 // ── GetByLabel ────────────────────────────────────────────────────────────────
-func (s *service) GetTipeByLabel(label string, actor he.AuthContext) (*dto.TipeResponse, error) {
+func (s *service) GetTipeByLabel(ctx context.Context, label string, actor he.AuthContext) (*dto.TipeResponse, error) {
 	can, err := s.canReadTipe(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -133,7 +134,7 @@ func (s *service) GetTipeByLabel(label string, actor he.AuthContext) (*dto.TipeR
 			"Akses ditolak. Anda tidak memiliki hak akses untuk melihat Tipe.", nil)
 	}
 
-	m, err := s.repo.GetTipeByLabel(label)
+	m, err := s.repo.GetTipeByLabel(ctx, label)
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +153,7 @@ func (s *service) GetTipeByLabel(label string, actor he.AuthContext) (*dto.TipeR
 }
 
 // ── List ──────────────────────────────────────────────────────────────────────
-func (s *service) ListTipe(page, pageSize int, filter *dto.FilterTipeRequest, actor he.AuthContext) ([]dto.TipeResponse, int64, error) {
+func (s *service) ListTipe(ctx context.Context, page, pageSize int, filter *dto.FilterTipeRequest, actor he.AuthContext) ([]dto.TipeResponse, int64, error) {
 	can, err := s.canReadTipe(actor)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal cek akses")
@@ -168,7 +169,7 @@ func (s *service) ListTipe(page, pageSize int, filter *dto.FilterTipeRequest, ac
 	if pageSize < 1 || pageSize > s.cfg.DefaultPageSizeMax {
 		pageSize = s.cfg.DefaultPageSizeMax
 	}
-	items, total, err := s.repo.ListTipe(page, pageSize, filter)
+	items, total, err := s.repo.ListTipe(ctx, page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -178,7 +179,7 @@ func (s *service) ListTipe(page, pageSize int, filter *dto.FilterTipeRequest, ac
 }
 
 // ── Update ────────────────────────────────────────────────────────────────────
-func (s *service) UpdateTipe(id int64, req *dto.UpdateTipeRequest, actor he.AuthContext) (*dto.TipeResponse, error) {
+func (s *service) UpdateTipe(ctx context.Context, id int64, req *dto.UpdateTipeRequest, actor he.AuthContext) (*dto.TipeResponse, error) {
 	can, err := s.canUpdateTipe(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -188,7 +189,7 @@ func (s *service) UpdateTipe(id int64, req *dto.UpdateTipeRequest, actor he.Auth
 			"Akses ditolak. Anda tidak memiliki hak akses untuk mengubah Tipe.", nil)
 	}
 
-	m, err := s.repo.GetTipeByID(id)
+	m, err := s.repo.GetTipeByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -198,7 +199,7 @@ func (s *service) UpdateTipe(id int64, req *dto.UpdateTipeRequest, actor he.Auth
 
 	//ceck duplicate code
 	if req.Code != nil && *req.Code != m.Code {
-		data, err := s.repo.GetTipeByCode(*req.Code)
+		data, err := s.repo.GetTipeByCode(ctx, *req.Code)
 		if err != nil {
 			return nil, err
 		}
@@ -209,7 +210,7 @@ func (s *service) UpdateTipe(id int64, req *dto.UpdateTipeRequest, actor he.Auth
 
 	//ceck duplicate label
 	if req.Label != nil && *req.Label != m.Label {
-		data, err := s.repo.GetTipeByLabel(*req.Label)
+		data, err := s.repo.GetTipeByLabel(ctx, *req.Label)
 		if err != nil {
 			return nil, err
 		}
@@ -228,7 +229,7 @@ func (s *service) UpdateTipe(id int64, req *dto.UpdateTipeRequest, actor he.Auth
 	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()
 
-	if err := s.repo.UpdateTipe(m); err != nil {
+	if err := s.repo.UpdateTipe(ctx, m); err != nil {
 		return nil, err
 	}
 
@@ -243,7 +244,7 @@ func (s *service) UpdateTipe(id int64, req *dto.UpdateTipeRequest, actor he.Auth
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
-func (s *service) DeleteTipe(id int64, actor he.AuthContext) error {
+func (s *service) DeleteTipe(ctx context.Context, id int64, actor he.AuthContext) error {
 	can, err := s.canDeleteTipe(actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
@@ -253,14 +254,14 @@ func (s *service) DeleteTipe(id int64, actor he.AuthContext) error {
 			"Akses ditolak. Anda tidak memiliki hak akses untuk menghapus Tipe.", nil)
 	}
 
-	m, err := s.repo.GetTipeByID(id)
+	m, err := s.repo.GetTipeByID(ctx, id)
 	if err != nil {
 		return err
 	}
 	if m == nil {
 		return errors.New("Tipe tidak ditemukan")
 	}
-	return s.repo.DeleteTipe(id)
+	return s.repo.DeleteTipe(ctx, id)
 }
 
 // ── helper khusus Tipe (nama fungsi unik agar tidak bentrok) ───────

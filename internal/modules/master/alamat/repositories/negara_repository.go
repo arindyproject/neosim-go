@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"errors"
 
 	"neosim_go/internal/modules/master/alamat/dto"
@@ -12,13 +13,13 @@ import (
 // =====================================================================
 // NEGARA
 // =====================================================================
-func (r *repository) CreateNegara(m *models.MasterAlamatNegara) error {
-	return r.db.Create(m).Error
+func (r *repository) CreateNegara(ctx context.Context, m *models.MasterAlamatNegara) error {
+	return r.db.WithContext(ctx).Create(m).Error
 }
 
-func (r *repository) GetByIDNegara(id int64) (*models.MasterAlamatNegara, error) {
+func (r *repository) GetByIDNegara(ctx context.Context, id int64) (*models.MasterAlamatNegara, error) {
 	var m models.MasterAlamatNegara
-	result := r.db.Where("id = ?", id).
+	result := r.db.WithContext(ctx).Where("id = ?", id).
 		Where("master_alamat_negara.deleted_at IS NULL").First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
@@ -26,11 +27,11 @@ func (r *repository) GetByIDNegara(id int64) (*models.MasterAlamatNegara, error)
 	return &m, result.Error
 }
 
-func (r *repository) ListNegara(page, pageSize int, filter *dto.FilterNegaraRequest) ([]models.MasterAlamatNegara, int64, error) {
+func (r *repository) ListNegara(ctx context.Context, page, pageSize int, filter *dto.FilterNegaraRequest) ([]models.MasterAlamatNegara, int64, error) {
 	var items []models.MasterAlamatNegara
 	var total int64
 
-	query := r.db.Model(&models.MasterAlamatNegara{}).Where("master_alamat_negara.deleted_at IS NULL")
+	query := r.db.WithContext(ctx).Model(&models.MasterAlamatNegara{}).Where("master_alamat_negara.deleted_at IS NULL")
 
 	if filter != nil && filter.Name != "" {
 		query = query.Where("name ILIKE ?", "%"+filter.Name+"%")
@@ -48,17 +49,17 @@ func (r *repository) ListNegara(page, pageSize int, filter *dto.FilterNegaraRequ
 	return items, total, nil
 }
 
-func (r *repository) UpdateNegara(m *models.MasterAlamatNegara) error {
-	return r.db.Save(m).Error
+func (r *repository) UpdateNegara(ctx context.Context, m *models.MasterAlamatNegara) error {
+	return r.db.WithContext(ctx).Save(m).Error
 }
 
-func (r *repository) DeleteNegara(id int64) error {
-	return r.db.Where("id = ?", id).Delete(&models.MasterAlamatNegara{}).Error
+func (r *repository) DeleteNegara(ctx context.Context, id int64) error {
+	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&models.MasterAlamatNegara{}).Error
 }
 
-func (r *repository) ExistsNegaraByCode(code string, excludeID *int64) (bool, error) {
+func (r *repository) ExistsNegaraByCode(ctx context.Context, code string, excludeID *int64) (bool, error) {
 	var count int64
-	q := r.db.Model(&models.MasterAlamatNegara{}).Where("code = ?", code)
+	q := r.db.WithContext(ctx).Model(&models.MasterAlamatNegara{}).Where("code = ?", code)
 	if excludeID != nil {
 		q = q.Where("id != ?", *excludeID)
 	}

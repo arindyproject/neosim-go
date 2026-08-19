@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	authContracts "neosim_go/internal/modules/auth/contracts"
 	rbacContracts "neosim_go/internal/modules/rbac/contracts"
 	rbacDto "neosim_go/internal/modules/rbac/dto"
@@ -110,11 +111,11 @@ func (s *service) buildUsersRBAC(userIDs []int64) map[int64][]rbacDto.RoleSimple
 }
 
 // buildCreator mengambil data creator user
-func (s *service) buildCreator(createdBy *int64) *models.UserCreator {
+func (s *service) buildCreator(ctx context.Context, createdBy *int64) *models.UserCreator {
 	if createdBy == nil {
 		return nil
 	}
-	creator, err := s.repo.GetByID(*createdBy)
+	creator, err := s.repo.GetByID(ctx, *createdBy)
 	if err != nil || creator == nil {
 		return nil
 	}

@@ -516,6 +516,7 @@ type Service interface {
 var tmplModuleInterfaces = `package contracts
 
 import (
+	"context"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
 	he "{{.ProjectModule}}/internal/shared/httputil"
@@ -525,22 +526,22 @@ import (
 // Diimplementasikan oleh struct 'repository' (lihat repositories/repository.go
 // & repositories/{{.ModuleName}}_repository.go).
 type {{.ModuleTitle}}Repository interface {
-	Create{{.MethodSuffix}}(m *models.{{.ModuleTitle}}) error
-	Get{{.MethodSuffix}}ByID(id int64) (*models.{{.ModuleTitle}}, error)
-	List{{.MethodSuffix}}(page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request) ([]models.{{.ModuleTitle}}, int64, error)
-	Update{{.MethodSuffix}}(m *models.{{.ModuleTitle}}) error
-	Delete{{.MethodSuffix}}(id int64) error
+	Create{{.MethodSuffix}}(ctx context.Context,m *models.{{.ModuleTitle}}) error
+	Get{{.MethodSuffix}}ByID(ctx context.Context,id int64) (*models.{{.ModuleTitle}}, error)
+	List{{.MethodSuffix}}(ctx context.Context,page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request) ([]models.{{.ModuleTitle}}, int64, error)
+	Update{{.MethodSuffix}}(ctx context.Context,m *models.{{.ModuleTitle}}) error
+	Delete{{.MethodSuffix}}(ctx context.Context,id int64) error
 }
 
 // {{.ModuleTitle}}Service defines business logic operations for {{.ModuleTitle}}.
 // Diimplementasikan oleh struct 'service' (lihat services/service.go
 // & services/{{.ModuleName}}_service.go).
 type {{.ModuleTitle}}Service interface {
-	Create{{.MethodSuffix}}(req *dto.Create{{.ModuleTitle}}Request, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error)
-	Get{{.MethodSuffix}}ByID(id int64, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error)
-	List{{.MethodSuffix}}(page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request, actor he.AuthContext) ([]dto.{{.ModuleTitle}}Response, int64, error)
-	Update{{.MethodSuffix}}(id int64, req *dto.Update{{.ModuleTitle}}Request, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error)
-	Delete{{.MethodSuffix}}(id int64, actor he.AuthContext) error
+	Create{{.MethodSuffix}}(ctx context.Context,req *dto.Create{{.ModuleTitle}}Request, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error)
+	Get{{.MethodSuffix}}ByID(ctx context.Context,id int64, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error)
+	List{{.MethodSuffix}}(ctx context.Context,page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request, actor he.AuthContext) ([]dto.{{.ModuleTitle}}Response, int64, error)
+	Update{{.MethodSuffix}}(ctx context.Context,id int64, req *dto.Update{{.ModuleTitle}}Request, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error)
+	Delete{{.MethodSuffix}}(ctx context.Context,id int64, actor he.AuthContext) error
 }
 `
 
@@ -682,6 +683,7 @@ func New{{.ModuleTitle}}Repository(db *gorm.DB) contracts.Repository {
 var tmplRepository = `package repositories
 
 import (
+	"context"
 	"errors"
 
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
@@ -691,14 +693,14 @@ import (
 )
 
 // ── Create ────────────────────────────────────────────────────────────────────
-func (r *repository) Create{{.MethodSuffix}}(m *models.{{.ModuleTitle}}) error {
-	return r.db.Create(m).Error
+func (r *repository) Create{{.MethodSuffix}}(ctx context.Context, m *models.{{.ModuleTitle}}) error {
+	return r.db.WithContext(ctx).Create(m).Error
 }
 
 // ── GetByID ───────────────────────────────────────────────────────────────────
-func (r *repository) Get{{.MethodSuffix}}ByID(id int64) (*models.{{.ModuleTitle}}, error) {
+func (r *repository) Get{{.MethodSuffix}}ByID(ctx context.Context, id int64) (*models.{{.ModuleTitle}}, error) {
 	var m models.{{.ModuleTitle}}
-	result := r.db.Where("id = ? AND deleted_at IS NULL", id).First(&m)
+	result := r.db.WithContext(ctx).Where("id = ? AND deleted_at IS NULL", id).First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -706,11 +708,11 @@ func (r *repository) Get{{.MethodSuffix}}ByID(id int64) (*models.{{.ModuleTitle}
 }
 
 // ── List ──────────────────────────────────────────────────────────────────────
-func (r *repository) List{{.MethodSuffix}}(page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request) ([]models.{{.ModuleTitle}}, int64, error) {
+func (r *repository) List{{.MethodSuffix}}(ctx context.Context, page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request) ([]models.{{.ModuleTitle}}, int64, error) {
 	var items []models.{{.ModuleTitle}}
 	var total int64
 
-	query := r.db.Model(&models.{{.ModuleTitle}}{}).Where("deleted_at IS NULL")
+	query := r.db.WithContext(ctx).Model(&models.{{.ModuleTitle}}{}).Where("deleted_at IS NULL")
 
 	if filter.Name != "" {
 		query = query.Where("name ILIKE ?", "%"+filter.Name+"%")
@@ -730,13 +732,13 @@ func (r *repository) List{{.MethodSuffix}}(page, pageSize int, filter *dto.Filte
 
 
 // ── Update ────────────────────────────────────────────────────────────────────
-func (r *repository) Update{{.MethodSuffix}}(m *models.{{.ModuleTitle}}) error {
-	return r.db.Save(m).Error
+func (r *repository) Update{{.MethodSuffix}}(ctx context.Context, m *models.{{.ModuleTitle}}) error {
+	return r.db.WithContext(ctx).Save(m).Error
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
-func (r *repository) Delete{{.MethodSuffix}}(id int64) error {
-	return r.db.Where("id = ?", id).Delete(&models.{{.ModuleTitle}}{}).Error
+func (r *repository) Delete{{.MethodSuffix}}(ctx context.Context, id int64) error {
+	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&models.{{.ModuleTitle}}{}).Error
 }
 `
 
@@ -904,6 +906,7 @@ func (s *service) canDelete{{.ModuleTitle}}(actor he.AuthContext) (bool, error) 
 var tmplService = `package services
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"time"
@@ -915,7 +918,7 @@ import (
 )
 
 // ── Create ────────────────────────────────────────────────────────────────────
-func (s *service) Create{{.MethodSuffix}}(req *dto.Create{{.ModuleTitle}}Request, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
+func (s *service) Create{{.MethodSuffix}}(ctx context.Context,req *dto.Create{{.ModuleTitle}}Request, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
 	can, err := s.canCreate{{.ModuleTitle}}(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -931,7 +934,7 @@ func (s *service) Create{{.MethodSuffix}}(req *dto.Create{{.ModuleTitle}}Request
 		CreatedBy:   &actor.UserID,
 		UpdatedBy:   &actor.UserID,
 	}
-	if err := s.repo.Create{{.MethodSuffix}}(m); err != nil {
+	if err := s.repo.Create{{.MethodSuffix}}(ctx,m); err != nil {
 		return nil, err
 	}
 	
@@ -946,7 +949,7 @@ func (s *service) Create{{.MethodSuffix}}(req *dto.Create{{.ModuleTitle}}Request
 
 
 // ── GetByID ───────────────────────────────────────────────────────────────────
-func (s *service) Get{{.MethodSuffix}}ByID(id int64, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
+func (s *service) Get{{.MethodSuffix}}ByID(ctx context.Context,id int64, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
 	can, err := s.canRead{{.ModuleTitle}}(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -956,7 +959,7 @@ func (s *service) Get{{.MethodSuffix}}ByID(id int64, actor he.AuthContext) (*dto
 			"Akses ditolak. Anda tidak memiliki hak akses untuk Melihat {{.ModuleTitle}}.", nil)
 	}
 
-	m, err := s.repo.Get{{.MethodSuffix}}ByID(id)
+	m, err := s.repo.Get{{.MethodSuffix}}ByID(ctx,id)
 	if err != nil {
 		return nil, err
 	}
@@ -976,7 +979,7 @@ func (s *service) Get{{.MethodSuffix}}ByID(id int64, actor he.AuthContext) (*dto
 
 
 // ── List ──────────────────────────────────────────────────────────────────────
-func (s *service) List{{.MethodSuffix}}(page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request, actor he.AuthContext) ([]dto.{{.ModuleTitle}}Response, int64, error) {
+func (s *service) List{{.MethodSuffix}}(ctx context.Context,page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request, actor he.AuthContext) ([]dto.{{.ModuleTitle}}Response, int64, error) {
 	can, err := s.canRead{{.ModuleTitle}}(actor)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal cek akses")
@@ -992,7 +995,7 @@ func (s *service) List{{.MethodSuffix}}(page, pageSize int, filter *dto.Filter{{
 	if pageSize < 1 || pageSize > s.cfg.DefaultPageSizeMax {
 		pageSize = s.cfg.DefaultPageSizeMax
 	}
-	items, total, err := s.repo.List{{.MethodSuffix}}(page, pageSize, filter)
+	items, total, err := s.repo.List{{.MethodSuffix}}(ctx,page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -1003,7 +1006,7 @@ func (s *service) List{{.MethodSuffix}}(page, pageSize int, filter *dto.Filter{{
 
 
 // ── Update ────────────────────────────────────────────────────────────────────
-func (s *service) Update{{.MethodSuffix}}(id int64, req *dto.Update{{.ModuleTitle}}Request, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
+func (s *service) Update{{.MethodSuffix}}(ctx context.Context,id int64, req *dto.Update{{.ModuleTitle}}Request, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
 	can, err := s.canUpdate{{.ModuleTitle}}(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -1013,7 +1016,7 @@ func (s *service) Update{{.MethodSuffix}}(id int64, req *dto.Update{{.ModuleTitl
 			"Akses ditolak. Anda tidak memiliki hak akses untuk mengubah {{.ModuleTitle}}.", nil)
 	}
 
-	m, err := s.repo.Get{{.MethodSuffix}}ByID(id)
+	m, err := s.repo.Get{{.MethodSuffix}}ByID(ctx,id)
 	if err != nil {
 		return nil, err
 	}
@@ -1029,7 +1032,7 @@ func (s *service) Update{{.MethodSuffix}}(id int64, req *dto.Update{{.ModuleTitl
 	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()
 
-	if err := s.repo.Update{{.MethodSuffix}}(m); err != nil {
+	if err := s.repo.Update{{.MethodSuffix}}(ctx,m); err != nil {
 		return nil, err
 	}
 	
@@ -1044,7 +1047,7 @@ func (s *service) Update{{.MethodSuffix}}(id int64, req *dto.Update{{.ModuleTitl
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
-func (s *service) Delete{{.MethodSuffix}}(id int64, actor he.AuthContext) error {
+func (s *service) Delete{{.MethodSuffix}}(ctx context.Context,id int64, actor he.AuthContext) error {
 	can, err := s.canDelete{{.ModuleTitle}}(actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
@@ -1054,14 +1057,14 @@ func (s *service) Delete{{.MethodSuffix}}(id int64, actor he.AuthContext) error 
 			"Akses ditolak. Anda tidak memiliki hak akses untuk menghapus {{.ModuleTitle}}.", nil)
 	}
 
-	m, err := s.repo.Get{{.MethodSuffix}}ByID(id)
+	m, err := s.repo.Get{{.MethodSuffix}}ByID(ctx,id)
 	if err != nil {
 		return err
 	}
 	if m == nil {
 		return errors.New("{{.ModuleTitle}} tidak ditemukan")
 	}
-	return s.repo.Delete{{.MethodSuffix}}(id)
+	return s.repo.Delete{{.MethodSuffix}}(ctx,id)
 }
 `
 
@@ -1124,7 +1127,7 @@ func (h *{{.ModuleTitle}}Handler) List{{.MethodSuffix}}(c *echo.Context) error {
 	page, pageSize := he.ParsePagination(c, h.cfg)
 
 	actor := he.BuildAuthContext(c)
-	items, total, err := h.service.List{{.MethodSuffix}}(page, pageSize, &filter, actor)
+	items, total, err := h.service.List{{.MethodSuffix}}(c.Request().Context(),page, pageSize, &filter, actor)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
 	}
@@ -1148,7 +1151,7 @@ func (h *{{.ModuleTitle}}Handler) Get{{.MethodSuffix}}ByID(c *echo.Context) erro
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.Get{{.MethodSuffix}}ByID(id, actor)
+	item, err := h.service.Get{{.MethodSuffix}}ByID(c.Request().Context(),id, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -1180,7 +1183,7 @@ func (h *{{.ModuleTitle}}Handler) Create{{.MethodSuffix}}(c *echo.Context) error
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (validator)", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.Create{{.MethodSuffix}}(&req,  actor)
+	item, err := h.service.Create{{.MethodSuffix}}(c.Request().Context(),&req,  actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
@@ -1217,7 +1220,7 @@ func (h *{{.ModuleTitle}}Handler) Update{{.MethodSuffix}}(c *echo.Context) error
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (validator)", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.Update{{.MethodSuffix}}(id, &req, actor)
+	item, err := h.service.Update{{.MethodSuffix}}(c.Request().Context(),id, &req, actor)
 	if err != nil {
 		status := http.StatusBadRequest
 		if err.Error() == "{{.ModuleTitle}} tidak ditemukan" {
@@ -1245,7 +1248,7 @@ func (h *{{.ModuleTitle}}Handler) Delete{{.MethodSuffix}}(c *echo.Context) error
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	if err := h.service.Delete{{.MethodSuffix}}(id, actor); err != nil {
+	if err := h.service.Delete{{.MethodSuffix}}(c.Request().Context(),id, actor); err != nil {
 		status := http.StatusInternalServerError
 		if err.Error() == "{{.ModuleTitle}} tidak ditemukan" {
 			status = http.StatusNotFound
@@ -2440,6 +2443,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Delete{{.MethodSuffix}}_RepoErro
 var tmplItemContracts = `package contracts
 
 import (
+	"context"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
 	he "{{.ProjectModule}}/internal/shared/httputil"
@@ -2451,21 +2455,21 @@ import (
 // Method diberi suffix nama item agar tidak bentrok saat di-embed ke
 // contracts.Repository.
 type {{.ItemTitle}}Repository interface {
-	Create{{.ItemTitle}}(m *models.{{.ItemTitle}}) error
-	Get{{.ItemTitle}}ByID(id int64) (*models.{{.ItemTitle}}, error)
-	List{{.ItemTitle}}(page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request) ([]models.{{.ItemTitle}}, int64, error)
-	Update{{.ItemTitle}}(m *models.{{.ItemTitle}}) error
-	Delete{{.ItemTitle}}(id int64) error
+	Create{{.ItemTitle}}(ctx context.Context,m *models.{{.ItemTitle}}) error
+	Get{{.ItemTitle}}ByID(ctx context.Context,id int64) (*models.{{.ItemTitle}}, error)
+	List{{.ItemTitle}}(ctx context.Context,page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request) ([]models.{{.ItemTitle}}, int64, error)
+	Update{{.ItemTitle}}(ctx context.Context,m *models.{{.ItemTitle}}) error
+	Delete{{.ItemTitle}}(ctx context.Context,id int64) error
 }
 
 // {{.ItemTitle}}Service defines business logic operations for {{.ItemTitle}}.
 // Diimplementasikan oleh struct 'service' yang sama dengan entitas utama.
 type {{.ItemTitle}}Service interface {
-	Create{{.ItemTitle}}(req *dto.Create{{.ItemTitle}}Request, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error)
-	Get{{.ItemTitle}}ByID(id int64, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error)
-	List{{.ItemTitle}}(page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request, actor he.AuthContext) ([]dto.{{.ItemTitle}}Response, int64, error)
-	Update{{.ItemTitle}}(id int64, req *dto.Update{{.ItemTitle}}Request, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error)
-	Delete{{.ItemTitle}}(id int64, actor he.AuthContext) error
+	Create{{.ItemTitle}}(ctx context.Context,req *dto.Create{{.ItemTitle}}Request, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error)
+	Get{{.ItemTitle}}ByID(ctx context.Context,id int64, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error)
+	List{{.ItemTitle}}(ctx context.Context,page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request, actor he.AuthContext) ([]dto.{{.ItemTitle}}Response, int64, error)
+	Update{{.ItemTitle}}(ctx context.Context,id int64, req *dto.Update{{.ItemTitle}}Request, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error)
+	Delete{{.ItemTitle}}(ctx context.Context,id int64, actor he.AuthContext) error
 }
 `
 
@@ -2584,6 +2588,7 @@ func ({{.ItemTitle}}) TableName() string {
 var tmplItemRepository = `package repositories
 
 import (
+	"context"
 	"errors"
 
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/contracts"
@@ -2602,14 +2607,14 @@ func New{{.ItemTitle}}Repository(db *gorm.DB) contracts.{{.ItemTitle}}Repository
 }
 
 // ── Create ────────────────────────────────────────────────────────────────────
-func (r *repository) Create{{.ItemTitle}}(m *models.{{.ItemTitle}}) error {
-	return r.db.Create(m).Error
+func (r *repository) Create{{.ItemTitle}}(ctx context.Context,m *models.{{.ItemTitle}}) error {
+	return r.db.WithContext(ctx).Create(m).Error
 }
 
 // ── GetByID ───────────────────────────────────────────────────────────────────
-func (r *repository) Get{{.ItemTitle}}ByID(id int64) (*models.{{.ItemTitle}}, error) {
+func (r *repository) Get{{.ItemTitle}}ByID(ctx context.Context,id int64) (*models.{{.ItemTitle}}, error) {
 	var m models.{{.ItemTitle}}
-	result := r.db.Where("id = ? AND deleted_at IS NULL", id).First(&m)
+	result := r.db.WithContext(ctx).Where("id = ? AND deleted_at IS NULL", id).First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -2617,11 +2622,11 @@ func (r *repository) Get{{.ItemTitle}}ByID(id int64) (*models.{{.ItemTitle}}, er
 }
 
 // ── List ──────────────────────────────────────────────────────────────────────
-func (r *repository) List{{.ItemTitle}}(page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request) ([]models.{{.ItemTitle}}, int64, error) {
+func (r *repository) List{{.ItemTitle}}(ctx context.Context,page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request) ([]models.{{.ItemTitle}}, int64, error) {
 	var items []models.{{.ItemTitle}}
 	var total int64
 
-	query := r.db.Model(&models.{{.ItemTitle}}{}).Where("deleted_at IS NULL")
+	query := r.db.WithContext(ctx).Model(&models.{{.ItemTitle}}{}).Where("deleted_at IS NULL")
 	if filter.Name != "" {
 		query = query.Where("name ILIKE ?", "%"+filter.Name+"%")
 	}
@@ -2636,12 +2641,12 @@ func (r *repository) List{{.ItemTitle}}(page, pageSize int, filter *dto.Filter{{
 }
 
 // ── Update ────────────────────────────────────────────────────────────────────
-func (r *repository) Update{{.ItemTitle}}(m *models.{{.ItemTitle}}) error {
-	return r.db.Save(m).Error
+func (r *repository) Update{{.ItemTitle}}(ctx context.Context,m *models.{{.ItemTitle}}) error {
+	return r.db.WithContext(ctx).Save(m).Error
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
-func (r *repository) Delete{{.ItemTitle}}(id int64) error {
+func (r *repository) Delete{{.ItemTitle}}(ctx context.Context,id int64) error {
 	return r.db.Where("id = ?", id).Delete(&models.{{.ItemTitle}}{}).Error
 }
 `
@@ -2649,6 +2654,7 @@ func (r *repository) Delete{{.ItemTitle}}(id int64) error {
 var tmplItemService = `package services
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"time"
@@ -2664,7 +2670,7 @@ import (
 // s.buildAuditMaps dipakai ulang langsung — tidak perlu field/param baru.
 
 // ── Create ────────────────────────────────────────────────────────────────────
-func (s *service) Create{{.ItemTitle}}(req *dto.Create{{.ItemTitle}}Request, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error) {
+func (s *service) Create{{.ItemTitle}}(ctx context.Context,req *dto.Create{{.ItemTitle}}Request, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error) {
 	can, err := s.canCreate{{.ItemTitle}}(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -2680,7 +2686,7 @@ func (s *service) Create{{.ItemTitle}}(req *dto.Create{{.ItemTitle}}Request, act
 		CreatedBy:   &actor.UserID,
 		UpdatedBy:   &actor.UserID,
 	}
-	if err := s.repo.Create{{.ItemTitle}}(m); err != nil {
+	if err := s.repo.Create{{.ItemTitle}}(ctx,m); err != nil {
 		return nil, err
 	}
 
@@ -2695,7 +2701,7 @@ func (s *service) Create{{.ItemTitle}}(req *dto.Create{{.ItemTitle}}Request, act
 
 
 // ── GetByID ───────────────────────────────────────────────────────────────────
-func (s *service) Get{{.ItemTitle}}ByID(id int64, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error) {
+func (s *service) Get{{.ItemTitle}}ByID(ctx context.Context,id int64, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error) {
 	can, err := s.canRead{{.ItemTitle}}(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -2705,7 +2711,7 @@ func (s *service) Get{{.ItemTitle}}ByID(id int64, actor he.AuthContext) (*dto.{{
 			"Akses ditolak. Anda tidak memiliki hak akses untuk melihat {{.ItemTitle}}.", nil)
 	}
 
-	m, err := s.repo.Get{{.ItemTitle}}ByID(id)
+	m, err := s.repo.Get{{.ItemTitle}}ByID(ctx,id)
 	if err != nil {
 		return nil, err
 	}
@@ -2725,7 +2731,7 @@ func (s *service) Get{{.ItemTitle}}ByID(id int64, actor he.AuthContext) (*dto.{{
 
 
 // ── List ──────────────────────────────────────────────────────────────────────	
-func (s *service) List{{.ItemTitle}}(page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request, actor he.AuthContext) ([]dto.{{.ItemTitle}}Response, int64, error) {
+func (s *service) List{{.ItemTitle}}(ctx context.Context,page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request, actor he.AuthContext) ([]dto.{{.ItemTitle}}Response, int64, error) {
 	can, err := s.canRead{{.ItemTitle}}(actor)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal cek akses")
@@ -2741,7 +2747,7 @@ func (s *service) List{{.ItemTitle}}(page, pageSize int, filter *dto.Filter{{.It
 	if pageSize < 1 || pageSize > s.cfg.DefaultPageSizeMax {
 		pageSize = s.cfg.DefaultPageSizeMax
 	}
-	items, total, err := s.repo.List{{.ItemTitle}}(page, pageSize, filter)
+	items, total, err := s.repo.List{{.ItemTitle}}(ctx,page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -2752,7 +2758,7 @@ func (s *service) List{{.ItemTitle}}(page, pageSize int, filter *dto.Filter{{.It
 
 
 // ── Update ────────────────────────────────────────────────────────────────────
-func (s *service) Update{{.ItemTitle}}(id int64, req *dto.Update{{.ItemTitle}}Request, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error) {
+func (s *service) Update{{.ItemTitle}}(ctx context.Context,id int64, req *dto.Update{{.ItemTitle}}Request, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error) {
 	can, err := s.canUpdate{{.ItemTitle}}(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -2762,7 +2768,7 @@ func (s *service) Update{{.ItemTitle}}(id int64, req *dto.Update{{.ItemTitle}}Re
 			"Akses ditolak. Anda tidak memiliki hak akses untuk mengubah {{.ItemTitle}}.", nil)
 	}
 
-	m, err := s.repo.Get{{.ItemTitle}}ByID(id)
+	m, err := s.repo.Get{{.ItemTitle}}ByID(ctx,id)
 	if err != nil {
 		return nil, err
 	}
@@ -2778,7 +2784,7 @@ func (s *service) Update{{.ItemTitle}}(id int64, req *dto.Update{{.ItemTitle}}Re
 	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()
 
-	if err := s.repo.Update{{.ItemTitle}}(m); err != nil {
+	if err := s.repo.Update{{.ItemTitle}}(ctx,m); err != nil {
 		return nil, err
 	}
 
@@ -2793,7 +2799,7 @@ func (s *service) Update{{.ItemTitle}}(id int64, req *dto.Update{{.ItemTitle}}Re
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
-func (s *service) Delete{{.ItemTitle}}(id int64, actor he.AuthContext) error {
+func (s *service) Delete{{.ItemTitle}}(ctx context.Context,id int64, actor he.AuthContext) error {
 	can, err := s.canDelete{{.ItemTitle}}(actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
@@ -2803,14 +2809,14 @@ func (s *service) Delete{{.ItemTitle}}(id int64, actor he.AuthContext) error {
 			"Akses ditolak. Anda tidak memiliki hak akses untuk menghapus {{.ItemTitle}}.", nil)
 	}
 
-	m, err := s.repo.Get{{.ItemTitle}}ByID(id)
+	m, err := s.repo.Get{{.ItemTitle}}ByID(ctx,id)
 	if err != nil {
 		return err
 	}
 	if m == nil {
 		return errors.New("{{.ItemTitle}} tidak ditemukan")
 	}
-	return s.repo.Delete{{.ItemTitle}}(id)
+	return s.repo.Delete{{.ItemTitle}}(ctx,id)
 }
 
 // ── helper khusus {{.ItemTitle}} (nama fungsi unik agar tidak bentrok) ───────
@@ -2964,7 +2970,7 @@ func (h *{{.SubModuleTitle}}Handler) List{{.ItemTitle}}(c *echo.Context) error {
 	page, pageSize := he.ParsePagination(c, h.cfg)
 
 	actor := he.BuildAuthContext(c)
-	items, total, err := h.service.List{{.ItemTitle}}(page, pageSize, &filter, actor)
+	items, total, err := h.service.List{{.ItemTitle}}(c.Request().Context(),page, pageSize, &filter, actor)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
 	}
@@ -2988,7 +2994,7 @@ func (h *{{.SubModuleTitle}}Handler) Get{{.ItemTitle}}ByID(c *echo.Context) erro
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.Get{{.ItemTitle}}ByID(id, actor)
+	item, err := h.service.Get{{.ItemTitle}}ByID(c.Request().Context(),id, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -3020,7 +3026,7 @@ func (h *{{.SubModuleTitle}}Handler) Create{{.ItemTitle}}(c *echo.Context) error
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (validator)", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.Create{{.ItemTitle}}(&req, actor)
+	item, err := h.service.Create{{.ItemTitle}}(c.Request().Context(),&req, actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
@@ -3058,7 +3064,7 @@ func (h *{{.SubModuleTitle}}Handler) Update{{.ItemTitle}}(c *echo.Context) error
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (validator)", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.Update{{.ItemTitle}}(id, &req, actor)
+	item, err := h.service.Update{{.ItemTitle}}(c.Request().Context(),id, &req, actor)
 	if err != nil {
 		status := http.StatusBadRequest
 		if err.Error() == "{{.ItemTitle}} tidak ditemukan" {
@@ -3086,7 +3092,7 @@ func (h *{{.SubModuleTitle}}Handler) Delete{{.ItemTitle}}(c *echo.Context) error
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	if err := h.service.Delete{{.ItemTitle}}(id, actor); err != nil {
+	if err := h.service.Delete{{.ItemTitle}}(c.Request().Context(),id, actor); err != nil {
 		status := http.StatusInternalServerError
 		if err.Error() == "{{.ItemTitle}} tidak ditemukan" {
 			status = http.StatusNotFound

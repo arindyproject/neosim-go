@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"time"
@@ -16,7 +17,7 @@ import (
 // s.buildAuditMaps dipakai ulang langsung — tidak perlu field/param baru.
 
 // ── Create ────────────────────────────────────────────────────────────────────
-func (s *service) CreateTag(req *dto.CreateTagRequest, actor he.AuthContext) (*dto.TagResponse, error) {
+func (s *service) CreateTag(ctx context.Context,req *dto.CreateTagRequest, actor he.AuthContext) (*dto.TagResponse, error) {
 	can, err := s.canCreateTag(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -32,23 +33,22 @@ func (s *service) CreateTag(req *dto.CreateTagRequest, actor he.AuthContext) (*d
 		CreatedBy:   &actor.UserID,
 		UpdatedBy:   &actor.UserID,
 	}
-	if err := s.repo.CreateTag(m); err != nil {
+	if err := s.repo.CreateTag(ctx,m); err != nil {
 		return nil, err
 	}
 
 	creator := s.buildCreator(m.CreatedBy)
-	updater := s.buildCreator(m.UpdatedBy)
 
 	return dto.ToTagResponse(dto.TagResponseParams{
 		Tag: m,
 		Creator:       creator,
-		Updater:       updater,
+		Updater:       creator, // saat create, creator dan updater sama
 	}), nil
 }
 
 
 // ── GetByID ───────────────────────────────────────────────────────────────────
-func (s *service) GetTagByID(id int64, actor he.AuthContext) (*dto.TagResponse, error) {
+func (s *service) GetTagByID(ctx context.Context,id int64, actor he.AuthContext) (*dto.TagResponse, error) {
 	can, err := s.canReadTag(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -58,7 +58,7 @@ func (s *service) GetTagByID(id int64, actor he.AuthContext) (*dto.TagResponse, 
 			"Akses ditolak. Anda tidak memiliki hak akses untuk melihat Tag.", nil)
 	}
 
-	m, err := s.repo.GetTagByID(id)
+	m, err := s.repo.GetTagByID(ctx,id)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,7 @@ func (s *service) GetTagByID(id int64, actor he.AuthContext) (*dto.TagResponse, 
 
 
 // ── List ──────────────────────────────────────────────────────────────────────	
-func (s *service) ListTag(page, pageSize int, filter *dto.FilterTagRequest, actor he.AuthContext) ([]dto.TagResponse, int64, error) {
+func (s *service) ListTag(ctx context.Context,page, pageSize int, filter *dto.FilterTagRequest, actor he.AuthContext) ([]dto.TagResponse, int64, error) {
 	can, err := s.canReadTag(actor)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal cek akses")
@@ -94,7 +94,7 @@ func (s *service) ListTag(page, pageSize int, filter *dto.FilterTagRequest, acto
 	if pageSize < 1 || pageSize > s.cfg.DefaultPageSizeMax {
 		pageSize = s.cfg.DefaultPageSizeMax
 	}
-	items, total, err := s.repo.ListTag(page, pageSize, filter)
+	items, total, err := s.repo.ListTag(ctx,page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -105,7 +105,7 @@ func (s *service) ListTag(page, pageSize int, filter *dto.FilterTagRequest, acto
 
 
 // ── Update ────────────────────────────────────────────────────────────────────
-func (s *service) UpdateTag(id int64, req *dto.UpdateTagRequest, actor he.AuthContext) (*dto.TagResponse, error) {
+func (s *service) UpdateTag(ctx context.Context,id int64, req *dto.UpdateTagRequest, actor he.AuthContext) (*dto.TagResponse, error) {
 	can, err := s.canUpdateTag(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -115,7 +115,7 @@ func (s *service) UpdateTag(id int64, req *dto.UpdateTagRequest, actor he.AuthCo
 			"Akses ditolak. Anda tidak memiliki hak akses untuk mengubah Tag.", nil)
 	}
 
-	m, err := s.repo.GetTagByID(id)
+	m, err := s.repo.GetTagByID(ctx,id)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +131,7 @@ func (s *service) UpdateTag(id int64, req *dto.UpdateTagRequest, actor he.AuthCo
 	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()
 
-	if err := s.repo.UpdateTag(m); err != nil {
+	if err := s.repo.UpdateTag(ctx,m); err != nil {
 		return nil, err
 	}
 
@@ -146,7 +146,7 @@ func (s *service) UpdateTag(id int64, req *dto.UpdateTagRequest, actor he.AuthCo
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
-func (s *service) DeleteTag(id int64, actor he.AuthContext) error {
+func (s *service) DeleteTag(ctx context.Context,id int64, actor he.AuthContext) error {
 	can, err := s.canDeleteTag(actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
@@ -156,14 +156,14 @@ func (s *service) DeleteTag(id int64, actor he.AuthContext) error {
 			"Akses ditolak. Anda tidak memiliki hak akses untuk menghapus Tag.", nil)
 	}
 
-	m, err := s.repo.GetTagByID(id)
+	m, err := s.repo.GetTagByID(ctx,id)
 	if err != nil {
 		return err
 	}
 	if m == nil {
 		return errors.New("Tag tidak ditemukan")
 	}
-	return s.repo.DeleteTag(id)
+	return s.repo.DeleteTag(ctx,id)
 }
 
 // ── helper khusus Tag (nama fungsi unik agar tidak bentrok) ───────

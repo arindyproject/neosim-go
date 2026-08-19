@@ -39,7 +39,7 @@ func (h *MasterAlamatHandler) ListKotaKabupaten(c *echo.Context) error {
 		Name: c.QueryParam("name"),
 	}
 
-	items, total, err := h.service.ListKotaKabupaten(page, pageSize, provinsiID, &filter)
+	items, total, err := h.service.ListKotaKabupaten(c.Request().Context(), page, pageSize, provinsiID, &filter)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
 	}
@@ -67,7 +67,7 @@ func (h *MasterAlamatHandler) GetByIDKotaKabupaten(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 
-	item, err := h.service.GetByIDKotaKabupaten(id)
+	item, err := h.service.GetByIDKotaKabupaten(c.Request().Context(), id)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -104,7 +104,7 @@ func (h *MasterAlamatHandler) CreateKotaKabupaten(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.CreateKotaKabupaten(&req, actor)
+	item, err := h.service.CreateKotaKabupaten(c.Request().Context(), &req, actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
@@ -147,7 +147,7 @@ func (h *MasterAlamatHandler) UpdateKotaKabupaten(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.UpdateKotaKabupaten(id, &req, actor)
+	item, err := h.service.UpdateKotaKabupaten(c.Request().Context(), id, &req, actor)
 	if err != nil {
 		return response.Response(c, he.NotFoundStatus(err, "Kota/Kabupaten tidak ditemukan"), false, err.Error(), nil, nil)
 	}
@@ -176,7 +176,7 @@ func (h *MasterAlamatHandler) DeleteKotaKabupaten(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	if err := h.service.DeleteKotaKabupaten(id, actor); err != nil {
+	if err := h.service.DeleteKotaKabupaten(c.Request().Context(), id, actor); err != nil {
 		return response.Response(c, he.NotFoundStatus(err, "Kota/Kabupaten tidak ditemukan"), false, err.Error(), nil, nil)
 	}
 

@@ -37,7 +37,7 @@ func (h *MasterAlamatHandler) ListNegara(c *echo.Context) error {
 		Name: c.QueryParam("name"),
 	}
 
-	items, total, err := h.service.ListNegara(page, pageSize, &filter)
+	items, total, err := h.service.ListNegara(c.Request().Context(), page, pageSize, &filter)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
 	}
@@ -65,7 +65,7 @@ func (h *MasterAlamatHandler) GetByIDNegara(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 
-	item, err := h.service.GetByIDNegara(id)
+	item, err := h.service.GetByIDNegara(c.Request().Context(), id)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -102,7 +102,7 @@ func (h *MasterAlamatHandler) CreateNegara(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.CreateNegara(&req, actor)
+	item, err := h.service.CreateNegara(c.Request().Context(), &req, actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
@@ -145,7 +145,7 @@ func (h *MasterAlamatHandler) UpdateNegara(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.UpdateNegara(id, &req, actor)
+	item, err := h.service.UpdateNegara(c.Request().Context(), id, &req, actor)
 	if err != nil {
 		return response.Response(c, he.NotFoundStatus(err, "Negara tidak ditemukan"), false, err.Error(), nil, nil)
 	}
@@ -174,7 +174,7 @@ func (h *MasterAlamatHandler) DeleteNegara(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	if err := h.service.DeleteNegara(id, actor); err != nil {
+	if err := h.service.DeleteNegara(c.Request().Context(), id, actor); err != nil {
 		return response.Response(c, he.NotFoundStatus(err, "Negara tidak ditemukan"), false, err.Error(), nil, nil)
 	}
 

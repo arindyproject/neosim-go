@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"time"
 
 	"neosim_go/internal/modules/auth/contracts"
@@ -23,13 +24,13 @@ func NewAuthRepository(db *gorm.DB) contracts.AuthRepository {
 
 // ─── Auth Token ────────────────────────────────────────────────────────────────
 
-func (r *authRepository) SaveToken(token *models.AuthToken) error {
-	return r.db.Create(token).Error
+func (r *authRepository) SaveToken(ctx context.Context, token *models.AuthToken) error {
+	return r.db.WithContext(ctx).Create(token).Error
 }
 
-func (r *authRepository) GetTokenByJTI(jti string) (*models.AuthToken, error) {
+func (r *authRepository) GetTokenByJTI(ctx context.Context, jti string) (*models.AuthToken, error) {
 	var token models.AuthToken
-	result := r.db.Where("jti = ? AND deleted_at IS NULL", jti).First(&token)
+	result := r.db.WithContext(ctx).Where("jti = ? AND deleted_at IS NULL", jti).First(&token)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return nil, nil
@@ -39,21 +40,21 @@ func (r *authRepository) GetTokenByJTI(jti string) (*models.AuthToken, error) {
 	return &token, nil
 }
 
-func (r *authRepository) BlacklistToken(jti string) error {
-	return r.db.Model(&models.AuthToken{}).
+func (r *authRepository) BlacklistToken(ctx context.Context, jti string) error {
+	return r.db.WithContext(ctx).Model(&models.AuthToken{}).
 		Where("jti = ?", jti).
 		Update("is_blacklist", true).Error
 }
 
-func (r *authRepository) BlacklistAllUserTokens(userID int64) error {
-	return r.db.Model(&models.AuthToken{}).
+func (r *authRepository) BlacklistAllUserTokens(ctx context.Context, userID int64) error {
+	return r.db.WithContext(ctx).Model(&models.AuthToken{}).
 		Where("user_id = ? AND is_blacklist = false", userID).
 		Update("is_blacklist", true).Error
 }
 
-func (r *authRepository) CountActiveTokens(userID int64) (int64, error) {
+func (r *authRepository) CountActiveTokens(ctx context.Context, userID int64) (int64, error) {
 	var count int64
-	err := r.db.Model(&models.AuthToken{}).
+	err := r.db.WithContext(ctx).Model(&models.AuthToken{}).
 		Where("user_id = ? AND is_blacklist = false AND expires_at > ? AND deleted_at IS NULL",
 			userID, time.Now()).
 		Count(&count).Error
@@ -62,11 +63,11 @@ func (r *authRepository) CountActiveTokens(userID int64) (int64, error) {
 
 // ─── Login History ─────────────────────────────────────────────────────────────
 
-func (r *authRepository) SaveLoginHistory(history *models.LoginHistory) error {
-	return r.db.Create(history).Error
+func (r *authRepository) SaveLoginHistory(ctx context.Context, history *models.LoginHistory) error {
+	return r.db.WithContext(ctx).Create(history).Error
 }
 
-func (r *authRepository) GetUserLoginHistories(userID int64, limit int) ([]models.LoginHistory, error) {
+func (r *authRepository) GetUserLoginHistories(ctx context.Context, userID int64, limit int) ([]models.LoginHistory, error) {
 	// Inisialisasi slice kosong (bukan nil) agar aman saat di-return
 	histories := make([]models.LoginHistory, 0)
 
@@ -75,7 +76,7 @@ func (r *authRepository) GetUserLoginHistories(userID int64, limit int) ([]model
 		limit = 10
 	}
 
-	err := r.db.Where("user_id = ?", userID).
+	err := r.db.WithContext(ctx).Where("user_id = ?", userID).
 		Order("created_at DESC").
 		Limit(limit).
 		Find(&histories).Error
@@ -89,13 +90,13 @@ func (r *authRepository) GetUserLoginHistories(userID int64, limit int) ([]model
 
 // ─── Password History ──────────────────────────────────────────────────────────
 
-func (r *authRepository) SavePasswordHistory(history *models.PasswordHistory) error {
-	return r.db.Create(history).Error
+func (r *authRepository) SavePasswordHistory(ctx context.Context, history *models.PasswordHistory) error {
+	return r.db.WithContext(ctx).Create(history).Error
 }
 
-func (r *authRepository) GetPasswordHistories(userID int64, limit int) ([]models.PasswordHistory, error) {
+func (r *authRepository) GetPasswordHistories(ctx context.Context, userID int64, limit int) ([]models.PasswordHistory, error) {
 	var histories []models.PasswordHistory
-	err := r.db.Where("user_id = ?", userID).
+	err := r.db.WithContext(ctx).Where("user_id = ?", userID).
 		Order("created_at DESC").
 		Limit(limit).
 		Find(&histories).Error

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"time"
@@ -12,7 +13,7 @@ import (
 )
 
 // ── Create ────────────────────────────────────────────────────────────────────
-func (s *service) CreateArtikel(req *dto.CreateArtikelRequest, actor he.AuthContext) (*dto.ArtikelResponse, error) {
+func (s *service) CreateArtikel(ctx context.Context,req *dto.CreateArtikelRequest, actor he.AuthContext) (*dto.ArtikelResponse, error) {
 	can, err := s.canCreateArtikel(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -28,7 +29,7 @@ func (s *service) CreateArtikel(req *dto.CreateArtikelRequest, actor he.AuthCont
 		CreatedBy:   &actor.UserID,
 		UpdatedBy:   &actor.UserID,
 	}
-	if err := s.repo.CreateArtikel(m); err != nil {
+	if err := s.repo.CreateArtikel(ctx,m); err != nil {
 		return nil, err
 	}
 	
@@ -43,7 +44,7 @@ func (s *service) CreateArtikel(req *dto.CreateArtikelRequest, actor he.AuthCont
 
 
 // ── GetByID ───────────────────────────────────────────────────────────────────
-func (s *service) GetArtikelByID(id int64, actor he.AuthContext) (*dto.ArtikelResponse, error) {
+func (s *service) GetArtikelByID(ctx context.Context,id int64, actor he.AuthContext) (*dto.ArtikelResponse, error) {
 	can, err := s.canReadArtikel(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -53,7 +54,7 @@ func (s *service) GetArtikelByID(id int64, actor he.AuthContext) (*dto.ArtikelRe
 			"Akses ditolak. Anda tidak memiliki hak akses untuk Melihat Artikel.", nil)
 	}
 
-	m, err := s.repo.GetArtikelByID(id)
+	m, err := s.repo.GetArtikelByID(ctx,id)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +74,7 @@ func (s *service) GetArtikelByID(id int64, actor he.AuthContext) (*dto.ArtikelRe
 
 
 // ── List ──────────────────────────────────────────────────────────────────────
-func (s *service) ListArtikel(page, pageSize int, filter *dto.FilterArtikelRequest, actor he.AuthContext) ([]dto.ArtikelResponse, int64, error) {
+func (s *service) ListArtikel(ctx context.Context,page, pageSize int, filter *dto.FilterArtikelRequest, actor he.AuthContext) ([]dto.ArtikelResponse, int64, error) {
 	can, err := s.canReadArtikel(actor)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal cek akses")
@@ -89,7 +90,7 @@ func (s *service) ListArtikel(page, pageSize int, filter *dto.FilterArtikelReque
 	if pageSize < 1 || pageSize > s.cfg.DefaultPageSizeMax {
 		pageSize = s.cfg.DefaultPageSizeMax
 	}
-	items, total, err := s.repo.ListArtikel(page, pageSize, filter)
+	items, total, err := s.repo.ListArtikel(ctx,page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -100,7 +101,7 @@ func (s *service) ListArtikel(page, pageSize int, filter *dto.FilterArtikelReque
 
 
 // ── Update ────────────────────────────────────────────────────────────────────
-func (s *service) UpdateArtikel(id int64, req *dto.UpdateArtikelRequest, actor he.AuthContext) (*dto.ArtikelResponse, error) {
+func (s *service) UpdateArtikel(ctx context.Context,id int64, req *dto.UpdateArtikelRequest, actor he.AuthContext) (*dto.ArtikelResponse, error) {
 	can, err := s.canUpdateArtikel(actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -110,7 +111,7 @@ func (s *service) UpdateArtikel(id int64, req *dto.UpdateArtikelRequest, actor h
 			"Akses ditolak. Anda tidak memiliki hak akses untuk mengubah Artikel.", nil)
 	}
 
-	m, err := s.repo.GetArtikelByID(id)
+	m, err := s.repo.GetArtikelByID(ctx,id)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +127,7 @@ func (s *service) UpdateArtikel(id int64, req *dto.UpdateArtikelRequest, actor h
 	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()
 
-	if err := s.repo.UpdateArtikel(m); err != nil {
+	if err := s.repo.UpdateArtikel(ctx,m); err != nil {
 		return nil, err
 	}
 	
@@ -141,7 +142,7 @@ func (s *service) UpdateArtikel(id int64, req *dto.UpdateArtikelRequest, actor h
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
-func (s *service) DeleteArtikel(id int64, actor he.AuthContext) error {
+func (s *service) DeleteArtikel(ctx context.Context,id int64, actor he.AuthContext) error {
 	can, err := s.canDeleteArtikel(actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
@@ -151,12 +152,12 @@ func (s *service) DeleteArtikel(id int64, actor he.AuthContext) error {
 			"Akses ditolak. Anda tidak memiliki hak akses untuk menghapus Artikel.", nil)
 	}
 
-	m, err := s.repo.GetArtikelByID(id)
+	m, err := s.repo.GetArtikelByID(ctx,id)
 	if err != nil {
 		return err
 	}
 	if m == nil {
 		return errors.New("Artikel tidak ditemukan")
 	}
-	return s.repo.DeleteArtikel(id)
+	return s.repo.DeleteArtikel(ctx,id)
 }

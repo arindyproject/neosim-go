@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -26,9 +27,9 @@ func NewRBACService(rbacRepo contracts.RBACRepository, userRepo userContracts.Re
 
 // ─── Permission CRUD ───────────────────────────────────────────────────────────
 
-func (s *rbacService) CreatePermission(req *dto.CreatePermissionRequest, createdBy *int64) (*dto.PermissionResponse, error) {
+func (s *rbacService) CreatePermission(ctx context.Context, req *dto.CreatePermissionRequest, createdBy *int64) (*dto.PermissionResponse, error) {
 	// Cek nama sudah ada
-	existing, _ := s.rbacRepo.GetPermissionByName(req.Name)
+	existing, _ := s.rbacRepo.GetPermissionByName(ctx, req.Name)
 	if existing != nil {
 		return nil, errors.New("nama permission sudah digunakan")
 	}
@@ -40,14 +41,14 @@ func (s *rbacService) CreatePermission(req *dto.CreatePermissionRequest, created
 		Resource:    req.Resource,
 		Action:      req.Action,
 	}
-	if err := s.rbacRepo.CreatePermission(p); err != nil {
+	if err := s.rbacRepo.CreatePermission(ctx, p); err != nil {
 		return nil, err
 	}
 	return dto.ToPermissionResponse(p), nil
 }
 
-func (s *rbacService) GetPermissionByID(id int64) (*dto.PermissionResponse, error) {
-	p, err := s.rbacRepo.GetPermissionByID(id)
+func (s *rbacService) GetPermissionByID(ctx context.Context, id int64) (*dto.PermissionResponse, error) {
+	p, err := s.rbacRepo.GetPermissionByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -57,22 +58,22 @@ func (s *rbacService) GetPermissionByID(id int64) (*dto.PermissionResponse, erro
 	return dto.ToPermissionResponse(p), nil
 }
 
-func (s *rbacService) ListPermissions(page, pageSize int) ([]dto.PermissionResponse, int64, error) {
+func (s *rbacService) ListPermissions(ctx context.Context, page, pageSize int) ([]dto.PermissionResponse, int64, error) {
 	if page < 1 {
 		page = 1
 	}
 	if pageSize < 1 || pageSize > 100 {
 		pageSize = 10
 	}
-	items, total, err := s.rbacRepo.ListPermissions(page, pageSize)
+	items, total, err := s.rbacRepo.ListPermissions(ctx, page, pageSize)
 	if err != nil {
 		return nil, 0, err
 	}
 	return dto.ToPermissionListResponse(items), total, nil
 }
 
-func (s *rbacService) UpdatePermission(id int64, req *dto.UpdatePermissionRequest, updatedBy *int64) (*dto.PermissionResponse, error) {
-	p, err := s.rbacRepo.GetPermissionByID(id)
+func (s *rbacService) UpdatePermission(ctx context.Context, id int64, req *dto.UpdatePermissionRequest, updatedBy *int64) (*dto.PermissionResponse, error) {
+	p, err := s.rbacRepo.GetPermissionByID(ctx, id)
 	if err != nil || p == nil {
 		return nil, errors.New("permission tidak ditemukan")
 	}
@@ -85,24 +86,24 @@ func (s *rbacService) UpdatePermission(id int64, req *dto.UpdatePermissionReques
 	}
 	p.UpdatedAt = time.Now()
 
-	if err := s.rbacRepo.UpdatePermission(p); err != nil {
+	if err := s.rbacRepo.UpdatePermission(ctx, p); err != nil {
 		return nil, err
 	}
 	return dto.ToPermissionResponse(p), nil
 }
 
-func (s *rbacService) DeletePermission(id int64) error {
-	p, err := s.rbacRepo.GetPermissionByID(id)
+func (s *rbacService) DeletePermission(ctx context.Context, id int64) error {
+	p, err := s.rbacRepo.GetPermissionByID(ctx, id)
 	if err != nil || p == nil {
 		return errors.New("permission tidak ditemukan")
 	}
-	return s.rbacRepo.DeletePermission(id)
+	return s.rbacRepo.DeletePermission(ctx, id)
 }
 
 // ─── Role CRUD ─────────────────────────────────────────────────────────────────
 
-func (s *rbacService) CreateRole(req *dto.CreateRoleRequest, createdBy *int64) (*dto.RoleResponse, error) {
-	existing, _ := s.rbacRepo.GetRoleByName(req.Name)
+func (s *rbacService) CreateRole(ctx context.Context, req *dto.CreateRoleRequest, createdBy *int64) (*dto.RoleResponse, error) {
+	existing, _ := s.rbacRepo.GetRoleByName(ctx, req.Name)
 	if existing != nil {
 		return nil, errors.New("nama role sudah digunakan")
 	}
@@ -115,36 +116,36 @@ func (s *rbacService) CreateRole(req *dto.CreateRoleRequest, createdBy *int64) (
 		CreatedBy:   createdBy,
 		UpdatedBy:   createdBy,
 	}
-	if err := s.rbacRepo.CreateRole(role); err != nil {
+	if err := s.rbacRepo.CreateRole(ctx, role); err != nil {
 		return nil, err
 	}
 	return dto.ToRoleResponse(role), nil
 }
 
-func (s *rbacService) GetRoleByID(id int64) (*dto.RoleResponse, error) {
-	role, err := s.rbacRepo.GetRoleByID(id)
+func (s *rbacService) GetRoleByID(ctx context.Context, id int64) (*dto.RoleResponse, error) {
+	role, err := s.rbacRepo.GetRoleByID(ctx, id)
 	if err != nil || role == nil {
 		return nil, errors.New("role tidak ditemukan")
 	}
 	return dto.ToRoleResponse(role), nil
 }
 
-func (s *rbacService) ListRoles(page, pageSize int) ([]dto.RoleResponse, int64, error) {
+func (s *rbacService) ListRoles(ctx context.Context, page, pageSize int) ([]dto.RoleResponse, int64, error) {
 	if page < 1 {
 		page = 1
 	}
 	if pageSize < 1 || pageSize > 100 {
 		pageSize = 10
 	}
-	items, total, err := s.rbacRepo.ListRoles(page, pageSize)
+	items, total, err := s.rbacRepo.ListRoles(ctx, page, pageSize)
 	if err != nil {
 		return nil, 0, err
 	}
 	return dto.ToRoleListResponse(items), total, nil
 }
 
-func (s *rbacService) UpdateRole(id int64, req *dto.UpdateRoleRequest, updatedBy *int64) (*dto.RoleResponse, error) {
-	role, err := s.rbacRepo.GetRoleByID(id)
+func (s *rbacService) UpdateRole(ctx context.Context, id int64, req *dto.UpdateRoleRequest, updatedBy *int64) (*dto.RoleResponse, error) {
+	role, err := s.rbacRepo.GetRoleByID(ctx, id)
 	if err != nil || role == nil {
 		return nil, errors.New("role tidak ditemukan")
 	}
@@ -161,67 +162,67 @@ func (s *rbacService) UpdateRole(id int64, req *dto.UpdateRoleRequest, updatedBy
 	role.UpdatedBy = updatedBy
 	role.UpdatedAt = time.Now()
 
-	if err := s.rbacRepo.UpdateRole(role); err != nil {
+	if err := s.rbacRepo.UpdateRole(ctx, role); err != nil {
 		return nil, err
 	}
 	return dto.ToRoleResponse(role), nil
 }
 
-func (s *rbacService) DeleteRole(id int64) error {
-	role, err := s.rbacRepo.GetRoleByID(id)
+func (s *rbacService) DeleteRole(ctx context.Context, id int64) error {
+	role, err := s.rbacRepo.GetRoleByID(ctx, id)
 	if err != nil || role == nil {
 		return errors.New("role tidak ditemukan")
 	}
 	if role.IsSystem {
 		return errors.New("system role tidak bisa dihapus")
 	}
-	return s.rbacRepo.DeleteRole(id)
+	return s.rbacRepo.DeleteRole(ctx, id)
 }
 
 // ─── Role ↔ Permission ─────────────────────────────────────────────────────────
 
-func (s *rbacService) AssignPermissionsToRole(roleID int64, req *dto.AssignPermissionsRequest) error {
-	role, err := s.rbacRepo.GetRoleByID(roleID)
+func (s *rbacService) AssignPermissionsToRole(ctx context.Context, roleID int64, req *dto.AssignPermissionsRequest) error {
+	role, err := s.rbacRepo.GetRoleByID(ctx, roleID)
 	if err != nil || role == nil {
 		return errors.New("role tidak ditemukan")
 	}
-	return s.rbacRepo.AssignPermissionsToRole(roleID, req.PermissionIDs)
+	return s.rbacRepo.AssignPermissionsToRole(ctx, roleID, req.PermissionIDs)
 }
 
-func (s *rbacService) RevokePermissionsFromRole(roleID int64, req *dto.AssignPermissionsRequest) error {
-	role, err := s.rbacRepo.GetRoleByID(roleID)
+func (s *rbacService) RevokePermissionsFromRole(ctx context.Context, roleID int64, req *dto.AssignPermissionsRequest) error {
+	role, err := s.rbacRepo.GetRoleByID(ctx, roleID)
 	if err != nil || role == nil {
 		return errors.New("role tidak ditemukan")
 	}
-	return s.rbacRepo.RevokePermissionsFromRole(roleID, req.PermissionIDs)
+	return s.rbacRepo.RevokePermissionsFromRole(ctx, roleID, req.PermissionIDs)
 }
 
-func (s *rbacService) SyncRolePermissions(roleID int64, req *dto.AssignPermissionsRequest) error {
-	role, err := s.rbacRepo.GetRoleByID(roleID)
+func (s *rbacService) SyncRolePermissions(ctx context.Context, roleID int64, req *dto.AssignPermissionsRequest) error {
+	role, err := s.rbacRepo.GetRoleByID(ctx, roleID)
 	if err != nil || role == nil {
 		return errors.New("role tidak ditemukan")
 	}
-	return s.rbacRepo.SyncRolePermissions(roleID, req.PermissionIDs)
+	return s.rbacRepo.SyncRolePermissions(ctx, roleID, req.PermissionIDs)
 }
 
 // ─── User ↔ Role ───────────────────────────────────────────────────────────────
 
-func (s *rbacService) AssignRolesToUser(userID int64, req *dto.AssignRolesRequest, assignedBy *int64) error {
-	return s.rbacRepo.AssignRolesToUser(userID, req.RoleIDs, assignedBy)
+func (s *rbacService) AssignRolesToUser(ctx context.Context, userID int64, req *dto.AssignRolesRequest, assignedBy *int64) error {
+	return s.rbacRepo.AssignRolesToUser(ctx, userID, req.RoleIDs, assignedBy)
 }
 
-func (s *rbacService) RevokeRolesFromUser(userID int64, req *dto.AssignRolesRequest) error {
-	return s.rbacRepo.RevokeRolesFromUser(userID, req.RoleIDs)
+func (s *rbacService) RevokeRolesFromUser(ctx context.Context, userID int64, req *dto.AssignRolesRequest) error {
+	return s.rbacRepo.RevokeRolesFromUser(ctx, userID, req.RoleIDs)
 }
 
-func (s *rbacService) SyncUserRoles(userID int64, req *dto.AssignRolesRequest, assignedBy *int64) error {
-	return s.rbacRepo.SyncUserRoles(userID, req.RoleIDs, assignedBy)
+func (s *rbacService) SyncUserRoles(ctx context.Context, userID int64, req *dto.AssignRolesRequest, assignedBy *int64) error {
+	return s.rbacRepo.SyncUserRoles(ctx, userID, req.RoleIDs, assignedBy)
 }
 
 // ─── User Permissions (direct) ───────────────────────────────────────────────
-func (s *rbacService) GetUserRoles(userID int64) ([]dto.RoleResponse, error) {
+func (s *rbacService) GetUserRoles(ctx context.Context, userID int64) ([]dto.RoleResponse, error) {
 	// 1. Validasi keberadaan user di database
-	user, err := s.userRepo.GetByID(userID)
+	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		// Cek apakah error karena record memang tidak ditemukan (GORM)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -237,7 +238,7 @@ func (s *rbacService) GetUserRoles(userID int64) ([]dto.RoleResponse, error) {
 	}
 
 	// 2. Ambil roles user
-	roles, err := s.rbacRepo.GetUserRoles(userID)
+	roles, err := s.rbacRepo.GetUserRoles(ctx, userID)
 	if err != nil {
 		// Sertakan err.Error() agar pesan error asli dari database terlihat di log
 		return nil, appErrors.Internal("gagal mengambil roles untuk user: " + err.Error())
@@ -255,22 +256,22 @@ func (s *rbacService) GetUserRoles(userID int64) ([]dto.RoleResponse, error) {
 
 // ─── User ↔ Permission (direct) ───────────────────────────────────────────────
 
-func (s *rbacService) AssignDirectPermission(userID int64, req *dto.AssignDirectPermissionRequest, assignedBy *int64) error {
-	return s.rbacRepo.AssignDirectPermission(userID, req.PermissionID, req.IsGranted, assignedBy)
+func (s *rbacService) AssignDirectPermission(ctx context.Context, userID int64, req *dto.AssignDirectPermissionRequest, assignedBy *int64) error {
+	return s.rbacRepo.AssignDirectPermission(ctx, userID, req.PermissionID, req.IsGranted, assignedBy)
 }
 
-func (s *rbacService) RevokeDirectPermission(userID, permissionID int64) error {
-	return s.rbacRepo.RevokeDirectPermission(userID, permissionID)
+func (s *rbacService) RevokeDirectPermission(ctx context.Context, userID, permissionID int64) error {
+	return s.rbacRepo.RevokeDirectPermission(ctx, userID, permissionID)
 }
 
-func (s *rbacService) GetUserDirectPermissions(userID int64) ([]dto.DirectPermissionResponse, error) {
-	items, err := s.rbacRepo.GetUserDirectPermissions(userID)
+func (s *rbacService) GetUserDirectPermissions(ctx context.Context, userID int64) ([]dto.DirectPermissionResponse, error) {
+	items, err := s.rbacRepo.GetUserDirectPermissions(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 	var result []dto.DirectPermissionResponse
 	for _, up := range items {
-		perm, _ := s.rbacRepo.GetPermissionByID(up.PermissionID)
+		perm, _ := s.rbacRepo.GetPermissionByID(ctx, up.PermissionID)
 		if perm == nil {
 			continue
 		}
@@ -284,10 +285,10 @@ func (s *rbacService) GetUserDirectPermissions(userID int64) ([]dto.DirectPermis
 
 // ─── Check ─────────────────────────────────────────────────────────────────────
 
-func (s *rbacService) GetUserAllPermissions(userID int64) ([]string, error) {
-	return s.rbacRepo.GetUserAllPermissions(userID)
+func (s *rbacService) GetUserAllPermissions(ctx context.Context, userID int64) ([]string, error) {
+	return s.rbacRepo.GetUserAllPermissions(ctx, userID)
 }
 
-func (s *rbacService) HasPermission(userID int64, permission string) (bool, error) {
-	return s.rbacRepo.HasPermission(userID, permission)
+func (s *rbacService) HasPermission(ctx context.Context, userID int64, permission string) (bool, error) {
+	return s.rbacRepo.HasPermission(ctx, userID, permission)
 }

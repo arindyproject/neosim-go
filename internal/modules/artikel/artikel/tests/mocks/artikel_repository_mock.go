@@ -27,6 +27,14 @@ func (m *ArtikelRepositoryMock) GetArtikelByID(id int64) (*models.Artikel, error
 	return args.Get(0).(*models.Artikel), args.Error(1)
 }
 
+func (m *ArtikelRepositoryMock) GetByIDs(ids []int64) ([]models.Artikel, error) {
+	args := m.Called(ids)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.Artikel), args.Error(1)
+}
+
 func (m *ArtikelRepositoryMock) ListArtikel(page, pageSize int, filter *dto.FilterArtikelRequest) ([]models.Artikel, int64, error) {
 	args := m.Called(page, pageSize, filter)
 	return args.Get(0).([]models.Artikel), args.Get(1).(int64), args.Error(2)
