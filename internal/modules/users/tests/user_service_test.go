@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -138,7 +139,7 @@ func (s *UserServiceTestSuite) TestCreateUser_Success_Superadmin() {
 	})
 	s.stubRBAC(int64(10), false)
 
-	result, err := s.service.CreateUser(req, s.superActor)
+	result, err := s.service.CreateUser(context.Background(), req, s.superActor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -164,7 +165,7 @@ func (s *UserServiceTestSuite) TestCreateUser_WithPermission() {
 	})
 	s.stubRBAC(int64(11), false)
 
-	result, err := s.service.CreateUser(req, s.regularActor)
+	result, err := s.service.CreateUser(context.Background(), req, s.regularActor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -182,7 +183,7 @@ func (s *UserServiceTestSuite) TestCreateUser_Forbidden() {
 	s.rbacRepo.On("HasPermission", s.regularActor.UserID, rbacModels.PermUsersManage).Return(false, nil)
 	s.rbacRepo.On("GetUserRoles", s.regularActor.UserID).Return([]rbacModels.Role{}, nil)
 
-	result, err := s.service.CreateUser(req, s.regularActor)
+	result, err := s.service.CreateUser(context.Background(), req, s.regularActor)
 
 	s.Nil(result)
 	s.requireForbidden(err)
@@ -198,7 +199,7 @@ func (s *UserServiceTestSuite) TestCreateUser_DuplicateUsername() {
 
 	s.repo.On("GetByUsername", "existinguser").Return(factories.MakeUser(), nil)
 
-	result, err := s.service.CreateUser(req, s.superActor)
+	result, err := s.service.CreateUser(context.Background(), req, s.superActor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -216,7 +217,7 @@ func (s *UserServiceTestSuite) TestCreateUser_DuplicateEmail() {
 	s.repo.On("GetByUsername", "newuser").Return(nil, nil)
 	s.repo.On("GetByEmail", "existing@example.com").Return(factories.MakeUser(), nil)
 
-	result, err := s.service.CreateUser(req, s.superActor)
+	result, err := s.service.CreateUser(context.Background(), req, s.superActor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -231,7 +232,7 @@ func (s *UserServiceTestSuite) TestGetUserByID_Success_Superadmin() {
 	s.repo.On("GetByID", int64(5)).Return(user, nil)
 	s.stubFullUserDetail(user)
 
-	result, err := s.service.GetUserByID(5, s.superActor)
+	result, err := s.service.GetUserByID(context.Background(), 5, s.superActor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -248,7 +249,7 @@ func (s *UserServiceTestSuite) TestGetUserByID_Success_Self() {
 	s.repo.On("GetByID", int64(5)).Return(user, nil)
 	s.stubFullUserDetail(user)
 
-	result, err := s.service.GetUserByID(5, actor)
+	result, err := s.service.GetUserByID(context.Background(), 5, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -268,7 +269,7 @@ func (s *UserServiceTestSuite) TestGetUserByID_LimitedView_NoPermission() {
 	s.stubHistories(int64(5))
 	s.stubCreator(int64(1))
 
-	result, err := s.service.GetUserByID(5, actor)
+	result, err := s.service.GetUserByID(context.Background(), 5, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -279,7 +280,7 @@ func (s *UserServiceTestSuite) TestGetUserByID_LimitedView_NoPermission() {
 func (s *UserServiceTestSuite) TestGetUserByID_NotFound() {
 	s.repo.On("GetByID", int64(999)).Return(nil, nil)
 
-	result, err := s.service.GetUserByID(999, s.superActor)
+	result, err := s.service.GetUserByID(context.Background(), 999, s.superActor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -301,7 +302,7 @@ func (s *UserServiceTestSuite) TestListUsers_Success() {
 	s.repo.On("List", 1, 10, filter).Return(users, int64(3), nil)
 	s.rbacRepo.On("GetUsersRoles", userIDs).Return(rolesMap, nil)
 
-	result, total, err := s.service.ListUsers(1, 10, filter)
+	result, total, err := s.service.ListUsers(context.Background(), 1, 10, filter)
 
 	s.NoError(err)
 	s.Equal(int64(3), total)
@@ -317,7 +318,7 @@ func (s *UserServiceTestSuite) TestListUsers_EmptyResult_ReturnsEmptySlice() {
 
 	s.repo.On("List", 1, 10, filter).Return([]models.User{}, int64(0), nil)
 
-	result, total, err := s.service.ListUsers(1, 10, filter)
+	result, total, err := s.service.ListUsers(context.Background(), 1, 10, filter)
 
 	// ✅ UBAH EKSPEKTASI: Service mengembalikan error, bukan empty slice
 	s.Error(err)
@@ -334,7 +335,7 @@ func (s *UserServiceTestSuite) TestListUsers_PageNormalization() {
 	s.repo.On("List", 1, 10, filter).Return(users, int64(1), nil)
 	s.rbacRepo.On("GetUsersRoles", []int64{users[0].ID}).Return(map[int64][]rbacModels.Role{}, nil)
 
-	result, _, err := s.service.ListUsers(0, 10, filter)
+	result, _, err := s.service.ListUsers(context.Background(), 0, 10, filter)
 
 	s.NoError(err)
 	s.Len(result, 1)
@@ -351,7 +352,7 @@ func (s *UserServiceTestSuite) TestUpdateUser_Success_Superadmin() {
 	s.repo.On("Update", user).Return(nil)
 	s.stubFullUserDetail(user)
 
-	result, err := s.service.UpdateUser(3, req, s.superActor)
+	result, err := s.service.UpdateUser(context.Background(), 3, req, s.superActor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -368,7 +369,7 @@ func (s *UserServiceTestSuite) TestUpdateUser_Success_Self() {
 	s.repo.On("Update", user).Return(nil)
 	s.stubFullUserDetail(user)
 
-	result, err := s.service.UpdateUser(3, req, actor)
+	result, err := s.service.UpdateUser(context.Background(), 3, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -386,7 +387,7 @@ func (s *UserServiceTestSuite) TestUpdateUser_Success_WithPermission() {
 	s.repo.On("Update", user).Return(nil)
 	s.stubFullUserDetail(user)
 
-	result, err := s.service.UpdateUser(5, req, actor)
+	result, err := s.service.UpdateUser(context.Background(), 5, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -399,7 +400,7 @@ func (s *UserServiceTestSuite) TestUpdateUser_Forbidden() {
 	s.rbacRepo.On("HasPermission", s.regularActor.UserID, rbacModels.PermUsersManage).Return(false, nil)
 	s.rbacRepo.On("GetUserRoles", s.regularActor.UserID).Return([]rbacModels.Role{}, nil)
 
-	result, err := s.service.UpdateUser(99, req, s.regularActor)
+	result, err := s.service.UpdateUser(context.Background(), 99, req, s.regularActor)
 
 	s.Nil(result)
 	s.requireForbidden(err)
@@ -410,7 +411,7 @@ func (s *UserServiceTestSuite) TestUpdateUser_NotFound() {
 
 	s.repo.On("GetByID", int64(404)).Return(nil, nil)
 
-	result, err := s.service.UpdateUser(404, req, s.superActor)
+	result, err := s.service.UpdateUser(context.Background(), 404, req, s.superActor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -429,7 +430,7 @@ func (s *UserServiceTestSuite) TestUpdateUser_DuplicateEmail() {
 	})
 	s.repo.On("GetByEmail", "taken@example.com").Return(otherUser, nil)
 
-	result, err := s.service.UpdateUser(3, req, s.superActor)
+	result, err := s.service.UpdateUser(context.Background(), 3, req, s.superActor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -444,13 +445,13 @@ func (s *UserServiceTestSuite) TestDeleteUser_Success() {
 	s.repo.On("GetByID", int64(5)).Return(user, nil)
 	s.repo.On("Delete", int64(5), s.superActor.UserID, "Pelanggaran").Return(nil)
 
-	err := s.service.DeleteUser(5, "Pelanggaran", s.superActor)
+	err := s.service.DeleteUser(context.Background(), 5, "Pelanggaran", s.superActor)
 
 	s.NoError(err)
 }
 
 func (s *UserServiceTestSuite) TestDeleteUser_Forbidden_NotSuperadmin() {
-	err := s.service.DeleteUser(5, "Alasan", s.regularActor)
+	err := s.service.DeleteUser(context.Background(), 5, "Alasan", s.regularActor)
 
 	s.requireForbidden(err)
 }
@@ -461,7 +462,7 @@ func (s *UserServiceTestSuite) TestDeleteUser_CannotDeleteSelf() {
 
 	s.repo.On("GetByID", int64(5)).Return(user, nil)
 
-	err := s.service.DeleteUser(5, "Self", selfActor)
+	err := s.service.DeleteUser(context.Background(), 5, "Self", selfActor)
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak bisa menghapus akun sendiri")
@@ -470,7 +471,7 @@ func (s *UserServiceTestSuite) TestDeleteUser_CannotDeleteSelf() {
 func (s *UserServiceTestSuite) TestDeleteUser_NotFound() {
 	s.repo.On("GetByID", int64(999)).Return(nil, nil)
 
-	err := s.service.DeleteUser(999, "Alasan", s.superActor)
+	err := s.service.DeleteUser(context.Background(), 999, "Alasan", s.superActor)
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
@@ -496,7 +497,7 @@ func (s *UserServiceTestSuite) TestChangePassword_Success_Self() {
 	s.repo.On("Update", user).Return(nil)
 	s.stubFullUserDetail(user)
 
-	result, err := s.service.ChangePassword(3, req, actor)
+	result, err := s.service.ChangePassword(context.Background(), 3, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -520,7 +521,7 @@ func (s *UserServiceTestSuite) TestChangePassword_Success_Superadmin() {
 	s.repo.On("Update", user).Return(nil)
 	s.stubFullUserDetail(user)
 
-	result, err := s.service.ChangePassword(5, req, s.superActor)
+	result, err := s.service.ChangePassword(context.Background(), 5, req, s.superActor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -542,7 +543,7 @@ func (s *UserServiceTestSuite) TestChangePassword_WrongOldPassword() {
 
 	s.repo.On("GetByID", int64(3)).Return(user, nil)
 
-	result, err := s.service.ChangePassword(3, req, actor)
+	result, err := s.service.ChangePassword(context.Background(), 3, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -554,7 +555,7 @@ func (s *UserServiceTestSuite) TestChangePassword_Forbidden_OtherUser() {
 		OldPassword: "old", NewPassword: "new", ConfirmPassword: "new",
 	}
 
-	result, err := s.service.ChangePassword(99, req, s.regularActor)
+	result, err := s.service.ChangePassword(context.Background(), 99, req, s.regularActor)
 
 	s.Nil(result)
 	s.requireForbidden(err)
@@ -569,7 +570,7 @@ func (s *UserServiceTestSuite) TestGetSettings_Success_Self() {
 	}
 	s.repo.On("GetSettings", int64(3)).Return(settings, nil)
 
-	result, err := s.service.GetSettings(3, actor)
+	result, err := s.service.GetSettings(context.Background(), 3, actor)
 
 	s.NoError(err)
 	s.Len(result, 1)
@@ -581,7 +582,7 @@ func (s *UserServiceTestSuite) TestGetSettings_Forbidden() {
 	s.rbacRepo.On("HasPermission", s.regularActor.UserID, rbacModels.PermUsersManage).Return(false, nil)
 	s.rbacRepo.On("GetUserRoles", s.regularActor.UserID).Return([]rbacModels.Role{}, nil)
 
-	result, err := s.service.GetSettings(99, s.regularActor)
+	result, err := s.service.GetSettings(context.Background(), 99, s.regularActor)
 
 	s.Nil(result)
 	s.requireForbidden(err)
@@ -607,7 +608,7 @@ func (s *UserServiceTestSuite) TestUploadPhoto_Success() {
 	s.repo.On("Update", user).Return(nil)
 	s.stubFullUserDetail(user)
 
-	result, err := s.service.UploadPhoto(3, "photo.jpg", mockFile, actor)
+	result, err := s.service.UploadPhoto(context.Background(), 3, "photo.jpg", mockFile, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -638,7 +639,7 @@ func (s *UserServiceTestSuite) TestUploadPhoto_DeletesOldPhoto() {
 	s.stubFullUserDetail(user)
 
 	actor := he.AuthContext{UserID: 3, IsSuperadmin: false}
-	result, err := s.service.UploadPhoto(3, "photo.jpg", mockFile, actor)
+	result, err := s.service.UploadPhoto(context.Background(), 3, "photo.jpg", mockFile, actor)
 
 	s.NoError(err)
 	s.Equal(&newOrig, result.Photo)
@@ -660,7 +661,7 @@ func (s *UserServiceTestSuite) TestUploadPhoto_RollbackOnDBError() {
 	s.imgStorage.On("DeleteImageMultiple", origURL, thumbURL).Return(nil)
 
 	actor := he.AuthContext{UserID: 3, IsSuperadmin: false}
-	result, err := s.service.UploadPhoto(3, "photo.jpg", mockFile, actor)
+	result, err := s.service.UploadPhoto(context.Background(), 3, "photo.jpg", mockFile, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -673,7 +674,7 @@ func (s *UserServiceTestSuite) TestUploadPhoto_Forbidden() {
 	s.rbacRepo.On("HasPermission", s.regularActor.UserID, rbacModels.PermUsersManage).Return(false, nil)
 	s.rbacRepo.On("GetUserRoles", s.regularActor.UserID).Return([]rbacModels.Role{}, nil)
 
-	result, err := s.service.UploadPhoto(99, "photo.jpg", mockFile, s.regularActor)
+	result, err := s.service.UploadPhoto(context.Background(), 99, "photo.jpg", mockFile, s.regularActor)
 
 	s.Nil(result)
 	s.requireForbidden(err)
@@ -693,7 +694,7 @@ func (s *UserServiceTestSuite) TestDeletePhoto_Success() {
 	s.imgStorage.On("DeleteImageMultiple", oldPhoto, oldThumb).Return(nil).Maybe()
 	s.stubFullUserDetail(user)
 
-	result, err := s.service.DeletePhoto(3, actor)
+	result, err := s.service.DeletePhoto(context.Background(), 3, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -716,7 +717,7 @@ func (s *UserServiceTestSuite) TestDeletePhoto_NoPhoto_StillSuccess() {
 	s.imgStorage.On("DeleteImageMultiple", "", "").Return(nil).Maybe()
 	s.stubFullUserDetail(user)
 
-	result, err := s.service.DeletePhoto(3, actor)
+	result, err := s.service.DeletePhoto(context.Background(), 3, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -727,7 +728,7 @@ func (s *UserServiceTestSuite) TestDeletePhoto_Forbidden() {
 	s.rbacRepo.On("HasPermission", s.regularActor.UserID, rbacModels.PermUsersManage).Return(false, nil)
 	s.rbacRepo.On("GetUserRoles", s.regularActor.UserID).Return([]rbacModels.Role{}, nil)
 
-	result, err := s.service.DeletePhoto(99, s.regularActor)
+	result, err := s.service.DeletePhoto(context.Background(), 99, s.regularActor)
 
 	s.Nil(result)
 	s.requireForbidden(err)
@@ -736,7 +737,7 @@ func (s *UserServiceTestSuite) TestDeletePhoto_Forbidden() {
 func (s *UserServiceTestSuite) TestDeletePhoto_NotFound() {
 	s.repo.On("GetByID", int64(999)).Return(nil, nil)
 
-	result, err := s.service.DeletePhoto(999, s.superActor)
+	result, err := s.service.DeletePhoto(context.Background(), 999, s.superActor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -751,13 +752,13 @@ func (s *UserServiceTestSuite) TestResetPassword_Success() {
 	s.repo.On("GetByID", int64(5)).Return(user, nil)
 	s.repo.On("Update", user).Return(nil)
 
-	err := s.service.ResetPassword(5, s.superActor)
+	err := s.service.ResetPassword(context.Background(), 5, s.superActor)
 
 	s.NoError(err)
 }
 
 func (s *UserServiceTestSuite) TestResetPassword_Forbidden() {
-	err := s.service.ResetPassword(5, s.regularActor)
+	err := s.service.ResetPassword(context.Background(), 5, s.regularActor)
 
 	s.requireForbidden(err)
 }
@@ -765,7 +766,7 @@ func (s *UserServiceTestSuite) TestResetPassword_Forbidden() {
 func (s *UserServiceTestSuite) TestResetPassword_NotFound() {
 	s.repo.On("GetByID", int64(999)).Return(nil, nil)
 
-	err := s.service.ResetPassword(999, s.superActor)
+	err := s.service.ResetPassword(context.Background(), 999, s.superActor)
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
@@ -781,7 +782,7 @@ func (s *UserServiceTestSuite) TestUpdateLastLogin_Success() {
 	s.repo.On("GetByID", int64(1)).Return(user, nil)
 	s.repo.On("Update", user).Return(nil)
 
-	err := s.service.UpdateLastLogin(1)
+	err := s.service.UpdateLastLogin(context.Background(), 1)
 
 	s.NoError(err)
 	s.NotNil(user.LastLoginAt)
@@ -790,7 +791,7 @@ func (s *UserServiceTestSuite) TestUpdateLastLogin_Success() {
 func (s *UserServiceTestSuite) TestUpdateLastLogin_NotFound() {
 	s.repo.On("GetByID", int64(999)).Return(nil, nil)
 
-	err := s.service.UpdateLastLogin(999)
+	err := s.service.UpdateLastLogin(context.Background(), 999)
 
 	s.Error(err)
 }
@@ -809,7 +810,7 @@ func (s *UserServiceTestSuite) TestListDeletedUsers_Success() {
 	// Sesuaikan juga jika `CreatedBy` atau `DeletedBy` dipanggil oleh s.repo.GetByID
 	s.repo.On("GetByID", mock.Anything).Return(factories.MakeSuperadminUser(), nil)
 
-	result, total, err := s.service.ListDeletedUsers(1, 10, filter, s.superActor)
+	result, total, err := s.service.ListDeletedUsers(context.Background(), 1, 10, filter, s.superActor)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
@@ -820,7 +821,7 @@ func (s *UserServiceTestSuite) TestListDeletedUsers_Success() {
 func (s *UserServiceTestSuite) TestListDeletedUsers_Forbidden() {
 	filter := &dto.UserDeletedFilter{}
 
-	result, total, err := s.service.ListDeletedUsers(1, 10, filter, s.regularActor)
+	result, total, err := s.service.ListDeletedUsers(context.Background(), 1, 10, filter, s.regularActor)
 
 	s.Nil(result)
 	s.Equal(int64(0), total)
@@ -832,7 +833,7 @@ func (s *UserServiceTestSuite) TestListDeletedUsers_EmptyResult() {
 
 	s.repo.On("DeletedList", 1, 10, filter).Return([]models.User{}, int64(0), nil)
 
-	result, total, err := s.service.ListDeletedUsers(1, 10, filter, s.superActor)
+	result, total, err := s.service.ListDeletedUsers(context.Background(), 1, 10, filter, s.superActor)
 
 	// ✅ UBAH EKSPEKTASI: Service mengembalikan error, bukan empty slice
 	s.Error(err)

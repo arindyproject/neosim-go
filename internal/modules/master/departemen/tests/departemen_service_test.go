@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -16,6 +17,7 @@ import (
 	"neosim_go/internal/modules/master/departemen/services"
 	"neosim_go/internal/modules/master/departemen/tests/factories"
 	"neosim_go/internal/modules/master/departemen/tests/mocks"
+	userModels "neosim_go/internal/modules/users/models"
 
 	departemenContracts "neosim_go/internal/modules/master/departemen/contracts"
 	rbacModels "neosim_go/internal/modules/rbac/models"
@@ -53,16 +55,20 @@ type MasterDepartemenServiceTestSuite struct {
 }
 
 func (s *MasterDepartemenServiceTestSuite) SetupTest() {
-	s.repo     = new(mocks.MasterDepartemenRepositoryMock)
+	s.repo = new(mocks.MasterDepartemenRepositoryMock)
 	s.rbacRepo = new(mocks.RBACRepositoryMock)
 	s.authRepo = new(mocks.AuthRepositoryMock)
 	s.userRepo = new(mocks.UserRepositoryMock)
-	s.cfg      = &config.Config{}
+	s.cfg = &config.Config{
+		DefaultPageSize:    10,
+		DefaultPageSizeMax: 10,
+	}
 	s.svc = services.NewMasterDepartemenService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.cfg)
 
 	// Stub default agar buildCreator/buildAuditMaps tidak panic saat memanggil userRepo.
 	// Boleh dipanggil 0 kali atau lebih (.Maybe()) tergantung skenario test.
 	s.userRepo.On("GetByID", mock.Anything).Return(nil, nil).Maybe()
+	s.userRepo.On("GetByIDs", mock.Anything).Return([]userModels.User{}, nil).Maybe()
 }
 
 func TestMasterDepartemenService(t *testing.T) {
@@ -91,7 +97,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_CreateDepartemen_Superadmin_Succ
 
 	s.repo.On("CreateDepartemen", mock.AnythingOfType("*models.MasterDepartemen")).Return(nil)
 
-	result, err := s.svc.CreateDepartemen(req, actor)
+	result, err := s.svc.CreateDepartemen(context.Background(), req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -106,7 +112,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_CreateDepartemen_WithPermission_
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(true, nil)
 	s.repo.On("CreateDepartemen", mock.AnythingOfType("*models.MasterDepartemen")).Return(nil)
 
-	result, err := s.svc.CreateDepartemen(req, actor)
+	result, err := s.svc.CreateDepartemen(context.Background(), req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -121,7 +127,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_CreateDepartemen_WithManagePermi
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyManage).Return(true, nil)
 	s.repo.On("CreateDepartemen", mock.AnythingOfType("*models.MasterDepartemen")).Return(nil)
 
-	result, err := s.svc.CreateDepartemen(req, actor)
+	result, err := s.svc.CreateDepartemen(context.Background(), req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -132,7 +138,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_CreateDepartemen_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.CreateDepartemen(req, actor)
+	result, err := s.svc.CreateDepartemen(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -147,7 +153,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_CreateDepartemen_RepoError() {
 
 	s.repo.On("CreateDepartemen", mock.AnythingOfType("*models.MasterDepartemen")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.CreateDepartemen(req, actor)
+	result, err := s.svc.CreateDepartemen(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -160,7 +166,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_GetDepartemenByID_Superadmin_Suc
 
 	s.repo.On("GetDepartemenByID", int64(1)).Return(item, nil)
 
-	result, err := s.svc.GetDepartemenByID(1, actor)
+	result, err := s.svc.GetDepartemenByID(context.Background(), 1, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -176,7 +182,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_GetDepartemenByID_WithPermission
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyRead).Return(true, nil)
 	s.repo.On("GetDepartemenByID", int64(1)).Return(item, nil)
 
-	result, err := s.svc.GetDepartemenByID(1, actor)
+	result, err := s.svc.GetDepartemenByID(context.Background(), 1, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -186,7 +192,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_GetDepartemenByID_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.GetDepartemenByID(1, actor)
+	result, err := s.svc.GetDepartemenByID(context.Background(), 1, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -200,7 +206,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_GetDepartemenByID_NotFound() {
 
 	s.repo.On("GetDepartemenByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.GetDepartemenByID(999, actor)
+	result, err := s.svc.GetDepartemenByID(context.Background(), 999, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -212,7 +218,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_GetDepartemenByID_RepoError() {
 
 	s.repo.On("GetDepartemenByID", int64(1)).Return(nil, fmt.Errorf("db error"))
 
-	result, err := s.svc.GetDepartemenByID(1, actor)
+	result, err := s.svc.GetDepartemenByID(context.Background(), 1, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -228,7 +234,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_ListDepartemen_Superadmin_Succes
 
 	s.repo.On("ListDepartemen", 1, 10, filter).Return(items, int64(2), nil)
 
-	result, total, err := s.svc.ListDepartemen(1, 10, filter, actor)
+	result, total, err := s.svc.ListDepartemen(context.Background(), 1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(2), total)
@@ -243,7 +249,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_ListDepartemen_WithPermission_Su
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyRead).Return(true, nil)
 	s.repo.On("ListDepartemen", 1, 10, filter).Return(items, int64(1), nil)
 
-	result, total, err := s.svc.ListDepartemen(1, 10, filter, actor)
+	result, total, err := s.svc.ListDepartemen(context.Background(), 1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
@@ -255,7 +261,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_ListDepartemen_Forbidden() {
 	filter := &dto.FilterMasterDepartemenRequest{}
 	s.mockNoPermissions()
 
-	result, total, err := s.svc.ListDepartemen(1, 10, filter, actor)
+	result, total, err := s.svc.ListDepartemen(context.Background(), 1, 10, filter, actor)
 
 	s.Nil(result)
 	s.Equal(int64(0), total)
@@ -271,7 +277,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_ListDepartemen_DefaultPagination
 
 	s.repo.On("ListDepartemen", 1, 10, filter).Return([]models.MasterDepartemen{}, int64(0), nil)
 
-	result, total, err := s.svc.ListDepartemen(0, 0, filter, actor)
+	result, total, err := s.svc.ListDepartemen(context.Background(), 0, 0, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(0), total)
@@ -284,7 +290,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_ListDepartemen_PageSizeCapped() 
 
 	s.repo.On("ListDepartemen", 1, 10, filter).Return([]models.MasterDepartemen{}, int64(0), nil)
 
-	_, _, err := s.svc.ListDepartemen(1, 999, filter, actor)
+	_, _, err := s.svc.ListDepartemen(context.Background(), 1, 999, filter, actor)
 
 	s.NoError(err)
 	s.repo.AssertCalled(s.T(), "ListDepartemen", 1, 10, filter)
@@ -297,7 +303,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_ListDepartemen_WithNameFilter() 
 
 	s.repo.On("ListDepartemen", 1, 10, filter).Return(items, int64(1), nil)
 
-	result, total, err := s.svc.ListDepartemen(1, 10, filter, actor)
+	result, total, err := s.svc.ListDepartemen(context.Background(), 1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
@@ -314,7 +320,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_UpdateDepartemen_Superadmin_Succ
 	s.repo.On("GetDepartemenByID", int64(1)).Return(existing, nil)
 	s.repo.On("UpdateDepartemen", mock.AnythingOfType("*models.MasterDepartemen")).Return(nil)
 
-	result, err := s.svc.UpdateDepartemen(1, req, actor)
+	result, err := s.svc.UpdateDepartemen(context.Background(), 1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -332,7 +338,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_UpdateDepartemen_WithPermission_
 	s.repo.On("GetDepartemenByID", int64(1)).Return(existing, nil)
 	s.repo.On("UpdateDepartemen", mock.AnythingOfType("*models.MasterDepartemen")).Return(nil)
 
-	result, err := s.svc.UpdateDepartemen(1, req, actor)
+	result, err := s.svc.UpdateDepartemen(context.Background(), 1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -343,7 +349,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_UpdateDepartemen_Forbidden() {
 	req := &dto.UpdateMasterDepartemenRequest{}
 	s.mockNoPermissions()
 
-	result, err := s.svc.UpdateDepartemen(1, req, actor)
+	result, err := s.svc.UpdateDepartemen(context.Background(), 1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -358,7 +364,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_UpdateDepartemen_NotFound() {
 
 	s.repo.On("GetDepartemenByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.UpdateDepartemen(999, req, actor)
+	result, err := s.svc.UpdateDepartemen(context.Background(), 999, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -378,7 +384,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_UpdateDepartemen_PartialFields()
 		return m.Name == originalName && *m.Description == newDesc
 	})).Return(nil)
 
-	result, err := s.svc.UpdateDepartemen(1, req, actor)
+	result, err := s.svc.UpdateDepartemen(context.Background(), 1, req, actor)
 
 	s.NoError(err)
 	s.Equal(originalName, result.Name)
@@ -394,7 +400,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_UpdateDepartemen_RepoError() {
 	s.repo.On("GetDepartemenByID", int64(1)).Return(existing, nil)
 	s.repo.On("UpdateDepartemen", mock.AnythingOfType("*models.MasterDepartemen")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.UpdateDepartemen(1, req, actor)
+	result, err := s.svc.UpdateDepartemen(context.Background(), 1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -408,7 +414,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_DeleteDepartemen_Superadmin_Succ
 	s.repo.On("GetDepartemenByID", int64(1)).Return(existing, nil)
 	s.repo.On("DeleteDepartemen", int64(1)).Return(nil)
 
-	err := s.svc.DeleteDepartemen(1, actor)
+	err := s.svc.DeleteDepartemen(context.Background(), 1, actor)
 
 	s.NoError(err)
 	s.repo.AssertExpectations(s.T())
@@ -423,7 +429,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_DeleteDepartemen_WithPermission_
 	s.repo.On("GetDepartemenByID", int64(1)).Return(existing, nil)
 	s.repo.On("DeleteDepartemen", int64(1)).Return(nil)
 
-	err := s.svc.DeleteDepartemen(1, actor)
+	err := s.svc.DeleteDepartemen(context.Background(), 1, actor)
 
 	s.NoError(err)
 }
@@ -432,7 +438,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_DeleteDepartemen_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	err := s.svc.DeleteDepartemen(1, actor)
+	err := s.svc.DeleteDepartemen(context.Background(), 1, actor)
 
 	s.Error(err)
 	var appErr *appErrors.AppError
@@ -445,7 +451,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_DeleteDepartemen_NotFound() {
 
 	s.repo.On("GetDepartemenByID", int64(999)).Return(nil, nil)
 
-	err := s.svc.DeleteDepartemen(999, actor)
+	err := s.svc.DeleteDepartemen(context.Background(), 999, actor)
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
@@ -459,7 +465,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_DeleteDepartemen_RepoError() {
 	s.repo.On("GetDepartemenByID", int64(1)).Return(existing, nil)
 	s.repo.On("DeleteDepartemen", int64(1)).Return(fmt.Errorf("db error"))
 
-	err := s.svc.DeleteDepartemen(1, actor)
+	err := s.svc.DeleteDepartemen(context.Background(), 1, actor)
 
 	s.Error(err)
 }

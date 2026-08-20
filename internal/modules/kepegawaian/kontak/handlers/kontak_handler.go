@@ -102,6 +102,8 @@ func (h *KepegawaianKontakHandler) GetKontakByID(c *echo.Context) error {
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
+//	@Param			page		query		int		false	"Page number"
+//	@Param			page_size	query		int		false	"Page size"
 //	@Param          pegawai_id  path        int true    "ID pegawai"
 //	@Success		200	{object}	response.MyGoResponse{data=dto.KepegawaianKontakResponse}
 //	@Router			/kepegawaian/kontak/{pegawai_id}/pegawai [get]
@@ -113,17 +115,18 @@ func (h *KepegawaianKontakHandler) ListKontakByPegawai(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
 
-	item, err := h.service.GetKontakByPegawaiID(c.Request().Context(), pegawaiID, actor)
+	page, pageSize := he.ParsePagination(c, h.cfg)
+	items, total, err := h.service.GetKontakByPegawaiID(c.Request().Context(), pegawaiID, page, pageSize, actor)
 
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
 
-	if len(item) == 0 {
+	if len(items) == 0 {
 		return response.Response(c, http.StatusNotFound, false, "Data tidak ditemukan", nil, nil)
 	}
 
-	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", item, nil)
+	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data", items, total, page, pageSize)
 
 }
 

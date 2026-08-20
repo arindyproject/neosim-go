@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -89,7 +90,7 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateNegara_Superadmin_Success() {
 
 	s.repo.On("CreateNegara", mock.AnythingOfType("*models.MasterAlamatNegara")).Return(nil)
 
-	result, err := s.svc.CreateNegara(req, actor)
+	result, err := s.svc.CreateNegara(context.Background(), req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -109,7 +110,7 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateNegara_WithPermission_Success(
 
 	s.repo.On("CreateNegara", mock.AnythingOfType("*models.MasterAlamatNegara")).Return(nil)
 
-	result, err := s.svc.CreateNegara(req, actor)
+	result, err := s.svc.CreateNegara(context.Background(), req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -128,7 +129,7 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateNegara_WithManagePermission_Su
 
 	s.repo.On("CreateNegara", mock.AnythingOfType("*models.MasterAlamatNegara")).Return(nil)
 
-	result, err := s.svc.CreateNegara(req, actor)
+	result, err := s.svc.CreateNegara(context.Background(), req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -139,7 +140,7 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateNegara_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.CreateNegara(req, actor)
+	result, err := s.svc.CreateNegara(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -158,7 +159,7 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateNegara_RepoError() {
 
 	s.repo.On("CreateNegara", mock.AnythingOfType("*models.MasterAlamatNegara")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.CreateNegara(req, actor)
+	result, err := s.svc.CreateNegara(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -170,7 +171,7 @@ func (s *MasterAlamatServiceTestSuite) Test_GetByIDNegara_Success() {
 
 	s.repo.On("GetByIDNegara", int64(1)).Return(item, nil)
 
-	result, err := s.svc.GetByIDNegara(1)
+	result, err := s.svc.GetByIDNegara(context.Background(), 1)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -181,7 +182,7 @@ func (s *MasterAlamatServiceTestSuite) Test_GetByIDNegara_Success() {
 func (s *MasterAlamatServiceTestSuite) Test_GetByIDNegara_NotFound() {
 	s.repo.On("GetByIDNegara", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.GetByIDNegara(999)
+	result, err := s.svc.GetByIDNegara(context.Background(), 999)
 
 	s.Nil(result)
 	s.Error(err)
@@ -191,7 +192,7 @@ func (s *MasterAlamatServiceTestSuite) Test_GetByIDNegara_NotFound() {
 func (s *MasterAlamatServiceTestSuite) Test_GetByIDNegara_RepoError() {
 	s.repo.On("GetByIDNegara", int64(1)).Return(nil, fmt.Errorf("db error"))
 
-	result, err := s.svc.GetByIDNegara(1)
+	result, err := s.svc.GetByIDNegara(context.Background(), 1)
 
 	s.Nil(result)
 	s.Error(err)
@@ -206,7 +207,7 @@ func (s *MasterAlamatServiceTestSuite) Test_ListNegara_Success() {
 
 	s.repo.On("ListNegara", 1, 10, filter).Return(items, int64(2), nil)
 
-	result, total, err := s.svc.ListNegara(1, 10, filter)
+	result, total, err := s.svc.ListNegara(context.Background(), 1, 10, filter)
 
 	s.NoError(err)
 	s.Equal(int64(2), total)
@@ -218,7 +219,7 @@ func (s *MasterAlamatServiceTestSuite) Test_ListNegara_NotFound() {
 
 	s.repo.On("ListNegara", 1, 10, filter).Return([]models.MasterAlamatNegara{}, int64(0), nil)
 
-	result, total, err := s.svc.ListNegara(1, 10, filter)
+	result, total, err := s.svc.ListNegara(context.Background(), 1, 10, filter)
 
 	s.Nil(result)
 	s.Equal(int64(0), total)
@@ -232,7 +233,7 @@ func (s *MasterAlamatServiceTestSuite) Test_ListNegara_DefaultPagination() {
 
 	s.repo.On("ListNegara", 1, 10, filter).Return(items, int64(1), nil)
 
-	_, _, err := s.svc.ListNegara(0, 0, filter)
+	_, _, err := s.svc.ListNegara(context.Background(), 0, 0, filter)
 
 	s.NoError(err)
 	s.repo.AssertCalled(s.T(), "ListNegara", 1, 10, filter)
@@ -244,7 +245,7 @@ func (s *MasterAlamatServiceTestSuite) Test_ListNegara_PageSizeCapped() {
 
 	s.repo.On("ListNegara", 1, 10, filter).Return(items, int64(1), nil)
 
-	_, _, err := s.svc.ListNegara(1, 999, filter)
+	_, _, err := s.svc.ListNegara(context.Background(), 1, 999, filter)
 
 	s.NoError(err)
 	s.repo.AssertCalled(s.T(), "ListNegara", 1, 10, filter)
@@ -260,7 +261,7 @@ func (s *MasterAlamatServiceTestSuite) Test_UpdateNegara_Superadmin_Success() {
 	s.repo.On("GetByIDNegara", int64(1)).Return(existing, nil)
 	s.repo.On("UpdateNegara", mock.AnythingOfType("*models.MasterAlamatNegara")).Return(nil)
 
-	result, err := s.svc.UpdateNegara(1, req, actor)
+	result, err := s.svc.UpdateNegara(context.Background(), 1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -272,7 +273,7 @@ func (s *MasterAlamatServiceTestSuite) Test_UpdateNegara_Forbidden() {
 	req := &dto.UpdateNegaraRequest{}
 	s.mockNoPermissions()
 
-	result, err := s.svc.UpdateNegara(1, req, actor)
+	result, err := s.svc.UpdateNegara(context.Background(), 1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -287,7 +288,7 @@ func (s *MasterAlamatServiceTestSuite) Test_UpdateNegara_NotFound() {
 
 	s.repo.On("GetByIDNegara", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.UpdateNegara(999, req, actor)
+	result, err := s.svc.UpdateNegara(context.Background(), 999, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -308,7 +309,7 @@ func (s *MasterAlamatServiceTestSuite) Test_UpdateNegara_PartialFields() {
 		return m.Name == originalName && *m.Description == newDesc
 	})).Return(nil)
 
-	result, err := s.svc.UpdateNegara(1, req, actor)
+	result, err := s.svc.UpdateNegara(context.Background(), 1, req, actor)
 
 	s.NoError(err)
 	s.Equal(originalName, result.Name)
@@ -324,7 +325,7 @@ func (s *MasterAlamatServiceTestSuite) Test_UpdateNegara_RepoError() {
 	s.repo.On("GetByIDNegara", int64(1)).Return(existing, nil)
 	s.repo.On("UpdateNegara", mock.AnythingOfType("*models.MasterAlamatNegara")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.UpdateNegara(1, req, actor)
+	result, err := s.svc.UpdateNegara(context.Background(), 1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -338,7 +339,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteNegara_Superadmin_Success() {
 	s.repo.On("GetByIDNegara", int64(1)).Return(existing, nil)
 	s.repo.On("DeleteNegara", int64(1)).Return(nil)
 
-	err := s.svc.DeleteNegara(1, actor)
+	err := s.svc.DeleteNegara(context.Background(), 1, actor)
 
 	s.NoError(err)
 	s.repo.AssertExpectations(s.T())
@@ -348,7 +349,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteNegara_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	err := s.svc.DeleteNegara(1, actor)
+	err := s.svc.DeleteNegara(context.Background(), 1, actor)
 
 	s.Error(err)
 	var appErr *appErrors.AppError
@@ -361,7 +362,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteNegara_NotFound() {
 
 	s.repo.On("GetByIDNegara", int64(999)).Return(nil, nil)
 
-	err := s.svc.DeleteNegara(999, actor)
+	err := s.svc.DeleteNegara(context.Background(), 999, actor)
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
@@ -375,7 +376,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteNegara_RepoError() {
 	s.repo.On("GetByIDNegara", int64(1)).Return(existing, nil)
 	s.repo.On("DeleteNegara", int64(1)).Return(fmt.Errorf("db error"))
 
-	err := s.svc.DeleteNegara(1, actor)
+	err := s.svc.DeleteNegara(context.Background(), 1, actor)
 
 	s.Error(err)
 }
@@ -397,7 +398,7 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateProvinsi_Superadmin_Success() 
 	s.repo.On("GetByIDNegara", int64(1)).Return(negara, nil)
 	s.repo.On("CreateProvinsi", mock.AnythingOfType("*models.MasterAlamatProvinsi")).Return(nil)
 
-	result, err := s.svc.CreateProvinsi(req, actor)
+	result, err := s.svc.CreateProvinsi(context.Background(), req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -420,7 +421,7 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateProvinsi_WithPermission_Succes
 	s.repo.On("GetByIDNegara", int64(1)).Return(negara, nil)
 	s.repo.On("CreateProvinsi", mock.AnythingOfType("*models.MasterAlamatProvinsi")).Return(nil)
 
-	result, err := s.svc.CreateProvinsi(req, actor)
+	result, err := s.svc.CreateProvinsi(context.Background(), req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -431,7 +432,7 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateProvinsi_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.CreateProvinsi(req, actor)
+	result, err := s.svc.CreateProvinsi(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -450,7 +451,7 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateProvinsi_NegaraNotFound() {
 
 	s.repo.On("GetByIDNegara", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.CreateProvinsi(req, actor)
+	result, err := s.svc.CreateProvinsi(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -470,7 +471,7 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateProvinsi_RepoError() {
 	s.repo.On("GetByIDNegara", int64(1)).Return(negara, nil)
 	s.repo.On("CreateProvinsi", mock.AnythingOfType("*models.MasterAlamatProvinsi")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.CreateProvinsi(req, actor)
+	result, err := s.svc.CreateProvinsi(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -486,7 +487,7 @@ func (s *MasterAlamatServiceTestSuite) Test_GetByIDProvinsi_Success() {
 	s.repo.On("CountKecamatanByProvinsiID", int64(1)).Return(int64(20), nil)
 	s.repo.On("CountDesaByProvinsiID", int64(1)).Return(int64(100), nil)
 
-	result, err := s.svc.GetByIDProvinsi(1)
+	result, err := s.svc.GetByIDProvinsi(context.Background(), 1)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -500,7 +501,7 @@ func (s *MasterAlamatServiceTestSuite) Test_GetByIDProvinsi_Success() {
 func (s *MasterAlamatServiceTestSuite) Test_GetByIDProvinsi_NotFound() {
 	s.repo.On("GetByIDProvinsi", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.GetByIDProvinsi(999)
+	result, err := s.svc.GetByIDProvinsi(context.Background(), 999)
 
 	s.Nil(result)
 	s.Error(err)
@@ -514,7 +515,7 @@ func (s *MasterAlamatServiceTestSuite) Test_GetByIDProvinsi_CountError() {
 	s.repo.On("GetByIDProvinsi", int64(1)).Return(item, nil)
 	s.repo.On("CountKotaByProvinsiID", int64(1)).Return(int64(0), fmt.Errorf("db error"))
 
-	result, err := s.svc.GetByIDProvinsi(1)
+	result, err := s.svc.GetByIDProvinsi(context.Background(), 1)
 
 	s.Nil(result)
 	s.Error(err)
@@ -529,7 +530,7 @@ func (s *MasterAlamatServiceTestSuite) Test_ListProvinsi_Success() {
 
 	s.repo.On("ListProvinsi", 1, 10, (*int64)(nil), filter).Return(items, int64(2), nil)
 
-	result, total, err := s.svc.ListProvinsi(1, 10, nil, filter)
+	result, total, err := s.svc.ListProvinsi(context.Background(), 1, 10, nil, filter)
 
 	s.NoError(err)
 	s.Equal(int64(2), total)
@@ -543,7 +544,7 @@ func (s *MasterAlamatServiceTestSuite) Test_ListProvinsi_WithNegaraIDFilter() {
 
 	s.repo.On("ListProvinsi", 1, 10, &negaraID, filter).Return(items, int64(1), nil)
 
-	result, total, err := s.svc.ListProvinsi(1, 10, &negaraID, filter)
+	result, total, err := s.svc.ListProvinsi(context.Background(), 1, 10, &negaraID, filter)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
@@ -555,7 +556,7 @@ func (s *MasterAlamatServiceTestSuite) Test_ListProvinsi_NotFound() {
 
 	s.repo.On("ListProvinsi", 1, 10, (*int64)(nil), filter).Return([]models.MasterAlamatProvinsi{}, int64(0), nil)
 
-	result, total, err := s.svc.ListProvinsi(1, 10, nil, filter)
+	result, total, err := s.svc.ListProvinsi(context.Background(), 1, 10, nil, filter)
 
 	s.Nil(result)
 	s.Equal(int64(0), total)
@@ -572,7 +573,7 @@ func (s *MasterAlamatServiceTestSuite) Test_UpdateProvinsi_Superadmin_Success() 
 	s.repo.On("GetByIDProvinsi", int64(1)).Return(existing, nil)
 	s.repo.On("UpdateProvinsi", mock.AnythingOfType("*models.MasterAlamatProvinsi")).Return(nil)
 
-	result, err := s.svc.UpdateProvinsi(1, req, actor)
+	result, err := s.svc.UpdateProvinsi(context.Background(), 1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -584,7 +585,7 @@ func (s *MasterAlamatServiceTestSuite) Test_UpdateProvinsi_Forbidden() {
 	req := &dto.UpdateProvinsiRequest{}
 	s.mockNoPermissions()
 
-	result, err := s.svc.UpdateProvinsi(1, req, actor)
+	result, err := s.svc.UpdateProvinsi(context.Background(), 1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -599,7 +600,7 @@ func (s *MasterAlamatServiceTestSuite) Test_UpdateProvinsi_NotFound() {
 
 	s.repo.On("GetByIDProvinsi", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.UpdateProvinsi(999, req, actor)
+	result, err := s.svc.UpdateProvinsi(context.Background(), 999, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -615,7 +616,7 @@ func (s *MasterAlamatServiceTestSuite) Test_UpdateProvinsi_RepoError() {
 	s.repo.On("GetByIDProvinsi", int64(1)).Return(existing, nil)
 	s.repo.On("UpdateProvinsi", mock.AnythingOfType("*models.MasterAlamatProvinsi")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.UpdateProvinsi(1, req, actor)
+	result, err := s.svc.UpdateProvinsi(context.Background(), 1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -629,7 +630,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteProvinsi_Superadmin_Success() 
 	s.repo.On("GetByIDProvinsi", int64(1)).Return(existing, nil)
 	s.repo.On("DeleteProvinsi", int64(1)).Return(nil)
 
-	err := s.svc.DeleteProvinsi(1, actor)
+	err := s.svc.DeleteProvinsi(context.Background(), 1, actor)
 
 	s.NoError(err)
 	s.repo.AssertExpectations(s.T())
@@ -639,7 +640,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteProvinsi_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	err := s.svc.DeleteProvinsi(1, actor)
+	err := s.svc.DeleteProvinsi(context.Background(), 1, actor)
 
 	s.Error(err)
 	var appErr *appErrors.AppError
@@ -652,7 +653,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteProvinsi_NotFound() {
 
 	s.repo.On("GetByIDProvinsi", int64(999)).Return(nil, nil)
 
-	err := s.svc.DeleteProvinsi(999, actor)
+	err := s.svc.DeleteProvinsi(context.Background(), 999, actor)
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
@@ -666,7 +667,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteProvinsi_RepoError() {
 	s.repo.On("GetByIDProvinsi", int64(1)).Return(existing, nil)
 	s.repo.On("DeleteProvinsi", int64(1)).Return(fmt.Errorf("db error"))
 
-	err := s.svc.DeleteProvinsi(1, actor)
+	err := s.svc.DeleteProvinsi(context.Background(), 1, actor)
 
 	s.Error(err)
 }
@@ -688,7 +689,7 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateKotaKabupaten_Superadmin_Succe
 	s.repo.On("GetByIDProvinsi", int64(1)).Return(provinsi, nil)
 	s.repo.On("CreateKotaKabupaten", mock.AnythingOfType("*models.MasterAlamatKotaKabupaten")).Return(nil)
 
-	result, err := s.svc.CreateKotaKabupaten(req, actor)
+	result, err := s.svc.CreateKotaKabupaten(context.Background(), req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -700,7 +701,7 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateKotaKabupaten_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.CreateKotaKabupaten(req, actor)
+	result, err := s.svc.CreateKotaKabupaten(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -719,7 +720,7 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateKotaKabupaten_ProvinsiNotFound
 
 	s.repo.On("GetByIDProvinsi", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.CreateKotaKabupaten(req, actor)
+	result, err := s.svc.CreateKotaKabupaten(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -739,7 +740,7 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateKotaKabupaten_RepoError() {
 	s.repo.On("GetByIDProvinsi", int64(1)).Return(provinsi, nil)
 	s.repo.On("CreateKotaKabupaten", mock.AnythingOfType("*models.MasterAlamatKotaKabupaten")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.CreateKotaKabupaten(req, actor)
+	result, err := s.svc.CreateKotaKabupaten(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -758,7 +759,7 @@ func (s *MasterAlamatServiceTestSuite) Test_GetByIDKotaKabupaten_Success() {
 	s.repo.On("CountKecamatanByKotaID", int64(1)).Return(int64(10), nil)
 	s.repo.On("CountDesaByKotaID", int64(1)).Return(int64(50), nil)
 
-	result, err := s.svc.GetByIDKotaKabupaten(1)
+	result, err := s.svc.GetByIDKotaKabupaten(context.Background(), 1)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -771,7 +772,7 @@ func (s *MasterAlamatServiceTestSuite) Test_GetByIDKotaKabupaten_Success() {
 func (s *MasterAlamatServiceTestSuite) Test_GetByIDKotaKabupaten_NotFound() {
 	s.repo.On("GetByIDKotaKabupaten", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.GetByIDKotaKabupaten(999)
+	result, err := s.svc.GetByIDKotaKabupaten(context.Background(), 999)
 
 	s.Nil(result)
 	s.Error(err)
@@ -785,7 +786,7 @@ func (s *MasterAlamatServiceTestSuite) Test_GetByIDKotaKabupaten_CountError() {
 	s.repo.On("GetByIDKotaKabupaten", int64(1)).Return(item, nil)
 	s.repo.On("CountKecamatanByKotaID", int64(1)).Return(int64(0), fmt.Errorf("db error"))
 
-	result, err := s.svc.GetByIDKotaKabupaten(1)
+	result, err := s.svc.GetByIDKotaKabupaten(context.Background(), 1)
 
 	s.Nil(result)
 	s.Error(err)
@@ -799,7 +800,7 @@ func (s *MasterAlamatServiceTestSuite) Test_ListKotaKabupaten_Success() {
 
 	s.repo.On("ListKotaKabupaten", 1, 10, (*int64)(nil), filter).Return(items, int64(1), nil)
 
-	result, total, err := s.svc.ListKotaKabupaten(1, 10, nil, filter)
+	result, total, err := s.svc.ListKotaKabupaten(context.Background(), 1, 10, nil, filter)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
@@ -811,7 +812,7 @@ func (s *MasterAlamatServiceTestSuite) Test_ListKotaKabupaten_NotFound() {
 
 	s.repo.On("ListKotaKabupaten", 1, 10, (*int64)(nil), filter).Return([]models.MasterAlamatKotaKabupaten{}, int64(0), nil)
 
-	result, total, err := s.svc.ListKotaKabupaten(1, 10, nil, filter)
+	result, total, err := s.svc.ListKotaKabupaten(context.Background(), 1, 10, nil, filter)
 
 	s.Nil(result)
 	s.Equal(int64(0), total)
@@ -828,7 +829,7 @@ func (s *MasterAlamatServiceTestSuite) Test_UpdateKotaKabupaten_Superadmin_Succe
 	s.repo.On("GetByIDKotaKabupaten", int64(1)).Return(existing, nil)
 	s.repo.On("UpdateKotaKabupaten", mock.AnythingOfType("*models.MasterAlamatKotaKabupaten")).Return(nil)
 
-	result, err := s.svc.UpdateKotaKabupaten(1, req, actor)
+	result, err := s.svc.UpdateKotaKabupaten(context.Background(), 1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -840,7 +841,7 @@ func (s *MasterAlamatServiceTestSuite) Test_UpdateKotaKabupaten_Forbidden() {
 	req := &dto.UpdateKotaKabupatenRequest{}
 	s.mockNoPermissions()
 
-	result, err := s.svc.UpdateKotaKabupaten(1, req, actor)
+	result, err := s.svc.UpdateKotaKabupaten(context.Background(), 1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -855,7 +856,7 @@ func (s *MasterAlamatServiceTestSuite) Test_UpdateKotaKabupaten_NotFound() {
 
 	s.repo.On("GetByIDKotaKabupaten", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.UpdateKotaKabupaten(999, req, actor)
+	result, err := s.svc.UpdateKotaKabupaten(context.Background(), 999, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -871,7 +872,7 @@ func (s *MasterAlamatServiceTestSuite) Test_UpdateKotaKabupaten_RepoError() {
 	s.repo.On("GetByIDKotaKabupaten", int64(1)).Return(existing, nil)
 	s.repo.On("UpdateKotaKabupaten", mock.AnythingOfType("*models.MasterAlamatKotaKabupaten")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.UpdateKotaKabupaten(1, req, actor)
+	result, err := s.svc.UpdateKotaKabupaten(context.Background(), 1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -885,7 +886,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteKotaKabupaten_Superadmin_Succe
 	s.repo.On("GetByIDKotaKabupaten", int64(1)).Return(existing, nil)
 	s.repo.On("DeleteKotaKabupaten", int64(1)).Return(nil)
 
-	err := s.svc.DeleteKotaKabupaten(1, actor)
+	err := s.svc.DeleteKotaKabupaten(context.Background(), 1, actor)
 
 	s.NoError(err)
 	s.repo.AssertExpectations(s.T())
@@ -895,7 +896,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteKotaKabupaten_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	err := s.svc.DeleteKotaKabupaten(1, actor)
+	err := s.svc.DeleteKotaKabupaten(context.Background(), 1, actor)
 
 	s.Error(err)
 	var appErr *appErrors.AppError
@@ -908,7 +909,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteKotaKabupaten_NotFound() {
 
 	s.repo.On("GetByIDKotaKabupaten", int64(999)).Return(nil, nil)
 
-	err := s.svc.DeleteKotaKabupaten(999, actor)
+	err := s.svc.DeleteKotaKabupaten(context.Background(), 999, actor)
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
@@ -922,7 +923,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteKotaKabupaten_RepoError() {
 	s.repo.On("GetByIDKotaKabupaten", int64(1)).Return(existing, nil)
 	s.repo.On("DeleteKotaKabupaten", int64(1)).Return(fmt.Errorf("db error"))
 
-	err := s.svc.DeleteKotaKabupaten(1, actor)
+	err := s.svc.DeleteKotaKabupaten(context.Background(), 1, actor)
 
 	s.Error(err)
 }
@@ -944,7 +945,7 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateKecamatan_Superadmin_Success()
 	s.repo.On("GetByIDKotaKabupaten", int64(1)).Return(kota, nil)
 	s.repo.On("CreateKecamatan", mock.AnythingOfType("*models.MasterAlamatKecamatan")).Return(nil)
 
-	result, err := s.svc.CreateKecamatan(req, actor)
+	result, err := s.svc.CreateKecamatan(context.Background(), req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -956,7 +957,7 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateKecamatan_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.CreateKecamatan(req, actor)
+	result, err := s.svc.CreateKecamatan(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -977,7 +978,7 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateKecamatan_KotaNotFound() {
 	// 2. Mock GetByIDKotaKabupaten untuk mensimulasikan kota tidak ditemukan
 	s.repo.On("GetByIDKotaKabupaten", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.CreateKecamatan(req, actor)
+	result, err := s.svc.CreateKecamatan(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -997,7 +998,7 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateKecamatan_RepoError() {
 	s.repo.On("GetByIDKotaKabupaten", int64(1)).Return(kota, nil)
 	s.repo.On("CreateKecamatan", mock.AnythingOfType("*models.MasterAlamatKecamatan")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.CreateKecamatan(req, actor)
+	result, err := s.svc.CreateKecamatan(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -1019,7 +1020,7 @@ func (s *MasterAlamatServiceTestSuite) Test_GetByIDKecamatan_Success() {
 	s.repo.On("GetByIDKecamatan", int64(1)).Return(item, nil)
 	s.repo.On("CountDesaByKecamatanID", int64(1)).Return(int64(15), nil)
 
-	result, err := s.svc.GetByIDKecamatan(1)
+	result, err := s.svc.GetByIDKecamatan(context.Background(), 1)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -1032,7 +1033,7 @@ func (s *MasterAlamatServiceTestSuite) Test_GetByIDKecamatan_Success() {
 func (s *MasterAlamatServiceTestSuite) Test_GetByIDKecamatan_NotFound() {
 	s.repo.On("GetByIDKecamatan", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.GetByIDKecamatan(999)
+	result, err := s.svc.GetByIDKecamatan(context.Background(), 999)
 
 	s.Nil(result)
 	s.Error(err)
@@ -1046,7 +1047,7 @@ func (s *MasterAlamatServiceTestSuite) Test_GetByIDKecamatan_CountError() {
 	s.repo.On("GetByIDKecamatan", int64(1)).Return(item, nil)
 	s.repo.On("CountDesaByKecamatanID", int64(1)).Return(int64(0), fmt.Errorf("db error"))
 
-	result, err := s.svc.GetByIDKecamatan(1)
+	result, err := s.svc.GetByIDKecamatan(context.Background(), 1)
 
 	s.Nil(result)
 	s.Error(err)
@@ -1060,7 +1061,7 @@ func (s *MasterAlamatServiceTestSuite) Test_ListKecamatan_Success() {
 
 	s.repo.On("ListKecamatan", 1, 10, (*int64)(nil), filter).Return(items, int64(1), nil)
 
-	result, total, err := s.svc.ListKecamatan(1, 10, nil, filter)
+	result, total, err := s.svc.ListKecamatan(context.Background(), 1, 10, nil, filter)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
@@ -1072,7 +1073,7 @@ func (s *MasterAlamatServiceTestSuite) Test_ListKecamatan_NotFound() {
 
 	s.repo.On("ListKecamatan", 1, 10, (*int64)(nil), filter).Return([]models.MasterAlamatKecamatan{}, int64(0), nil)
 
-	result, total, err := s.svc.ListKecamatan(1, 10, nil, filter)
+	result, total, err := s.svc.ListKecamatan(context.Background(), 1, 10, nil, filter)
 
 	s.Nil(result)
 	s.Equal(int64(0), total)
@@ -1089,7 +1090,7 @@ func (s *MasterAlamatServiceTestSuite) Test_UpdateKecamatan_Superadmin_Success()
 	s.repo.On("GetByIDKecamatan", int64(1)).Return(existing, nil)
 	s.repo.On("UpdateKecamatan", mock.AnythingOfType("*models.MasterAlamatKecamatan")).Return(nil)
 
-	result, err := s.svc.UpdateKecamatan(1, req, actor)
+	result, err := s.svc.UpdateKecamatan(context.Background(), 1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -1101,7 +1102,7 @@ func (s *MasterAlamatServiceTestSuite) Test_UpdateKecamatan_Forbidden() {
 	req := &dto.UpdateKecamatanRequest{}
 	s.mockNoPermissions()
 
-	result, err := s.svc.UpdateKecamatan(1, req, actor)
+	result, err := s.svc.UpdateKecamatan(context.Background(), 1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -1116,7 +1117,7 @@ func (s *MasterAlamatServiceTestSuite) Test_UpdateKecamatan_NotFound() {
 
 	s.repo.On("GetByIDKecamatan", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.UpdateKecamatan(999, req, actor)
+	result, err := s.svc.UpdateKecamatan(context.Background(), 999, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -1132,7 +1133,7 @@ func (s *MasterAlamatServiceTestSuite) Test_UpdateKecamatan_RepoError() {
 	s.repo.On("GetByIDKecamatan", int64(1)).Return(existing, nil)
 	s.repo.On("UpdateKecamatan", mock.AnythingOfType("*models.MasterAlamatKecamatan")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.UpdateKecamatan(1, req, actor)
+	result, err := s.svc.UpdateKecamatan(context.Background(), 1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -1146,7 +1147,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteKecamatan_Superadmin_Success()
 	s.repo.On("GetByIDKecamatan", int64(1)).Return(existing, nil)
 	s.repo.On("DeleteKecamatan", int64(1)).Return(nil)
 
-	err := s.svc.DeleteKecamatan(1, actor)
+	err := s.svc.DeleteKecamatan(context.Background(), 1, actor)
 
 	s.NoError(err)
 	s.repo.AssertExpectations(s.T())
@@ -1156,7 +1157,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteKecamatan_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	err := s.svc.DeleteKecamatan(1, actor)
+	err := s.svc.DeleteKecamatan(context.Background(), 1, actor)
 
 	s.Error(err)
 	var appErr *appErrors.AppError
@@ -1169,7 +1170,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteKecamatan_NotFound() {
 
 	s.repo.On("GetByIDKecamatan", int64(999)).Return(nil, nil)
 
-	err := s.svc.DeleteKecamatan(999, actor)
+	err := s.svc.DeleteKecamatan(context.Background(), 999, actor)
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
@@ -1183,7 +1184,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteKecamatan_RepoError() {
 	s.repo.On("GetByIDKecamatan", int64(1)).Return(existing, nil)
 	s.repo.On("DeleteKecamatan", int64(1)).Return(fmt.Errorf("db error"))
 
-	err := s.svc.DeleteKecamatan(1, actor)
+	err := s.svc.DeleteKecamatan(context.Background(), 1, actor)
 
 	s.Error(err)
 }
@@ -1205,7 +1206,7 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateKelurahanDesa_Superadmin_Succe
 	s.repo.On("GetByIDKecamatan", int64(1)).Return(kecamatan, nil)
 	s.repo.On("CreateKelurahanDesa", mock.AnythingOfType("*models.MasterAlamatKelurahanDesa")).Return(nil)
 
-	result, err := s.svc.CreateKelurahanDesa(req, actor)
+	result, err := s.svc.CreateKelurahanDesa(context.Background(), req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -1217,7 +1218,7 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateKelurahanDesa_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.CreateKelurahanDesa(req, actor)
+	result, err := s.svc.CreateKelurahanDesa(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -1236,7 +1237,7 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateKelurahanDesa_KecamatanNotFoun
 
 	s.repo.On("GetByIDKecamatan", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.CreateKelurahanDesa(req, actor)
+	result, err := s.svc.CreateKelurahanDesa(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -1256,7 +1257,7 @@ func (s *MasterAlamatServiceTestSuite) Test_CreateKelurahanDesa_RepoError() {
 	s.repo.On("GetByIDKecamatan", int64(1)).Return(kecamatan, nil)
 	s.repo.On("CreateKelurahanDesa", mock.AnythingOfType("*models.MasterAlamatKelurahanDesa")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.CreateKelurahanDesa(req, actor)
+	result, err := s.svc.CreateKelurahanDesa(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -1281,7 +1282,7 @@ func (s *MasterAlamatServiceTestSuite) Test_GetByIDKelurahanDesa_Success() {
 
 	s.repo.On("GetByIDKelurahanDesa", int64(1)).Return(item, nil)
 
-	result, err := s.svc.GetByIDKelurahanDesa(1)
+	result, err := s.svc.GetByIDKelurahanDesa(context.Background(), 1)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -1294,7 +1295,7 @@ func (s *MasterAlamatServiceTestSuite) Test_GetByIDKelurahanDesa_Success() {
 func (s *MasterAlamatServiceTestSuite) Test_GetByIDKelurahanDesa_NotFound() {
 	s.repo.On("GetByIDKelurahanDesa", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.GetByIDKelurahanDesa(999)
+	result, err := s.svc.GetByIDKelurahanDesa(context.Background(), 999)
 
 	s.Nil(result)
 	s.Error(err)
@@ -1304,7 +1305,7 @@ func (s *MasterAlamatServiceTestSuite) Test_GetByIDKelurahanDesa_NotFound() {
 func (s *MasterAlamatServiceTestSuite) Test_GetByIDKelurahanDesa_RepoError() {
 	s.repo.On("GetByIDKelurahanDesa", int64(1)).Return(nil, fmt.Errorf("db error"))
 
-	result, err := s.svc.GetByIDKelurahanDesa(1)
+	result, err := s.svc.GetByIDKelurahanDesa(context.Background(), 1)
 
 	s.Nil(result)
 	s.Error(err)
@@ -1318,7 +1319,7 @@ func (s *MasterAlamatServiceTestSuite) Test_ListKelurahanDesa_Success() {
 
 	s.repo.On("ListKelurahanDesa", 1, 10, (*int64)(nil), filter).Return(items, int64(1), nil)
 
-	result, total, err := s.svc.ListKelurahanDesa(1, 10, nil, filter)
+	result, total, err := s.svc.ListKelurahanDesa(context.Background(), 1, 10, nil, filter)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
@@ -1330,7 +1331,7 @@ func (s *MasterAlamatServiceTestSuite) Test_ListKelurahanDesa_NotFound() {
 
 	s.repo.On("ListKelurahanDesa", 1, 10, (*int64)(nil), filter).Return([]models.MasterAlamatKelurahanDesa{}, int64(0), nil)
 
-	result, total, err := s.svc.ListKelurahanDesa(1, 10, nil, filter)
+	result, total, err := s.svc.ListKelurahanDesa(context.Background(), 1, 10, nil, filter)
 
 	s.Nil(result)
 	s.Equal(int64(0), total)
@@ -1347,7 +1348,7 @@ func (s *MasterAlamatServiceTestSuite) Test_UpdateKelurahanDesa_Superadmin_Succe
 	s.repo.On("GetByIDKelurahanDesa", int64(1)).Return(existing, nil)
 	s.repo.On("UpdateKelurahanDesa", mock.AnythingOfType("*models.MasterAlamatKelurahanDesa")).Return(nil)
 
-	result, err := s.svc.UpdateKelurahanDesa(1, req, actor)
+	result, err := s.svc.UpdateKelurahanDesa(context.Background(), 1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -1359,7 +1360,7 @@ func (s *MasterAlamatServiceTestSuite) Test_UpdateKelurahanDesa_Forbidden() {
 	req := &dto.UpdateKelurahanDesaRequest{}
 	s.mockNoPermissions()
 
-	result, err := s.svc.UpdateKelurahanDesa(1, req, actor)
+	result, err := s.svc.UpdateKelurahanDesa(context.Background(), 1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -1374,7 +1375,7 @@ func (s *MasterAlamatServiceTestSuite) Test_UpdateKelurahanDesa_NotFound() {
 
 	s.repo.On("GetByIDKelurahanDesa", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.UpdateKelurahanDesa(999, req, actor)
+	result, err := s.svc.UpdateKelurahanDesa(context.Background(), 999, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -1395,7 +1396,7 @@ func (s *MasterAlamatServiceTestSuite) Test_UpdateKelurahanDesa_PartialFields() 
 		return m.Name == originalName && *m.PostalCode == newPostal
 	})).Return(nil)
 
-	result, err := s.svc.UpdateKelurahanDesa(1, req, actor)
+	result, err := s.svc.UpdateKelurahanDesa(context.Background(), 1, req, actor)
 
 	s.NoError(err)
 	s.Equal(originalName, result.Name)
@@ -1411,7 +1412,7 @@ func (s *MasterAlamatServiceTestSuite) Test_UpdateKelurahanDesa_RepoError() {
 	s.repo.On("GetByIDKelurahanDesa", int64(1)).Return(existing, nil)
 	s.repo.On("UpdateKelurahanDesa", mock.AnythingOfType("*models.MasterAlamatKelurahanDesa")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.UpdateKelurahanDesa(1, req, actor)
+	result, err := s.svc.UpdateKelurahanDesa(context.Background(), 1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -1425,7 +1426,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteKelurahanDesa_Superadmin_Succe
 	s.repo.On("GetByIDKelurahanDesa", int64(1)).Return(existing, nil)
 	s.repo.On("DeleteKelurahanDesa", int64(1)).Return(nil)
 
-	err := s.svc.DeleteKelurahanDesa(1, actor)
+	err := s.svc.DeleteKelurahanDesa(context.Background(), 1, actor)
 
 	s.NoError(err)
 	s.repo.AssertExpectations(s.T())
@@ -1435,7 +1436,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteKelurahanDesa_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	err := s.svc.DeleteKelurahanDesa(1, actor)
+	err := s.svc.DeleteKelurahanDesa(context.Background(), 1, actor)
 
 	s.Error(err)
 	var appErr *appErrors.AppError
@@ -1448,7 +1449,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteKelurahanDesa_NotFound() {
 
 	s.repo.On("GetByIDKelurahanDesa", int64(999)).Return(nil, nil)
 
-	err := s.svc.DeleteKelurahanDesa(999, actor)
+	err := s.svc.DeleteKelurahanDesa(context.Background(), 999, actor)
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
@@ -1462,7 +1463,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteKelurahanDesa_RepoError() {
 	s.repo.On("GetByIDKelurahanDesa", int64(1)).Return(existing, nil)
 	s.repo.On("DeleteKelurahanDesa", int64(1)).Return(fmt.Errorf("db error"))
 
-	err := s.svc.DeleteKelurahanDesa(1, actor)
+	err := s.svc.DeleteKelurahanDesa(context.Background(), 1, actor)
 
 	s.Error(err)
 }

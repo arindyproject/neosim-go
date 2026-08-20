@@ -586,7 +586,7 @@ definitions:
         $ref: '#/definitions/types.DateOnly'
       tipe:
         allOf:
-        - $ref: '#/definitions/dto.TipeSimpelResponse'
+        - $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.TipeSimpelResponse'
         description: TipeID         int64            `json:"tipe_id"`
       updated_at:
         type: string
@@ -611,8 +611,10 @@ definitions:
         type: string
       pegawai_id:
         type: integer
-      tipe_id:
-        type: integer
+      tipe:
+        allOf:
+        - $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_kontak_dto.TipeSimpelResponse'
+        description: TipeID      int64            `json:"tipe_id"`
       updated_at:
         type: string
       updated_by:
@@ -683,6 +685,9 @@ definitions:
       password:
         example: password123
         type: string
+    required:
+    - identifier
+    - password
     type: object
   dto.LogoutRequest:
     properties:
@@ -1014,27 +1019,6 @@ definitions:
         type: string
       updated_by:
         $ref: '#/definitions/httputil.UserData'
-    type: object
-  dto.TipeSimpelResponse:
-    properties:
-      code:
-        type: string
-      description:
-        type: string
-      fhir_system:
-        type: string
-      has_expiry:
-        type: boolean
-      id:
-        type: integer
-      is_nakes:
-        type: boolean
-      is_required:
-        type: boolean
-      label:
-        type: string
-      penerbit:
-        type: string
     type: object
   dto.TokenResponse:
     properties:
@@ -1515,6 +1499,27 @@ definitions:
       updated_by:
         $ref: '#/definitions/httputil.UserData'
     type: object
+  neosim_go_internal_modules_kepegawaian_identifier_dto.TipeSimpelResponse:
+    properties:
+      code:
+        type: string
+      description:
+        type: string
+      fhir_system:
+        type: string
+      has_expiry:
+        type: boolean
+      id:
+        type: integer
+      is_nakes:
+        type: boolean
+      is_required:
+        type: boolean
+      label:
+        type: string
+      penerbit:
+        type: string
+    type: object
   neosim_go_internal_modules_kepegawaian_identifier_dto.UpdateTipeRequest:
     properties:
       code:
@@ -1571,6 +1576,15 @@ definitions:
         type: string
       updated_by:
         $ref: '#/definitions/httputil.UserData'
+    type: object
+  neosim_go_internal_modules_kepegawaian_kontak_dto.TipeSimpelResponse:
+    properties:
+      code:
+        type: string
+      id:
+        type: integer
+      label:
+        type: string
     type: object
   neosim_go_internal_modules_kepegawaian_kontak_dto.UpdateTipeRequest:
     properties:
@@ -2816,6 +2830,14 @@ paths:
       - application/json
       description: Get KepegawaianKontak by :id
       parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
       - description: ID pegawai
         in: path
         name: pegawai_id

@@ -1,6 +1,7 @@
 package mocks
 
 import (
+	"context"
 	"neosim_go/internal/modules/auth/dto"
 
 	"github.com/stretchr/testify/mock"
@@ -11,6 +12,7 @@ type MockAuthService struct {
 }
 
 func (m *MockAuthService) Login(
+	ctx context.Context,
 	req *dto.LoginRequest,
 	ip,
 	userAgent string,
@@ -27,6 +29,7 @@ func (m *MockAuthService) Login(
 }
 
 func (m *MockAuthService) Register(
+	ctx context.Context,
 	req *dto.RegisterRequest,
 ) (*dto.RegisterResponse, error) {
 
@@ -41,6 +44,7 @@ func (m *MockAuthService) Register(
 }
 
 func (m *MockAuthService) RefreshToken(
+	ctx context.Context,
 	req *dto.RefreshTokenRequest,
 ) (*dto.TokenResponse, error) {
 
@@ -55,6 +59,7 @@ func (m *MockAuthService) RefreshToken(
 }
 
 func (m *MockAuthService) Logout(
+	ctx context.Context,
 	req *dto.LogoutRequest,
 ) error {
 
@@ -63,6 +68,7 @@ func (m *MockAuthService) Logout(
 }
 
 func (m *MockAuthService) LogoutAll(
+	ctx context.Context,
 	userID int64,
 ) error {
 
@@ -71,6 +77,7 @@ func (m *MockAuthService) LogoutAll(
 }
 
 func (m *MockAuthService) ForgotPassword(
+	ctx context.Context,
 	req *dto.ForgotPasswordRequest,
 ) error {
 
@@ -79,6 +86,7 @@ func (m *MockAuthService) ForgotPassword(
 }
 
 func (m *MockAuthService) ResetPassword(
+	ctx context.Context,
 	req *dto.ResetPasswordRequest,
 ) error {
 

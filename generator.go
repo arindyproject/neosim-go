@@ -1620,6 +1620,7 @@ func (r *registryModule) MigrateSQL(sqlDB *sql.DB) error {
 var tmplModuleServiceMock = `package mocks
 
 import (
+	"context"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
 	"github.com/stretchr/testify/mock"
@@ -1633,12 +1634,12 @@ type {{.ModuleTitle}}RepositoryMock struct {
 	mock.Mock
 }
 
-func (m *{{.ModuleTitle}}RepositoryMock) Create{{.MethodSuffix}}(item *models.{{.ModuleTitle}}) error {
+func (m *{{.ModuleTitle}}RepositoryMock) Create{{.MethodSuffix}}(ctx context.Context,item *models.{{.ModuleTitle}}) error {
 	args := m.Called(item)
 	return args.Error(0)
 }
 
-func (m *{{.ModuleTitle}}RepositoryMock) Get{{.MethodSuffix}}ByID(id int64) (*models.{{.ModuleTitle}}, error) {
+func (m *{{.ModuleTitle}}RepositoryMock) Get{{.MethodSuffix}}ByID(ctx context.Context,id int64) (*models.{{.ModuleTitle}}, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -1646,7 +1647,7 @@ func (m *{{.ModuleTitle}}RepositoryMock) Get{{.MethodSuffix}}ByID(id int64) (*mo
 	return args.Get(0).(*models.{{.ModuleTitle}}), args.Error(1)
 }
 
-func (m *{{.ModuleTitle}}RepositoryMock) GetByIDs(ids []int64) ([]models.{{.ModuleTitle}}, error) {
+func (m *{{.ModuleTitle}}RepositoryMock) GetByIDs(ctx context.Context,ids []int64) ([]models.{{.ModuleTitle}}, error) {
 	args := m.Called(ids)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -1654,17 +1655,17 @@ func (m *{{.ModuleTitle}}RepositoryMock) GetByIDs(ids []int64) ([]models.{{.Modu
 	return args.Get(0).([]models.{{.ModuleTitle}}), args.Error(1)
 }
 
-func (m *{{.ModuleTitle}}RepositoryMock) List{{.MethodSuffix}}(page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request) ([]models.{{.ModuleTitle}}, int64, error) {
+func (m *{{.ModuleTitle}}RepositoryMock) List{{.MethodSuffix}}(ctx context.Context,page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request) ([]models.{{.ModuleTitle}}, int64, error) {
 	args := m.Called(page, pageSize, filter)
 	return args.Get(0).([]models.{{.ModuleTitle}}), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *{{.ModuleTitle}}RepositoryMock) Update{{.MethodSuffix}}(item *models.{{.ModuleTitle}}) error {
+func (m *{{.ModuleTitle}}RepositoryMock) Update{{.MethodSuffix}}(ctx context.Context,item *models.{{.ModuleTitle}}) error {
 	args := m.Called(item)
 	return args.Error(0)
 }
 
-func (m *{{.ModuleTitle}}RepositoryMock) Delete{{.MethodSuffix}}(id int64) error {
+func (m *{{.ModuleTitle}}RepositoryMock) Delete{{.MethodSuffix}}(ctx context.Context,id int64) error {
 	args := m.Called(id)
 	return args.Error(0)
 }
@@ -1673,6 +1674,7 @@ func (m *{{.ModuleTitle}}RepositoryMock) Delete{{.MethodSuffix}}(id int64) error
 var tmplRBACMock = `package mocks
 
 import (
+	"context"
 	rbacModels "{{.ProjectModule}}/internal/modules/rbac/models"
 	"github.com/stretchr/testify/mock"
 )
@@ -1682,17 +1684,17 @@ type RBACRepositoryMock struct {
 	mock.Mock
 }
 
-func (m *RBACRepositoryMock) IsSuperadmin(userID int64) (bool, error) {
+func (m *RBACRepositoryMock) IsSuperadmin(ctx context.Context,userID int64) (bool, error) {
 	args := m.Called(userID)
 	return args.Bool(0), args.Error(1)
 }
 
-func (m *RBACRepositoryMock) CreatePermission(p *rbacModels.Permission) error {
+func (m *RBACRepositoryMock) CreatePermission(ctx context.Context,p *rbacModels.Permission) error {
 	args := m.Called(p)
 	return args.Error(0)
 }
 
-func (m *RBACRepositoryMock) GetPermissionByID(id int64) (*rbacModels.Permission, error) {
+func (m *RBACRepositoryMock) GetPermissionByID(ctx context.Context,id int64) (*rbacModels.Permission, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -1700,7 +1702,7 @@ func (m *RBACRepositoryMock) GetPermissionByID(id int64) (*rbacModels.Permission
 	return args.Get(0).(*rbacModels.Permission), args.Error(1)
 }
 
-func (m *RBACRepositoryMock) GetPermissionByName(name string) (*rbacModels.Permission, error) {
+func (m *RBACRepositoryMock) GetPermissionByName(ctx context.Context,name string) (*rbacModels.Permission, error) {
 	args := m.Called(name)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -1708,27 +1710,27 @@ func (m *RBACRepositoryMock) GetPermissionByName(name string) (*rbacModels.Permi
 	return args.Get(0).(*rbacModels.Permission), args.Error(1)
 }
 
-func (m *RBACRepositoryMock) ListPermissions(page, pageSize int) ([]rbacModels.Permission, int64, error) {
+func (m *RBACRepositoryMock) ListPermissions(ctx context.Context,page, pageSize int) ([]rbacModels.Permission, int64, error) {
 	args := m.Called(page, pageSize)
 	return args.Get(0).([]rbacModels.Permission), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *RBACRepositoryMock) UpdatePermission(p *rbacModels.Permission) error {
+func (m *RBACRepositoryMock) UpdatePermission(ctx context.Context,p *rbacModels.Permission) error {
 	args := m.Called(p)
 	return args.Error(0)
 }
 
-func (m *RBACRepositoryMock) DeletePermission(id int64) error {
+func (m *RBACRepositoryMock) DeletePermission(ctx context.Context,id int64) error {
 	args := m.Called(id)
 	return args.Error(0)
 }
 
-func (m *RBACRepositoryMock) CreateRole(r *rbacModels.Role) error {
+func (m *RBACRepositoryMock) CreateRole(ctx context.Context,r *rbacModels.Role) error {
 	args := m.Called(r)
 	return args.Error(0)
 }
 
-func (m *RBACRepositoryMock) GetRoleByID(id int64) (*rbacModels.Role, error) {
+func (m *RBACRepositoryMock) GetRoleByID(ctx context.Context,id int64) (*rbacModels.Role, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -1736,7 +1738,7 @@ func (m *RBACRepositoryMock) GetRoleByID(id int64) (*rbacModels.Role, error) {
 	return args.Get(0).(*rbacModels.Role), args.Error(1)
 }
 
-func (m *RBACRepositoryMock) GetRoleByName(name string) (*rbacModels.Role, error) {
+func (m *RBACRepositoryMock) GetRoleByName(ctx context.Context,name string) (*rbacModels.Role, error) {
 	args := m.Called(name)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -1744,87 +1746,87 @@ func (m *RBACRepositoryMock) GetRoleByName(name string) (*rbacModels.Role, error
 	return args.Get(0).(*rbacModels.Role), args.Error(1)
 }
 
-func (m *RBACRepositoryMock) ListRoles(page, pageSize int) ([]rbacModels.Role, int64, error) {
+func (m *RBACRepositoryMock) ListRoles(ctx context.Context,page, pageSize int) ([]rbacModels.Role, int64, error) {
 	args := m.Called(page, pageSize)
 	return args.Get(0).([]rbacModels.Role), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *RBACRepositoryMock) UpdateRole(r *rbacModels.Role) error {
+func (m *RBACRepositoryMock) UpdateRole(ctx context.Context,r *rbacModels.Role) error {
 	args := m.Called(r)
 	return args.Error(0)
 }
 
-func (m *RBACRepositoryMock) DeleteRole(id int64) error {
+func (m *RBACRepositoryMock) DeleteRole(ctx context.Context,id int64) error {
 	args := m.Called(id)
 	return args.Error(0)
 }
 
-func (m *RBACRepositoryMock) GetUsersRoles(userIDs []int64) (map[int64][]rbacModels.Role, error) {
+func (m *RBACRepositoryMock) GetUsersRoles(ctx context.Context,userIDs []int64) (map[int64][]rbacModels.Role, error) {
 	args := m.Called(userIDs)
 	return args.Get(0).(map[int64][]rbacModels.Role), args.Error(1)
 }
 
-func (m *RBACRepositoryMock) AssignPermissionsToRole(roleID int64, permissionIDs []int64) error {
+func (m *RBACRepositoryMock) AssignPermissionsToRole(ctx context.Context,roleID int64, permissionIDs []int64) error {
 	args := m.Called(roleID, permissionIDs)
 	return args.Error(0)
 }
 
-func (m *RBACRepositoryMock) RevokePermissionsFromRole(roleID int64, permissionIDs []int64) error {
+func (m *RBACRepositoryMock) RevokePermissionsFromRole(ctx context.Context,roleID int64, permissionIDs []int64) error {
 	args := m.Called(roleID, permissionIDs)
 	return args.Error(0)
 }
 
-func (m *RBACRepositoryMock) GetRolePermissions(roleID int64) ([]rbacModels.Permission, error) {
+func (m *RBACRepositoryMock) GetRolePermissions(ctx context.Context,roleID int64) ([]rbacModels.Permission, error) {
 	args := m.Called(roleID)
 	return args.Get(0).([]rbacModels.Permission), args.Error(1)
 }
 
-func (m *RBACRepositoryMock) SyncRolePermissions(roleID int64, permissionIDs []int64) error {
+func (m *RBACRepositoryMock) SyncRolePermissions(ctx context.Context,roleID int64, permissionIDs []int64) error {
 	args := m.Called(roleID, permissionIDs)
 	return args.Error(0)
 }
 
-func (m *RBACRepositoryMock) AssignRolesToUser(userID int64, roleIDs []int64, assignedBy *int64) error {
+func (m *RBACRepositoryMock) AssignRolesToUser(ctx context.Context,userID int64, roleIDs []int64, assignedBy *int64) error {
 	args := m.Called(userID, roleIDs, assignedBy)
 	return args.Error(0)
 }
 
-func (m *RBACRepositoryMock) RevokeRolesFromUser(userID int64, roleIDs []int64) error {
+func (m *RBACRepositoryMock) RevokeRolesFromUser(ctx context.Context,userID int64, roleIDs []int64) error {
 	args := m.Called(userID, roleIDs)
 	return args.Error(0)
 }
 
-func (m *RBACRepositoryMock) GetUserRoles(userID int64) ([]rbacModels.Role, error) {
+func (m *RBACRepositoryMock) GetUserRoles(ctx context.Context,userID int64) ([]rbacModels.Role, error) {
 	args := m.Called(userID)
 	return args.Get(0).([]rbacModels.Role), args.Error(1)
 }
 
-func (m *RBACRepositoryMock) SyncUserRoles(userID int64, roleIDs []int64, assignedBy *int64) error {
+func (m *RBACRepositoryMock) SyncUserRoles(ctx context.Context,userID int64, roleIDs []int64, assignedBy *int64) error {
 	args := m.Called(userID, roleIDs, assignedBy)
 	return args.Error(0)
 }
 
-func (m *RBACRepositoryMock) AssignDirectPermission(userID, permissionID int64, isGranted bool, assignedBy *int64) error {
+func (m *RBACRepositoryMock) AssignDirectPermission(ctx context.Context,userID, permissionID int64, isGranted bool, assignedBy *int64) error {
 	args := m.Called(userID, permissionID, isGranted, assignedBy)
 	return args.Error(0)
 }
 
-func (m *RBACRepositoryMock) RevokeDirectPermission(userID, permissionID int64) error {
+func (m *RBACRepositoryMock) RevokeDirectPermission(ctx context.Context,userID, permissionID int64) error {
 	args := m.Called(userID, permissionID)
 	return args.Error(0)
 }
 
-func (m *RBACRepositoryMock) GetUserDirectPermissions(userID int64) ([]rbacModels.UserPermission, error) {
+func (m *RBACRepositoryMock) GetUserDirectPermissions(ctx context.Context,userID int64) ([]rbacModels.UserPermission, error) {
 	args := m.Called(userID)
 	return args.Get(0).([]rbacModels.UserPermission), args.Error(1)
 }
 
-func (m *RBACRepositoryMock) GetUserAllPermissions(userID int64) ([]string, error) {
+func (m *RBACRepositoryMock) GetUserAllPermissions(ctx context.Context,userID int64) ([]string, error) {
 	args := m.Called(userID)
 	return args.Get(0).([]string), args.Error(1)
 }
 
-func (m *RBACRepositoryMock) HasPermission(userID int64, permission string) (bool, error) {
+func (m *RBACRepositoryMock) HasPermission(ctx context.Context,userID int64, permission string) (bool, error) {
 	args := m.Called(userID, permission)
 	return args.Bool(0), args.Error(1)
 }
@@ -1833,6 +1835,7 @@ func (m *RBACRepositoryMock) HasPermission(userID int64, permission string) (boo
 var tmplAuthMock = `package mocks
 
 import (
+	"context"
 	authModels "{{.ProjectModule}}/internal/modules/auth/models"
 	"github.com/stretchr/testify/mock"
 )
@@ -1842,12 +1845,12 @@ type AuthRepositoryMock struct {
 	mock.Mock
 }
 
-func (m *AuthRepositoryMock) SaveToken(token *authModels.AuthToken) error {
+func (m *AuthRepositoryMock) SaveToken(ctx context.Context,token *authModels.AuthToken) error {
 	args := m.Called(token)
 	return args.Error(0)
 }
 
-func (m *AuthRepositoryMock) GetTokenByJTI(jti string) (*authModels.AuthToken, error) {
+func (m *AuthRepositoryMock) GetTokenByJTI(ctx context.Context,jti string) (*authModels.AuthToken, error) {
 	args := m.Called(jti)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -1855,37 +1858,37 @@ func (m *AuthRepositoryMock) GetTokenByJTI(jti string) (*authModels.AuthToken, e
 	return args.Get(0).(*authModels.AuthToken), args.Error(1)
 }
 
-func (m *AuthRepositoryMock) BlacklistToken(jti string) error {
+func (m *AuthRepositoryMock) BlacklistToken(ctx context.Context,jti string) error {
 	args := m.Called(jti)
 	return args.Error(0)
 }
 
-func (m *AuthRepositoryMock) BlacklistAllUserTokens(userID int64) error {
+func (m *AuthRepositoryMock) BlacklistAllUserTokens(ctx context.Context,userID int64) error {
 	args := m.Called(userID)
 	return args.Error(0)
 }
 
-func (m *AuthRepositoryMock) CountActiveTokens(userID int64) (int64, error) {
+func (m *AuthRepositoryMock) CountActiveTokens(ctx context.Context,userID int64) (int64, error) {
 	args := m.Called(userID)
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *AuthRepositoryMock) SaveLoginHistory(history *authModels.LoginHistory) error {
+func (m *AuthRepositoryMock) SaveLoginHistory(ctx context.Context,history *authModels.LoginHistory) error {
 	args := m.Called(history)
 	return args.Error(0)
 }
 
-func (m *AuthRepositoryMock) GetUserLoginHistories(userID int64, limit int) ([]authModels.LoginHistory, error) {
+func (m *AuthRepositoryMock) GetUserLoginHistories(ctx context.Context,userID int64, limit int) ([]authModels.LoginHistory, error) {
 	args := m.Called(userID, limit)
 	return args.Get(0).([]authModels.LoginHistory), args.Error(1)
 }
 
-func (m *AuthRepositoryMock) SavePasswordHistory(history *authModels.PasswordHistory) error {
+func (m *AuthRepositoryMock) SavePasswordHistory(ctx context.Context,history *authModels.PasswordHistory) error {
 	args := m.Called(history)
 	return args.Error(0)
 }
 
-func (m *AuthRepositoryMock) GetPasswordHistories(userID int64, limit int) ([]authModels.PasswordHistory, error) {
+func (m *AuthRepositoryMock) GetPasswordHistories(ctx context.Context,userID int64, limit int) ([]authModels.PasswordHistory, error) {
 	args := m.Called(userID, limit)
 	return args.Get(0).([]authModels.PasswordHistory), args.Error(1)
 }
@@ -1894,6 +1897,7 @@ func (m *AuthRepositoryMock) GetPasswordHistories(userID int64, limit int) ([]au
 var tmplUserMock = `package mocks
 
 import (
+	"context"
 	userDto    "{{.ProjectModule}}/internal/modules/users/dto"
 	userModels "{{.ProjectModule}}/internal/modules/users/models"
 	"github.com/stretchr/testify/mock"
@@ -1904,12 +1908,18 @@ type UserRepositoryMock struct {
 	mock.Mock
 }
 
-func (m *UserRepositoryMock) Create(user *userModels.User) error {
-	args := m.Called(user)
-	return args.Error(0)
+func (m *UserRepositoryMock) GetByIDs(ctx context.Context, ids []int64) ([]userModels.User, error) {
+	args := m.Called(ids)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]userModels.User), args.Error(1)
 }
 
-func (m *UserRepositoryMock) GetByID(id int64) (*userModels.User, error) {
+
+
+
+func (m *UserRepositoryMock) GetByID(ctx context.Context,id int64) (*userModels.User, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -1917,7 +1927,12 @@ func (m *UserRepositoryMock) GetByID(id int64) (*userModels.User, error) {
 	return args.Get(0).(*userModels.User), args.Error(1)
 }
 
-func (m *UserRepositoryMock) GetByUsername(username string) (*userModels.User, error) {
+func (m *UserRepositoryMock) Create(ctx context.Context,user *userModels.User) error {
+	args := m.Called(user)
+	return args.Error(0)
+}
+
+func (m *UserRepositoryMock) GetByUsername(ctx context.Context,username string) (*userModels.User, error) {
 	args := m.Called(username)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -1925,7 +1940,7 @@ func (m *UserRepositoryMock) GetByUsername(username string) (*userModels.User, e
 	return args.Get(0).(*userModels.User), args.Error(1)
 }
 
-func (m *UserRepositoryMock) GetByEmail(email string) (*userModels.User, error) {
+func (m *UserRepositoryMock) GetByEmail(ctx context.Context,email string) (*userModels.User, error) {
 	args := m.Called(email)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -1933,7 +1948,7 @@ func (m *UserRepositoryMock) GetByEmail(email string) (*userModels.User, error) 
 	return args.Get(0).(*userModels.User), args.Error(1)
 }
 
-func (m *UserRepositoryMock) List(page, pageSize int, filter *userDto.UserFilter) ([]userModels.User, int64, error) {
+func (m *UserRepositoryMock) List(ctx context.Context,page, pageSize int, filter *userDto.UserFilter) ([]userModels.User, int64, error) {
 	args := m.Called(page, pageSize, filter)
 	var users []userModels.User
 	if args.Get(0) != nil {
@@ -1942,17 +1957,17 @@ func (m *UserRepositoryMock) List(page, pageSize int, filter *userDto.UserFilter
 	return users, args.Get(1).(int64), args.Error(2)
 }
 
-func (m *UserRepositoryMock) Update(user *userModels.User) error {
+func (m *UserRepositoryMock) Update(ctx context.Context,user *userModels.User) error {
 	args := m.Called(user)
 	return args.Error(0)
 }
 
-func (m *UserRepositoryMock) Delete(id int64, deletedBy int64, reason string) error {
+func (m *UserRepositoryMock) Delete(ctx context.Context,id int64, deletedBy int64, reason string) error {
 	args := m.Called(id, deletedBy, reason)
 	return args.Error(0)
 }
 
-func (m *UserRepositoryMock) DeletedList(page, pageSize int, filter *userDto.UserDeletedFilter) ([]userModels.User, int64, error) {
+func (m *UserRepositoryMock) DeletedList(ctx context.Context,page, pageSize int, filter *userDto.UserDeletedFilter) ([]userModels.User, int64, error) {
 	args := m.Called(page, pageSize, filter)
 	var users []userModels.User
 	if args.Get(0) != nil {
@@ -1961,7 +1976,7 @@ func (m *UserRepositoryMock) DeletedList(page, pageSize int, filter *userDto.Use
 	return users, args.Get(1).(int64), args.Error(2)
 }
 
-func (m *UserRepositoryMock) GetSettings(id int64) ([]userModels.UserSetting, error) {
+func (m *UserRepositoryMock) GetSettings(ctx context.Context,id int64) ([]userModels.UserSetting, error) {
 	args := m.Called(id)
 	var settings []userModels.UserSetting
 	if args.Get(0) != nil {
@@ -1970,7 +1985,7 @@ func (m *UserRepositoryMock) GetSettings(id int64) ([]userModels.UserSetting, er
 	return settings, args.Error(1)
 }
 
-func (m *UserRepositoryMock) UpdateSettings(id int64, settings []userModels.UserSetting) error {
+func (m *UserRepositoryMock) UpdateSettings(ctx context.Context,id int64, settings []userModels.UserSetting) error {
 	args := m.Called(id, settings)
 	return args.Error(0)
 }
@@ -1979,6 +1994,7 @@ func (m *UserRepositoryMock) UpdateSettings(id int64, settings []userModels.User
 var tmplModuleServiceTest = `package tests
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -2035,12 +2051,16 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) SetupTest() {
 	s.rbacRepo = new(mocks.RBACRepositoryMock)
 	s.authRepo = new(mocks.AuthRepositoryMock)
 	s.userRepo = new(mocks.UserRepositoryMock)
-	s.cfg      = &config.Config{}
+	s.cfg = &config.Config{
+		DefaultPageSize:    10,
+		DefaultPageSizeMax: 10,
+	}
 	s.svc = services.New{{.ModuleTitle}}Service(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.cfg)
 
 	// Stub default agar buildCreator/buildAuditMaps tidak panic saat memanggil userRepo.
 	// Boleh dipanggil 0 kali atau lebih (.Maybe()) tergantung skenario test.
 	s.userRepo.On("GetByID", mock.Anything).Return(nil, nil).Maybe()
+	s.userRepo.On("GetByIDs", mock.Anything).Return(nil, nil).Maybe()
 }
 
 func Test{{.ModuleTitle}}Service(t *testing.T) {
@@ -2069,7 +2089,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Create{{.MethodSuffix}}_Superadm
 
 	s.repo.On("Create{{.MethodSuffix}}", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(nil)
 
-	result, err := s.svc.Create{{.MethodSuffix}}(req, actor)
+	result, err := s.svc.Create{{.MethodSuffix}}(context.Background(), req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -2084,7 +2104,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Create{{.MethodSuffix}}_WithPerm
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(true, nil)
 	s.repo.On("Create{{.MethodSuffix}}", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(nil)
 
-	result, err := s.svc.Create{{.MethodSuffix}}(req, actor)
+	result, err := s.svc.Create{{.MethodSuffix}}(context.Background(),req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -2099,7 +2119,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Create{{.MethodSuffix}}_WithMana
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyManage).Return(true, nil)
 	s.repo.On("Create{{.MethodSuffix}}", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(nil)
 
-	result, err := s.svc.Create{{.MethodSuffix}}(req, actor)
+	result, err := s.svc.Create{{.MethodSuffix}}(context.Background(),req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -2110,7 +2130,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Create{{.MethodSuffix}}_Forbidde
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.Create{{.MethodSuffix}}(req, actor)
+	result, err := s.svc.Create{{.MethodSuffix}}(context.Background(),req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -2125,7 +2145,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Create{{.MethodSuffix}}_RepoErro
 
 	s.repo.On("Create{{.MethodSuffix}}", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.Create{{.MethodSuffix}}(req, actor)
+	result, err := s.svc.Create{{.MethodSuffix}}(context.Background(),req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -2138,7 +2158,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Get{{.MethodSuffix}}ByID_Superad
 
 	s.repo.On("Get{{.MethodSuffix}}ByID", int64(1)).Return(item, nil)
 
-	result, err := s.svc.Get{{.MethodSuffix}}ByID(1, actor)
+	result, err := s.svc.Get{{.MethodSuffix}}ByID(context.Background(),1, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -2154,7 +2174,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Get{{.MethodSuffix}}ByID_WithPer
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyRead).Return(true, nil)
 	s.repo.On("Get{{.MethodSuffix}}ByID", int64(1)).Return(item, nil)
 
-	result, err := s.svc.Get{{.MethodSuffix}}ByID(1, actor)
+	result, err := s.svc.Get{{.MethodSuffix}}ByID(context.Background(),1, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -2164,7 +2184,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Get{{.MethodSuffix}}ByID_Forbidd
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.Get{{.MethodSuffix}}ByID(1, actor)
+	result, err := s.svc.Get{{.MethodSuffix}}ByID(context.Background(),1, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -2178,7 +2198,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Get{{.MethodSuffix}}ByID_NotFoun
 
 	s.repo.On("Get{{.MethodSuffix}}ByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.Get{{.MethodSuffix}}ByID(999, actor)
+	result, err := s.svc.Get{{.MethodSuffix}}ByID(context.Background(),999, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -2190,7 +2210,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Get{{.MethodSuffix}}ByID_RepoErr
 
 	s.repo.On("Get{{.MethodSuffix}}ByID", int64(1)).Return(nil, fmt.Errorf("db error"))
 
-	result, err := s.svc.Get{{.MethodSuffix}}ByID(1, actor)
+	result, err := s.svc.Get{{.MethodSuffix}}ByID(context.Background(),1, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -2206,7 +2226,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_List{{.MethodSuffix}}_Superadmin
 
 	s.repo.On("List{{.MethodSuffix}}", 1, 10, filter).Return(items, int64(2), nil)
 
-	result, total, err := s.svc.List{{.MethodSuffix}}(1, 10, filter, actor)
+	result, total, err := s.svc.List{{.MethodSuffix}}(context.Background(),1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(2), total)
@@ -2221,7 +2241,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_List{{.MethodSuffix}}_WithPermis
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyRead).Return(true, nil)
 	s.repo.On("List{{.MethodSuffix}}", 1, 10, filter).Return(items, int64(1), nil)
 
-	result, total, err := s.svc.List{{.MethodSuffix}}(1, 10, filter, actor)
+	result, total, err := s.svc.List{{.MethodSuffix}}(context.Background(),1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
@@ -2233,7 +2253,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_List{{.MethodSuffix}}_Forbidden(
 	filter := &dto.Filter{{.ModuleTitle}}Request{}
 	s.mockNoPermissions()
 
-	result, total, err := s.svc.List{{.MethodSuffix}}(1, 10, filter, actor)
+	result, total, err := s.svc.List{{.MethodSuffix}}(context.Background(),1, 10, filter, actor)
 
 	s.Nil(result)
 	s.Equal(int64(0), total)
@@ -2249,7 +2269,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_List{{.MethodSuffix}}_DefaultPag
 
 	s.repo.On("List{{.MethodSuffix}}", 1, 10, filter).Return([]models.{{.ModuleTitle}}{}, int64(0), nil)
 
-	result, total, err := s.svc.List{{.MethodSuffix}}(0, 0, filter, actor)
+	result, total, err := s.svc.List{{.MethodSuffix}}(context.Background(),0, 0, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(0), total)
@@ -2262,7 +2282,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_List{{.MethodSuffix}}_PageSizeCa
 
 	s.repo.On("List{{.MethodSuffix}}", 1, 10, filter).Return([]models.{{.ModuleTitle}}{}, int64(0), nil)
 
-	_, _, err := s.svc.List{{.MethodSuffix}}(1, 999, filter, actor)
+	_, _, err := s.svc.List{{.MethodSuffix}}(context.Background(),1, 999, filter, actor)
 
 	s.NoError(err)
 	s.repo.AssertCalled(s.T(), "List{{.MethodSuffix}}", 1, 10, filter)
@@ -2275,7 +2295,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_List{{.MethodSuffix}}_WithNameFi
 
 	s.repo.On("List{{.MethodSuffix}}", 1, 10, filter).Return(items, int64(1), nil)
 
-	result, total, err := s.svc.List{{.MethodSuffix}}(1, 10, filter, actor)
+	result, total, err := s.svc.List{{.MethodSuffix}}(context.Background(),1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
@@ -2292,7 +2312,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update{{.MethodSuffix}}_Superadm
 	s.repo.On("Get{{.MethodSuffix}}ByID", int64(1)).Return(existing, nil)
 	s.repo.On("Update{{.MethodSuffix}}", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(nil)
 
-	result, err := s.svc.Update{{.MethodSuffix}}(1, req, actor)
+	result, err := s.svc.Update{{.MethodSuffix}}(context.Background(),1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -2310,7 +2330,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update{{.MethodSuffix}}_WithPerm
 	s.repo.On("Get{{.MethodSuffix}}ByID", int64(1)).Return(existing, nil)
 	s.repo.On("Update{{.MethodSuffix}}", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(nil)
 
-	result, err := s.svc.Update{{.MethodSuffix}}(1, req, actor)
+	result, err := s.svc.Update{{.MethodSuffix}}(context.Background(),1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -2321,7 +2341,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update{{.MethodSuffix}}_Forbidde
 	req := &dto.Update{{.ModuleTitle}}Request{}
 	s.mockNoPermissions()
 
-	result, err := s.svc.Update{{.MethodSuffix}}(1, req, actor)
+	result, err := s.svc.Update{{.MethodSuffix}}(context.Background(),1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -2336,7 +2356,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update{{.MethodSuffix}}_NotFound
 
 	s.repo.On("Get{{.MethodSuffix}}ByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.Update{{.MethodSuffix}}(999, req, actor)
+	result, err := s.svc.Update{{.MethodSuffix}}(context.Background(),999, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -2356,7 +2376,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update{{.MethodSuffix}}_PartialF
 		return m.Name == originalName && *m.Description == newDesc
 	})).Return(nil)
 
-	result, err := s.svc.Update{{.MethodSuffix}}(1, req, actor)
+	result, err := s.svc.Update{{.MethodSuffix}}(context.Background(),1, req, actor)
 
 	s.NoError(err)
 	s.Equal(originalName, result.Name)
@@ -2372,7 +2392,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Update{{.MethodSuffix}}_RepoErro
 	s.repo.On("Get{{.MethodSuffix}}ByID", int64(1)).Return(existing, nil)
 	s.repo.On("Update{{.MethodSuffix}}", mock.AnythingOfType("*models.{{.ModuleTitle}}")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.Update{{.MethodSuffix}}(1, req, actor)
+	result, err := s.svc.Update{{.MethodSuffix}}(context.Background(),1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -2386,7 +2406,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Delete{{.MethodSuffix}}_Superadm
 	s.repo.On("Get{{.MethodSuffix}}ByID", int64(1)).Return(existing, nil)
 	s.repo.On("Delete{{.MethodSuffix}}", int64(1)).Return(nil)
 
-	err := s.svc.Delete{{.MethodSuffix}}(1, actor)
+	err := s.svc.Delete{{.MethodSuffix}}(context.Background(),1, actor)
 
 	s.NoError(err)
 	s.repo.AssertExpectations(s.T())
@@ -2401,7 +2421,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Delete{{.MethodSuffix}}_WithPerm
 	s.repo.On("Get{{.MethodSuffix}}ByID", int64(1)).Return(existing, nil)
 	s.repo.On("Delete{{.MethodSuffix}}", int64(1)).Return(nil)
 
-	err := s.svc.Delete{{.MethodSuffix}}(1, actor)
+	err := s.svc.Delete{{.MethodSuffix}}(context.Background(),1, actor)
 
 	s.NoError(err)
 }
@@ -2410,7 +2430,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Delete{{.MethodSuffix}}_Forbidde
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	err := s.svc.Delete{{.MethodSuffix}}(1, actor)
+	err := s.svc.Delete{{.MethodSuffix}}(context.Background(),1, actor)
 
 	s.Error(err)
 	var appErr *appErrors.AppError
@@ -2423,7 +2443,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Delete{{.MethodSuffix}}_NotFound
 
 	s.repo.On("Get{{.MethodSuffix}}ByID", int64(999)).Return(nil, nil)
 
-	err := s.svc.Delete{{.MethodSuffix}}(999, actor)
+	err := s.svc.Delete{{.MethodSuffix}}(context.Background(),999, actor)
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
@@ -2437,7 +2457,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Delete{{.MethodSuffix}}_RepoErro
 	s.repo.On("Get{{.MethodSuffix}}ByID", int64(1)).Return(existing, nil)
 	s.repo.On("Delete{{.MethodSuffix}}", int64(1)).Return(fmt.Errorf("db error"))
 
-	err := s.svc.Delete{{.MethodSuffix}}(1, actor)
+	err := s.svc.Delete{{.MethodSuffix}}(context.Background(),1, actor)
 
 	s.Error(err)
 }
@@ -3272,6 +3292,7 @@ func (s *{{.ItemTitle}}Seeder) seedDefault(name string) error {
 var tmplItemRepositoryMock = `package mocks
 
 import (
+	"context"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
 )
@@ -3279,12 +3300,12 @@ import (
 // Method di bawah ini ditempelkan ke {{.SubModuleTitle}}RepositoryMock yang
 // sama dengan mock entitas utama (lihat tests/mocks/{{.SubModule}}_repository_mock.go).
 
-func (m *{{.SubModuleTitle}}RepositoryMock) Create{{.ItemTitle}}(item *models.{{.ItemTitle}}) error {
+func (m *{{.SubModuleTitle}}RepositoryMock) Create{{.ItemTitle}}(ctx context.Context,item *models.{{.ItemTitle}}) error {
 	args := m.Called(item)
 	return args.Error(0)
 }
 
-func (m *{{.SubModuleTitle}}RepositoryMock) Get{{.ItemTitle}}ByID(id int64) (*models.{{.ItemTitle}}, error) {
+func (m *{{.SubModuleTitle}}RepositoryMock) Get{{.ItemTitle}}ByID(ctx context.Context,id int64) (*models.{{.ItemTitle}}, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -3292,17 +3313,17 @@ func (m *{{.SubModuleTitle}}RepositoryMock) Get{{.ItemTitle}}ByID(id int64) (*mo
 	return args.Get(0).(*models.{{.ItemTitle}}), args.Error(1)
 }
 
-func (m *{{.SubModuleTitle}}RepositoryMock) List{{.ItemTitle}}(page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request) ([]models.{{.ItemTitle}}, int64, error) {
+func (m *{{.SubModuleTitle}}RepositoryMock) List{{.ItemTitle}}(ctx context.Context,page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request) ([]models.{{.ItemTitle}}, int64, error) {
 	args := m.Called(page, pageSize, filter)
 	return args.Get(0).([]models.{{.ItemTitle}}), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *{{.SubModuleTitle}}RepositoryMock) Update{{.ItemTitle}}(item *models.{{.ItemTitle}}) error {
+func (m *{{.SubModuleTitle}}RepositoryMock) Update{{.ItemTitle}}(ctx context.Context,item *models.{{.ItemTitle}}) error {
 	args := m.Called(item)
 	return args.Error(0)
 }
 
-func (m *{{.SubModuleTitle}}RepositoryMock) Delete{{.ItemTitle}}(id int64) error {
+func (m *{{.SubModuleTitle}}RepositoryMock) Delete{{.ItemTitle}}(ctx context.Context,id int64) error {
 	args := m.Called(id)
 	return args.Error(0)
 }
@@ -3311,6 +3332,7 @@ func (m *{{.SubModuleTitle}}RepositoryMock) Delete{{.ItemTitle}}(id int64) error
 var tmplItemServiceTest = `package tests
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -3335,7 +3357,7 @@ func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_Create{{.ItemTitle}}_Superadm
 
 	s.repo.On("Create{{.ItemTitle}}", mock.AnythingOfType("*models.{{.ItemTitle}}")).Return(nil)
 
-	result, err := s.svc.Create{{.ItemTitle}}(req, actor)
+	result, err := s.svc.Create{{.ItemTitle}}(context.Background(),req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -3347,7 +3369,7 @@ func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_Create{{.ItemTitle}}_Forbidde
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.Create{{.ItemTitle}}(req, actor)
+	result, err := s.svc.Create{{.ItemTitle}}(context.Background(),req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -3362,7 +3384,7 @@ func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_Create{{.ItemTitle}}_RepoErro
 
 	s.repo.On("Create{{.ItemTitle}}", mock.AnythingOfType("*models.{{.ItemTitle}}")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.Create{{.ItemTitle}}(req, actor)
+	result, err := s.svc.Create{{.ItemTitle}}(context.Background(),req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -3375,7 +3397,7 @@ func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_Get{{.ItemTitle}}ByID_Success
 
 	s.repo.On("Get{{.ItemTitle}}ByID", int64(1)).Return(item, nil)
 
-	result, err := s.svc.Get{{.ItemTitle}}ByID(1, actor)
+	result, err := s.svc.Get{{.ItemTitle}}ByID(context.Background(),1, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -3387,7 +3409,7 @@ func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_Get{{.ItemTitle}}ByID_NotFoun
 
 	s.repo.On("Get{{.ItemTitle}}ByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.Get{{.ItemTitle}}ByID(999, actor)
+	result, err := s.svc.Get{{.ItemTitle}}ByID(context.Background(),999, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -3398,7 +3420,7 @@ func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_Get{{.ItemTitle}}ByID_Forbidd
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.Get{{.ItemTitle}}ByID(1, actor)
+	result, err := s.svc.Get{{.ItemTitle}}ByID(context.Background(),1, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -3414,7 +3436,7 @@ func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_List{{.ItemTitle}}_Success() 
 
 	s.repo.On("List{{.ItemTitle}}", 1, 10, filter).Return(items, int64(2), nil)
 
-	result, total, err := s.svc.List{{.ItemTitle}}(1, 10, filter, actor)
+	result, total, err := s.svc.List{{.ItemTitle}}(context.Background(),1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(2), total)
@@ -3426,7 +3448,7 @@ func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_List{{.ItemTitle}}_Forbidden(
 	filter := &dto.Filter{{.ItemTitle}}Request{}
 	s.mockNoPermissions()
 
-	result, total, err := s.svc.List{{.ItemTitle}}(1, 10, filter, actor)
+	result, total, err := s.svc.List{{.ItemTitle}}(context.Background(),1, 10, filter, actor)
 
 	s.Nil(result)
 	s.Equal(int64(0), total)
@@ -3446,7 +3468,7 @@ func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_Update{{.ItemTitle}}_Success(
 	s.repo.On("Get{{.ItemTitle}}ByID", int64(1)).Return(existing, nil)
 	s.repo.On("Update{{.ItemTitle}}", mock.AnythingOfType("*models.{{.ItemTitle}}")).Return(nil)
 
-	result, err := s.svc.Update{{.ItemTitle}}(1, req, actor)
+	result, err := s.svc.Update{{.ItemTitle}}(context.Background(),1, req, actor)
 
 	s.NoError(err)
 	s.Equal(newName, result.Name)
@@ -3458,7 +3480,7 @@ func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_Update{{.ItemTitle}}_NotFound
 
 	s.repo.On("Get{{.ItemTitle}}ByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.Update{{.ItemTitle}}(999, req, actor)
+	result, err := s.svc.Update{{.ItemTitle}}(context.Background(),999, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -3470,7 +3492,7 @@ func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_Update{{.ItemTitle}}_Forbidde
 	req := &dto.Update{{.ItemTitle}}Request{}
 	s.mockNoPermissions()
 
-	result, err := s.svc.Update{{.ItemTitle}}(1, req, actor)
+	result, err := s.svc.Update{{.ItemTitle}}(context.Background(),1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -3484,7 +3506,7 @@ func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_Delete{{.ItemTitle}}_Success(
 	s.repo.On("Get{{.ItemTitle}}ByID", int64(1)).Return(existing, nil)
 	s.repo.On("Delete{{.ItemTitle}}", int64(1)).Return(nil)
 
-	err := s.svc.Delete{{.ItemTitle}}(1, actor)
+	err := s.svc.Delete{{.ItemTitle}}(context.Background(),1, actor)
 
 	s.NoError(err)
 }
@@ -3494,7 +3516,7 @@ func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_Delete{{.ItemTitle}}_NotFound
 
 	s.repo.On("Get{{.ItemTitle}}ByID", int64(999)).Return(nil, nil)
 
-	err := s.svc.Delete{{.ItemTitle}}(999, actor)
+	err := s.svc.Delete{{.ItemTitle}}(context.Background(),999, actor)
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
@@ -3504,7 +3526,7 @@ func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_Delete{{.ItemTitle}}_Forbidde
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	err := s.svc.Delete{{.ItemTitle}}(1, actor)
+	err := s.svc.Delete{{.ItemTitle}}(context.Background(),1, actor)
 
 	s.Error(err)
 	var appErr *appErrors.AppError

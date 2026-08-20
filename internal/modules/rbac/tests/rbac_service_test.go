@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -44,33 +45,33 @@ type RBACServiceTestSuite struct {
 	userRepo *mocks.MockUserRepository
 	service  interface {
 		// Permission
-		CreatePermission(req *dto.CreatePermissionRequest, createdBy *int64) (*dto.PermissionResponse, error)
-		GetPermissionByID(id int64) (*dto.PermissionResponse, error)
-		ListPermissions(page, pageSize int) ([]dto.PermissionResponse, int64, error)
-		UpdatePermission(id int64, req *dto.UpdatePermissionRequest, updatedBy *int64) (*dto.PermissionResponse, error)
-		DeletePermission(id int64) error
+		CreatePermission(ctx context.Context, req *dto.CreatePermissionRequest, createdBy *int64) (*dto.PermissionResponse, error)
+		GetPermissionByID(ctx context.Context, id int64) (*dto.PermissionResponse, error)
+		ListPermissions(ctx context.Context, page, pageSize int) ([]dto.PermissionResponse, int64, error)
+		UpdatePermission(ctx context.Context, id int64, req *dto.UpdatePermissionRequest, updatedBy *int64) (*dto.PermissionResponse, error)
+		DeletePermission(ctx context.Context, id int64) error
 		// Role
-		CreateRole(req *dto.CreateRoleRequest, createdBy *int64) (*dto.RoleResponse, error)
-		GetRoleByID(id int64) (*dto.RoleResponse, error)
-		ListRoles(page, pageSize int) ([]dto.RoleResponse, int64, error)
-		UpdateRole(id int64, req *dto.UpdateRoleRequest, updatedBy *int64) (*dto.RoleResponse, error)
-		DeleteRole(id int64) error
+		CreateRole(ctx context.Context, req *dto.CreateRoleRequest, createdBy *int64) (*dto.RoleResponse, error)
+		GetRoleByID(ctx context.Context, id int64) (*dto.RoleResponse, error)
+		ListRoles(ctx context.Context, page, pageSize int) ([]dto.RoleResponse, int64, error)
+		UpdateRole(ctx context.Context, id int64, req *dto.UpdateRoleRequest, updatedBy *int64) (*dto.RoleResponse, error)
+		DeleteRole(ctx context.Context, id int64) error
 		// Role ↔ Permission
-		AssignPermissionsToRole(roleID int64, req *dto.AssignPermissionsRequest) error
-		RevokePermissionsFromRole(roleID int64, req *dto.AssignPermissionsRequest) error
-		SyncRolePermissions(roleID int64, req *dto.AssignPermissionsRequest) error
+		AssignPermissionsToRole(ctx context.Context, roleID int64, req *dto.AssignPermissionsRequest) error
+		RevokePermissionsFromRole(ctx context.Context, roleID int64, req *dto.AssignPermissionsRequest) error
+		SyncRolePermissions(ctx context.Context, roleID int64, req *dto.AssignPermissionsRequest) error
 		// User ↔ Role
-		GetUserRoles(userID int64) ([]dto.RoleResponse, error)
-		AssignRolesToUser(userID int64, req *dto.AssignRolesRequest, assignedBy *int64) error
-		RevokeRolesFromUser(userID int64, req *dto.AssignRolesRequest) error
-		SyncUserRoles(userID int64, req *dto.AssignRolesRequest, assignedBy *int64) error
+		GetUserRoles(ctx context.Context, userID int64) ([]dto.RoleResponse, error)
+		AssignRolesToUser(ctx context.Context, userID int64, req *dto.AssignRolesRequest, assignedBy *int64) error
+		RevokeRolesFromUser(ctx context.Context, userID int64, req *dto.AssignRolesRequest) error
+		SyncUserRoles(ctx context.Context, userID int64, req *dto.AssignRolesRequest, assignedBy *int64) error
 		// User ↔ Permission
-		AssignDirectPermission(userID int64, req *dto.AssignDirectPermissionRequest, assignedBy *int64) error
-		RevokeDirectPermission(userID, permissionID int64) error
-		GetUserDirectPermissions(userID int64) ([]dto.DirectPermissionResponse, error)
+		AssignDirectPermission(ctx context.Context, userID int64, req *dto.AssignDirectPermissionRequest, assignedBy *int64) error
+		RevokeDirectPermission(ctx context.Context, userID, permissionID int64) error
+		GetUserDirectPermissions(ctx context.Context, userID int64) ([]dto.DirectPermissionResponse, error)
 		// Check
-		GetUserAllPermissions(userID int64) ([]string, error)
-		HasPermission(userID int64, permission string) (bool, error)
+		GetUserAllPermissions(ctx context.Context, userID int64) ([]string, error)
+		HasPermission(ctx context.Context, userID int64, permission string) (bool, error)
 	}
 	actorID *int64
 }
@@ -141,7 +142,7 @@ func (s *RBACServiceTestSuite) TestCreatePermission_Success() {
 	*/
 
 	// Eksekusi Service
-	result, err := s.service.CreatePermission(req, s.actorID)
+	result, err := s.service.CreatePermission(context.Background(), req, s.actorID)
 
 	// Assertion
 	s.NoError(err)
@@ -159,7 +160,7 @@ func (s *RBACServiceTestSuite) TestCreatePermission_DuplicateName() {
 
 	s.rbacRepo.On("GetPermissionByName", "users:read").Return(factories.MakePermission(), nil)
 
-	result, err := s.service.CreatePermission(req, s.actorID)
+	result, err := s.service.CreatePermission(context.Background(), req, s.actorID)
 
 	s.Nil(result)
 	s.Error(err)
@@ -172,7 +173,7 @@ func (s *RBACServiceTestSuite) TestGetPermissionByID_Success() {
 	perm := factories.MakePermission()
 	s.rbacRepo.On("GetPermissionByID", int64(1)).Return(perm, nil)
 
-	result, err := s.service.GetPermissionByID(1)
+	result, err := s.service.GetPermissionByID(context.Background(), 1)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -183,7 +184,7 @@ func (s *RBACServiceTestSuite) TestGetPermissionByID_Success() {
 func (s *RBACServiceTestSuite) TestGetPermissionByID_NotFound() {
 	s.rbacRepo.On("GetPermissionByID", int64(99)).Return(nil, nil)
 
-	result, err := s.service.GetPermissionByID(99)
+	result, err := s.service.GetPermissionByID(context.Background(), 99)
 
 	s.Nil(result)
 	s.Error(err)
@@ -193,7 +194,7 @@ func (s *RBACServiceTestSuite) TestGetPermissionByID_NotFound() {
 func (s *RBACServiceTestSuite) TestGetPermissionByID_DBError() {
 	s.rbacRepo.On("GetPermissionByID", int64(1)).Return(nil, dbError())
 
-	result, err := s.service.GetPermissionByID(1)
+	result, err := s.service.GetPermissionByID(context.Background(), 1)
 
 	s.Nil(result)
 	s.Error(err)
@@ -205,7 +206,7 @@ func (s *RBACServiceTestSuite) TestListPermissions_Success() {
 	perms := factories.MakePermissionList(3)
 	s.rbacRepo.On("ListPermissions", 1, 10).Return(perms, int64(3), nil)
 
-	result, total, err := s.service.ListPermissions(1, 10)
+	result, total, err := s.service.ListPermissions(context.Background(), 1, 10)
 
 	s.NoError(err)
 	s.Equal(int64(3), total)
@@ -217,7 +218,7 @@ func (s *RBACServiceTestSuite) TestListPermissions_PageNormalized() {
 	// page=0 harus dinormalisasi ke 1
 	s.rbacRepo.On("ListPermissions", 1, 10).Return(perms, int64(2), nil)
 
-	result, total, err := s.service.ListPermissions(0, 10)
+	result, total, err := s.service.ListPermissions(context.Background(), 0, 10)
 
 	s.NoError(err)
 	s.Equal(int64(2), total)
@@ -229,7 +230,7 @@ func (s *RBACServiceTestSuite) TestListPermissions_PageSizeNormalized() {
 	// pageSize=0 harus dinormalisasi ke 10
 	s.rbacRepo.On("ListPermissions", 1, 10).Return(perms, int64(5), nil)
 
-	result, _, err := s.service.ListPermissions(1, 0)
+	result, _, err := s.service.ListPermissions(context.Background(), 1, 0)
 
 	s.NoError(err)
 	s.Len(result, 5)
@@ -245,7 +246,7 @@ func (s *RBACServiceTestSuite) TestUpdatePermission_Success() {
 	s.rbacRepo.On("GetPermissionByID", int64(1)).Return(perm, nil)
 	s.rbacRepo.On("UpdatePermission", perm).Return(nil)
 
-	result, err := s.service.UpdatePermission(1, req, s.actorID)
+	result, err := s.service.UpdatePermission(context.Background(), 1, req, s.actorID)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -260,7 +261,7 @@ func (s *RBACServiceTestSuite) TestUpdatePermission_UpdateDescription() {
 	s.rbacRepo.On("GetPermissionByID", int64(1)).Return(perm, nil)
 	s.rbacRepo.On("UpdatePermission", perm).Return(nil)
 
-	result, err := s.service.UpdatePermission(1, req, s.actorID)
+	result, err := s.service.UpdatePermission(context.Background(), 1, req, s.actorID)
 
 	s.NoError(err)
 	s.Equal("Deskripsi baru", *result.Description)
@@ -270,7 +271,7 @@ func (s *RBACServiceTestSuite) TestUpdatePermission_NotFound() {
 	req := &dto.UpdatePermissionRequest{}
 	s.rbacRepo.On("GetPermissionByID", int64(99)).Return(nil, nil)
 
-	result, err := s.service.UpdatePermission(99, req, s.actorID)
+	result, err := s.service.UpdatePermission(context.Background(), 99, req, s.actorID)
 
 	s.Nil(result)
 	s.Error(err)
@@ -284,7 +285,7 @@ func (s *RBACServiceTestSuite) TestDeletePermission_Success() {
 	s.rbacRepo.On("GetPermissionByID", int64(1)).Return(perm, nil)
 	s.rbacRepo.On("DeletePermission", int64(1)).Return(nil)
 
-	err := s.service.DeletePermission(1)
+	err := s.service.DeletePermission(context.Background(), 1)
 
 	s.NoError(err)
 }
@@ -292,7 +293,7 @@ func (s *RBACServiceTestSuite) TestDeletePermission_Success() {
 func (s *RBACServiceTestSuite) TestDeletePermission_NotFound() {
 	s.rbacRepo.On("GetPermissionByID", int64(99)).Return(nil, nil)
 
-	err := s.service.DeletePermission(99)
+	err := s.service.DeletePermission(context.Background(), 99)
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
@@ -330,7 +331,7 @@ func (s *RBACServiceTestSuite) TestCreateRole_Success() {
 	*/
 
 	// Eksekusi Service
-	result, err := s.service.CreateRole(req, s.actorID)
+	result, err := s.service.CreateRole(context.Background(), req, s.actorID)
 
 	// Assertion
 	s.NoError(err)
@@ -346,7 +347,7 @@ func (s *RBACServiceTestSuite) TestCreateRole_DuplicateName() {
 
 	s.rbacRepo.On("GetRoleByName", "admin").Return(factories.MakeRole(), nil)
 
-	result, err := s.service.CreateRole(req, s.actorID)
+	result, err := s.service.CreateRole(context.Background(), req, s.actorID)
 
 	s.Nil(result)
 	s.Error(err)
@@ -359,7 +360,7 @@ func (s *RBACServiceTestSuite) TestGetRoleByID_Success() {
 	role := factories.MakeRoleWithPermissions()
 	s.rbacRepo.On("GetRoleByID", int64(1)).Return(role, nil)
 
-	result, err := s.service.GetRoleByID(1)
+	result, err := s.service.GetRoleByID(context.Background(), 1)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -370,7 +371,7 @@ func (s *RBACServiceTestSuite) TestGetRoleByID_Success() {
 func (s *RBACServiceTestSuite) TestGetRoleByID_NotFound() {
 	s.rbacRepo.On("GetRoleByID", int64(99)).Return(nil, nil)
 
-	result, err := s.service.GetRoleByID(99)
+	result, err := s.service.GetRoleByID(context.Background(), 99)
 
 	s.Nil(result)
 	s.Error(err)
@@ -383,7 +384,7 @@ func (s *RBACServiceTestSuite) TestListRoles_Success() {
 	roles := factories.MakeRoleList(3)
 	s.rbacRepo.On("ListRoles", 1, 10).Return(roles, int64(3), nil)
 
-	result, total, err := s.service.ListRoles(1, 10)
+	result, total, err := s.service.ListRoles(context.Background(), 1, 10)
 
 	s.NoError(err)
 	s.Equal(int64(3), total)
@@ -395,7 +396,7 @@ func (s *RBACServiceTestSuite) TestListRoles_PageSizeCappedAt100() {
 	// pageSize > 100 harus dinormalisasi ke 10
 	s.rbacRepo.On("ListRoles", 1, 10).Return(roles, int64(2), nil)
 
-	result, _, err := s.service.ListRoles(1, 999)
+	result, _, err := s.service.ListRoles(context.Background(), 1, 999)
 
 	s.NoError(err)
 	s.Len(result, 2)
@@ -411,7 +412,7 @@ func (s *RBACServiceTestSuite) TestUpdateRole_Success() {
 	s.rbacRepo.On("GetRoleByID", int64(1)).Return(role, nil)
 	s.rbacRepo.On("UpdateRole", role).Return(nil)
 
-	result, err := s.service.UpdateRole(1, req, s.actorID)
+	result, err := s.service.UpdateRole(context.Background(), 1, req, s.actorID)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -425,7 +426,7 @@ func (s *RBACServiceTestSuite) TestUpdateRole_SystemRoleCannotBeUpdated() {
 
 	s.rbacRepo.On("GetRoleByID", int64(1)).Return(role, nil)
 
-	result, err := s.service.UpdateRole(1, req, s.actorID)
+	result, err := s.service.UpdateRole(context.Background(), 1, req, s.actorID)
 
 	s.Nil(result)
 	s.Error(err)
@@ -436,7 +437,7 @@ func (s *RBACServiceTestSuite) TestUpdateRole_NotFound() {
 	req := &dto.UpdateRoleRequest{}
 	s.rbacRepo.On("GetRoleByID", int64(99)).Return(nil, nil)
 
-	result, err := s.service.UpdateRole(99, req, s.actorID)
+	result, err := s.service.UpdateRole(context.Background(), 99, req, s.actorID)
 
 	s.Nil(result)
 	s.Error(err)
@@ -449,7 +450,7 @@ func (s *RBACServiceTestSuite) TestDeleteRole_Success() {
 	s.rbacRepo.On("GetRoleByID", int64(1)).Return(role, nil)
 	s.rbacRepo.On("DeleteRole", int64(1)).Return(nil)
 
-	err := s.service.DeleteRole(1)
+	err := s.service.DeleteRole(context.Background(), 1)
 
 	s.NoError(err)
 }
@@ -458,7 +459,7 @@ func (s *RBACServiceTestSuite) TestDeleteRole_SystemRoleCannotBeDeleted() {
 	role := factories.MakeSystemRole()
 	s.rbacRepo.On("GetRoleByID", int64(1)).Return(role, nil)
 
-	err := s.service.DeleteRole(1)
+	err := s.service.DeleteRole(context.Background(), 1)
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak bisa dihapus")
@@ -467,7 +468,7 @@ func (s *RBACServiceTestSuite) TestDeleteRole_SystemRoleCannotBeDeleted() {
 func (s *RBACServiceTestSuite) TestDeleteRole_NotFound() {
 	s.rbacRepo.On("GetRoleByID", int64(99)).Return(nil, nil)
 
-	err := s.service.DeleteRole(99)
+	err := s.service.DeleteRole(context.Background(), 99)
 
 	s.Error(err)
 }
@@ -483,7 +484,7 @@ func (s *RBACServiceTestSuite) TestAssignPermissionsToRole_Success() {
 	s.rbacRepo.On("GetRoleByID", int64(1)).Return(role, nil)
 	s.rbacRepo.On("AssignPermissionsToRole", int64(1), []int64{1, 2, 3}).Return(nil)
 
-	err := s.service.AssignPermissionsToRole(1, req)
+	err := s.service.AssignPermissionsToRole(context.Background(), 1, req)
 
 	s.NoError(err)
 }
@@ -492,7 +493,7 @@ func (s *RBACServiceTestSuite) TestAssignPermissionsToRole_RoleNotFound() {
 	req := &dto.AssignPermissionsRequest{PermissionIDs: []int64{1}}
 	s.rbacRepo.On("GetRoleByID", int64(99)).Return(nil, nil)
 
-	err := s.service.AssignPermissionsToRole(99, req)
+	err := s.service.AssignPermissionsToRole(context.Background(), 99, req)
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
@@ -505,7 +506,7 @@ func (s *RBACServiceTestSuite) TestRevokePermissionsFromRole_Success() {
 	s.rbacRepo.On("GetRoleByID", int64(1)).Return(role, nil)
 	s.rbacRepo.On("RevokePermissionsFromRole", int64(1), []int64{1}).Return(nil)
 
-	err := s.service.RevokePermissionsFromRole(1, req)
+	err := s.service.RevokePermissionsFromRole(context.Background(), 1, req)
 
 	s.NoError(err)
 }
@@ -517,7 +518,7 @@ func (s *RBACServiceTestSuite) TestSyncRolePermissions_Success() {
 	s.rbacRepo.On("GetRoleByID", int64(1)).Return(role, nil)
 	s.rbacRepo.On("SyncRolePermissions", int64(1), []int64{1, 2}).Return(nil)
 
-	err := s.service.SyncRolePermissions(1, req)
+	err := s.service.SyncRolePermissions(context.Background(), 1, req)
 
 	s.NoError(err)
 }
@@ -533,7 +534,7 @@ func (s *RBACServiceTestSuite) TestGetUserRoles_Success() {
 	s.userRepo.On("GetByID", int64(1)).Return(user, nil)
 	s.rbacRepo.On("GetUserRoles", int64(1)).Return(roles, nil)
 
-	result, err := s.service.GetUserRoles(1)
+	result, err := s.service.GetUserRoles(context.Background(), 1)
 
 	s.NoError(err)
 	s.Len(result, 1)
@@ -543,7 +544,7 @@ func (s *RBACServiceTestSuite) TestGetUserRoles_Success() {
 func (s *RBACServiceTestSuite) TestGetUserRoles_UserNotFound() {
 	s.userRepo.On("GetByID", int64(99)).Return(nil, nil)
 
-	result, err := s.service.GetUserRoles(99)
+	result, err := s.service.GetUserRoles(context.Background(), 99)
 
 	s.Nil(result)
 	s.requireAppError(err, http.StatusNotFound)
@@ -555,7 +556,7 @@ func (s *RBACServiceTestSuite) TestGetUserRoles_EmptyRoles_Returns404() {
 	s.userRepo.On("GetByID", int64(1)).Return(user, nil)
 	s.rbacRepo.On("GetUserRoles", int64(1)).Return([]models.Role{}, nil)
 
-	result, err := s.service.GetUserRoles(1)
+	result, err := s.service.GetUserRoles(context.Background(), 1)
 
 	s.Nil(result)
 	s.requireAppError(err, http.StatusNotFound)
@@ -568,7 +569,7 @@ func (s *RBACServiceTestSuite) TestGetUserRoles_DBError() {
 	s.userRepo.On("GetByID", int64(1)).Return(user, nil)
 	s.rbacRepo.On("GetUserRoles", int64(1)).Return(nil, dbError())
 
-	result, err := s.service.GetUserRoles(1)
+	result, err := s.service.GetUserRoles(context.Background(), 1)
 
 	s.Nil(result)
 	s.requireAppError(err, http.StatusInternalServerError)
@@ -579,7 +580,7 @@ func (s *RBACServiceTestSuite) TestAssignRolesToUser_Success() {
 
 	s.rbacRepo.On("AssignRolesToUser", int64(5), []int64{1, 2}, s.actorID).Return(nil)
 
-	err := s.service.AssignRolesToUser(5, req, s.actorID)
+	err := s.service.AssignRolesToUser(context.Background(), 5, req, s.actorID)
 
 	s.NoError(err)
 }
@@ -589,7 +590,7 @@ func (s *RBACServiceTestSuite) TestRevokeRolesFromUser_Success() {
 
 	s.rbacRepo.On("RevokeRolesFromUser", int64(5), []int64{1}).Return(nil)
 
-	err := s.service.RevokeRolesFromUser(5, req)
+	err := s.service.RevokeRolesFromUser(context.Background(), 5, req)
 
 	s.NoError(err)
 }
@@ -599,7 +600,7 @@ func (s *RBACServiceTestSuite) TestSyncUserRoles_Success() {
 
 	s.rbacRepo.On("SyncUserRoles", int64(5), []int64{2, 3}, s.actorID).Return(nil)
 
-	err := s.service.SyncUserRoles(5, req, s.actorID)
+	err := s.service.SyncUserRoles(context.Background(), 5, req, s.actorID)
 
 	s.NoError(err)
 }
@@ -616,7 +617,7 @@ func (s *RBACServiceTestSuite) TestAssignDirectPermission_Grant() {
 
 	s.rbacRepo.On("AssignDirectPermission", int64(5), int64(1), true, s.actorID).Return(nil)
 
-	err := s.service.AssignDirectPermission(5, req, s.actorID)
+	err := s.service.AssignDirectPermission(context.Background(), 5, req, s.actorID)
 
 	s.NoError(err)
 }
@@ -629,7 +630,7 @@ func (s *RBACServiceTestSuite) TestAssignDirectPermission_Deny() {
 
 	s.rbacRepo.On("AssignDirectPermission", int64(5), int64(2), false, s.actorID).Return(nil)
 
-	err := s.service.AssignDirectPermission(5, req, s.actorID)
+	err := s.service.AssignDirectPermission(context.Background(), 5, req, s.actorID)
 
 	s.NoError(err)
 }
@@ -637,7 +638,7 @@ func (s *RBACServiceTestSuite) TestAssignDirectPermission_Deny() {
 func (s *RBACServiceTestSuite) TestRevokeDirectPermission_Success() {
 	s.rbacRepo.On("RevokeDirectPermission", int64(5), int64(1)).Return(nil)
 
-	err := s.service.RevokeDirectPermission(5, 1)
+	err := s.service.RevokeDirectPermission(context.Background(), 5, 1)
 
 	s.NoError(err)
 }
@@ -657,7 +658,7 @@ func (s *RBACServiceTestSuite) TestGetUserDirectPermissions_Success() {
 	s.rbacRepo.On("GetPermissionByID", int64(1)).Return(perm1, nil)
 	s.rbacRepo.On("GetPermissionByID", int64(2)).Return(perm2, nil)
 
-	result, err := s.service.GetUserDirectPermissions(5)
+	result, err := s.service.GetUserDirectPermissions(context.Background(), 5)
 
 	s.NoError(err)
 	s.Len(result, 2)
@@ -675,7 +676,7 @@ func (s *RBACServiceTestSuite) TestGetUserDirectPermissions_SkipMissingPermissio
 	s.rbacRepo.On("GetUserDirectPermissions", int64(5)).Return(userPerms, nil)
 	s.rbacRepo.On("GetPermissionByID", int64(999)).Return(nil, nil)
 
-	result, err := s.service.GetUserDirectPermissions(5)
+	result, err := s.service.GetUserDirectPermissions(context.Background(), 5)
 
 	s.NoError(err)
 	s.Empty(result) // di-skip
@@ -689,7 +690,7 @@ func (s *RBACServiceTestSuite) TestGetUserAllPermissions_Success() {
 	perms := []string{"users:read", "users:create", "roles:read"}
 	s.rbacRepo.On("GetUserAllPermissions", int64(1)).Return(perms, nil)
 
-	result, err := s.service.GetUserAllPermissions(1)
+	result, err := s.service.GetUserAllPermissions(context.Background(), 1)
 
 	s.NoError(err)
 	s.Len(result, 3)
@@ -699,7 +700,7 @@ func (s *RBACServiceTestSuite) TestGetUserAllPermissions_Success() {
 func (s *RBACServiceTestSuite) TestHasPermission_True() {
 	s.rbacRepo.On("HasPermission", int64(1), "users:read").Return(true, nil)
 
-	result, err := s.service.HasPermission(1, "users:read")
+	result, err := s.service.HasPermission(context.Background(), 1, "users:read")
 
 	s.NoError(err)
 	s.True(result)
@@ -708,7 +709,7 @@ func (s *RBACServiceTestSuite) TestHasPermission_True() {
 func (s *RBACServiceTestSuite) TestHasPermission_False() {
 	s.rbacRepo.On("HasPermission", int64(1), "users:delete").Return(false, nil)
 
-	result, err := s.service.HasPermission(1, "users:delete")
+	result, err := s.service.HasPermission(context.Background(), 1, "users:delete")
 
 	s.NoError(err)
 	s.False(result)
@@ -717,7 +718,7 @@ func (s *RBACServiceTestSuite) TestHasPermission_False() {
 func (s *RBACServiceTestSuite) TestHasPermission_DBError() {
 	s.rbacRepo.On("HasPermission", int64(1), "users:read").Return(false, dbError())
 
-	result, err := s.service.HasPermission(1, "users:read")
+	result, err := s.service.HasPermission(context.Background(), 1, "users:read")
 
 	s.False(result)
 	s.Error(err)

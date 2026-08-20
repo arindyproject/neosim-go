@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -39,7 +40,7 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_CreateTipe_Superadmin_Succe
 
 	s.repo.On("CreateTipe", mock.AnythingOfType("*models.Tipe")).Return(nil)
 
-	result, err := s.svc.CreateTipe(req, actor)
+	result, err := s.svc.CreateTipe(context.Background(), req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -55,7 +56,7 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_CreateTipe_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.CreateTipe(req, actor)
+	result, err := s.svc.CreateTipe(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -78,7 +79,7 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_CreateTipe_RepoError() {
 	// 2. Mock error saat insert ke DB
 	s.repo.On("CreateTipe", mock.AnythingOfType("*models.Tipe")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.CreateTipe(req, actor)
+	result, err := s.svc.CreateTipe(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -100,7 +101,7 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_GetTipeByID_Success() {
 
 	s.repo.On("GetTipeByID", int64(1)).Return(item, nil)
 
-	result, err := s.svc.GetTipeByID(1, actor)
+	result, err := s.svc.GetTipeByID(context.Background(), 1, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -114,7 +115,7 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_GetTipeByID_NotFound() {
 
 	s.repo.On("GetTipeByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.GetTipeByID(999, actor)
+	result, err := s.svc.GetTipeByID(context.Background(), 999, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -125,7 +126,7 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_GetTipeByID_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.GetTipeByID(1, actor)
+	result, err := s.svc.GetTipeByID(context.Background(), 1, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -141,7 +142,7 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_ListTipe_Success() {
 
 	s.repo.On("ListTipe", 1, 10, filter).Return(items, int64(2), nil)
 
-	result, total, err := s.svc.ListTipe(1, 10, filter, actor)
+	result, total, err := s.svc.ListTipe(context.Background(), 1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(2), total)
@@ -153,7 +154,7 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_ListTipe_Forbidden() {
 	filter := &dto.FilterTipeRequest{}
 	s.mockNoPermissions()
 
-	result, total, err := s.svc.ListTipe(1, 10, filter, actor)
+	result, total, err := s.svc.ListTipe(context.Background(), 1, 10, filter, actor)
 
 	s.Nil(result)
 	s.Equal(int64(0), total)
@@ -185,7 +186,7 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_UpdateTipe_Success() {
 	// 3. Update ke DB
 	s.repo.On("UpdateTipe", mock.AnythingOfType("*models.Tipe")).Return(nil)
 
-	result, err := s.svc.UpdateTipe(1, req, actor)
+	result, err := s.svc.UpdateTipe(context.Background(), 1, req, actor)
 
 	s.NoError(err)
 	s.Equal(newCode, result.Code)
@@ -198,7 +199,7 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_UpdateTipe_NotFound() {
 
 	s.repo.On("GetTipeByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.UpdateTipe(999, req, actor)
+	result, err := s.svc.UpdateTipe(context.Background(), 999, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -210,7 +211,7 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_UpdateTipe_Forbidden() {
 	req := &dto.UpdateTipeRequest{}
 	s.mockNoPermissions()
 
-	result, err := s.svc.UpdateTipe(1, req, actor)
+	result, err := s.svc.UpdateTipe(context.Background(), 1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -224,7 +225,7 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_DeleteTipe_Success() {
 	s.repo.On("GetTipeByID", int64(1)).Return(existing, nil)
 	s.repo.On("DeleteTipe", int64(1)).Return(nil)
 
-	err := s.svc.DeleteTipe(1, actor)
+	err := s.svc.DeleteTipe(context.Background(), 1, actor)
 
 	s.NoError(err)
 }
@@ -234,7 +235,7 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_DeleteTipe_NotFound() {
 
 	s.repo.On("GetTipeByID", int64(999)).Return(nil, nil)
 
-	err := s.svc.DeleteTipe(999, actor)
+	err := s.svc.DeleteTipe(context.Background(), 999, actor)
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
@@ -244,7 +245,7 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_DeleteTipe_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	err := s.svc.DeleteTipe(1, actor)
+	err := s.svc.DeleteTipe(context.Background(), 1, actor)
 
 	s.Error(err)
 	var appErr *appErrors.AppError

@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -53,16 +54,21 @@ type KepegawaianKontakServiceTestSuite struct {
 }
 
 func (s *KepegawaianKontakServiceTestSuite) SetupTest() {
-	s.repo     = new(mocks.KepegawaianKontakRepositoryMock)
+	s.repo = new(mocks.KepegawaianKontakRepositoryMock)
 	s.rbacRepo = new(mocks.RBACRepositoryMock)
 	s.authRepo = new(mocks.AuthRepositoryMock)
 	s.userRepo = new(mocks.UserRepositoryMock)
-	s.cfg      = &config.Config{}
+	s.cfg = &config.Config{
+		DefaultPageSize:    10,
+		DefaultPageSizeMax: 10,
+	}
 	s.svc = services.NewKepegawaianKontakService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.cfg)
 
 	// Stub default agar buildCreator/buildAuditMaps tidak panic saat memanggil userRepo.
 	// Boleh dipanggil 0 kali atau lebih (.Maybe()) tergantung skenario test.
 	s.userRepo.On("GetByID", mock.Anything).Return(nil, nil).Maybe()
+	s.repo.On("GetTipeByCode", mock.Anything).Return(nil, nil).Maybe()
+	s.repo.On("GetTipeByLabel", mock.Anything).Return(nil, nil).Maybe()
 }
 
 func TestKepegawaianKontakService(t *testing.T) {
@@ -86,27 +92,27 @@ func (s *KepegawaianKontakServiceTestSuite) mockNoPermissions() {
 }
 
 func (s *KepegawaianKontakServiceTestSuite) Test_CreateKontak_Superadmin_Success() {
-	req := &dto.CreateKepegawaianKontakRequest{Name: "Test KepegawaianKontak"}
+	req := &dto.CreateKepegawaianKontakRequest{PegawaiID: 1, TipeID: 1, Nilai: "Test KepegawaianKontak"}
 	actor := superadminActor()
 
 	s.repo.On("CreateKontak", mock.AnythingOfType("*models.KepegawaianKontak")).Return(nil)
 
-	result, err := s.svc.CreateKontak(req, actor)
+	result, err := s.svc.CreateKontak(context.Background(), req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
-	s.Equal(req.Name, result.Name)
+	s.Equal(req.Nilai, result.Nilai)
 	s.repo.AssertExpectations(s.T())
 }
 
 func (s *KepegawaianKontakServiceTestSuite) Test_CreateKontak_WithPermission_Success() {
-	req := &dto.CreateKepegawaianKontakRequest{Name: "Test KepegawaianKontak"}
+	req := &dto.CreateKepegawaianKontakRequest{PegawaiID: 1, TipeID: 1, Nilai: "Test KepegawaianKontak"}
 	actor := regularActor()
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(true, nil)
 	s.repo.On("CreateKontak", mock.AnythingOfType("*models.KepegawaianKontak")).Return(nil)
 
-	result, err := s.svc.CreateKontak(req, actor)
+	result, err := s.svc.CreateKontak(context.Background(), req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -114,25 +120,25 @@ func (s *KepegawaianKontakServiceTestSuite) Test_CreateKontak_WithPermission_Suc
 }
 
 func (s *KepegawaianKontakServiceTestSuite) Test_CreateKontak_WithManagePermission_Success() {
-	req := &dto.CreateKepegawaianKontakRequest{Name: "Test"}
+	req := &dto.CreateKepegawaianKontakRequest{PegawaiID: 1, TipeID: 1, Nilai: "Test"}
 	actor := regularActor()
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(false, nil)
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyManage).Return(true, nil)
 	s.repo.On("CreateKontak", mock.AnythingOfType("*models.KepegawaianKontak")).Return(nil)
 
-	result, err := s.svc.CreateKontak(req, actor)
+	result, err := s.svc.CreateKontak(context.Background(), req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 }
 
 func (s *KepegawaianKontakServiceTestSuite) Test_CreateKontak_Forbidden() {
-	req := &dto.CreateKepegawaianKontakRequest{Name: "Test"}
+	req := &dto.CreateKepegawaianKontakRequest{PegawaiID: 1, TipeID: 1, Nilai: "Test"}
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.CreateKontak(req, actor)
+	result, err := s.svc.CreateKontak(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -142,12 +148,12 @@ func (s *KepegawaianKontakServiceTestSuite) Test_CreateKontak_Forbidden() {
 }
 
 func (s *KepegawaianKontakServiceTestSuite) Test_CreateKontak_RepoError() {
-	req := &dto.CreateKepegawaianKontakRequest{Name: "Test"}
+	req := &dto.CreateKepegawaianKontakRequest{PegawaiID: 1, TipeID: 1, Nilai: "Test"}
 	actor := superadminActor()
 
 	s.repo.On("CreateKontak", mock.AnythingOfType("*models.KepegawaianKontak")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.CreateKontak(req, actor)
+	result, err := s.svc.CreateKontak(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -160,12 +166,12 @@ func (s *KepegawaianKontakServiceTestSuite) Test_GetKontakByID_Superadmin_Succes
 
 	s.repo.On("GetKontakByID", int64(1)).Return(item, nil)
 
-	result, err := s.svc.GetKontakByID(1, actor)
+	result, err := s.svc.GetKontakByID(context.Background(), 1, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 	s.Equal(item.ID, result.ID)
-	s.Equal(item.Name, result.Name)
+	s.Equal(item.Nilai, result.Nilai)
 }
 
 func (s *KepegawaianKontakServiceTestSuite) Test_GetKontakByID_WithPermission_Success() {
@@ -176,7 +182,7 @@ func (s *KepegawaianKontakServiceTestSuite) Test_GetKontakByID_WithPermission_Su
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyRead).Return(true, nil)
 	s.repo.On("GetKontakByID", int64(1)).Return(item, nil)
 
-	result, err := s.svc.GetKontakByID(1, actor)
+	result, err := s.svc.GetKontakByID(context.Background(), 1, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -186,7 +192,7 @@ func (s *KepegawaianKontakServiceTestSuite) Test_GetKontakByID_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.GetKontakByID(1, actor)
+	result, err := s.svc.GetKontakByID(context.Background(), 1, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -200,7 +206,7 @@ func (s *KepegawaianKontakServiceTestSuite) Test_GetKontakByID_NotFound() {
 
 	s.repo.On("GetKontakByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.GetKontakByID(999, actor)
+	result, err := s.svc.GetKontakByID(context.Background(), 999, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -212,7 +218,7 @@ func (s *KepegawaianKontakServiceTestSuite) Test_GetKontakByID_RepoError() {
 
 	s.repo.On("GetKontakByID", int64(1)).Return(nil, fmt.Errorf("db error"))
 
-	result, err := s.svc.GetKontakByID(1, actor)
+	result, err := s.svc.GetKontakByID(context.Background(), 1, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -228,7 +234,7 @@ func (s *KepegawaianKontakServiceTestSuite) Test_ListKontak_Superadmin_Success()
 
 	s.repo.On("ListKontak", 1, 10, filter).Return(items, int64(2), nil)
 
-	result, total, err := s.svc.ListKontak(1, 10, filter, actor)
+	result, total, err := s.svc.ListKontak(context.Background(), 1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(2), total)
@@ -243,7 +249,7 @@ func (s *KepegawaianKontakServiceTestSuite) Test_ListKontak_WithPermission_Succe
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyRead).Return(true, nil)
 	s.repo.On("ListKontak", 1, 10, filter).Return(items, int64(1), nil)
 
-	result, total, err := s.svc.ListKontak(1, 10, filter, actor)
+	result, total, err := s.svc.ListKontak(context.Background(), 1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
@@ -255,7 +261,7 @@ func (s *KepegawaianKontakServiceTestSuite) Test_ListKontak_Forbidden() {
 	filter := &dto.FilterKepegawaianKontakRequest{}
 	s.mockNoPermissions()
 
-	result, total, err := s.svc.ListKontak(1, 10, filter, actor)
+	result, total, err := s.svc.ListKontak(context.Background(), 1, 10, filter, actor)
 
 	s.Nil(result)
 	s.Equal(int64(0), total)
@@ -271,7 +277,7 @@ func (s *KepegawaianKontakServiceTestSuite) Test_ListKontak_DefaultPagination() 
 
 	s.repo.On("ListKontak", 1, 10, filter).Return([]models.KepegawaianKontak{}, int64(0), nil)
 
-	result, total, err := s.svc.ListKontak(0, 0, filter, actor)
+	result, total, err := s.svc.ListKontak(context.Background(), 0, 0, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(0), total)
@@ -284,7 +290,7 @@ func (s *KepegawaianKontakServiceTestSuite) Test_ListKontak_PageSizeCapped() {
 
 	s.repo.On("ListKontak", 1, 10, filter).Return([]models.KepegawaianKontak{}, int64(0), nil)
 
-	_, _, err := s.svc.ListKontak(1, 999, filter, actor)
+	_, _, err := s.svc.ListKontak(context.Background(), 1, 999, filter, actor)
 
 	s.NoError(err)
 	s.repo.AssertCalled(s.T(), "ListKontak", 1, 10, filter)
@@ -292,12 +298,13 @@ func (s *KepegawaianKontakServiceTestSuite) Test_ListKontak_PageSizeCapped() {
 
 func (s *KepegawaianKontakServiceTestSuite) Test_ListKontak_WithNameFilter() {
 	actor := superadminActor()
-	filter := &dto.FilterKepegawaianKontakRequest{Name: "test"}
+	filterValue := "test"
+	filter := &dto.FilterKepegawaianKontakRequest{Nilai: &filterValue}
 	items := []models.KepegawaianKontak{*factories.NewKepegawaianKontakFactory().Make()}
 
 	s.repo.On("ListKontak", 1, 10, filter).Return(items, int64(1), nil)
 
-	result, total, err := s.svc.ListKontak(1, 10, filter, actor)
+	result, total, err := s.svc.ListKontak(context.Background(), 1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
@@ -309,16 +316,16 @@ func (s *KepegawaianKontakServiceTestSuite) Test_UpdateKontak_Superadmin_Success
 	existing := factories.NewKepegawaianKontakFactory().Make()
 	existing.ID = 1
 	newName := "Updated Name"
-	req := &dto.UpdateKepegawaianKontakRequest{Name: &newName}
+	req := &dto.UpdateKepegawaianKontakRequest{Nilai: &newName}
 
 	s.repo.On("GetKontakByID", int64(1)).Return(existing, nil)
 	s.repo.On("UpdateKontak", mock.AnythingOfType("*models.KepegawaianKontak")).Return(nil)
 
-	result, err := s.svc.UpdateKontak(1, req, actor)
+	result, err := s.svc.UpdateKontak(context.Background(), 1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
-	s.Equal(newName, result.Name)
+	s.Equal(newName, result.Nilai)
 }
 
 func (s *KepegawaianKontakServiceTestSuite) Test_UpdateKontak_WithPermission_Success() {
@@ -326,13 +333,13 @@ func (s *KepegawaianKontakServiceTestSuite) Test_UpdateKontak_WithPermission_Suc
 	existing := factories.NewKepegawaianKontakFactory().Make()
 	existing.ID = 1
 	newName := "Updated"
-	req := &dto.UpdateKepegawaianKontakRequest{Name: &newName}
+	req := &dto.UpdateKepegawaianKontakRequest{Nilai: &newName}
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyUpdate).Return(true, nil)
 	s.repo.On("GetKontakByID", int64(1)).Return(existing, nil)
 	s.repo.On("UpdateKontak", mock.AnythingOfType("*models.KepegawaianKontak")).Return(nil)
 
-	result, err := s.svc.UpdateKontak(1, req, actor)
+	result, err := s.svc.UpdateKontak(context.Background(), 1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -343,7 +350,7 @@ func (s *KepegawaianKontakServiceTestSuite) Test_UpdateKontak_Forbidden() {
 	req := &dto.UpdateKepegawaianKontakRequest{}
 	s.mockNoPermissions()
 
-	result, err := s.svc.UpdateKontak(1, req, actor)
+	result, err := s.svc.UpdateKontak(context.Background(), 1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -358,7 +365,7 @@ func (s *KepegawaianKontakServiceTestSuite) Test_UpdateKontak_NotFound() {
 
 	s.repo.On("GetKontakByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.UpdateKontak(999, req, actor)
+	result, err := s.svc.UpdateKontak(context.Background(), 999, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -369,19 +376,19 @@ func (s *KepegawaianKontakServiceTestSuite) Test_UpdateKontak_PartialFields() {
 	actor := superadminActor()
 	existing := factories.NewKepegawaianKontakFactory().Make()
 	existing.ID = 1
-	originalName := existing.Name
+	originalName := existing.Nilai
 	newDesc := "New description"
 	req := &dto.UpdateKepegawaianKontakRequest{Description: &newDesc}
 
 	s.repo.On("GetKontakByID", int64(1)).Return(existing, nil)
 	s.repo.On("UpdateKontak", mock.MatchedBy(func(m *models.KepegawaianKontak) bool {
-		return m.Name == originalName && *m.Description == newDesc
+		return m.Nilai == originalName && *m.Description == newDesc
 	})).Return(nil)
 
-	result, err := s.svc.UpdateKontak(1, req, actor)
+	result, err := s.svc.UpdateKontak(context.Background(), 1, req, actor)
 
 	s.NoError(err)
-	s.Equal(originalName, result.Name)
+	s.Equal(originalName, result.Nilai)
 	s.Equal(newDesc, *result.Description)
 }
 
@@ -394,7 +401,7 @@ func (s *KepegawaianKontakServiceTestSuite) Test_UpdateKontak_RepoError() {
 	s.repo.On("GetKontakByID", int64(1)).Return(existing, nil)
 	s.repo.On("UpdateKontak", mock.AnythingOfType("*models.KepegawaianKontak")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.UpdateKontak(1, req, actor)
+	result, err := s.svc.UpdateKontak(context.Background(), 1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -408,7 +415,7 @@ func (s *KepegawaianKontakServiceTestSuite) Test_DeleteKontak_Superadmin_Success
 	s.repo.On("GetKontakByID", int64(1)).Return(existing, nil)
 	s.repo.On("DeleteKontak", int64(1)).Return(nil)
 
-	err := s.svc.DeleteKontak(1, actor)
+	err := s.svc.DeleteKontak(context.Background(), 1, actor)
 
 	s.NoError(err)
 	s.repo.AssertExpectations(s.T())
@@ -423,7 +430,7 @@ func (s *KepegawaianKontakServiceTestSuite) Test_DeleteKontak_WithPermission_Suc
 	s.repo.On("GetKontakByID", int64(1)).Return(existing, nil)
 	s.repo.On("DeleteKontak", int64(1)).Return(nil)
 
-	err := s.svc.DeleteKontak(1, actor)
+	err := s.svc.DeleteKontak(context.Background(), 1, actor)
 
 	s.NoError(err)
 }
@@ -432,7 +439,7 @@ func (s *KepegawaianKontakServiceTestSuite) Test_DeleteKontak_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	err := s.svc.DeleteKontak(1, actor)
+	err := s.svc.DeleteKontak(context.Background(), 1, actor)
 
 	s.Error(err)
 	var appErr *appErrors.AppError
@@ -445,7 +452,7 @@ func (s *KepegawaianKontakServiceTestSuite) Test_DeleteKontak_NotFound() {
 
 	s.repo.On("GetKontakByID", int64(999)).Return(nil, nil)
 
-	err := s.svc.DeleteKontak(999, actor)
+	err := s.svc.DeleteKontak(context.Background(), 999, actor)
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
@@ -459,7 +466,7 @@ func (s *KepegawaianKontakServiceTestSuite) Test_DeleteKontak_RepoError() {
 	s.repo.On("GetKontakByID", int64(1)).Return(existing, nil)
 	s.repo.On("DeleteKontak", int64(1)).Return(fmt.Errorf("db error"))
 
-	err := s.svc.DeleteKontak(1, actor)
+	err := s.svc.DeleteKontak(context.Background(), 1, actor)
 
 	s.Error(err)
 }

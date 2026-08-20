@@ -73,12 +73,11 @@ func (s *service) CreateIdentifier(
 	m.Tipe = tipeMaster
 
 	creator := s.buildCreator(ctx, m.CreatedBy)
-	updater := s.buildCreator(ctx, m.UpdatedBy)
 
 	return dto.ToKepegawaianIdentifierResponse(dto.KepegawaianIdentifierResponseParams{
 		KepegawaianIdentifier: m,
 		Creator:               creator,
-		Updater:               updater,
+		Updater:               creator,
 	}), nil
 }
 

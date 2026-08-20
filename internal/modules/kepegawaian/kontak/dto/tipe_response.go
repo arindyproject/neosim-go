@@ -17,6 +17,12 @@ type TipeResponse struct {
 	UpdatedAt types.CustomTime `json:"updated_at"`
 }
 
+type TipeSimpelResponse struct {
+	ID    int64  `json:"id"`
+	Code  string `json:"code"`
+	Label string `json:"label"`
+}
+
 type TipeResponseParams struct {
 	Tipe    *models.Tipe
 	Creator *he.UserData

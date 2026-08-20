@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -57,12 +58,16 @@ func (s *ArtikelServiceTestSuite) SetupTest() {
 	s.rbacRepo = new(mocks.RBACRepositoryMock)
 	s.authRepo = new(mocks.AuthRepositoryMock)
 	s.userRepo = new(mocks.UserRepositoryMock)
-	s.cfg      = &config.Config{}
+	s.cfg = &config.Config{
+		DefaultPageSize:    10,
+		DefaultPageSizeMax: 10,
+	}
 	s.svc = services.NewArtikelService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.cfg)
 
 	// Stub default agar buildCreator/buildAuditMaps tidak panic saat memanggil userRepo.
 	// Boleh dipanggil 0 kali atau lebih (.Maybe()) tergantung skenario test.
 	s.userRepo.On("GetByID", mock.Anything).Return(nil, nil).Maybe()
+	s.userRepo.On("GetByIDs", mock.Anything).Return(nil, nil).Maybe()
 }
 
 func TestArtikelService(t *testing.T) {
@@ -91,7 +96,7 @@ func (s *ArtikelServiceTestSuite) Test_CreateArtikel_Superadmin_Success() {
 
 	s.repo.On("CreateArtikel", mock.AnythingOfType("*models.Artikel")).Return(nil)
 
-	result, err := s.svc.CreateArtikel(req, actor)
+	result, err := s.svc.CreateArtikel(context.Background(), req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -106,7 +111,7 @@ func (s *ArtikelServiceTestSuite) Test_CreateArtikel_WithPermission_Success() {
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(true, nil)
 	s.repo.On("CreateArtikel", mock.AnythingOfType("*models.Artikel")).Return(nil)
 
-	result, err := s.svc.CreateArtikel(req, actor)
+	result, err := s.svc.CreateArtikel(context.Background(),req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -121,7 +126,7 @@ func (s *ArtikelServiceTestSuite) Test_CreateArtikel_WithManagePermission_Succes
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyManage).Return(true, nil)
 	s.repo.On("CreateArtikel", mock.AnythingOfType("*models.Artikel")).Return(nil)
 
-	result, err := s.svc.CreateArtikel(req, actor)
+	result, err := s.svc.CreateArtikel(context.Background(),req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -132,7 +137,7 @@ func (s *ArtikelServiceTestSuite) Test_CreateArtikel_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.CreateArtikel(req, actor)
+	result, err := s.svc.CreateArtikel(context.Background(),req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -147,7 +152,7 @@ func (s *ArtikelServiceTestSuite) Test_CreateArtikel_RepoError() {
 
 	s.repo.On("CreateArtikel", mock.AnythingOfType("*models.Artikel")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.CreateArtikel(req, actor)
+	result, err := s.svc.CreateArtikel(context.Background(),req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -160,7 +165,7 @@ func (s *ArtikelServiceTestSuite) Test_GetArtikelByID_Superadmin_Success() {
 
 	s.repo.On("GetArtikelByID", int64(1)).Return(item, nil)
 
-	result, err := s.svc.GetArtikelByID(1, actor)
+	result, err := s.svc.GetArtikelByID(context.Background(),1, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -176,7 +181,7 @@ func (s *ArtikelServiceTestSuite) Test_GetArtikelByID_WithPermission_Success() {
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyRead).Return(true, nil)
 	s.repo.On("GetArtikelByID", int64(1)).Return(item, nil)
 
-	result, err := s.svc.GetArtikelByID(1, actor)
+	result, err := s.svc.GetArtikelByID(context.Background(),1, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -186,7 +191,7 @@ func (s *ArtikelServiceTestSuite) Test_GetArtikelByID_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.GetArtikelByID(1, actor)
+	result, err := s.svc.GetArtikelByID(context.Background(),1, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -200,7 +205,7 @@ func (s *ArtikelServiceTestSuite) Test_GetArtikelByID_NotFound() {
 
 	s.repo.On("GetArtikelByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.GetArtikelByID(999, actor)
+	result, err := s.svc.GetArtikelByID(context.Background(),999, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -212,7 +217,7 @@ func (s *ArtikelServiceTestSuite) Test_GetArtikelByID_RepoError() {
 
 	s.repo.On("GetArtikelByID", int64(1)).Return(nil, fmt.Errorf("db error"))
 
-	result, err := s.svc.GetArtikelByID(1, actor)
+	result, err := s.svc.GetArtikelByID(context.Background(),1, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -228,7 +233,7 @@ func (s *ArtikelServiceTestSuite) Test_ListArtikel_Superadmin_Success() {
 
 	s.repo.On("ListArtikel", 1, 10, filter).Return(items, int64(2), nil)
 
-	result, total, err := s.svc.ListArtikel(1, 10, filter, actor)
+	result, total, err := s.svc.ListArtikel(context.Background(),1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(2), total)
@@ -243,7 +248,7 @@ func (s *ArtikelServiceTestSuite) Test_ListArtikel_WithPermission_Success() {
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyRead).Return(true, nil)
 	s.repo.On("ListArtikel", 1, 10, filter).Return(items, int64(1), nil)
 
-	result, total, err := s.svc.ListArtikel(1, 10, filter, actor)
+	result, total, err := s.svc.ListArtikel(context.Background(),1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
@@ -255,7 +260,7 @@ func (s *ArtikelServiceTestSuite) Test_ListArtikel_Forbidden() {
 	filter := &dto.FilterArtikelRequest{}
 	s.mockNoPermissions()
 
-	result, total, err := s.svc.ListArtikel(1, 10, filter, actor)
+	result, total, err := s.svc.ListArtikel(context.Background(),1, 10, filter, actor)
 
 	s.Nil(result)
 	s.Equal(int64(0), total)
@@ -271,7 +276,7 @@ func (s *ArtikelServiceTestSuite) Test_ListArtikel_DefaultPagination() {
 
 	s.repo.On("ListArtikel", 1, 10, filter).Return([]models.Artikel{}, int64(0), nil)
 
-	result, total, err := s.svc.ListArtikel(0, 0, filter, actor)
+	result, total, err := s.svc.ListArtikel(context.Background(),0, 0, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(0), total)
@@ -284,7 +289,7 @@ func (s *ArtikelServiceTestSuite) Test_ListArtikel_PageSizeCapped() {
 
 	s.repo.On("ListArtikel", 1, 10, filter).Return([]models.Artikel{}, int64(0), nil)
 
-	_, _, err := s.svc.ListArtikel(1, 999, filter, actor)
+	_, _, err := s.svc.ListArtikel(context.Background(),1, 999, filter, actor)
 
 	s.NoError(err)
 	s.repo.AssertCalled(s.T(), "ListArtikel", 1, 10, filter)
@@ -297,7 +302,7 @@ func (s *ArtikelServiceTestSuite) Test_ListArtikel_WithNameFilter() {
 
 	s.repo.On("ListArtikel", 1, 10, filter).Return(items, int64(1), nil)
 
-	result, total, err := s.svc.ListArtikel(1, 10, filter, actor)
+	result, total, err := s.svc.ListArtikel(context.Background(),1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
@@ -314,7 +319,7 @@ func (s *ArtikelServiceTestSuite) Test_UpdateArtikel_Superadmin_Success() {
 	s.repo.On("GetArtikelByID", int64(1)).Return(existing, nil)
 	s.repo.On("UpdateArtikel", mock.AnythingOfType("*models.Artikel")).Return(nil)
 
-	result, err := s.svc.UpdateArtikel(1, req, actor)
+	result, err := s.svc.UpdateArtikel(context.Background(),1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -332,7 +337,7 @@ func (s *ArtikelServiceTestSuite) Test_UpdateArtikel_WithPermission_Success() {
 	s.repo.On("GetArtikelByID", int64(1)).Return(existing, nil)
 	s.repo.On("UpdateArtikel", mock.AnythingOfType("*models.Artikel")).Return(nil)
 
-	result, err := s.svc.UpdateArtikel(1, req, actor)
+	result, err := s.svc.UpdateArtikel(context.Background(),1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -343,7 +348,7 @@ func (s *ArtikelServiceTestSuite) Test_UpdateArtikel_Forbidden() {
 	req := &dto.UpdateArtikelRequest{}
 	s.mockNoPermissions()
 
-	result, err := s.svc.UpdateArtikel(1, req, actor)
+	result, err := s.svc.UpdateArtikel(context.Background(),1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -358,7 +363,7 @@ func (s *ArtikelServiceTestSuite) Test_UpdateArtikel_NotFound() {
 
 	s.repo.On("GetArtikelByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.UpdateArtikel(999, req, actor)
+	result, err := s.svc.UpdateArtikel(context.Background(),999, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -378,7 +383,7 @@ func (s *ArtikelServiceTestSuite) Test_UpdateArtikel_PartialFields() {
 		return m.Name == originalName && *m.Description == newDesc
 	})).Return(nil)
 
-	result, err := s.svc.UpdateArtikel(1, req, actor)
+	result, err := s.svc.UpdateArtikel(context.Background(),1, req, actor)
 
 	s.NoError(err)
 	s.Equal(originalName, result.Name)
@@ -394,7 +399,7 @@ func (s *ArtikelServiceTestSuite) Test_UpdateArtikel_RepoError() {
 	s.repo.On("GetArtikelByID", int64(1)).Return(existing, nil)
 	s.repo.On("UpdateArtikel", mock.AnythingOfType("*models.Artikel")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.UpdateArtikel(1, req, actor)
+	result, err := s.svc.UpdateArtikel(context.Background(),1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -408,7 +413,7 @@ func (s *ArtikelServiceTestSuite) Test_DeleteArtikel_Superadmin_Success() {
 	s.repo.On("GetArtikelByID", int64(1)).Return(existing, nil)
 	s.repo.On("DeleteArtikel", int64(1)).Return(nil)
 
-	err := s.svc.DeleteArtikel(1, actor)
+	err := s.svc.DeleteArtikel(context.Background(),1, actor)
 
 	s.NoError(err)
 	s.repo.AssertExpectations(s.T())
@@ -423,7 +428,7 @@ func (s *ArtikelServiceTestSuite) Test_DeleteArtikel_WithPermission_Success() {
 	s.repo.On("GetArtikelByID", int64(1)).Return(existing, nil)
 	s.repo.On("DeleteArtikel", int64(1)).Return(nil)
 
-	err := s.svc.DeleteArtikel(1, actor)
+	err := s.svc.DeleteArtikel(context.Background(),1, actor)
 
 	s.NoError(err)
 }
@@ -432,7 +437,7 @@ func (s *ArtikelServiceTestSuite) Test_DeleteArtikel_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	err := s.svc.DeleteArtikel(1, actor)
+	err := s.svc.DeleteArtikel(context.Background(),1, actor)
 
 	s.Error(err)
 	var appErr *appErrors.AppError
@@ -445,7 +450,7 @@ func (s *ArtikelServiceTestSuite) Test_DeleteArtikel_NotFound() {
 
 	s.repo.On("GetArtikelByID", int64(999)).Return(nil, nil)
 
-	err := s.svc.DeleteArtikel(999, actor)
+	err := s.svc.DeleteArtikel(context.Background(),999, actor)
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
@@ -459,7 +464,7 @@ func (s *ArtikelServiceTestSuite) Test_DeleteArtikel_RepoError() {
 	s.repo.On("GetArtikelByID", int64(1)).Return(existing, nil)
 	s.repo.On("DeleteArtikel", int64(1)).Return(fmt.Errorf("db error"))
 
-	err := s.svc.DeleteArtikel(1, actor)
+	err := s.svc.DeleteArtikel(context.Background(),1, actor)
 
 	s.Error(err)
 }

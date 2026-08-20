@@ -18,9 +18,37 @@ func (s *service) CreateKontak(ctx context.Context, req *dto.CreateKepegawaianKo
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
+
 	if !can {
 		return nil, appErrors.Wrap(http.StatusForbidden,
 			"Akses ditolak. Anda tidak memiliki hak akses untuk membuat KepegawaianKontak baru.", nil)
+	}
+
+	// validasi keberadaan master Tipe
+	tipeMaster, err := s.repo.GetTipeByID(ctx, req.TipeID)
+	if err != nil {
+		return nil, appErrors.Internal("gagal mengambil master tipe kontak")
+	}
+
+	if tipeMaster == nil {
+		return nil, appErrors.Wrap(http.StatusUnprocessableEntity, "Tipe kontak tidak ditemukan.", nil)
+	}
+
+	// cek duplikasi nilai+tipe (mis. NIK tidak boleh sama antar pegawai)
+	duplicate, err := s.repo.ExistsByNilaiAndTipe(ctx, req.TipeID, req.Nilai, 0)
+	if err != nil {
+		return nil, appErrors.Internal("gagal cek duplikasi kontak")
+	}
+	if duplicate {
+		return nil, appErrors.Wrap(http.StatusConflict,
+			"Nilai kontak sudah digunakan oleh pegawai lain.", nil)
+	}
+
+	// jika is_primary = true, unset primary lama untuk tipe yang sama
+	if req.IsPrimary {
+		if err := s.repo.UnsetPrimaryByPegawaiIDAndTipe(ctx, req.PegawaiID, req.TipeID, actor.UserID); err != nil {
+			return nil, appErrors.Internal("gagal mereset primary identifier sebelumnya")
+		}
 	}
 
 	m := &models.KepegawaianKontak{
@@ -34,8 +62,11 @@ func (s *service) CreateKontak(ctx context.Context, req *dto.CreateKepegawaianKo
 		UpdatedBy:   &actor.UserID,
 	}
 	if err := s.repo.CreateKontak(ctx, m); err != nil {
-		return nil, err
+		return nil, appErrors.Internal("gagal menyimpan kontak pegawai")
 	}
+
+	// Attach Tipe master untuk kebutuhan response mapping
+	m.Tipe = tipeMaster
 
 	creator := s.buildCreator(ctx, m.CreatedBy)
 
@@ -76,26 +107,26 @@ func (s *service) GetKontakByID(ctx context.Context, id int64, actor he.AuthCont
 }
 
 // ─── GetByPegawaiID ───────────────────────────────────────────────────────────────────────────────
-func (s *service) GetKontakByPegawaiID(ctx context.Context, pegawaiID int64, actor he.AuthContext) ([]dto.KepegawaianKontakResponse, error) {
+func (s *service) GetKontakByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int, actor he.AuthContext) ([]dto.KepegawaianKontakResponse, int64, error) {
 	can, err := s.canReadKepegawaianKontak(ctx, actor)
 	if err != nil {
-		return nil, appErrors.Internal("gagal cek akses")
+		return nil, 0, appErrors.Internal("gagal cek akses")
 	}
 	if !can {
-		return nil, appErrors.Wrap(http.StatusForbidden,
+		return nil, 0, appErrors.Wrap(http.StatusForbidden,
 			"Akses ditolak. Anda tidak memiliki hak akses untuk Melihat KepegawaianKontak.", nil)
 	}
 
-	items, err := s.repo.GetKontakByPegawaiID(ctx, pegawaiID)
+	items, total, err := s.repo.GetKontakByPegawaiID(ctx, pegawaiID, page, pageSize)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	if items == nil {
-		return nil, errors.New("KepegawaianKontak tidak ditemukan")
+		return nil, 0, errors.New("KepegawaianKontak tidak ditemukan")
 	}
 
 	creatorsMap, updatersMap := s.buildAuditMaps(ctx, items)
-	return dto.ToKepegawaianKontakListResponse(items, creatorsMap, updatersMap), nil
+	return dto.ToKepegawaianKontakListResponse(items, creatorsMap, updatersMap), total, nil
 }
 
 // ─── List ───────────────────────────────────────────────────────────────────────────────
@@ -137,11 +168,44 @@ func (s *service) UpdateKontak(ctx context.Context, id int64, req *dto.UpdateKep
 
 	m, err := s.repo.GetKontakByID(ctx, id)
 	if err != nil {
-		return nil, err
+		return nil, appErrors.Internal("gagal mengambil data kontak")
 	}
 	if m == nil {
-		return nil, errors.New("KepegawaianKontak tidak ditemukan")
+		return nil, appErrors.Wrap(http.StatusNotFound, "KepegawaianKontak tidak ditemukan.", nil)
 	}
+
+	tipeCheck := m.TipeID
+	nilaiCheck := m.Nilai
+
+	duplicate, err := s.repo.ExistsByNilaiAndTipe(ctx, tipeCheck, nilaiCheck, id)
+	if err != nil {
+		return nil, appErrors.Internal("gagal cek duplikasi kontak")
+	}
+	if duplicate {
+		return nil, appErrors.Wrap(http.StatusConflict,
+			"Nilai kontak sudah digunakan oleh pegawai lain.", nil)
+	}
+
+	// jika diubah menjadi primary, unset primary lama terlebih dahulu
+	if req.IsPrimary != nil && *req.IsPrimary && !m.IsPrimary {
+		if err := s.repo.UnsetPrimaryByPegawaiIDAndTipe(ctx, m.PegawaiID, tipeCheck, actor.UserID); err != nil {
+			return nil, appErrors.Internal("gagal mereset primary kontak sebelumnya")
+		}
+	}
+
+	// update parsial jika pointer dikirimkan (not nil)
+	if req.TipeID != nil {
+		tipeMaster, err := s.repo.GetTipeByID(ctx, *req.TipeID)
+		if err != nil {
+			return nil, appErrors.Internal("gagal mengambil master tipe kontak")
+		}
+		if tipeMaster == nil {
+			return nil, appErrors.Wrap(http.StatusUnprocessableEntity, "Tipe kontak tidak ditemukan.", nil)
+		}
+		m.TipeID = *req.TipeID
+		m.Tipe = tipeMaster
+	}
+
 	if req.TipeID != nil {
 		m.TipeID = *req.TipeID
 	}
@@ -161,7 +225,7 @@ func (s *service) UpdateKontak(ctx context.Context, id int64, req *dto.UpdateKep
 	m.UpdatedAt = time.Now()
 
 	if err := s.repo.UpdateKontak(ctx, m); err != nil {
-		return nil, err
+		return nil, appErrors.Internal("gagal menyimpan perubahan kontak")
 	}
 
 	creator := s.buildCreator(ctx, m.CreatedBy)

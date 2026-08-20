@@ -1,8 +1,8 @@
 package kontak
 
 import (
-	"neosim_go/internal/modules/kepegawaian/kontak/handlers"
 	authMiddlewares "neosim_go/internal/modules/auth/middlewares"
+	"neosim_go/internal/modules/kepegawaian/kontak/handlers"
 	"neosim_go/internal/shared/utils"
 
 	"github.com/labstack/echo/v5"
@@ -17,6 +17,7 @@ func RegisterRoutes(e *echo.Echo, h *handlers.KepegawaianKontakHandler, jwtManag
 	g.POST("", h.CreateKontak)
 	g.PUT("/:id", h.UpdateKontak)
 	g.DELETE("/:id", h.DeleteKontak)
+	g.GET("/:pegawai_id/pegawai", h.ListKontakByPegawai)
 	gTipe := e.Group("/api/v1/kepegawaian/kontak/tipes", jwt)
 	gTipe.GET("", h.ListTipe)
 	gTipe.GET("/:id", h.GetTipeByID)

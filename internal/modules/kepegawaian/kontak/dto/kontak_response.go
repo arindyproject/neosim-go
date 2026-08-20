@@ -8,17 +8,18 @@ import (
 
 // KepegawaianKontakResponse response untuk single KepegawaianKontak
 type KepegawaianKontakResponse struct {
-	ID          int64            `json:"id"`
-	PegawaiID   int64            `json:"pegawai_id"`
-	TipeID      int64            `json:"tipe_id"`
-	Nilai       string           `json:"nilai"`
-	IsPrimary   bool             `json:"is_primary"`
-	IsAktif     bool             `json:"is_aktif"`
-	Description *string          `json:"description"`
-	CreatedBy   *he.UserData     `json:"created_by"`
-	UpdatedBy   *he.UserData     `json:"updated_by"`
-	CreatedAt   types.CustomTime `json:"created_at"`
-	UpdatedAt   types.CustomTime `json:"updated_at"`
+	ID        int64 `json:"id"`
+	PegawaiID int64 `json:"pegawai_id"`
+	//TipeID      int64            `json:"tipe_id"`
+	Tipe        *TipeSimpelResponse `json:"tipe,omitempty"`
+	Nilai       string              `json:"nilai"`
+	IsPrimary   bool                `json:"is_primary"`
+	IsAktif     bool                `json:"is_aktif"`
+	Description *string             `json:"description"`
+	CreatedBy   *he.UserData        `json:"created_by"`
+	UpdatedBy   *he.UserData        `json:"updated_by"`
+	CreatedAt   types.CustomTime    `json:"created_at"`
+	UpdatedAt   types.CustomTime    `json:"updated_at"`
 }
 
 type KepegawaianKontakResponseParams struct {
@@ -29,14 +30,31 @@ type KepegawaianKontakResponseParams struct {
 
 // ToKepegawaianKontakResponse mengubah model menjadi response
 func ToKepegawaianKontakResponse(params KepegawaianKontakResponseParams) *KepegawaianKontakResponse {
+	if params.KepegawaianKontak == nil {
+		return nil
+	}
+
+	m := params.KepegawaianKontak
+
+	var tipeResponse *TipeSimpelResponse
+
+	if m.Tipe != nil {
+		tipeResponse = &TipeSimpelResponse{
+			ID:    m.Tipe.ID,
+			Code:  m.Tipe.Code,
+			Label: m.Tipe.Label,
+		}
+	}
+
 	return &KepegawaianKontakResponse{
-		ID:          params.KepegawaianKontak.ID,
-		PegawaiID:   params.KepegawaianKontak.PegawaiID,
-		TipeID:      params.KepegawaianKontak.TipeID,
-		Nilai:       params.KepegawaianKontak.Nilai,
-		IsPrimary:   params.KepegawaianKontak.IsPrimary,
-		IsAktif:     params.KepegawaianKontak.IsAktif,
-		Description: params.KepegawaianKontak.Description,
+		ID:        m.ID,
+		PegawaiID: m.PegawaiID,
+		//TipeID:      params.KepegawaianKontak.TipeID,
+		Tipe:        tipeResponse,
+		Nilai:       m.Nilai,
+		IsPrimary:   m.IsPrimary,
+		IsAktif:     m.IsAktif,
+		Description: m.Description,
 		CreatedBy:   params.Creator,
 		UpdatedBy:   params.Updater,
 		CreatedAt:   types.CustomTime(params.KepegawaianKontak.CreatedAt),

@@ -1,6 +1,7 @@
 package mocks
 
 import (
+	"context"
 	"neosim_go/internal/modules/users/dto"
 	"neosim_go/internal/modules/users/models"
 
@@ -12,12 +13,12 @@ type MockUserRepository struct {
 	mock.Mock
 }
 
-func (m *MockUserRepository) Create(user *models.User) error {
+func (m *MockUserRepository) Create(ctx context.Context, user *models.User) error {
 	args := m.Called(user)
 	return args.Error(0)
 }
 
-func (m *MockUserRepository) GetByID(id int64) (*models.User, error) {
+func (m *MockUserRepository) GetByID(ctx context.Context, id int64) (*models.User, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -25,7 +26,7 @@ func (m *MockUserRepository) GetByID(id int64) (*models.User, error) {
 	return args.Get(0).(*models.User), args.Error(1)
 }
 
-func (m *MockUserRepository) GetByIDs(ids []int64) ([]models.User, error) {
+func (m *MockUserRepository) GetByIDs(ctx context.Context, ids []int64) ([]models.User, error) {
 	args := m.Called(ids)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -33,7 +34,7 @@ func (m *MockUserRepository) GetByIDs(ids []int64) ([]models.User, error) {
 	return args.Get(0).([]models.User), args.Error(1)
 }
 
-func (m *MockUserRepository) GetByUsername(username string) (*models.User, error) {
+func (m *MockUserRepository) GetByUsername(ctx context.Context, username string) (*models.User, error) {
 	args := m.Called(username)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -41,7 +42,7 @@ func (m *MockUserRepository) GetByUsername(username string) (*models.User, error
 	return args.Get(0).(*models.User), args.Error(1)
 }
 
-func (m *MockUserRepository) GetByEmail(email string) (*models.User, error) {
+func (m *MockUserRepository) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	args := m.Called(email)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -49,27 +50,27 @@ func (m *MockUserRepository) GetByEmail(email string) (*models.User, error) {
 	return args.Get(0).(*models.User), args.Error(1)
 }
 
-func (m *MockUserRepository) List(page, pageSize int, filter *dto.UserFilter) ([]models.User, int64, error) {
+func (m *MockUserRepository) List(ctx context.Context, page, pageSize int, filter *dto.UserFilter) ([]models.User, int64, error) {
 	args := m.Called(page, pageSize, filter)
 	return args.Get(0).([]models.User), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockUserRepository) Update(user *models.User) error {
+func (m *MockUserRepository) Update(ctx context.Context, user *models.User) error {
 	args := m.Called(user)
 	return args.Error(0)
 }
 
-func (m *MockUserRepository) Delete(id int64, deletedBy int64, reason string) error {
+func (m *MockUserRepository) Delete(ctx context.Context, id int64, deletedBy int64, reason string) error {
 	args := m.Called(id, deletedBy, reason)
 	return args.Error(0)
 }
 
-func (m *MockUserRepository) DeletedList(page, pageSize int, filter *dto.UserDeletedFilter) ([]models.User, int64, error) {
+func (m *MockUserRepository) DeletedList(ctx context.Context, page, pageSize int, filter *dto.UserDeletedFilter) ([]models.User, int64, error) {
 	args := m.Called(page, pageSize, filter)
 	return args.Get(0).([]models.User), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockUserRepository) GetSettings(id int64) ([]models.UserSetting, error) {
+func (m *MockUserRepository) GetSettings(ctx context.Context, id int64) ([]models.UserSetting, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -77,7 +78,7 @@ func (m *MockUserRepository) GetSettings(id int64) ([]models.UserSetting, error)
 	return args.Get(0).([]models.UserSetting), args.Error(1)
 }
 
-func (m *MockUserRepository) UpdateSettings(id int64, settings []models.UserSetting) error {
+func (m *MockUserRepository) UpdateSettings(ctx context.Context, id int64, settings []models.UserSetting) error {
 	args := m.Called(id, settings)
 	return args.Error(0)
 }

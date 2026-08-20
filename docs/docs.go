@@ -2320,6 +2320,18 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
                         "description": "ID pegawai",
                         "name": "pegawai_id",
                         "in": "path",
@@ -8484,7 +8496,7 @@ const docTemplate = `{
                     "description": "TipeID         int64            ` + "`" + `json:\"tipe_id\"` + "`" + `",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/dto.TipeSimpelResponse"
+                            "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.TipeSimpelResponse"
                         }
                     ]
                 },
@@ -8523,8 +8535,13 @@ const docTemplate = `{
                 "pegawai_id": {
                     "type": "integer"
                 },
-                "tipe_id": {
-                    "type": "integer"
+                "tipe": {
+                    "description": "TipeID      int64            ` + "`" + `json:\"tipe_id\"` + "`" + `",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_kontak_dto.TipeSimpelResponse"
+                        }
+                    ]
                 },
                 "updated_at": {
                     "type": "string"
@@ -8623,6 +8640,10 @@ const docTemplate = `{
         },
         "dto.LoginRequest": {
             "type": "object",
+            "required": [
+                "identifier",
+                "password"
+            ],
             "properties": {
                 "identifier": {
                     "type": "string",
@@ -9134,38 +9155,6 @@ const docTemplate = `{
                 },
                 "updated_by": {
                     "$ref": "#/definitions/httputil.UserData"
-                }
-            }
-        },
-        "dto.TipeSimpelResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "fhir_system": {
-                    "type": "string"
-                },
-                "has_expiry": {
-                    "type": "boolean"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_nakes": {
-                    "type": "boolean"
-                },
-                "is_required": {
-                    "type": "boolean"
-                },
-                "label": {
-                    "type": "string"
-                },
-                "penerbit": {
-                    "type": "string"
                 }
             }
         },
@@ -9856,6 +9845,38 @@ const docTemplate = `{
                 }
             }
         },
+        "neosim_go_internal_modules_kepegawaian_identifier_dto.TipeSimpelResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "fhir_system": {
+                    "type": "string"
+                },
+                "has_expiry": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_nakes": {
+                    "type": "boolean"
+                },
+                "is_required": {
+                    "type": "boolean"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "penerbit": {
+                    "type": "string"
+                }
+            }
+        },
         "neosim_go_internal_modules_kepegawaian_identifier_dto.UpdateTipeRequest": {
             "type": "object",
             "properties": {
@@ -9934,6 +9955,20 @@ const docTemplate = `{
                 },
                 "updated_by": {
                     "$ref": "#/definitions/httputil.UserData"
+                }
+            }
+        },
+        "neosim_go_internal_modules_kepegawaian_kontak_dto.TipeSimpelResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "label": {
+                    "type": "string"
                 }
             }
         },

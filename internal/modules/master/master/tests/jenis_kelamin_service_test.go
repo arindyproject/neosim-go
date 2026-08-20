@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"fmt"
 	"neosim_go/internal/modules/master/master/dto"
 	"neosim_go/internal/modules/master/master/models"
@@ -24,7 +25,7 @@ func (s *MasterServiceTestSuite) Test_CreateJenisKelamin_Superadmin_Success() {
 	s.repo.On("GetByNameJenisKelamin", req.Name).Return(nil, nil)
 	s.repo.On("CreateJenisKelamin", mock.AnythingOfType("*models.MasterJenisKelamin")).Return(nil)
 
-	result, err := s.svc.CreateJenisKelamin(req, actor)
+	result, err := s.svc.CreateJenisKelamin(context.Background(), req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -40,7 +41,7 @@ func (s *MasterServiceTestSuite) Test_CreateJenisKelamin_WithPermission_Success(
 	s.repo.On("GetByNameJenisKelamin", req.Name).Return(nil, nil) // Added
 	s.repo.On("CreateJenisKelamin", mock.AnythingOfType("*models.MasterJenisKelamin")).Return(nil)
 
-	result, err := s.svc.CreateJenisKelamin(req, actor)
+	result, err := s.svc.CreateJenisKelamin(context.Background(), req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -55,7 +56,7 @@ func (s *MasterServiceTestSuite) Test_CreateJenisKelamin_WithManagePermission_Su
 	s.repo.On("GetByNameJenisKelamin", req.Name).Return(nil, nil) // Added
 	s.repo.On("CreateJenisKelamin", mock.AnythingOfType("*models.MasterJenisKelamin")).Return(nil)
 
-	result, err := s.svc.CreateJenisKelamin(req, actor)
+	result, err := s.svc.CreateJenisKelamin(context.Background(), req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -66,7 +67,7 @@ func (s *MasterServiceTestSuite) Test_CreateJenisKelamin_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.CreateJenisKelamin(req, actor)
+	result, err := s.svc.CreateJenisKelamin(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -82,7 +83,7 @@ func (s *MasterServiceTestSuite) Test_CreateJenisKelamin_RepoError() {
 	s.repo.On("GetByNameJenisKelamin", req.Name).Return(nil, nil) // Added: harus lolos cek duplikat dulu
 	s.repo.On("CreateJenisKelamin", mock.AnythingOfType("*models.MasterJenisKelamin")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.CreateJenisKelamin(req, actor)
+	result, err := s.svc.CreateJenisKelamin(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -95,7 +96,7 @@ func (s *MasterServiceTestSuite) Test_GetByIDJenisKelamin_Success() {
 	s.repo.On("GetByIDJenisKelamin", int64(1)).Return(item, nil)
 
 	// FIXED: Typo GetByIDJenisKelamin -> GetByIDJenisKelamin
-	result, err := s.svc.GetByIDJenisKelamin(1)
+	result, err := s.svc.GetByIDJenisKelamin(context.Background(), 1)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -106,7 +107,7 @@ func (s *MasterServiceTestSuite) Test_GetByIDJenisKelamin_Success() {
 func (s *MasterServiceTestSuite) Test_GetByIDJenisKelamin_NotFound() {
 	s.repo.On("GetByIDJenisKelamin", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.GetByIDJenisKelamin(999)
+	result, err := s.svc.GetByIDJenisKelamin(context.Background(), 999)
 
 	s.Nil(result)
 	s.Error(err)
@@ -116,7 +117,7 @@ func (s *MasterServiceTestSuite) Test_GetByIDJenisKelamin_NotFound() {
 func (s *MasterServiceTestSuite) Test_GetByIDJenisKelamin_RepoError() {
 	s.repo.On("GetByIDJenisKelamin", int64(1)).Return(nil, fmt.Errorf("db error"))
 
-	result, err := s.svc.GetByIDJenisKelamin(1)
+	result, err := s.svc.GetByIDJenisKelamin(context.Background(), 1)
 
 	s.Nil(result)
 	s.Error(err)
@@ -132,7 +133,7 @@ func (s *MasterServiceTestSuite) Test_ListJenisKelamin_Success() {
 	// FIXED: Typo ListMasterJenisKelamin -> ListJenisKelamin
 	s.repo.On("ListJenisKelamin", 1, 10, filter).Return(items, int64(2), nil)
 
-	result, total, err := s.svc.ListJenisKelamin(1, 10, filter)
+	result, total, err := s.svc.ListJenisKelamin(context.Background(), 1, 10, filter)
 
 	s.NoError(err)
 	s.Equal(int64(2), total)
@@ -145,7 +146,7 @@ func (s *MasterServiceTestSuite) Test_ListJenisKelamin_NotFound() {
 	// FIXED: Typo ListMasterJenisKelamin -> ListJenisKelamin
 	s.repo.On("ListJenisKelamin", 1, 10, filter).Return([]models.MasterJenisKelamin{}, int64(0), nil)
 
-	result, total, err := s.svc.ListJenisKelamin(1, 10, filter)
+	result, total, err := s.svc.ListJenisKelamin(context.Background(), 1, 10, filter)
 
 	s.Nil(result)
 	s.Equal(int64(0), total)
@@ -160,7 +161,7 @@ func (s *MasterServiceTestSuite) Test_ListJenisKelamin_DefaultPagination() {
 	// FIXED: Typo ListMasterJenisKelamin -> ListJenisKelamin
 	s.repo.On("ListJenisKelamin", 1, 10, filter).Return(items, int64(1), nil)
 
-	_, _, err := s.svc.ListJenisKelamin(0, 0, filter)
+	_, _, err := s.svc.ListJenisKelamin(context.Background(), 0, 0, filter)
 
 	s.NoError(err)
 	s.repo.AssertCalled(s.T(), "ListJenisKelamin", 1, 10, filter)
@@ -173,7 +174,7 @@ func (s *MasterServiceTestSuite) Test_ListJenisKelamin_PageSizeCapped() {
 	// FIXED: Typo ListMasterJenisKelamin -> ListJenisKelamin
 	s.repo.On("ListJenisKelamin", 1, 10, filter).Return(items, int64(1), nil)
 
-	_, _, err := s.svc.ListJenisKelamin(1, 999, filter)
+	_, _, err := s.svc.ListJenisKelamin(context.Background(), 1, 999, filter)
 
 	s.NoError(err)
 	s.repo.AssertCalled(s.T(), "ListJenisKelamin", 1, 10, filter)
@@ -191,7 +192,7 @@ func (s *MasterServiceTestSuite) Test_UpdateJenisKelamin_Superadmin_Success() {
 	s.repo.On("GetByNameJenisKelamin", newName).Return(nil, nil)
 	s.repo.On("UpdateJenisKelamin", mock.AnythingOfType("*models.MasterJenisKelamin")).Return(nil)
 
-	result, err := s.svc.UpdateJenisKelamin(1, req, actor)
+	result, err := s.svc.UpdateJenisKelamin(context.Background(), 1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -203,7 +204,7 @@ func (s *MasterServiceTestSuite) Test_UpdateJenisKelamin_Forbidden() {
 	req := &dto.UpdateMasterJenisKelaminRequest{}
 	s.mockNoPermissions()
 
-	result, err := s.svc.UpdateJenisKelamin(1, req, actor)
+	result, err := s.svc.UpdateJenisKelamin(context.Background(), 1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -218,7 +219,7 @@ func (s *MasterServiceTestSuite) Test_UpdateJenisKelamin_NotFound() {
 
 	s.repo.On("GetByIDJenisKelamin", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.UpdateJenisKelamin(999, req, actor)
+	result, err := s.svc.UpdateJenisKelamin(context.Background(), 999, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -239,7 +240,7 @@ func (s *MasterServiceTestSuite) Test_UpdateJenisKelamin_PartialFields() {
 		return m.Name == newName
 	})).Return(nil)
 
-	result, err := s.svc.UpdateJenisKelamin(1, req, actor)
+	result, err := s.svc.UpdateJenisKelamin(context.Background(), 1, req, actor)
 
 	s.NoError(err)
 	s.Equal(newName, result.Name)
@@ -254,7 +255,7 @@ func (s *MasterServiceTestSuite) Test_UpdateJenisKelamin_RepoError() {
 	s.repo.On("GetByIDJenisKelamin", int64(1)).Return(existing, nil)
 	s.repo.On("UpdateJenisKelamin", mock.AnythingOfType("*models.MasterJenisKelamin")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.UpdateJenisKelamin(1, req, actor)
+	result, err := s.svc.UpdateJenisKelamin(context.Background(), 1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -268,7 +269,7 @@ func (s *MasterServiceTestSuite) Test_DeleteJenisKelamin_Superadmin_Success() {
 	s.repo.On("GetByIDJenisKelamin", int64(1)).Return(existing, nil)
 	s.repo.On("DeleteJenisKelamin", int64(1)).Return(nil)
 
-	err := s.svc.DeleteJenisKelamin(1, actor)
+	err := s.svc.DeleteJenisKelamin(context.Background(), 1, actor)
 
 	s.NoError(err)
 	s.repo.AssertExpectations(s.T())
@@ -278,7 +279,7 @@ func (s *MasterServiceTestSuite) Test_DeleteJenisKelamin_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	err := s.svc.DeleteJenisKelamin(1, actor)
+	err := s.svc.DeleteJenisKelamin(context.Background(), 1, actor)
 
 	s.Error(err)
 	var appErr *appErrors.AppError
@@ -291,7 +292,7 @@ func (s *MasterServiceTestSuite) Test_DeleteJenisKelamin_NotFound() {
 
 	s.repo.On("GetByIDJenisKelamin", int64(999)).Return(nil, nil)
 
-	err := s.svc.DeleteJenisKelamin(999, actor)
+	err := s.svc.DeleteJenisKelamin(context.Background(), 999, actor)
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
@@ -305,7 +306,7 @@ func (s *MasterServiceTestSuite) Test_DeleteJenisKelamin_RepoError() {
 	s.repo.On("GetByIDJenisKelamin", int64(1)).Return(existing, nil)
 	s.repo.On("DeleteJenisKelamin", int64(1)).Return(fmt.Errorf("db error"))
 
-	err := s.svc.DeleteJenisKelamin(1, actor)
+	err := s.svc.DeleteJenisKelamin(context.Background(), 1, actor)
 
 	s.Error(err)
 }

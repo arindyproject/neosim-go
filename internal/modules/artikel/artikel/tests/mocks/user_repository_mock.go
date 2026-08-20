@@ -1,6 +1,7 @@
 package mocks
 
 import (
+	"context"
 	userDto    "neosim_go/internal/modules/users/dto"
 	userModels "neosim_go/internal/modules/users/models"
 	"github.com/stretchr/testify/mock"
@@ -11,12 +12,18 @@ type UserRepositoryMock struct {
 	mock.Mock
 }
 
-func (m *UserRepositoryMock) Create(user *userModels.User) error {
-	args := m.Called(user)
-	return args.Error(0)
+func (m *UserRepositoryMock) GetByIDs(ctx context.Context, ids []int64) ([]userModels.User, error) {
+	args := m.Called(ids)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]userModels.User), args.Error(1)
 }
 
-func (m *UserRepositoryMock) GetByID(id int64) (*userModels.User, error) {
+
+
+
+func (m *UserRepositoryMock) GetByID(ctx context.Context,id int64) (*userModels.User, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -24,7 +31,12 @@ func (m *UserRepositoryMock) GetByID(id int64) (*userModels.User, error) {
 	return args.Get(0).(*userModels.User), args.Error(1)
 }
 
-func (m *UserRepositoryMock) GetByUsername(username string) (*userModels.User, error) {
+func (m *UserRepositoryMock) Create(ctx context.Context,user *userModels.User) error {
+	args := m.Called(user)
+	return args.Error(0)
+}
+
+func (m *UserRepositoryMock) GetByUsername(ctx context.Context,username string) (*userModels.User, error) {
 	args := m.Called(username)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -32,7 +44,7 @@ func (m *UserRepositoryMock) GetByUsername(username string) (*userModels.User, e
 	return args.Get(0).(*userModels.User), args.Error(1)
 }
 
-func (m *UserRepositoryMock) GetByEmail(email string) (*userModels.User, error) {
+func (m *UserRepositoryMock) GetByEmail(ctx context.Context,email string) (*userModels.User, error) {
 	args := m.Called(email)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -40,7 +52,7 @@ func (m *UserRepositoryMock) GetByEmail(email string) (*userModels.User, error) 
 	return args.Get(0).(*userModels.User), args.Error(1)
 }
 
-func (m *UserRepositoryMock) List(page, pageSize int, filter *userDto.UserFilter) ([]userModels.User, int64, error) {
+func (m *UserRepositoryMock) List(ctx context.Context,page, pageSize int, filter *userDto.UserFilter) ([]userModels.User, int64, error) {
 	args := m.Called(page, pageSize, filter)
 	var users []userModels.User
 	if args.Get(0) != nil {
@@ -49,17 +61,17 @@ func (m *UserRepositoryMock) List(page, pageSize int, filter *userDto.UserFilter
 	return users, args.Get(1).(int64), args.Error(2)
 }
 
-func (m *UserRepositoryMock) Update(user *userModels.User) error {
+func (m *UserRepositoryMock) Update(ctx context.Context,user *userModels.User) error {
 	args := m.Called(user)
 	return args.Error(0)
 }
 
-func (m *UserRepositoryMock) Delete(id int64, deletedBy int64, reason string) error {
+func (m *UserRepositoryMock) Delete(ctx context.Context,id int64, deletedBy int64, reason string) error {
 	args := m.Called(id, deletedBy, reason)
 	return args.Error(0)
 }
 
-func (m *UserRepositoryMock) DeletedList(page, pageSize int, filter *userDto.UserDeletedFilter) ([]userModels.User, int64, error) {
+func (m *UserRepositoryMock) DeletedList(ctx context.Context,page, pageSize int, filter *userDto.UserDeletedFilter) ([]userModels.User, int64, error) {
 	args := m.Called(page, pageSize, filter)
 	var users []userModels.User
 	if args.Get(0) != nil {
@@ -68,7 +80,7 @@ func (m *UserRepositoryMock) DeletedList(page, pageSize int, filter *userDto.Use
 	return users, args.Get(1).(int64), args.Error(2)
 }
 
-func (m *UserRepositoryMock) GetSettings(id int64) ([]userModels.UserSetting, error) {
+func (m *UserRepositoryMock) GetSettings(ctx context.Context,id int64) ([]userModels.UserSetting, error) {
 	args := m.Called(id)
 	var settings []userModels.UserSetting
 	if args.Get(0) != nil {
@@ -77,7 +89,7 @@ func (m *UserRepositoryMock) GetSettings(id int64) ([]userModels.UserSetting, er
 	return settings, args.Error(1)
 }
 
-func (m *UserRepositoryMock) UpdateSettings(id int64, settings []userModels.UserSetting) error {
+func (m *UserRepositoryMock) UpdateSettings(ctx context.Context,id int64, settings []userModels.UserSetting) error {
 	args := m.Called(id, settings)
 	return args.Error(0)
 }

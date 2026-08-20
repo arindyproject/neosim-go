@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"neosim_go/internal/modules/kepegawaian/kontak/contracts"
+
 	"gorm.io/gorm"
 )
 

@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -25,7 +26,7 @@ func (s *ArtikelKategoriServiceTestSuite) Test_CreateTag_Superadmin_Success() {
 
 	s.repo.On("CreateTag", mock.AnythingOfType("*models.Tag")).Return(nil)
 
-	result, err := s.svc.CreateTag(req, actor)
+	result, err := s.svc.CreateTag(context.Background(),req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -37,7 +38,7 @@ func (s *ArtikelKategoriServiceTestSuite) Test_CreateTag_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.CreateTag(req, actor)
+	result, err := s.svc.CreateTag(context.Background(),req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -52,7 +53,7 @@ func (s *ArtikelKategoriServiceTestSuite) Test_CreateTag_RepoError() {
 
 	s.repo.On("CreateTag", mock.AnythingOfType("*models.Tag")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.CreateTag(req, actor)
+	result, err := s.svc.CreateTag(context.Background(),req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -65,7 +66,7 @@ func (s *ArtikelKategoriServiceTestSuite) Test_GetTagByID_Success() {
 
 	s.repo.On("GetTagByID", int64(1)).Return(item, nil)
 
-	result, err := s.svc.GetTagByID(1, actor)
+	result, err := s.svc.GetTagByID(context.Background(),1, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -77,7 +78,7 @@ func (s *ArtikelKategoriServiceTestSuite) Test_GetTagByID_NotFound() {
 
 	s.repo.On("GetTagByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.GetTagByID(999, actor)
+	result, err := s.svc.GetTagByID(context.Background(),999, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -88,7 +89,7 @@ func (s *ArtikelKategoriServiceTestSuite) Test_GetTagByID_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.GetTagByID(1, actor)
+	result, err := s.svc.GetTagByID(context.Background(),1, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -104,7 +105,7 @@ func (s *ArtikelKategoriServiceTestSuite) Test_ListTag_Success() {
 
 	s.repo.On("ListTag", 1, 10, filter).Return(items, int64(2), nil)
 
-	result, total, err := s.svc.ListTag(1, 10, filter, actor)
+	result, total, err := s.svc.ListTag(context.Background(),1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(2), total)
@@ -116,7 +117,7 @@ func (s *ArtikelKategoriServiceTestSuite) Test_ListTag_Forbidden() {
 	filter := &dto.FilterTagRequest{}
 	s.mockNoPermissions()
 
-	result, total, err := s.svc.ListTag(1, 10, filter, actor)
+	result, total, err := s.svc.ListTag(context.Background(),1, 10, filter, actor)
 
 	s.Nil(result)
 	s.Equal(int64(0), total)
@@ -136,7 +137,7 @@ func (s *ArtikelKategoriServiceTestSuite) Test_UpdateTag_Success() {
 	s.repo.On("GetTagByID", int64(1)).Return(existing, nil)
 	s.repo.On("UpdateTag", mock.AnythingOfType("*models.Tag")).Return(nil)
 
-	result, err := s.svc.UpdateTag(1, req, actor)
+	result, err := s.svc.UpdateTag(context.Background(),1, req, actor)
 
 	s.NoError(err)
 	s.Equal(newName, result.Name)
@@ -148,7 +149,7 @@ func (s *ArtikelKategoriServiceTestSuite) Test_UpdateTag_NotFound() {
 
 	s.repo.On("GetTagByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.UpdateTag(999, req, actor)
+	result, err := s.svc.UpdateTag(context.Background(),999, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -160,7 +161,7 @@ func (s *ArtikelKategoriServiceTestSuite) Test_UpdateTag_Forbidden() {
 	req := &dto.UpdateTagRequest{}
 	s.mockNoPermissions()
 
-	result, err := s.svc.UpdateTag(1, req, actor)
+	result, err := s.svc.UpdateTag(context.Background(),1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -174,7 +175,7 @@ func (s *ArtikelKategoriServiceTestSuite) Test_DeleteTag_Success() {
 	s.repo.On("GetTagByID", int64(1)).Return(existing, nil)
 	s.repo.On("DeleteTag", int64(1)).Return(nil)
 
-	err := s.svc.DeleteTag(1, actor)
+	err := s.svc.DeleteTag(context.Background(),1, actor)
 
 	s.NoError(err)
 }
@@ -184,7 +185,7 @@ func (s *ArtikelKategoriServiceTestSuite) Test_DeleteTag_NotFound() {
 
 	s.repo.On("GetTagByID", int64(999)).Return(nil, nil)
 
-	err := s.svc.DeleteTag(999, actor)
+	err := s.svc.DeleteTag(context.Background(),999, actor)
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
@@ -194,7 +195,7 @@ func (s *ArtikelKategoriServiceTestSuite) Test_DeleteTag_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	err := s.svc.DeleteTag(1, actor)
+	err := s.svc.DeleteTag(context.Background(),1, actor)
 
 	s.Error(err)
 	var appErr *appErrors.AppError
