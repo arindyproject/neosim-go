@@ -23,13 +23,23 @@ func (s *service) CreatePendidikan(ctx context.Context, req *dto.CreateKepegawai
 			"Akses ditolak. Anda tidak memiliki hak akses untuk membuat KepegawaianPendidikan baru.", nil)
 	}
 
-	// validasi keberadaan master Tipe
+	// validasi keberadaan master Jenjang
 	jenjangMaster, err := s.repo.GetJenjangByID(ctx, req.JenjangID)
 	if err != nil {
 		return nil, appErrors.Internal("gagal mengambil master jenjang pendidikan")
 	}
 	if jenjangMaster == nil {
 		return nil, appErrors.Wrap(http.StatusUnprocessableEntity, "Jenjang Pendidikan tidak ditemukan.", nil)
+	}
+
+	// cek duplikasi jenjang dan nomor ijasah
+	duplicate, err := s.repo.ExistsByNomorIjazah(ctx, req.JenjangID, *req.NomorIjazah, 0)
+	if err != nil {
+		return nil, appErrors.Internal("gagal cek duplikasi Nomor Ijazah")
+	}
+	if duplicate {
+		return nil, appErrors.Wrap(http.StatusConflict,
+			"Nomor Ijazah sudah digunakan oleh pegawai lain.", nil)
 	}
 
 	m := &models.KepegawaianPendidikan{
@@ -48,8 +58,11 @@ func (s *service) CreatePendidikan(ctx context.Context, req *dto.CreateKepegawai
 		UpdatedBy:       &actor.UserID,
 	}
 	if err := s.repo.CreatePendidikan(ctx, m); err != nil {
-		return nil, err
+		return nil, appErrors.Internal("gagal menyimpan pendidikan pegawai")
 	}
+
+	// Attach Tipe master untuk kebutuhan response mapping
+	m.Jenjang = jenjangMaster
 
 	creator := s.buildCreator(ctx, m.CreatedBy)
 
@@ -108,7 +121,40 @@ func (s *service) ListPendidikan(ctx context.Context, page, pageSize int, filter
 	}
 	items, total, err := s.repo.ListPendidikan(ctx, page, pageSize, filter)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, appErrors.Internal("gagal mengambil daftar pendidikan")
+	}
+
+	creatorsMap, updatersMap := s.buildAuditMaps(ctx, items)
+	return dto.ToKepegawaianPendidikanListResponse(items, creatorsMap, updatersMap), total, nil
+}
+
+// ── ListByPegawai ─────────────────────────────────────────────────────────────
+func (s *service) ListPendidikanByPegawai(
+	ctx context.Context,
+	pegawaiID int64,
+	page, pageSize int,
+	actor he.AuthContext,
+) ([]dto.KepegawaianPendidikanResponse, int64, error) {
+	can, err := s.canReadKepegawaianPendidikan(ctx, actor)
+	if err != nil {
+		return nil, 0, appErrors.Internal("gagal cek akses")
+	}
+	if !can {
+		return nil, 0, appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda tidak memiliki hak akses untuk melihat pendidikan pegawai.", nil)
+	}
+
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > s.cfg.DefaultPageSizeMax {
+		pageSize = s.cfg.DefaultPageSize
+	}
+
+	items, total, err := s.repo.GetPendidikanByPegawaiID(ctx, pegawaiID, page, pageSize)
+
+	if err != nil {
+		return nil, 0, appErrors.Internal("gagal mengambil identifier pegawai")
 	}
 
 	creatorsMap, updatersMap := s.buildAuditMaps(ctx, items)
@@ -128,10 +174,43 @@ func (s *service) UpdatePendidikan(ctx context.Context, id int64, req *dto.Updat
 
 	m, err := s.repo.GetPendidikanByID(ctx, id)
 	if err != nil {
-		return nil, err
+		return nil, appErrors.Internal("gagal mengambil data pendidikan")
 	}
 	if m == nil {
 		return nil, errors.New("KepegawaianPendidikan tidak ditemukan")
+	}
+
+	jenjangCheck := m.JenjangID
+	nomorIjazahCheck := ""
+	if m.NomorIjazah != nil {
+		nomorIjazahCheck = *m.NomorIjazah
+	}
+	if req.JenjangID != nil {
+		jenjangCheck = *req.JenjangID
+	}
+	if req.NomorIjazah != nil {
+		nomorIjazahCheck = *req.NomorIjazah
+	}
+
+	duplicate, err := s.repo.ExistsByNomorIjazah(ctx, jenjangCheck, nomorIjazahCheck, id)
+	if err != nil {
+		return nil, appErrors.Internal("gagal cek duplikasi nomor ijazah")
+	}
+	if duplicate {
+		return nil, appErrors.Wrap(http.StatusConflict,
+			"nomor ijazah sudah digunakan oleh pegawai lain.", nil)
+	}
+
+	if req.JenjangID != nil {
+		jenjangMaster, err := s.repo.GetJenjangByID(ctx, *req.JenjangID)
+		if err != nil {
+			return nil, appErrors.Internal("gagal mengambil master jenjang pendidikan")
+		}
+		if jenjangMaster == nil {
+			return nil, appErrors.Wrap(http.StatusUnprocessableEntity, "Jenjang Pendidikan tidak ditemukan.", nil)
+		}
+		m.JenjangID = *req.JenjangID
+		m.Jenjang = jenjangMaster
 	}
 
 	if req.JenjangID != nil {
@@ -140,19 +219,35 @@ func (s *service) UpdatePendidikan(ctx context.Context, id int64, req *dto.Updat
 	if req.NamaInstitusi != nil {
 		m.NamaInstitusi = *req.NamaInstitusi
 	}
-	m.NomorIjazah = req.NomorIjazah
-	m.BidangStudi = req.BidangStudi
-	m.AlamatInstitusi = req.AlamatInstitusi
-	m.NilaiAkhir = req.NilaiAkhir
-	m.TanggalMasuk = req.TanggalMasuk.ToTimePtr()
-	m.TanggalLulus = req.TanggalLulus.ToTimePtr()
-	m.FHIRCode = req.FHIRCode
-	m.FHIRSystem = req.FHIRSystem
+	if req.NomorIjazah != nil {
+		m.NomorIjazah = req.NomorIjazah
+	}
+	if req.BidangStudi != nil {
+		m.BidangStudi = req.BidangStudi
+	}
+	if req.AlamatInstitusi != nil {
+		m.AlamatInstitusi = req.AlamatInstitusi
+	}
+	if req.NilaiAkhir != nil {
+		m.NilaiAkhir = req.NilaiAkhir
+	}
+	if req.TanggalMasuk != nil {
+		m.TanggalMasuk = req.TanggalMasuk.ToTimePtr()
+	}
+	if req.TanggalLulus != nil {
+		m.TanggalLulus = req.TanggalLulus.ToTimePtr()
+	}
+	if req.FHIRCode != nil {
+		m.FHIRCode = req.FHIRCode
+	}
+	if req.FHIRSystem != nil {
+		m.FHIRSystem = req.FHIRSystem
+	}
 	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()
 
 	if err := s.repo.UpdatePendidikan(ctx, m); err != nil {
-		return nil, err
+		return nil, appErrors.Internal("gagal menyimpan perubahan pendidikan")
 	}
 
 	creator := s.buildCreator(ctx, m.CreatedBy)

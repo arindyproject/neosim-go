@@ -256,5 +256,23 @@ func (s *service) DeleteKontak(ctx context.Context, id int64, actor he.AuthConte
 	if m == nil {
 		return errors.New("KepegawaianKontak tidak ditemukan")
 	}
+
+	if m.IsPrimary {
+		others, err := s.repo.GetByPegawaiIDAndTipe(ctx, m.PegawaiID, m.TipeID)
+		if err != nil {
+			return appErrors.Internal("gagal cek kontak lain")
+		}
+		activeCount := 0
+		for _, o := range others {
+			if o.ID != id && o.IsAktif {
+				activeCount++
+			}
+		}
+		if activeCount > 0 {
+			return appErrors.Wrap(http.StatusUnprocessableEntity,
+				"Kontak ini adalah primary. Tetapkan kontak lain sebagai primary terlebih dahulu sebelum menghapus.", nil)
+		}
+	}
+
 	return s.repo.DeleteKontak(ctx, id)
 }

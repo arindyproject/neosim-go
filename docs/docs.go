@@ -2632,9 +2632,33 @@ const docTemplate = `{
                 "summary": "Get list of KepegawaianPendidikan",
                 "parameters": [
                     {
+                        "type": "integer",
+                        "description": "Filter by Pegawai ID",
+                        "name": "pegawai_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by Jenjang ID",
+                        "name": "jenjang_id",
+                        "in": "query"
+                    },
+                    {
                         "type": "string",
-                        "description": "Filter by name (partial match)",
-                        "name": "name",
+                        "description": "Filter by nama_institusi ",
+                        "name": "nama_institusi",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by bidang_studi ",
+                        "name": "bidang_studi",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by nomor_ijazah ",
+                        "name": "nomor_ijazah",
                         "in": "query"
                     },
                     {
@@ -8474,17 +8498,50 @@ const docTemplate = `{
         "dto.CreateKepegawaianPendidikanRequest": {
             "type": "object",
             "required": [
-                "name"
+                "jenjang_id",
+                "nama_institusi",
+                "pegawai_id"
             ],
             "properties": {
-                "description": {
-                    "type": "string",
-                    "maxLength": 500
+                "alamat_institusi": {
+                    "type": "string"
                 },
-                "name": {
+                "bidang_studi": {
                     "type": "string",
-                    "maxLength": 255,
+                    "maxLength": 225
+                },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "fhir_system": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "jenjang_id": {
+                    "type": "integer"
+                },
+                "nama_institusi": {
+                    "type": "string",
+                    "maxLength": 225,
                     "minLength": 1
+                },
+                "nilai_akhir": {
+                    "type": "string",
+                    "maxLength": 225
+                },
+                "nomor_ijazah": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "pegawai_id": {
+                    "type": "integer"
+                },
+                "tanggal_lulus": {
+                    "$ref": "#/definitions/types.DateOnly"
+                },
+                "tanggal_masuk": {
+                    "$ref": "#/definitions/types.DateOnly"
                 }
             }
         },
@@ -8886,6 +8943,23 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.JenjangSimpelResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "fhir_system": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "label": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.KecamatanDetailResponse": {
             "type": "object",
             "properties": {
@@ -9153,20 +9227,52 @@ const docTemplate = `{
         "dto.KepegawaianPendidikanResponse": {
             "type": "object",
             "properties": {
+                "alamat_institusi": {
+                    "type": "string"
+                },
+                "bidang_studi": {
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "string"
                 },
                 "created_by": {
                     "$ref": "#/definitions/httputil.UserData"
                 },
-                "description": {
+                "fhir_code": {
+                    "type": "string"
+                },
+                "fhir_system": {
                     "type": "string"
                 },
                 "id": {
                     "type": "integer"
                 },
-                "name": {
+                "jenjang": {
+                    "description": "JenjangID       int64                  ` + "`" + `json:\"jenjang_id\"` + "`" + `",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.JenjangSimpelResponse"
+                        }
+                    ]
+                },
+                "nama_institusi": {
                     "type": "string"
+                },
+                "nilai_akhir": {
+                    "type": "string"
+                },
+                "nomor_ijazah": {
+                    "type": "string"
+                },
+                "pegawai_id": {
+                    "type": "integer"
+                },
+                "tanggal_lulus": {
+                    "$ref": "#/definitions/types.DateOnly"
+                },
+                "tanggal_masuk": {
+                    "$ref": "#/definitions/types.DateOnly"
                 },
                 "updated_at": {
                     "type": "string"
@@ -9934,14 +10040,42 @@ const docTemplate = `{
         "dto.UpdateKepegawaianPendidikanRequest": {
             "type": "object",
             "properties": {
-                "description": {
-                    "type": "string",
-                    "maxLength": 500
+                "alamat_institusi": {
+                    "type": "string"
                 },
-                "name": {
+                "bidang_studi": {
                     "type": "string",
-                    "maxLength": 255,
+                    "maxLength": 225
+                },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "fhir_system": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "jenjang_id": {
+                    "type": "integer"
+                },
+                "nama_institusi": {
+                    "type": "string",
+                    "maxLength": 225,
                     "minLength": 1
+                },
+                "nilai_akhir": {
+                    "type": "string",
+                    "maxLength": 225
+                },
+                "nomor_ijazah": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "tanggal_lulus": {
+                    "$ref": "#/definitions/types.DateOnly"
+                },
+                "tanggal_masuk": {
+                    "$ref": "#/definitions/types.DateOnly"
                 }
             }
         },

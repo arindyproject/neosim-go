@@ -218,15 +218,39 @@ definitions:
     type: object
   dto.CreateKepegawaianPendidikanRequest:
     properties:
-      description:
-        maxLength: 500
+      alamat_institusi:
         type: string
-      name:
+      bidang_studi:
+        maxLength: 225
+        type: string
+      fhir_code:
         maxLength: 255
+        type: string
+      fhir_system:
+        maxLength: 255
+        type: string
+      jenjang_id:
+        type: integer
+      nama_institusi:
+        maxLength: 225
         minLength: 1
         type: string
+      nilai_akhir:
+        maxLength: 225
+        type: string
+      nomor_ijazah:
+        maxLength: 255
+        type: string
+      pegawai_id:
+        type: integer
+      tanggal_lulus:
+        $ref: '#/definitions/types.DateOnly'
+      tanggal_masuk:
+        $ref: '#/definitions/types.DateOnly'
     required:
-    - name
+    - jenjang_id
+    - nama_institusi
+    - pegawai_id
     type: object
   dto.CreateKotaKabupatenRequest:
     properties:
@@ -514,6 +538,17 @@ definitions:
       updated_by:
         $ref: '#/definitions/httputil.UserData'
     type: object
+  dto.JenjangSimpelResponse:
+    properties:
+      code:
+        type: string
+      fhir_system:
+        type: string
+      id:
+        type: integer
+      label:
+        type: string
+    type: object
   dto.KecamatanDetailResponse:
     properties:
       code:
@@ -687,16 +722,36 @@ definitions:
     type: object
   dto.KepegawaianPendidikanResponse:
     properties:
+      alamat_institusi:
+        type: string
+      bidang_studi:
+        type: string
       created_at:
         type: string
       created_by:
         $ref: '#/definitions/httputil.UserData'
-      description:
+      fhir_code:
+        type: string
+      fhir_system:
         type: string
       id:
         type: integer
-      name:
+      jenjang:
+        allOf:
+        - $ref: '#/definitions/dto.JenjangSimpelResponse'
+        description: JenjangID       int64                  `json:"jenjang_id"`
+      nama_institusi:
         type: string
+      nilai_akhir:
+        type: string
+      nomor_ijazah:
+        type: string
+      pegawai_id:
+        type: integer
+      tanggal_lulus:
+        $ref: '#/definitions/types.DateOnly'
+      tanggal_masuk:
+        $ref: '#/definitions/types.DateOnly'
       updated_at:
         type: string
       updated_by:
@@ -1211,13 +1266,33 @@ definitions:
     type: object
   dto.UpdateKepegawaianPendidikanRequest:
     properties:
-      description:
-        maxLength: 500
+      alamat_institusi:
         type: string
-      name:
+      bidang_studi:
+        maxLength: 225
+        type: string
+      fhir_code:
         maxLength: 255
+        type: string
+      fhir_system:
+        maxLength: 255
+        type: string
+      jenjang_id:
+        type: integer
+      nama_institusi:
+        maxLength: 225
         minLength: 1
         type: string
+      nilai_akhir:
+        maxLength: 225
+        type: string
+      nomor_ijazah:
+        maxLength: 255
+        type: string
+      tanggal_lulus:
+        $ref: '#/definitions/types.DateOnly'
+      tanggal_masuk:
+        $ref: '#/definitions/types.DateOnly'
     type: object
   dto.UpdateKotaKabupatenRequest:
     properties:
@@ -3255,9 +3330,25 @@ paths:
       - application/json
       description: Get paginated list of KepegawaianPendidikan
       parameters:
-      - description: Filter by name (partial match)
+      - description: Filter by Pegawai ID
         in: query
-        name: name
+        name: pegawai_id
+        type: integer
+      - description: Filter by Jenjang ID
+        in: query
+        name: jenjang_id
+        type: integer
+      - description: 'Filter by nama_institusi '
+        in: query
+        name: nama_institusi
+        type: string
+      - description: 'Filter by bidang_studi '
+        in: query
+        name: bidang_studi
+        type: string
+      - description: 'Filter by nomor_ijazah '
+        in: query
+        name: nomor_ijazah
         type: string
       - description: Page number
         in: query

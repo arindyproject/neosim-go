@@ -3,6 +3,7 @@ package handlers
 import (
 	"io"
 	"net/http"
+	"strconv"
 
 	"neosim_go/internal/modules/kepegawaian/pendidikan/dto"
 	"neosim_go/internal/shared/binding"
@@ -21,7 +22,11 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			name		query		string	false	"Filter by name (partial match)"
+//	@Param          pegawai_id  query       int     false   "Filter by Pegawai ID"
+//	@Param          jenjang_id     query       int     false   "Filter by Jenjang ID"
+//	@Param          nama_institusi       query       string  false   "Filter by nama_institusi "
+//	@Param          bidang_studi       query       string  false   "Filter by bidang_studi "
+//	@Param          nomor_ijazah       query       string  false   "Filter by nomor_ijazah "
 //	@Param			page		query		int		false	"Page number"
 //	@Param			page_size	query		int		false	"Page size"
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.KepegawaianPendidikanResponse}
@@ -30,6 +35,20 @@ func (h *KepegawaianPendidikanHandler) ListPendidikan(c *echo.Context) error {
 
 	filter := dto.FilterKepegawaianPendidikanRequest{
 		NamaInstitusi: c.QueryParam("nama_institusi"),
+		BidangStudi:   c.QueryParam("bidang_studi"),
+		NomorIjazah:   c.QueryParam("nomor_ijazah"),
+	}
+
+	if pegawaiIDStr := c.QueryParam("pegawai_id"); pegawaiIDStr != "" {
+		if val, err := strconv.ParseInt(pegawaiIDStr, 10, 64); err == nil {
+			filter.PegawaiID = &val
+		}
+	}
+
+	if jenjangIDStr := c.QueryParam("jenjang_id"); jenjangIDStr != "" {
+		if val, err := strconv.ParseInt(jenjangIDStr, 10, 64); err == nil {
+			filter.JenjangID = &val
+		}
 	}
 	page, pageSize := he.ParsePagination(c, h.cfg)
 
@@ -129,11 +148,7 @@ func (h *KepegawaianPendidikanHandler) UpdatePendidikan(c *echo.Context) error {
 	actor := he.BuildAuthContext(c)
 	item, err := h.service.UpdatePendidikan(c.Request().Context(), id, &req, actor)
 	if err != nil {
-		status := http.StatusBadRequest
-		if err.Error() == "KepegawaianPendidikan tidak ditemukan" {
-			status = http.StatusNotFound
-		}
-		return response.Response(c, status, false, err.Error(), nil, nil)
+		return response.Response(c, http.StatusUnprocessableEntity, false, err.Error(), nil, nil)
 	}
 	return response.Response(c, http.StatusOK, true, "Data berhasil diupdate", item, nil)
 }
