@@ -102,6 +102,23 @@ definitions:
     required:
     - name
     type: object
+  dto.CreateJenjangRequest:
+    properties:
+      code:
+        maxLength: 100
+        minLength: 1
+        type: string
+      fhir_system:
+        maxLength: 500
+        type: string
+      label:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - code
+    - label
+    type: object
   dto.CreateKecamatanRequest:
     properties:
       code:
@@ -188,6 +205,18 @@ definitions:
     - tipe_id
     type: object
   dto.CreateKepegawaianPegawaiRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
+  dto.CreateKepegawaianPendidikanRequest:
     properties:
       description:
         maxLength: 500
@@ -466,6 +495,25 @@ definitions:
     required:
     - identifier
     type: object
+  dto.JenjangResponse:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        $ref: '#/definitions/httputil.UserData'
+      fhir_system:
+        type: string
+      id:
+        type: integer
+      label:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        $ref: '#/definitions/httputil.UserData'
+    type: object
   dto.KecamatanDetailResponse:
     properties:
       code:
@@ -621,6 +669,23 @@ definitions:
         $ref: '#/definitions/httputil.UserData'
     type: object
   dto.KepegawaianPegawaiResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        $ref: '#/definitions/httputil.UserData'
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        $ref: '#/definitions/httputil.UserData'
+    type: object
+  dto.KepegawaianPendidikanResponse:
     properties:
       created_at:
         type: string
@@ -1055,6 +1120,20 @@ definitions:
         minLength: 1
         type: string
     type: object
+  dto.UpdateJenjangRequest:
+    properties:
+      code:
+        maxLength: 100
+        minLength: 1
+        type: string
+      fhir_system:
+        maxLength: 500
+        type: string
+      label:
+        maxLength: 255
+        minLength: 1
+        type: string
+    type: object
   dto.UpdateKecamatanRequest:
     properties:
       code:
@@ -1121,6 +1200,16 @@ definitions:
         type: integer
     type: object
   dto.UpdateKepegawaianPegawaiRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    type: object
+  dto.UpdateKepegawaianPendidikanRequest:
     properties:
       description:
         maxLength: 500
@@ -3160,6 +3249,302 @@ paths:
       summary: Update KepegawaianPegawai
       tags:
       - kepegawaian/pegawai
+  /kepegawaian/pendidikan:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of KepegawaianPendidikan
+      parameters:
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.KepegawaianPendidikanResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of KepegawaianPendidikan
+      tags:
+      - kepegawaian/pendidikan
+    post:
+      consumes:
+      - application/json
+      description: Create New KepegawaianPendidikan
+      parameters:
+      - description: Create Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateKepegawaianPendidikanRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KepegawaianPendidikanResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create KepegawaianPendidikan
+      tags:
+      - kepegawaian/pendidikan
+  /kepegawaian/pendidikan/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete KepegawaianPendidikan by :id
+      parameters:
+      - description: KepegawaianPendidikan ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete KepegawaianPendidikan
+      tags:
+      - kepegawaian/pendidikan
+    get:
+      consumes:
+      - application/json
+      description: Get KepegawaianPendidikan by :id
+      parameters:
+      - description: KepegawaianPendidikan ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KepegawaianPendidikanResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get KepegawaianPendidikan
+      tags:
+      - kepegawaian/pendidikan
+    put:
+      consumes:
+      - application/json
+      description: Update KepegawaianPendidikan by :id
+      parameters:
+      - description: KepegawaianPendidikan ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateKepegawaianPendidikanRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KepegawaianPendidikanResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update KepegawaianPendidikan
+      tags:
+      - kepegawaian/pendidikan
+  /kepegawaian/pendidikan/jenjangs:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of Jenjang
+      parameters:
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.JenjangResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Jenjang
+      tags:
+      - kepegawaian/pendidikan/jenjang
+    post:
+      consumes:
+      - application/json
+      description: Create New Jenjang
+      parameters:
+      - description: Create Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateJenjangRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.JenjangResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create Jenjang
+      tags:
+      - kepegawaian/pendidikan/jenjang
+  /kepegawaian/pendidikan/jenjangs/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Jenjang by :id
+      parameters:
+      - description: Jenjang ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete Jenjang
+      tags:
+      - kepegawaian/pendidikan/jenjang
+    get:
+      consumes:
+      - application/json
+      description: Get Jenjang by :id
+      parameters:
+      - description: Jenjang ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.JenjangResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get Jenjang
+      tags:
+      - kepegawaian/pendidikan/jenjang
+    put:
+      consumes:
+      - application/json
+      description: Update Jenjang by :id
+      parameters:
+      - description: Jenjang ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateJenjangRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.JenjangResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update Jenjang
+      tags:
+      - kepegawaian/pendidikan/jenjang
   /master/agama:
     get:
       consumes:

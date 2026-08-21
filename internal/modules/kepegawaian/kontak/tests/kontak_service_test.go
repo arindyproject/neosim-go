@@ -69,6 +69,9 @@ func (s *KepegawaianKontakServiceTestSuite) SetupTest() {
 	s.userRepo.On("GetByID", mock.Anything).Return(nil, nil).Maybe()
 	s.repo.On("GetTipeByCode", mock.Anything).Return(nil, nil).Maybe()
 	s.repo.On("GetTipeByLabel", mock.Anything).Return(nil, nil).Maybe()
+	s.repo.On("GetKontakByPegawaiID", mock.Anything, mock.Anything, mock.Anything).Return(nil, int64(0), nil).Maybe()
+	s.repo.On("ExistsByNilaiAndTipe", mock.Anything, mock.Anything, mock.Anything).Return(false, nil).Maybe()
+	s.repo.On("UnsetPrimaryByPegawaiIDAndTipe", mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
 }
 
 func TestKepegawaianKontakService(t *testing.T) {
@@ -95,6 +98,7 @@ func (s *KepegawaianKontakServiceTestSuite) Test_CreateKontak_Superadmin_Success
 	req := &dto.CreateKepegawaianKontakRequest{PegawaiID: 1, TipeID: 1, Nilai: "Test KepegawaianKontak"}
 	actor := superadminActor()
 
+	s.repo.On("GetTipeByID", req.TipeID).Return(&models.Tipe{ID: req.TipeID}, nil)
 	s.repo.On("CreateKontak", mock.AnythingOfType("*models.KepegawaianKontak")).Return(nil)
 
 	result, err := s.svc.CreateKontak(context.Background(), req, actor)
@@ -110,6 +114,7 @@ func (s *KepegawaianKontakServiceTestSuite) Test_CreateKontak_WithPermission_Suc
 	actor := regularActor()
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(true, nil)
+	s.repo.On("GetTipeByID", req.TipeID).Return(&models.Tipe{ID: req.TipeID}, nil)
 	s.repo.On("CreateKontak", mock.AnythingOfType("*models.KepegawaianKontak")).Return(nil)
 
 	result, err := s.svc.CreateKontak(context.Background(), req, actor)
@@ -125,6 +130,7 @@ func (s *KepegawaianKontakServiceTestSuite) Test_CreateKontak_WithManagePermissi
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(false, nil)
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyManage).Return(true, nil)
+	s.repo.On("GetTipeByID", req.TipeID).Return(&models.Tipe{ID: req.TipeID}, nil)
 	s.repo.On("CreateKontak", mock.AnythingOfType("*models.KepegawaianKontak")).Return(nil)
 
 	result, err := s.svc.CreateKontak(context.Background(), req, actor)
@@ -151,6 +157,7 @@ func (s *KepegawaianKontakServiceTestSuite) Test_CreateKontak_RepoError() {
 	req := &dto.CreateKepegawaianKontakRequest{PegawaiID: 1, TipeID: 1, Nilai: "Test"}
 	actor := superadminActor()
 
+	s.repo.On("GetTipeByID", req.TipeID).Return(&models.Tipe{ID: req.TipeID}, nil)
 	s.repo.On("CreateKontak", mock.AnythingOfType("*models.KepegawaianKontak")).Return(fmt.Errorf("db error"))
 
 	result, err := s.svc.CreateKontak(context.Background(), req, actor)

@@ -241,6 +241,9 @@ test-kepegawaian-pegawai:
 test-kepegawaian-identifier: 
 	@go test -json ./internal/modules/kepegawaian/identifier/tests | gotestfmt
 
+test-kepegawaian-pendidikan: 
+	@go test -json ./internal/modules/kepegawaian/pendidikan/tests | gotestfmt
+
 
 #---------------------------------------------------------------------------------
 test-artikel-artikel: ## Run tests for master module

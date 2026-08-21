@@ -58,6 +58,7 @@ import (
 	_ "neosim_go/internal/modules/kepegawaian/identifier"
 	_ "neosim_go/internal/modules/kepegawaian/kontak"
 	_ "neosim_go/internal/modules/kepegawaian/pegawai"
+	_ "neosim_go/internal/modules/kepegawaian/pendidikan"
 
 	// Artikel
 	_ "neosim_go/internal/modules/artikel/artikel"

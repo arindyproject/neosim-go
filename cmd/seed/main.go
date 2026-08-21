@@ -23,6 +23,7 @@ import (
 	masterKepegawaianIdentifier "neosim_go/internal/modules/kepegawaian/identifier/tests/seeders"
 	masterKepegawaianKontak "neosim_go/internal/modules/kepegawaian/kontak/tests/seeders"
 	masterKepegawaianPegawai "neosim_go/internal/modules/kepegawaian/pegawai/tests/seeders"
+	masterKepegawaianPendidikan "neosim_go/internal/modules/kepegawaian/pendidikan/tests/seeders"
 
 	// Artikel---------------------------------------------------------------
 	masterArtikel "neosim_go/internal/modules/artikel/artikel/tests/seeders"
@@ -182,6 +183,30 @@ func main() {
 			log.Fatal("Gagal seed Kontak:", err)
 		}
 	} //------Kepegawaian Kontak---------------------------------------------
+
+	//------Kepegawaian Pendidikan Jenjang-----------------------------------
+	masterKepegawaianPendidikanJenjangSeeder := masterKepegawaianPendidikan.NewJenjangSeeder(db)
+	if *fresh {
+		if err := masterKepegawaianPendidikanJenjangSeeder.Fresh(); err != nil {
+			log.Fatal("Gagal fresh seed jenjang pendidikan:", err)
+		}
+	} else {
+		if err := masterKepegawaianPendidikanJenjangSeeder.Run(); err != nil {
+			log.Fatal("Gagal seed jenjang pendidikan:", err)
+		}
+	} //------Kepegawaian Pendidikan Jenjang---------------------------------
+
+	//------Kepegawaian Pendidikan-------------------------------------------
+	masterKepegawaianPendidikanSeeder := masterKepegawaianPendidikan.NewKepegawaianPendidikanSeeder(db)
+	if *fresh {
+		if err := masterKepegawaianPendidikanSeeder.Fresh(); err != nil {
+			log.Fatal("Gagal fresh seed  pendidikan:", err)
+		}
+	} else {
+		if err := masterKepegawaianPendidikanSeeder.Run(); err != nil {
+			log.Fatal("Gagal seed  pendidikan:", err)
+		}
+	} //------Kepegawaian Pendidikan-----------------------------------------
 	//Kepegawaian------------------------------------------------------------
 
 	// =====================================================================
