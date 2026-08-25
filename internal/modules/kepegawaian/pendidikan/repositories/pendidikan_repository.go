@@ -44,7 +44,7 @@ func (r *repository) GetPendidikanByPegawaiID(ctx context.Context,
 
 	offset := (page - 1) * pageSize
 	err := query.
-		Order("jenjang_id ASC, is_primary DESC, created_at DESC").
+		Order("jenjang_id ASC,  created_at DESC").
 		Offset(offset).
 		Limit(pageSize).
 		Find(&items).Error
@@ -136,6 +136,25 @@ func (r *repository) ExistsByNomorIjazah(
 	query := r.db.WithContext(ctx).
 		Model(&models.KepegawaianPendidikan{}).
 		Where("jenjang_id = ? AND nomor_ijazah = ? AND deleted_at IS NULL", jenjangID, nomorIjazah)
+
+	// excludeID > 0 saat update — exclude record sendiri
+	if excludeID > 0 {
+		query = query.Where("id != ?", excludeID)
+	}
+
+	err := query.Count(&count).Error
+	return count > 0, err
+}
+
+func (r *repository) ExistsByNomorIjazahOnly(
+	ctx context.Context,
+	nomorIjazah string,
+	excludeID int64,
+) (bool, error) {
+	var count int64
+	query := r.db.WithContext(ctx).
+		Model(&models.KepegawaianPendidikan{}).
+		Where("nomor_ijazah = ? AND deleted_at IS NULL", nomorIjazah)
 
 	// excludeID > 0 saat update — exclude record sendiri
 	if excludeID > 0 {

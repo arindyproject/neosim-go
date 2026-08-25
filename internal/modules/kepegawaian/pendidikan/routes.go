@@ -1,8 +1,8 @@
 package pendidikan
 
 import (
-	"neosim_go/internal/modules/kepegawaian/pendidikan/handlers"
 	authMiddlewares "neosim_go/internal/modules/auth/middlewares"
+	"neosim_go/internal/modules/kepegawaian/pendidikan/handlers"
 	"neosim_go/internal/shared/utils"
 
 	"github.com/labstack/echo/v5"
@@ -14,6 +14,7 @@ func RegisterRoutes(e *echo.Echo, h *handlers.KepegawaianPendidikanHandler, jwtM
 	g := e.Group("/api/v1/kepegawaian/pendidikan", jwt)
 	g.GET("", h.ListPendidikan)
 	g.GET("/:id", h.GetPendidikanByID)
+	g.GET("/:pegawai_id/pegawai", h.ListByPegawai)
 	g.POST("", h.CreatePendidikan)
 	g.PUT("/:id", h.UpdatePendidikan)
 	g.DELETE("/:id", h.DeletePendidikan)

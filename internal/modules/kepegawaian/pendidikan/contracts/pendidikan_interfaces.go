@@ -21,6 +21,7 @@ type KepegawaianPendidikanRepository interface {
 
 	ExistsPendidikanByID(ctx context.Context, id int64) (bool, error)
 	ExistsByNomorIjazah(ctx context.Context, jenjangID int64, nomorIjazah string, excludeID int64) (bool, error)
+	ExistsByNomorIjazahOnly(ctx context.Context, nomorIjazah string, excludeID int64) (bool, error)
 }
 
 // KepegawaianPendidikanService defines business logic operations for KepegawaianPendidikan.

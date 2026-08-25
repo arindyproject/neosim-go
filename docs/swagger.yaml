@@ -244,9 +244,13 @@ definitions:
       pegawai_id:
         type: integer
       tanggal_lulus:
-        $ref: '#/definitions/types.DateOnly'
+        example: "2026-01-01"
+        format: date
+        type: string
       tanggal_masuk:
-        $ref: '#/definitions/types.DateOnly'
+        example: "2026-01-01"
+        format: date
+        type: string
     required:
     - jenjang_id
     - nama_institusi
@@ -1290,9 +1294,13 @@ definitions:
         maxLength: 255
         type: string
       tanggal_lulus:
-        $ref: '#/definitions/types.DateOnly'
+        example: "2026-01-01"
+        format: date
+        type: string
       tanggal_masuk:
-        $ref: '#/definitions/types.DateOnly'
+        example: "2026-01-01"
+        format: date
+        type: string
     type: object
   dto.UpdateKotaKabupatenRequest:
     properties:
@@ -3486,6 +3494,44 @@ paths:
       security:
       - BearerAuth: []
       summary: Update KepegawaianPendidikan
+      tags:
+      - kepegawaian/pendidikan
+  /kepegawaian/pendidikan/{pegawai_id}/pegawai:
+    get:
+      consumes:
+      - application/json
+      description: Menampilkan semua pendidikan yang dimiliki oleh pegawai tertentu
+      parameters:
+      - description: ID pegawai
+        in: path
+        name: pegawai_id
+        required: true
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.KepegawaianIdentifierResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Daftar pendidikan milik satu pegawai
       tags:
       - kepegawaian/pendidikan
   /kepegawaian/pendidikan/jenjangs:

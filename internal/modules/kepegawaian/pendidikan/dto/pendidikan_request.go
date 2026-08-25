@@ -11,8 +11,8 @@ type CreateKepegawaianPendidikanRequest struct {
 	BidangStudi     *string         `json:"bidang_studi" validate:"omitempty,max=225"`
 	AlamatInstitusi *string         `json:"alamat_institusi" validate:"omitempty"`
 	NilaiAkhir      *string         `json:"nilai_akhir" validate:"omitempty,max=225"`
-	TanggalMasuk    *types.DateOnly `json:"tanggal_masuk"`
-	TanggalLulus    *types.DateOnly `json:"tanggal_lulus"`
+	TanggalMasuk    *types.DateOnly `json:"tanggal_masuk" swaggertype:"string" format:"date" example:"2026-01-01"`
+	TanggalLulus    *types.DateOnly `json:"tanggal_lulus" swaggertype:"string" format:"date" example:"2026-01-01"`
 	FHIRCode        *string         `json:"fhir_code" validate:"omitempty,max=255"`
 	FHIRSystem      *string         `json:"fhir_system" validate:"omitempty,max=255"`
 }
@@ -25,8 +25,8 @@ type UpdateKepegawaianPendidikanRequest struct {
 	BidangStudi     *string         `json:"bidang_studi" validate:"omitempty,max=225"`
 	AlamatInstitusi *string         `json:"alamat_institusi" validate:"omitempty"`
 	NilaiAkhir      *string         `json:"nilai_akhir" validate:"omitempty,max=225"`
-	TanggalMasuk    *types.DateOnly `json:"tanggal_masuk"`
-	TanggalLulus    *types.DateOnly `json:"tanggal_lulus"`
+	TanggalMasuk    *types.DateOnly `json:"tanggal_masuk" swaggertype:"string" format:"date" example:"2026-01-01"`
+	TanggalLulus    *types.DateOnly `json:"tanggal_lulus" swaggertype:"string" format:"date" example:"2026-01-01"`
 	FHIRCode        *string         `json:"fhir_code" validate:"omitempty,max=255"`
 	FHIRSystem      *string         `json:"fhir_system" validate:"omitempty,max=255"`
 }

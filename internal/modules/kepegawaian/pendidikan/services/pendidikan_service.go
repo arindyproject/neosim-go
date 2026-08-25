@@ -33,7 +33,7 @@ func (s *service) CreatePendidikan(ctx context.Context, req *dto.CreateKepegawai
 	}
 
 	// cek duplikasi jenjang dan nomor ijasah
-	duplicate, err := s.repo.ExistsByNomorIjazah(ctx, req.JenjangID, *req.NomorIjazah, 0)
+	duplicate, err := s.repo.ExistsByNomorIjazahOnly(ctx, *req.NomorIjazah, 0)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek duplikasi Nomor Ijazah")
 	}
@@ -153,8 +153,12 @@ func (s *service) ListPendidikanByPegawai(
 
 	items, total, err := s.repo.GetPendidikanByPegawaiID(ctx, pegawaiID, page, pageSize)
 
+	if total <= 0 {
+		return nil, 0, appErrors.Internal("Data tidak ditemukan")
+	}
+
 	if err != nil {
-		return nil, 0, appErrors.Internal("gagal mengambil identifier pegawai")
+		return nil, 0, appErrors.Internal("gagal mengambil pendidikan pegawai")
 	}
 
 	creatorsMap, updatersMap := s.buildAuditMaps(ctx, items)
@@ -180,19 +184,16 @@ func (s *service) UpdatePendidikan(ctx context.Context, id int64, req *dto.Updat
 		return nil, errors.New("KepegawaianPendidikan tidak ditemukan")
 	}
 
-	jenjangCheck := m.JenjangID
 	nomorIjazahCheck := ""
 	if m.NomorIjazah != nil {
 		nomorIjazahCheck = *m.NomorIjazah
 	}
-	if req.JenjangID != nil {
-		jenjangCheck = *req.JenjangID
-	}
+
 	if req.NomorIjazah != nil {
 		nomorIjazahCheck = *req.NomorIjazah
 	}
 
-	duplicate, err := s.repo.ExistsByNomorIjazah(ctx, jenjangCheck, nomorIjazahCheck, id)
+	duplicate, err := s.repo.ExistsByNomorIjazahOnly(ctx, nomorIjazahCheck, id)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek duplikasi nomor ijazah")
 	}

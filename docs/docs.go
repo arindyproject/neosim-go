@@ -3140,6 +3140,70 @@ const docTemplate = `{
                 }
             }
         },
+        "/kepegawaian/pendidikan/{pegawai_id}/pegawai": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menampilkan semua pendidikan yang dimiliki oleh pegawai tertentu",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/pendidikan"
+                ],
+                "summary": "Daftar pendidikan milik satu pegawai",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID pegawai",
+                        "name": "pegawai_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.KepegawaianIdentifierResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/master/agama": {
             "get": {
                 "security": [
@@ -8538,10 +8602,14 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "tanggal_lulus": {
-                    "$ref": "#/definitions/types.DateOnly"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-01-01"
                 },
                 "tanggal_masuk": {
-                    "$ref": "#/definitions/types.DateOnly"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-01-01"
                 }
             }
         },
@@ -10072,10 +10140,14 @@ const docTemplate = `{
                     "maxLength": 255
                 },
                 "tanggal_lulus": {
-                    "$ref": "#/definitions/types.DateOnly"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-01-01"
                 },
                 "tanggal_masuk": {
-                    "$ref": "#/definitions/types.DateOnly"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-01-01"
                 }
             }
         },
