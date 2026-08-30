@@ -241,6 +241,9 @@ test-kepegawaian-pegawai:
 test-kepegawaian-identifier: 
 	@go test -json ./internal/modules/kepegawaian/identifier/tests | gotestfmt
 
+test-kepegawaian-kontak: 
+	@go test -json ./internal/modules/kepegawaian/kontak/tests | gotestfmt
+
 test-kepegawaian-pendidikan: 
 	@go test -json ./internal/modules/kepegawaian/pendidikan/tests | gotestfmt
 

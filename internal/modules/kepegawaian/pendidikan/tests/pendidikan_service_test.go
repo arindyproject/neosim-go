@@ -65,9 +65,16 @@ func (s *KepegawaianPendidikanServiceTestSuite) SetupTest() {
 	s.svc = services.NewKepegawaianPendidikanService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.cfg)
 
 	// Stub default agar buildCreator/buildAuditMaps tidak panic saat memanggil userRepo.
-	// Boleh dipanggil 0 kali atau lebih (.Maybe()) tergantung skenario test.
 	s.userRepo.On("GetByID", mock.Anything).Return(nil, nil).Maybe()
 	s.userRepo.On("GetByIDs", mock.Anything).Return(nil, nil).Maybe()
+
+	// Stub default agar CreatePendidikan/UpdatePendidikan tidak panic saat
+	// memvalidasi master Jenjang dan duplikasi Nomor Ijazah. Test yang butuh
+	// perilaku lain (Jenjang not found, duplicate NomorIjazah, dsb.) meng-override
+	// ini dengan .On(...) miliknya sendiri sebelum memanggil service.
+
+	//s.repo.On("GetJenjangByID", mock.Anything).Return(&models.Jenjang{ID: 1}, nil).Maybe()
+	//s.repo.On("ExistsByNomorIjazahOnly", mock.Anything, mock.Anything, mock.Anything).Return(false, nil).Maybe()
 }
 
 func TestKepegawaianPendidikanService(t *testing.T) {
@@ -94,6 +101,8 @@ func (s *KepegawaianPendidikanServiceTestSuite) Test_CreatePendidikan_Superadmin
 	req := &dto.CreateKepegawaianPendidikanRequest{NamaInstitusi: "Test KepegawaianPendidikan", PegawaiID: 1, JenjangID: 1}
 	actor := superadminActor()
 
+	s.repo.On("GetJenjangByID", int64(1)).Return(&models.Jenjang{ID: 1}, nil)
+	s.repo.On("ExistsByNomorIjazahOnly", mock.Anything, "", int64(0)).Return(false, nil)
 	s.repo.On("CreatePendidikan", mock.AnythingOfType("*models.KepegawaianPendidikan")).Return(nil)
 
 	result, err := s.svc.CreatePendidikan(context.Background(), req, actor)
@@ -109,6 +118,8 @@ func (s *KepegawaianPendidikanServiceTestSuite) Test_CreatePendidikan_WithPermis
 	actor := regularActor()
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(true, nil)
+	s.repo.On("GetJenjangByID", int64(1)).Return(&models.Jenjang{ID: 1}, nil)
+	s.repo.On("ExistsByNomorIjazahOnly", mock.Anything, "", int64(0)).Return(false, nil)
 	s.repo.On("CreatePendidikan", mock.AnythingOfType("*models.KepegawaianPendidikan")).Return(nil)
 
 	result, err := s.svc.CreatePendidikan(context.Background(), req, actor)
@@ -124,6 +135,8 @@ func (s *KepegawaianPendidikanServiceTestSuite) Test_CreatePendidikan_WithManage
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(false, nil)
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyManage).Return(true, nil)
+	s.repo.On("GetJenjangByID", int64(1)).Return(&models.Jenjang{ID: 1}, nil)
+	s.repo.On("ExistsByNomorIjazahOnly", mock.Anything, "", int64(0)).Return(false, nil)
 	s.repo.On("CreatePendidikan", mock.AnythingOfType("*models.KepegawaianPendidikan")).Return(nil)
 
 	result, err := s.svc.CreatePendidikan(context.Background(), req, actor)
@@ -150,6 +163,8 @@ func (s *KepegawaianPendidikanServiceTestSuite) Test_CreatePendidikan_RepoError(
 	req := &dto.CreateKepegawaianPendidikanRequest{NamaInstitusi: "Test", PegawaiID: 1, JenjangID: 1}
 	actor := superadminActor()
 
+	s.repo.On("GetJenjangByID", int64(1)).Return(&models.Jenjang{ID: 1}, nil)
+	s.repo.On("ExistsByNomorIjazahOnly", mock.Anything, "", int64(0)).Return(false, nil)
 	s.repo.On("CreatePendidikan", mock.AnythingOfType("*models.KepegawaianPendidikan")).Return(fmt.Errorf("db error"))
 
 	result, err := s.svc.CreatePendidikan(context.Background(), req, actor)
@@ -317,6 +332,7 @@ func (s *KepegawaianPendidikanServiceTestSuite) Test_UpdatePendidikan_Superadmin
 	req := &dto.UpdateKepegawaianPendidikanRequest{NamaInstitusi: &newName}
 
 	s.repo.On("GetPendidikanByID", int64(1)).Return(existing, nil)
+	s.repo.On("ExistsByNomorIjazahOnly", mock.Anything, mock.Anything, int64(1)).Return(false, nil)
 	s.repo.On("UpdatePendidikan", mock.AnythingOfType("*models.KepegawaianPendidikan")).Return(nil)
 
 	result, err := s.svc.UpdatePendidikan(context.Background(), 1, req, actor)
@@ -335,6 +351,7 @@ func (s *KepegawaianPendidikanServiceTestSuite) Test_UpdatePendidikan_WithPermis
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyUpdate).Return(true, nil)
 	s.repo.On("GetPendidikanByID", int64(1)).Return(existing, nil)
+	s.repo.On("ExistsByNomorIjazahOnly", mock.Anything, mock.Anything, int64(1)).Return(false, nil)
 	s.repo.On("UpdatePendidikan", mock.AnythingOfType("*models.KepegawaianPendidikan")).Return(nil)
 
 	result, err := s.svc.UpdatePendidikan(context.Background(), 1, req, actor)
@@ -379,6 +396,7 @@ func (s *KepegawaianPendidikanServiceTestSuite) Test_UpdatePendidikan_PartialFie
 	req := &dto.UpdateKepegawaianPendidikanRequest{BidangStudi: &newBidangStudi}
 
 	s.repo.On("GetPendidikanByID", int64(1)).Return(existing, nil)
+	s.repo.On("ExistsByNomorIjazahOnly", mock.Anything, mock.Anything, int64(1)).Return(false, nil)
 	s.repo.On("UpdatePendidikan", mock.MatchedBy(func(m *models.KepegawaianPendidikan) bool {
 		return m.NamaInstitusi == originalName && *m.BidangStudi == newBidangStudi
 	})).Return(nil)
@@ -389,7 +407,6 @@ func (s *KepegawaianPendidikanServiceTestSuite) Test_UpdatePendidikan_PartialFie
 	s.Equal(originalName, result.NamaInstitusi)
 	s.Equal(newBidangStudi, *result.BidangStudi)
 }
-
 func (s *KepegawaianPendidikanServiceTestSuite) Test_UpdatePendidikan_RepoError() {
 	actor := superadminActor()
 	existing := factories.NewKepegawaianPendidikanFactory().Make()
@@ -397,6 +414,7 @@ func (s *KepegawaianPendidikanServiceTestSuite) Test_UpdatePendidikan_RepoError(
 	req := &dto.UpdateKepegawaianPendidikanRequest{}
 
 	s.repo.On("GetPendidikanByID", int64(1)).Return(existing, nil)
+	s.repo.On("ExistsByNomorIjazahOnly", mock.Anything, mock.Anything, int64(1)).Return(false, nil)
 	s.repo.On("UpdatePendidikan", mock.AnythingOfType("*models.KepegawaianPendidikan")).Return(fmt.Errorf("db error"))
 
 	result, err := s.svc.UpdatePendidikan(context.Background(), 1, req, actor)

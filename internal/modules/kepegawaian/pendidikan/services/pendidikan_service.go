@@ -33,7 +33,11 @@ func (s *service) CreatePendidikan(ctx context.Context, req *dto.CreateKepegawai
 	}
 
 	// cek duplikasi jenjang dan nomor ijasah
-	duplicate, err := s.repo.ExistsByNomorIjazahOnly(ctx, *req.NomorIjazah, 0)
+	nomorIjazah := ""
+	if req.NomorIjazah != nil {
+		nomorIjazah = *req.NomorIjazah
+	}
+	duplicate, err := s.repo.ExistsByNomorIjazahOnly(ctx, nomorIjazah, 0)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek duplikasi Nomor Ijazah")
 	}
@@ -188,7 +192,6 @@ func (s *service) UpdatePendidikan(ctx context.Context, id int64, req *dto.Updat
 	if m.NomorIjazah != nil {
 		nomorIjazahCheck = *m.NomorIjazah
 	}
-
 	if req.NomorIjazah != nil {
 		nomorIjazahCheck = *req.NomorIjazah
 	}

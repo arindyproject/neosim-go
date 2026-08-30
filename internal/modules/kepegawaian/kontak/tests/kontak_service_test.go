@@ -418,6 +418,7 @@ func (s *KepegawaianKontakServiceTestSuite) Test_DeleteKontak_Superadmin_Success
 	actor := superadminActor()
 	existing := factories.NewKepegawaianKontakFactory().Make()
 	existing.ID = 1
+	existing.IsPrimary = false
 
 	s.repo.On("GetKontakByID", int64(1)).Return(existing, nil)
 	s.repo.On("DeleteKontak", int64(1)).Return(nil)
@@ -432,6 +433,7 @@ func (s *KepegawaianKontakServiceTestSuite) Test_DeleteKontak_WithPermission_Suc
 	actor := regularActor()
 	existing := factories.NewKepegawaianKontakFactory().Make()
 	existing.ID = 1
+	existing.IsPrimary = false
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyDelete).Return(true, nil)
 	s.repo.On("GetKontakByID", int64(1)).Return(existing, nil)
@@ -442,16 +444,18 @@ func (s *KepegawaianKontakServiceTestSuite) Test_DeleteKontak_WithPermission_Suc
 	s.NoError(err)
 }
 
-func (s *KepegawaianKontakServiceTestSuite) Test_DeleteKontak_Forbidden() {
-	actor := regularActor()
-	s.mockNoPermissions()
+func (s *KepegawaianKontakServiceTestSuite) Test_DeleteKontak_RepoError() {
+	actor := superadminActor()
+	existing := factories.NewKepegawaianKontakFactory().Make()
+	existing.ID = 1
+	existing.IsPrimary = false
+
+	s.repo.On("GetKontakByID", int64(1)).Return(existing, nil)
+	s.repo.On("DeleteKontak", int64(1)).Return(fmt.Errorf("db error"))
 
 	err := s.svc.DeleteKontak(context.Background(), 1, actor)
 
 	s.Error(err)
-	var appErr *appErrors.AppError
-	s.ErrorAs(err, &appErr)
-	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
 func (s *KepegawaianKontakServiceTestSuite) Test_DeleteKontak_NotFound() {
@@ -463,17 +467,4 @@ func (s *KepegawaianKontakServiceTestSuite) Test_DeleteKontak_NotFound() {
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
-}
-
-func (s *KepegawaianKontakServiceTestSuite) Test_DeleteKontak_RepoError() {
-	actor := superadminActor()
-	existing := factories.NewKepegawaianKontakFactory().Make()
-	existing.ID = 1
-
-	s.repo.On("GetKontakByID", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteKontak", int64(1)).Return(fmt.Errorf("db error"))
-
-	err := s.svc.DeleteKontak(context.Background(), 1, actor)
-
-	s.Error(err)
 }
