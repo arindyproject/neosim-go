@@ -22,6 +22,7 @@ import (
 	// Kepegawaian----------------------------------------------------------
 	masterKepegawaianIdentifier "neosim_go/internal/modules/kepegawaian/identifier/tests/seeders"
 	masterKepegawaianKontak "neosim_go/internal/modules/kepegawaian/kontak/tests/seeders"
+	masterKepegawaianKualifikasi "neosim_go/internal/modules/kepegawaian/kualifikasi/tests/seeders"
 	masterKepegawaianPegawai "neosim_go/internal/modules/kepegawaian/pegawai/tests/seeders"
 	masterKepegawaianPendidikan "neosim_go/internal/modules/kepegawaian/pendidikan/tests/seeders"
 
@@ -207,6 +208,31 @@ func main() {
 			log.Fatal("Gagal seed  pendidikan:", err)
 		}
 	} //------Kepegawaian Pendidikan-----------------------------------------
+
+	//------Kepegawaian Kualifikasi Tipe-------------------------------------
+	masterKepegawaianKualifikasiTipeSeeder := masterKepegawaianKualifikasi.NewTipeSeeder(db)
+	if *fresh {
+		if err := masterKepegawaianKualifikasiTipeSeeder.Fresh(); err != nil {
+			log.Fatal("Gagal fresh seed  tipe kualifikasi:", err)
+		}
+	} else {
+		if err := masterKepegawaianKualifikasiTipeSeeder.Run(); err != nil {
+			log.Fatal("Gagal seed   tipe kualifikasi:", err)
+		}
+	} //------Kepegawaian Kualifikasi Tipe-----------------------------------
+
+	//------Kepegawaian Kualifikasi -----------------------------------------
+	masterKepegawaianKualifikasiSeeder := masterKepegawaianKualifikasi.NewKepegawaianKualifikasiSeeder(db)
+	if *fresh {
+		if err := masterKepegawaianKualifikasiSeeder.Fresh(); err != nil {
+			log.Fatal("Gagal fresh seed   kualifikasi:", err)
+		}
+	} else {
+		if err := masterKepegawaianKualifikasiSeeder.Run(); err != nil {
+			log.Fatal("Gagal seed  kualifikasi:", err)
+		}
+	} //------Kepegawaian Kualifikasi ---------------------------------------
+
 	//Kepegawaian------------------------------------------------------------
 
 	// =====================================================================

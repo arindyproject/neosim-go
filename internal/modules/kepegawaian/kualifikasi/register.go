@@ -48,13 +48,14 @@ func (r *registryModule) InitRoutes(e *echo.Echo) {
 		r.cfg.JWTRefreshTokenExpDays,
 	)
 	userRepo := userRepositories.NewRepository(r.db)
-	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo,userRepo, r.cfg).InitRoutes(e)
+	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo, userRepo, r.cfg).InitRoutes(e)
 }
 
 func (r *registryModule) Models() []interface{} {
 	return []interface{}{
-		&models.KepegawaianKualifikasi{},
 		&models.Tipe{},
+		&models.KepegawaianKualifikasi{},
+
 		// GEN:ITEM_MODELS
 	}
 }

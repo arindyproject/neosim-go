@@ -8,31 +8,37 @@ import (
 
 // TipeResponse response untuk single Tipe
 type TipeResponse struct {
-	ID          int64            `json:"id"`
-	Name        string           `json:"name"`
-	Description *string          `json:"description"`
-	CreatedBy   *he.UserData     `json:"created_by"`
-	UpdatedBy   *he.UserData     `json:"updated_by"`
-	CreatedAt   types.CustomTime `json:"created_at"`
-	UpdatedAt   types.CustomTime `json:"updated_at"`
+	ID        int64            `json:"id"`
+	Code      string           `json:"code"`
+	Label     string           `json:"label"`
+	CreatedBy *he.UserData     `json:"created_by"`
+	UpdatedBy *he.UserData     `json:"updated_by"`
+	CreatedAt types.CustomTime `json:"created_at"`
+	UpdatedAt types.CustomTime `json:"updated_at"`
+}
+
+type TipeSimpelResponse struct {
+	ID    int64  `json:"id"`
+	Code  string `json:"code"`
+	Label string `json:"label"`
 }
 
 type TipeResponseParams struct {
-	Tipe *models.Tipe
-	Creator       *he.UserData
-	Updater       *he.UserData
+	Tipe    *models.Tipe
+	Creator *he.UserData
+	Updater *he.UserData
 }
 
 // ToTipeResponse mengubah model menjadi response
 func ToTipeResponse(params TipeResponseParams) *TipeResponse {
 	return &TipeResponse{
-		ID:          params.Tipe.ID,
-		Name:        params.Tipe.Name,
-		Description: params.Tipe.Description,
-		CreatedBy:   params.Creator,
-		UpdatedBy:   params.Updater,
-		CreatedAt:   types.CustomTime(params.Tipe.CreatedAt),
-		UpdatedAt:   types.CustomTime(params.Tipe.UpdatedAt),
+		ID:        params.Tipe.ID,
+		Code:      params.Tipe.Code,
+		Label:     params.Tipe.Label,
+		CreatedBy: params.Creator,
+		UpdatedBy: params.Updater,
+		CreatedAt: types.CustomTime(params.Tipe.CreatedAt),
+		UpdatedAt: types.CustomTime(params.Tipe.UpdatedAt),
 	}
 }
 
@@ -55,9 +61,9 @@ func ToTipeListResponse(
 		}
 
 		responses = append(responses, *ToTipeResponse(TipeResponseParams{
-			Tipe: &m,
-			Creator:         creator,
-			Updater:         updater,
+			Tipe:    &m,
+			Creator: creator,
+			Updater: updater,
 		}))
 	}
 

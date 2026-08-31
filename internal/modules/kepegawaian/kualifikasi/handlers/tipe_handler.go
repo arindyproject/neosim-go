@@ -5,10 +5,10 @@ import (
 	"net/http"
 
 	"neosim_go/internal/modules/kepegawaian/kualifikasi/dto"
+	"neosim_go/internal/shared/binding"
 	he "neosim_go/internal/shared/httputil"
 	"neosim_go/internal/shared/response"
 	"neosim_go/internal/shared/validator"
-	"neosim_go/internal/shared/binding"
 
 	"github.com/labstack/echo/v5"
 )
@@ -32,11 +32,11 @@ import (
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.TipeResponse}
 //	@Router			/kepegawaian/kualifikasi/tipes [get]
 func (h *KepegawaianKualifikasiHandler) ListTipe(c *echo.Context) error {
-	filter := dto.FilterTipeRequest{Name: c.QueryParam("name")}
+	filter := dto.FilterTipeRequest{Code: c.QueryParam("code"), Label: c.QueryParam("label")}
 	page, pageSize := he.ParsePagination(c, h.cfg)
 
 	actor := he.BuildAuthContext(c)
-	items, total, err := h.service.ListTipe(c.Request().Context(),page, pageSize, &filter, actor)
+	items, total, err := h.service.ListTipe(c.Request().Context(), page, pageSize, &filter, actor)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
 	}
@@ -60,7 +60,7 @@ func (h *KepegawaianKualifikasiHandler) GetTipeByID(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.GetTipeByID(c.Request().Context(),id, actor)
+	item, err := h.service.GetTipeByID(c.Request().Context(), id, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -92,7 +92,7 @@ func (h *KepegawaianKualifikasiHandler) CreateTipe(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (validator)", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.CreateTipe(c.Request().Context(),&req, actor)
+	item, err := h.service.CreateTipe(c.Request().Context(), &req, actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
@@ -130,7 +130,7 @@ func (h *KepegawaianKualifikasiHandler) UpdateTipe(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (validator)", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.UpdateTipe(c.Request().Context(),id, &req, actor)
+	item, err := h.service.UpdateTipe(c.Request().Context(), id, &req, actor)
 	if err != nil {
 		status := http.StatusBadRequest
 		if err.Error() == "Tipe tidak ditemukan" {
@@ -158,7 +158,7 @@ func (h *KepegawaianKualifikasiHandler) DeleteTipe(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	if err := h.service.DeleteTipe(c.Request().Context(),id, actor); err != nil {
+	if err := h.service.DeleteTipe(c.Request().Context(), id, actor); err != nil {
 		status := http.StatusInternalServerError
 		if err.Error() == "Tipe tidak ditemukan" {
 			status = http.StatusNotFound

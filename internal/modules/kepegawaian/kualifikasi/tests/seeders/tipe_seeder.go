@@ -22,16 +22,45 @@ func NewTipeSeeder(db *gorm.DB) *TipeSeeder {
 	return &TipeSeeder{db: db}
 }
 
+// GetDefaultData mengembalikan daftar master data preset
+func GetDefaultData() []models.Tipe {
+	creatorID := int64(1)
+
+	return []models.Tipe{
+		{
+			Code:      "sertifikasi",
+			Label:     "Sertifikasi",
+			CreatedBy: &creatorID,
+			UpdatedBy: &creatorID,
+		},
+		{
+			Code:      "pelatihan",
+			Label:     "Pelatihan",
+			CreatedBy: &creatorID,
+			UpdatedBy: &creatorID,
+		},
+		{
+			Code:      "kompetensi",
+			Label:     "Kompetensi",
+			CreatedBy: &creatorID,
+			UpdatedBy: &creatorID,
+		},
+	}
+}
+
 func (s *TipeSeeder) Run() error {
 	log.Println("🌱 Seeding kepegawaian_kualifikasi_tipes...")
 
-	items := factories.NewTipeFactory().MakeMany(10)
-	for _, item := range items {
-		if err := s.db.Create(item).Error; err != nil {
-			log.Printf("   ⚠️  Gagal membuat Tipe: %v", err)
+	defaults := GetDefaultData()
+	for _, item := range defaults {
+		// Menggunakan FirstOrCreate berdasarkan `code` agar idempotent
+		var existing models.Tipe
+		err := s.db.Where("code = ?", item.Code).FirstOrCreate(&existing, item).Error
+		if err != nil {
+			log.Printf("   ⚠️ Gagal membuat/memeriksa Tipe [%s]: %v", item.Code, err)
 			continue
 		}
-		log.Printf("   ✅ Tipe '%s' dibuat.", item.Name)
+		log.Printf("   ✅ Tipe '%s' (%s) siap.", item.Label, item.Code)
 	}
 
 	log.Println("✅ kepegawaian_kualifikasi_tipes seeding selesai!")
