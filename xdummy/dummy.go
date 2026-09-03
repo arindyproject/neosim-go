@@ -13,6 +13,7 @@ import (
 	kategoriFactories "neosim_go/internal/modules/artikel/kategori/tests/factories"
 	kepegawaianIdentifierFactories "neosim_go/internal/modules/kepegawaian/identifier/tests/factories"
 	kepegawaianKontakFactories "neosim_go/internal/modules/kepegawaian/kontak/tests/factories"
+	kepegawaianKualifikasiFactories "neosim_go/internal/modules/kepegawaian/kualifikasi/tests/factories"
 
 	"github.com/joho/godotenv"
 	"gorm.io/gorm"
@@ -78,7 +79,12 @@ var registry = map[string]Seeder{
 			return seedBatch(db, "kepegawaian_kontak", total, batchSize, factory.MakeMany)
 		},
 	},
-
+	"kepegawaian_kualifikasis": {
+		Run: func(db *gorm.DB, total, batchSize int) error {
+			factory := kepegawaianKualifikasiFactories.NewKepegawaianKualifikasiFactory()
+			return seedBatch(db, "kepegawaian_kualifikasis", total, batchSize, factory.MakeMany)
+		},
+	},
 	// Tambahkan seeder model lain di sini, contoh pola di atas.
 }
 

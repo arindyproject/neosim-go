@@ -34,6 +34,6 @@ type KepegawaianKualifikasiService interface {
 	ListKualifikasi(ctx context.Context, page, pageSize int, filter *dto.FilterKepegawaianKualifikasiRequest, actor he.AuthContext) ([]dto.KepegawaianKualifikasiResponse, int64, error)
 	UpdateKualifikasi(ctx context.Context, id int64, req *dto.UpdateKepegawaianKualifikasiRequest, actor he.AuthContext) (*dto.KepegawaianKualifikasiResponse, error)
 	DeleteKualifikasi(ctx context.Context, id int64, actor he.AuthContext) error
-	GetExpiringSoonIdentifier(ctx context.Context, days int, page, pageSize int, actor he.AuthContext) ([]dto.KepegawaianKualifikasiResponse, int64, error)
+	GetExpiringSoonKualifikasi(ctx context.Context, days int, page, pageSize int, actor he.AuthContext) ([]dto.KepegawaianKualifikasiResponse, int64, error)
 	GetExpiredKualifikasi(ctx context.Context, page, pageSize int, actor he.AuthContext) ([]dto.KepegawaianKualifikasiResponse, int64, error)
 }

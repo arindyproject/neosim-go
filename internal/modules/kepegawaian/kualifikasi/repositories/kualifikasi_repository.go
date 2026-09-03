@@ -163,7 +163,7 @@ func (r *repository) ListKualifikasi(ctx context.Context, page, pageSize int, fi
 		if filter.Nama != "" {
 			query = query.Where("nama ILIKE ?", "%"+filter.Nama+"%")
 		}
-		if filter.TipeID != 0 {
+		if filter.TipeID != nil {
 			query = query.Where("tipe_id = ?", filter.TipeID)
 		}
 		if filter.Penyelenggara != "" {

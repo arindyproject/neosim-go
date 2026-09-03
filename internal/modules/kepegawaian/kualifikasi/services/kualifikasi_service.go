@@ -44,6 +44,8 @@ func (s *service) CreateKualifikasi(ctx context.Context, req *dto.CreateKepegawa
 	m := &models.KepegawaianKualifikasi{
 		PegawaiID:       req.PegawaiID,
 		TipeID:          req.TipeID,
+		Nama:            req.Nama,
+		Penyelenggara:   req.Penyelenggara,
 		NomorSertifikat: req.NomorSertifikat,
 		TanggalTerbit:   req.TanggalTerbit.ToTimePtr(),
 		TanggalExpired:  req.TanggalExpired.ToTimePtr(),
@@ -175,24 +177,24 @@ func (s *service) UpdateKualifikasi(ctx context.Context, id int64, req *dto.Upda
 
 	//----------------------
 	tipeCheck := m.TipeID
-	nomorSertifikatCheck := m.NomorSertifikat
-
 	if req.TipeID != nil {
 		tipeCheck = *req.TipeID
 	}
 
-	if nomorSertifikatCheck != nil {
+	nomorSertifikatCheck := m.NomorSertifikat
+	if req.NomorSertifikat != nil {
 		nomorSertifikatCheck = req.NomorSertifikat
 	}
 
-	// cekduplikasi di satu user
-	duplicate, err := s.repo.ExistsByNomorSertifikatAndTipe(ctx, tipeCheck, *nomorSertifikatCheck, id)
-	if err != nil {
-		return nil, appErrors.Internal("gagal cek duplikasi identifier")
-	}
-	if duplicate {
-		return nil, appErrors.Wrap(http.StatusConflict,
-			"Nilai identifier sudah  Pernah digunakan oleh Anda.", nil)
+	if nomorSertifikatCheck != nil {
+		duplicate, err := s.repo.ExistsByNomorSertifikatAndTipe(ctx, tipeCheck, *nomorSertifikatCheck, id)
+		if err != nil {
+			return nil, appErrors.Internal("gagal cek duplikasi identifier")
+		}
+		if duplicate {
+			return nil, appErrors.Wrap(http.StatusConflict,
+				"Nilai identifier sudah pernah digunakan oleh Anda.", nil)
+		}
 	}
 
 	// update parsial jika pointer dikirimkan (not nil)
@@ -278,7 +280,7 @@ func (s *service) DeleteKualifikasi(ctx context.Context, id int64, actor he.Auth
 }
 
 // ── GetExpiringSoon ───────────────────────────────────────────────────────────
-func (s *service) GetExpiringSoonIdentifier(
+func (s *service) GetExpiringSoonKualifikasi(
 	ctx context.Context,
 	days int,
 	page, pageSize int,

@@ -2360,6 +2360,640 @@ const docTemplate = `{
                 }
             }
         },
+        "/kepegawaian/kualifikasi": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get paginated list of KepegawaianKualifikasi",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/kualifikasi"
+                ],
+                "summary": "Get list of KepegawaianKualifikasi",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Filter by Tipe ID",
+                        "name": "tipe_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by nama (partial match)",
+                        "name": "nama",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by penyelenggara (partial match)",
+                        "name": "penyelenggara",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by Is Aktif Status",
+                        "name": "is_aktif",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter identifier yang sudah expired",
+                        "name": "is_expired",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.KepegawaianKualifikasiResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create New KepegawaianKualifikasi",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/kualifikasi"
+                ],
+                "summary": "Create KepegawaianKualifikasi",
+                "parameters": [
+                    {
+                        "description": "Create Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateKepegawaianKualifikasiRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KepegawaianKualifikasiResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/kualifikasi/expired": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menampilkan daftar kualifikasi yang sudah melewati tanggal expired",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/kualifikasi"
+                ],
+                "summary": "Kualifikasi yang sudah expired",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.KepegawaianKualifikasiResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/kualifikasi/tipes": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get paginated list of Tipe",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/kualifikasi"
+                ],
+                "summary": "Get list of Tipe",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by name (partial match)",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_kualifikasi_dto.TipeResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create New Tipe",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/kualifikasi"
+                ],
+                "summary": "Create Tipe",
+                "parameters": [
+                    {
+                        "description": "Create Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_kualifikasi_dto.CreateTipeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_kualifikasi_dto.TipeResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/kualifikasi/tipes/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get Tipe by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/kualifikasi"
+                ],
+                "summary": "Get Tipe",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Tipe ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_kualifikasi_dto.TipeResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update Tipe by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/kualifikasi"
+                ],
+                "summary": "Update Tipe",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Tipe ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_kualifikasi_dto.UpdateTipeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_kualifikasi_dto.TipeResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete Tipe by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/kualifikasi"
+                ],
+                "summary": "Delete Tipe",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Tipe ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.MyGoResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/kualifikasi/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get KepegawaianKualifikasi by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/kualifikasi"
+                ],
+                "summary": "Get KepegawaianKualifikasi",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "KepegawaianKualifikasi ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KepegawaianKualifikasiResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update KepegawaianKualifikasi by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/kualifikasi"
+                ],
+                "summary": "Update KepegawaianKualifikasi",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "KepegawaianKualifikasi ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateKepegawaianKualifikasiRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KepegawaianKualifikasiResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete KepegawaianKualifikasi by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/kualifikasi"
+                ],
+                "summary": "Delete KepegawaianKualifikasi",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "KepegawaianKualifikasi ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.MyGoResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/kualifikasi/{pegawai_id}/pegawai": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menampilkan semua kualifikasi yang dimiliki oleh pegawai tertentu",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/kualifikasi"
+                ],
+                "summary": "Daftar kualifikasi milik satu pegawai",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Jumlah hari ke depan (default: 30)",
+                        "name": "days",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.KepegawaianKualifikasiResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/kepegawaian/pegawai": {
             "get": {
                 "security": [
@@ -8542,6 +9176,57 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.CreateKepegawaianKualifikasiRequest": {
+            "type": "object",
+            "required": [
+                "nama",
+                "pegawai_id",
+                "penyelenggara",
+                "tipe_id"
+            ],
+            "properties": {
+                "fhir_code": {
+                    "type": "string"
+                },
+                "fhir_system": {
+                    "type": "string"
+                },
+                "is_aktif": {
+                    "type": "boolean"
+                },
+                "nama": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "nomor_sertifikat": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "pegawai_id": {
+                    "type": "integer"
+                },
+                "penyelenggara": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "tanggal_expired": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-01-01"
+                },
+                "tanggal_terbit": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-01-01"
+                },
+                "tipe_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "dto.CreateKepegawaianPegawaiRequest": {
             "type": "object",
             "required": [
@@ -9255,6 +9940,67 @@ const docTemplate = `{
                     "allOf": [
                         {
                             "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_kontak_dto.TipeSimpelResponse"
+                        }
+                    ]
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "$ref": "#/definitions/httputil.UserData"
+                }
+            }
+        },
+        "dto.KepegawaianKualifikasiResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "$ref": "#/definitions/httputil.UserData"
+                },
+                "days_until_expired": {
+                    "type": "integer"
+                },
+                "fhir_code": {
+                    "type": "string"
+                },
+                "fhir_system": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_aktif": {
+                    "type": "boolean"
+                },
+                "is_expired": {
+                    "type": "boolean"
+                },
+                "nama": {
+                    "type": "string"
+                },
+                "nomor_sertifikat": {
+                    "type": "string"
+                },
+                "pegawai_id": {
+                    "type": "integer"
+                },
+                "penyelenggara": {
+                    "type": "string"
+                },
+                "tanggal_expired": {
+                    "$ref": "#/definitions/types.DateOnly"
+                },
+                "tanggal_terbit": {
+                    "$ref": "#/definitions/types.DateOnly"
+                },
+                "tipe": {
+                    "description": "TipeID      int64            ` + "`" + `json:\"tipe_id\"` + "`" + `",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_kualifikasi_dto.TipeSimpelResponse"
                         }
                     ]
                 },
@@ -10091,6 +10837,48 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.UpdateKepegawaianKualifikasiRequest": {
+            "type": "object",
+            "properties": {
+                "fhir_code": {
+                    "type": "string"
+                },
+                "fhir_system": {
+                    "type": "string"
+                },
+                "is_aktif": {
+                    "type": "boolean"
+                },
+                "nama": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "nomor_sertifikat": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "penyelenggara": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "tanggal_expired": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-01-01"
+                },
+                "tanggal_terbit": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-01-01"
+                },
+                "tipe_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "dto.UpdateKepegawaianPegawaiRequest": {
             "type": "object",
             "properties": {
@@ -10811,6 +11599,80 @@ const docTemplate = `{
             }
         },
         "neosim_go_internal_modules_kepegawaian_kontak_dto.UpdateTipeRequest": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "label": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                }
+            }
+        },
+        "neosim_go_internal_modules_kepegawaian_kualifikasi_dto.CreateTipeRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "label"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "label": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                }
+            }
+        },
+        "neosim_go_internal_modules_kepegawaian_kualifikasi_dto.TipeResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "$ref": "#/definitions/httputil.UserData"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "$ref": "#/definitions/httputil.UserData"
+                }
+            }
+        },
+        "neosim_go_internal_modules_kepegawaian_kualifikasi_dto.TipeSimpelResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "label": {
+                    "type": "string"
+                }
+            }
+        },
+        "neosim_go_internal_modules_kepegawaian_kualifikasi_dto.UpdateTipeRequest": {
             "type": "object",
             "properties": {
                 "code": {

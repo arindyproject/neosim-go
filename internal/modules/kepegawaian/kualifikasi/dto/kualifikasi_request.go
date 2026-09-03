@@ -39,7 +39,7 @@ type UpdateKepegawaianKualifikasiRequest struct {
 
 // FilterKepegawaianKualifikasiRequest request body untuk filter KepegawaianKualifikasi
 type FilterKepegawaianKualifikasiRequest struct {
-	TipeID        int64  `query:"tipe_id"`
+	TipeID        *int64 `query:"tipe_id"`
 	Nama          string `query:"nama"`
 	Penyelenggara string `query:"penyelenggara"`
 	IsAktif       *bool  `query:"is_aktif"`

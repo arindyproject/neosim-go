@@ -15,7 +15,7 @@ type Endpoint struct {
 
 func main() {
 	// Token Authorization
-	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6InN1cGVyYWRtaW4iLCJpc19zdXBlcmFkbWluIjp0cnVlLCJpc19zdGFmZiI6dHJ1ZSwidG9rZW5fdHlwZSI6ImFjY2VzcyIsImlzcyI6Im5lb3NpbSIsImV4cCI6MTc4NzU2NTUzNiwiaWF0IjoxNzg2OTYwNzM2LCJqdGkiOiI5ZjJkZWY3NS01ZmQ1LTQ3ZDItYWM3ZS1hNzdiOTBjY2Q1ZDAifQ.y0K7unhY0W0TfQ-57-IMIbu2on7reTJ-C1DNqNfHuL4"
+	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6InN1cGVyYWRtaW4iLCJpc19zdXBlcmFkbWluIjp0cnVlLCJpc19zdGFmZiI6dHJ1ZSwidG9rZW5fdHlwZSI6ImFjY2VzcyIsImlzcyI6Im5lb3NpbSIsImV4cCI6MTc4OTAwNzcyNywiaWF0IjoxNzg4NDAyOTI3LCJqdGkiOiJkNjFjNTg3Zi0xY2NhLTRmY2UtYjcxNi1hYTU3MjRmN2U0YzgifQ.ZowHs54Thm4x7C0AVhxHDARCjub4Qnrk1Xu7iBjy3Bk"
 	base_url := "http://localhost:1323/api/v1/"
 	page_size := 100000
 	// Jumlah perulangan pengujian per endpoint
@@ -42,6 +42,10 @@ func main() {
 		{
 			Name: "Get Identifier Kepegawaian By PegawaiID",
 			URL:  base_url + "kepegawaian/identifier/3/pegawai?page_size=" + fmt.Sprint(page_size),
+		},
+		{
+			Name: "Get Kualifikasi Kepegawaian",
+			URL:  base_url + "kepegawaian/kualifikasi?page_size=" + fmt.Sprint(page_size),
 		},
 	}
 

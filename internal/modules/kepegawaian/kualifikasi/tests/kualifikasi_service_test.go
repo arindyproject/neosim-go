@@ -41,8 +41,8 @@ func TestMain(m *testing.M) {
 }
 
 // KepegawaianKualifikasiServiceTestSuite dipakai bersama oleh SELURUH item di dalam
-// sub-module ini (lihat mis. tag_service_test.go) — karena hanya ada satu
-// struct service/repository, satu suite ini sudah cukup untuk semuanya.
+// sub-module ini — karena hanya ada satu struct service/repository, satu suite
+// ini sudah cukup untuk semuanya.
 type KepegawaianKualifikasiServiceTestSuite struct {
 	suite.Suite
 	repo     *mocks.KepegawaianKualifikasiRepositoryMock
@@ -54,7 +54,7 @@ type KepegawaianKualifikasiServiceTestSuite struct {
 }
 
 func (s *KepegawaianKualifikasiServiceTestSuite) SetupTest() {
-	s.repo     = new(mocks.KepegawaianKualifikasiRepositoryMock)
+	s.repo = new(mocks.KepegawaianKualifikasiRepositoryMock)
 	s.rbacRepo = new(mocks.RBACRepositoryMock)
 	s.authRepo = new(mocks.AuthRepositoryMock)
 	s.userRepo = new(mocks.UserRepositoryMock)
@@ -65,7 +65,6 @@ func (s *KepegawaianKualifikasiServiceTestSuite) SetupTest() {
 	s.svc = services.NewKepegawaianKualifikasiService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.cfg)
 
 	// Stub default agar buildCreator/buildAuditMaps tidak panic saat memanggil userRepo.
-	// Boleh dipanggil 0 kali atau lebih (.Maybe()) tergantung skenario test.
 	s.userRepo.On("GetByID", mock.Anything).Return(nil, nil).Maybe()
 	s.userRepo.On("GetByIDs", mock.Anything).Return(nil, nil).Maybe()
 }
@@ -82,36 +81,55 @@ func regularActor() he.AuthContext {
 	return he.AuthContext{UserID: 2, IsSuperadmin: false}
 }
 
-func (s *KepegawaianKualifikasiServiceTestSuite) mockHasPermission(perm string, result bool) {
-	s.rbacRepo.On("HasPermission", regularActor().UserID, perm, mock.Anything).Return(result, nil).Maybe()
-}
-
 func (s *KepegawaianKualifikasiServiceTestSuite) mockNoPermissions() {
 	s.rbacRepo.On("HasPermission", regularActor().UserID, mock.Anything, mock.Anything).Return(false, nil)
 }
 
+// testTipe adalah master tipe kualifikasi dummy yang dikembalikan GetTipeByID.
+func testTipe(id int64) *models.Tipe {
+	return &models.Tipe{
+		ID:    id,
+		Code:  fmt.Sprintf("TIPE-%d", id),
+		Label: fmt.Sprintf("Tipe %d", id),
+	}
+}
+
+// ── Create ────────────────────────────────────────────────────────────────
+
 func (s *KepegawaianKualifikasiServiceTestSuite) Test_CreateKualifikasi_Superadmin_Success() {
-	req := &dto.CreateKepegawaianKualifikasiRequest{Name: "Test KepegawaianKualifikasi"}
+	req := &dto.CreateKepegawaianKualifikasiRequest{
+		PegawaiID:     10,
+		TipeID:        1,
+		Nama:          "Sertifikasi BLS",
+		Penyelenggara: "PMI",
+	}
 	actor := superadminActor()
 
+	s.repo.On("GetTipeByID", req.TipeID).Return(testTipe(req.TipeID), nil)
 	s.repo.On("CreateKualifikasi", mock.AnythingOfType("*models.KepegawaianKualifikasi")).Return(nil)
 
 	result, err := s.svc.CreateKualifikasi(context.Background(), req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
-	s.Equal(req.Name, result.Name)
+	s.Equal(req.Nama, result.Nama)
 	s.repo.AssertExpectations(s.T())
 }
 
 func (s *KepegawaianKualifikasiServiceTestSuite) Test_CreateKualifikasi_WithPermission_Success() {
-	req := &dto.CreateKepegawaianKualifikasiRequest{Name: "Test KepegawaianKualifikasi"}
+	req := &dto.CreateKepegawaianKualifikasiRequest{
+		PegawaiID:     10,
+		TipeID:        1,
+		Nama:          "Sertifikasi BLS",
+		Penyelenggara: "PMI",
+	}
 	actor := regularActor()
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(true, nil)
+	s.repo.On("GetTipeByID", req.TipeID).Return(testTipe(req.TipeID), nil)
 	s.repo.On("CreateKualifikasi", mock.AnythingOfType("*models.KepegawaianKualifikasi")).Return(nil)
 
-	result, err := s.svc.CreateKualifikasi(context.Background(),req, actor)
+	result, err := s.svc.CreateKualifikasi(context.Background(), req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -119,25 +137,33 @@ func (s *KepegawaianKualifikasiServiceTestSuite) Test_CreateKualifikasi_WithPerm
 }
 
 func (s *KepegawaianKualifikasiServiceTestSuite) Test_CreateKualifikasi_WithManagePermission_Success() {
-	req := &dto.CreateKepegawaianKualifikasiRequest{Name: "Test"}
+	req := &dto.CreateKepegawaianKualifikasiRequest{
+		PegawaiID:     10,
+		TipeID:        1,
+		Nama:          "Sertifikasi BLS",
+		Penyelenggara: "PMI",
+	}
 	actor := regularActor()
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(false, nil)
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyManage).Return(true, nil)
+	s.repo.On("GetTipeByID", req.TipeID).Return(testTipe(req.TipeID), nil)
 	s.repo.On("CreateKualifikasi", mock.AnythingOfType("*models.KepegawaianKualifikasi")).Return(nil)
 
-	result, err := s.svc.CreateKualifikasi(context.Background(),req, actor)
+	result, err := s.svc.CreateKualifikasi(context.Background(), req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 }
 
 func (s *KepegawaianKualifikasiServiceTestSuite) Test_CreateKualifikasi_Forbidden() {
-	req := &dto.CreateKepegawaianKualifikasiRequest{Name: "Test"}
+	req := &dto.CreateKepegawaianKualifikasiRequest{
+		PegawaiID: 10, TipeID: 1, Nama: "Test", Penyelenggara: "Test",
+	}
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.CreateKualifikasi(context.Background(),req, actor)
+	result, err := s.svc.CreateKualifikasi(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -146,17 +172,39 @@ func (s *KepegawaianKualifikasiServiceTestSuite) Test_CreateKualifikasi_Forbidde
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
-func (s *KepegawaianKualifikasiServiceTestSuite) Test_CreateKualifikasi_RepoError() {
-	req := &dto.CreateKepegawaianKualifikasiRequest{Name: "Test"}
+func (s *KepegawaianKualifikasiServiceTestSuite) Test_CreateKualifikasi_TipeNotFound() {
+	req := &dto.CreateKepegawaianKualifikasiRequest{
+		PegawaiID: 10, TipeID: 999, Nama: "Test", Penyelenggara: "Test",
+	}
 	actor := superadminActor()
 
+	s.repo.On("GetTipeByID", req.TipeID).Return(nil, nil)
+
+	result, err := s.svc.CreateKualifikasi(context.Background(), req, actor)
+
+	s.Nil(result)
+	s.Error(err)
+	var appErr *appErrors.AppError
+	s.ErrorAs(err, &appErr)
+	s.Equal(http.StatusUnprocessableEntity, appErr.Code)
+}
+
+func (s *KepegawaianKualifikasiServiceTestSuite) Test_CreateKualifikasi_RepoError() {
+	req := &dto.CreateKepegawaianKualifikasiRequest{
+		PegawaiID: 10, TipeID: 1, Nama: "Test", Penyelenggara: "Test",
+	}
+	actor := superadminActor()
+
+	s.repo.On("GetTipeByID", req.TipeID).Return(testTipe(req.TipeID), nil)
 	s.repo.On("CreateKualifikasi", mock.AnythingOfType("*models.KepegawaianKualifikasi")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.CreateKualifikasi(context.Background(),req, actor)
+	result, err := s.svc.CreateKualifikasi(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
 }
+
+// ── GetByID ───────────────────────────────────────────────────────────────
 
 func (s *KepegawaianKualifikasiServiceTestSuite) Test_GetKualifikasiByID_Superadmin_Success() {
 	actor := superadminActor()
@@ -165,12 +213,12 @@ func (s *KepegawaianKualifikasiServiceTestSuite) Test_GetKualifikasiByID_Superad
 
 	s.repo.On("GetKualifikasiByID", int64(1)).Return(item, nil)
 
-	result, err := s.svc.GetKualifikasiByID(context.Background(),1, actor)
+	result, err := s.svc.GetKualifikasiByID(context.Background(), 1, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 	s.Equal(item.ID, result.ID)
-	s.Equal(item.Name, result.Name)
+	s.Equal(item.Nama, result.Nama)
 }
 
 func (s *KepegawaianKualifikasiServiceTestSuite) Test_GetKualifikasiByID_WithPermission_Success() {
@@ -181,7 +229,7 @@ func (s *KepegawaianKualifikasiServiceTestSuite) Test_GetKualifikasiByID_WithPer
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyRead).Return(true, nil)
 	s.repo.On("GetKualifikasiByID", int64(1)).Return(item, nil)
 
-	result, err := s.svc.GetKualifikasiByID(context.Background(),1, actor)
+	result, err := s.svc.GetKualifikasiByID(context.Background(), 1, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -191,7 +239,7 @@ func (s *KepegawaianKualifikasiServiceTestSuite) Test_GetKualifikasiByID_Forbidd
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.GetKualifikasiByID(context.Background(),1, actor)
+	result, err := s.svc.GetKualifikasiByID(context.Background(), 1, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -205,7 +253,7 @@ func (s *KepegawaianKualifikasiServiceTestSuite) Test_GetKualifikasiByID_NotFoun
 
 	s.repo.On("GetKualifikasiByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.GetKualifikasiByID(context.Background(),999, actor)
+	result, err := s.svc.GetKualifikasiByID(context.Background(), 999, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -217,11 +265,13 @@ func (s *KepegawaianKualifikasiServiceTestSuite) Test_GetKualifikasiByID_RepoErr
 
 	s.repo.On("GetKualifikasiByID", int64(1)).Return(nil, fmt.Errorf("db error"))
 
-	result, err := s.svc.GetKualifikasiByID(context.Background(),1, actor)
+	result, err := s.svc.GetKualifikasiByID(context.Background(), 1, actor)
 
 	s.Nil(result)
 	s.Error(err)
 }
+
+// ── List ──────────────────────────────────────────────────────────────────
 
 func (s *KepegawaianKualifikasiServiceTestSuite) Test_ListKualifikasi_Superadmin_Success() {
 	actor := superadminActor()
@@ -233,7 +283,7 @@ func (s *KepegawaianKualifikasiServiceTestSuite) Test_ListKualifikasi_Superadmin
 
 	s.repo.On("ListKualifikasi", 1, 10, filter).Return(items, int64(2), nil)
 
-	result, total, err := s.svc.ListKualifikasi(context.Background(),1, 10, filter, actor)
+	result, total, err := s.svc.ListKualifikasi(context.Background(), 1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(2), total)
@@ -248,7 +298,7 @@ func (s *KepegawaianKualifikasiServiceTestSuite) Test_ListKualifikasi_WithPermis
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyRead).Return(true, nil)
 	s.repo.On("ListKualifikasi", 1, 10, filter).Return(items, int64(1), nil)
 
-	result, total, err := s.svc.ListKualifikasi(context.Background(),1, 10, filter, actor)
+	result, total, err := s.svc.ListKualifikasi(context.Background(), 1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
@@ -260,7 +310,7 @@ func (s *KepegawaianKualifikasiServiceTestSuite) Test_ListKualifikasi_Forbidden(
 	filter := &dto.FilterKepegawaianKualifikasiRequest{}
 	s.mockNoPermissions()
 
-	result, total, err := s.svc.ListKualifikasi(context.Background(),1, 10, filter, actor)
+	result, total, err := s.svc.ListKualifikasi(context.Background(), 1, 10, filter, actor)
 
 	s.Nil(result)
 	s.Equal(int64(0), total)
@@ -276,7 +326,7 @@ func (s *KepegawaianKualifikasiServiceTestSuite) Test_ListKualifikasi_DefaultPag
 
 	s.repo.On("ListKualifikasi", 1, 10, filter).Return([]models.KepegawaianKualifikasi{}, int64(0), nil)
 
-	result, total, err := s.svc.ListKualifikasi(context.Background(),0, 0, filter, actor)
+	result, total, err := s.svc.ListKualifikasi(context.Background(), 0, 0, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(0), total)
@@ -289,55 +339,59 @@ func (s *KepegawaianKualifikasiServiceTestSuite) Test_ListKualifikasi_PageSizeCa
 
 	s.repo.On("ListKualifikasi", 1, 10, filter).Return([]models.KepegawaianKualifikasi{}, int64(0), nil)
 
-	_, _, err := s.svc.ListKualifikasi(context.Background(),1, 999, filter, actor)
+	_, _, err := s.svc.ListKualifikasi(context.Background(), 1, 999, filter, actor)
 
 	s.NoError(err)
 	s.repo.AssertCalled(s.T(), "ListKualifikasi", 1, 10, filter)
 }
 
-func (s *KepegawaianKualifikasiServiceTestSuite) Test_ListKualifikasi_WithNameFilter() {
+func (s *KepegawaianKualifikasiServiceTestSuite) Test_ListKualifikasi_WithNamaFilter() {
 	actor := superadminActor()
-	filter := &dto.FilterKepegawaianKualifikasiRequest{Name: "test"}
+	filter := &dto.FilterKepegawaianKualifikasiRequest{Nama: "BLS"}
 	items := []models.KepegawaianKualifikasi{*factories.NewKepegawaianKualifikasiFactory().Make()}
 
 	s.repo.On("ListKualifikasi", 1, 10, filter).Return(items, int64(1), nil)
 
-	result, total, err := s.svc.ListKualifikasi(context.Background(),1, 10, filter, actor)
+	result, total, err := s.svc.ListKualifikasi(context.Background(), 1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
 	s.Len(result, 1)
 }
 
+// ── Update ────────────────────────────────────────────────────────────────
+
 func (s *KepegawaianKualifikasiServiceTestSuite) Test_UpdateKualifikasi_Superadmin_Success() {
 	actor := superadminActor()
 	existing := factories.NewKepegawaianKualifikasiFactory().Make()
 	existing.ID = 1
-	newName := "Updated Name"
-	req := &dto.UpdateKepegawaianKualifikasiRequest{Name: &newName}
+	newNama := "Sertifikasi ACLS"
+	req := &dto.UpdateKepegawaianKualifikasiRequest{Nama: &newNama}
 
 	s.repo.On("GetKualifikasiByID", int64(1)).Return(existing, nil)
+	s.repo.On("ExistsByNomorSertifikatAndTipe", existing.TipeID, *existing.NomorSertifikat, int64(1)).Return(false, nil)
 	s.repo.On("UpdateKualifikasi", mock.AnythingOfType("*models.KepegawaianKualifikasi")).Return(nil)
 
-	result, err := s.svc.UpdateKualifikasi(context.Background(),1, req, actor)
+	result, err := s.svc.UpdateKualifikasi(context.Background(), 1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
-	s.Equal(newName, result.Name)
+	s.Equal(newNama, result.Nama)
 }
 
 func (s *KepegawaianKualifikasiServiceTestSuite) Test_UpdateKualifikasi_WithPermission_Success() {
 	actor := regularActor()
 	existing := factories.NewKepegawaianKualifikasiFactory().Make()
 	existing.ID = 1
-	newName := "Updated"
-	req := &dto.UpdateKepegawaianKualifikasiRequest{Name: &newName}
+	newNama := "Updated"
+	req := &dto.UpdateKepegawaianKualifikasiRequest{Nama: &newNama}
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyUpdate).Return(true, nil)
 	s.repo.On("GetKualifikasiByID", int64(1)).Return(existing, nil)
+	s.repo.On("ExistsByNomorSertifikatAndTipe", existing.TipeID, *existing.NomorSertifikat, int64(1)).Return(false, nil)
 	s.repo.On("UpdateKualifikasi", mock.AnythingOfType("*models.KepegawaianKualifikasi")).Return(nil)
 
-	result, err := s.svc.UpdateKualifikasi(context.Background(),1, req, actor)
+	result, err := s.svc.UpdateKualifikasi(context.Background(), 1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -348,7 +402,7 @@ func (s *KepegawaianKualifikasiServiceTestSuite) Test_UpdateKualifikasi_Forbidde
 	req := &dto.UpdateKepegawaianKualifikasiRequest{}
 	s.mockNoPermissions()
 
-	result, err := s.svc.UpdateKualifikasi(context.Background(),1, req, actor)
+	result, err := s.svc.UpdateKualifikasi(context.Background(), 1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -363,31 +417,69 @@ func (s *KepegawaianKualifikasiServiceTestSuite) Test_UpdateKualifikasi_NotFound
 
 	s.repo.On("GetKualifikasiByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.UpdateKualifikasi(context.Background(),999, req, actor)
+	result, err := s.svc.UpdateKualifikasi(context.Background(), 999, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
-	s.Contains(err.Error(), "tidak ditemukan")
+}
+
+func (s *KepegawaianKualifikasiServiceTestSuite) Test_UpdateKualifikasi_DuplicateNomorSertifikat() {
+	actor := superadminActor()
+	existing := factories.NewKepegawaianKualifikasiFactory().Make()
+	existing.ID = 1
+	newNomor := "CERT-999999"
+	req := &dto.UpdateKepegawaianKualifikasiRequest{NomorSertifikat: &newNomor}
+
+	s.repo.On("GetKualifikasiByID", int64(1)).Return(existing, nil)
+	s.repo.On("ExistsByNomorSertifikatAndTipe", existing.TipeID, newNomor, int64(1)).Return(true, nil)
+
+	result, err := s.svc.UpdateKualifikasi(context.Background(), 1, req, actor)
+
+	s.Nil(result)
+	s.Error(err)
+	var appErr *appErrors.AppError
+	s.ErrorAs(err, &appErr)
+	s.Equal(http.StatusConflict, appErr.Code)
 }
 
 func (s *KepegawaianKualifikasiServiceTestSuite) Test_UpdateKualifikasi_PartialFields() {
 	actor := superadminActor()
 	existing := factories.NewKepegawaianKualifikasiFactory().Make()
 	existing.ID = 1
-	originalName := existing.Name
-	newDesc := "New description"
-	req := &dto.UpdateKepegawaianKualifikasiRequest{Description: &newDesc}
+	originalNama := existing.Nama
+	newPenyelenggara := "Penyelenggara Baru"
+	req := &dto.UpdateKepegawaianKualifikasiRequest{Penyelenggara: &newPenyelenggara}
 
 	s.repo.On("GetKualifikasiByID", int64(1)).Return(existing, nil)
+	s.repo.On("ExistsByNomorSertifikatAndTipe", existing.TipeID, *existing.NomorSertifikat, int64(1)).Return(false, nil)
 	s.repo.On("UpdateKualifikasi", mock.MatchedBy(func(m *models.KepegawaianKualifikasi) bool {
-		return m.Name == originalName && *m.Description == newDesc
+		return m.Nama == originalNama && m.Penyelenggara == newPenyelenggara
 	})).Return(nil)
 
-	result, err := s.svc.UpdateKualifikasi(context.Background(),1, req, actor)
+	result, err := s.svc.UpdateKualifikasi(context.Background(), 1, req, actor)
 
 	s.NoError(err)
-	s.Equal(originalName, result.Name)
-	s.Equal(newDesc, *result.Description)
+	s.Equal(originalNama, result.Nama)
+	s.Equal(newPenyelenggara, result.Penyelenggara)
+}
+
+func (s *KepegawaianKualifikasiServiceTestSuite) Test_UpdateKualifikasi_NoNomorSertifikat_SkipsDuplicateCheck() {
+	actor := superadminActor()
+	existing := factories.NewKepegawaianKualifikasiFactory().With("nomor_sertifikat", "").Make()
+	existing.ID = 1
+	existing.NomorSertifikat = nil
+	newNama := "Tanpa Nomor Sertifikat"
+	req := &dto.UpdateKepegawaianKualifikasiRequest{Nama: &newNama}
+
+	s.repo.On("GetKualifikasiByID", int64(1)).Return(existing, nil)
+	s.repo.On("UpdateKualifikasi", mock.AnythingOfType("*models.KepegawaianKualifikasi")).Return(nil)
+
+	result, err := s.svc.UpdateKualifikasi(context.Background(), 1, req, actor)
+
+	s.NoError(err)
+	s.NotNil(result)
+	// Tidak boleh memanggil ExistsByNomorSertifikatAndTipe sama sekali
+	s.repo.AssertNotCalled(s.T(), "ExistsByNomorSertifikatAndTipe", mock.Anything, mock.Anything, mock.Anything)
 }
 
 func (s *KepegawaianKualifikasiServiceTestSuite) Test_UpdateKualifikasi_RepoError() {
@@ -397,13 +489,16 @@ func (s *KepegawaianKualifikasiServiceTestSuite) Test_UpdateKualifikasi_RepoErro
 	req := &dto.UpdateKepegawaianKualifikasiRequest{}
 
 	s.repo.On("GetKualifikasiByID", int64(1)).Return(existing, nil)
+	s.repo.On("ExistsByNomorSertifikatAndTipe", existing.TipeID, *existing.NomorSertifikat, int64(1)).Return(false, nil)
 	s.repo.On("UpdateKualifikasi", mock.AnythingOfType("*models.KepegawaianKualifikasi")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.UpdateKualifikasi(context.Background(),1, req, actor)
+	result, err := s.svc.UpdateKualifikasi(context.Background(), 1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
 }
+
+// ── Delete ────────────────────────────────────────────────────────────────
 
 func (s *KepegawaianKualifikasiServiceTestSuite) Test_DeleteKualifikasi_Superadmin_Success() {
 	actor := superadminActor()
@@ -411,9 +506,9 @@ func (s *KepegawaianKualifikasiServiceTestSuite) Test_DeleteKualifikasi_Superadm
 	existing.ID = 1
 
 	s.repo.On("GetKualifikasiByID", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteKualifikasi", int64(1)).Return(nil)
+	s.repo.On("DeleteKualifikasi", int64(1), actor.UserID).Return(nil)
 
-	err := s.svc.DeleteKualifikasi(context.Background(),1, actor)
+	err := s.svc.DeleteKualifikasi(context.Background(), 1, actor)
 
 	s.NoError(err)
 	s.repo.AssertExpectations(s.T())
@@ -426,9 +521,9 @@ func (s *KepegawaianKualifikasiServiceTestSuite) Test_DeleteKualifikasi_WithPerm
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyDelete).Return(true, nil)
 	s.repo.On("GetKualifikasiByID", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteKualifikasi", int64(1)).Return(nil)
+	s.repo.On("DeleteKualifikasi", int64(1), actor.UserID).Return(nil)
 
-	err := s.svc.DeleteKualifikasi(context.Background(),1, actor)
+	err := s.svc.DeleteKualifikasi(context.Background(), 1, actor)
 
 	s.NoError(err)
 }
@@ -437,7 +532,7 @@ func (s *KepegawaianKualifikasiServiceTestSuite) Test_DeleteKualifikasi_Forbidde
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	err := s.svc.DeleteKualifikasi(context.Background(),1, actor)
+	err := s.svc.DeleteKualifikasi(context.Background(), 1, actor)
 
 	s.Error(err)
 	var appErr *appErrors.AppError
@@ -450,7 +545,7 @@ func (s *KepegawaianKualifikasiServiceTestSuite) Test_DeleteKualifikasi_NotFound
 
 	s.repo.On("GetKualifikasiByID", int64(999)).Return(nil, nil)
 
-	err := s.svc.DeleteKualifikasi(context.Background(),999, actor)
+	err := s.svc.DeleteKualifikasi(context.Background(), 999, actor)
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
@@ -462,9 +557,9 @@ func (s *KepegawaianKualifikasiServiceTestSuite) Test_DeleteKualifikasi_RepoErro
 	existing.ID = 1
 
 	s.repo.On("GetKualifikasiByID", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteKualifikasi", int64(1)).Return(fmt.Errorf("db error"))
+	s.repo.On("DeleteKualifikasi", int64(1), actor.UserID).Return(fmt.Errorf("db error"))
 
-	err := s.svc.DeleteKualifikasi(context.Background(),1, actor)
+	err := s.svc.DeleteKualifikasi(context.Background(), 1, actor)
 
 	s.Error(err)
 }

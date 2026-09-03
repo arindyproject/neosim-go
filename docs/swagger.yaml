@@ -204,6 +204,44 @@ definitions:
     - pegawai_id
     - tipe_id
     type: object
+  dto.CreateKepegawaianKualifikasiRequest:
+    properties:
+      fhir_code:
+        type: string
+      fhir_system:
+        type: string
+      is_aktif:
+        type: boolean
+      nama:
+        maxLength: 255
+        minLength: 1
+        type: string
+      nomor_sertifikat:
+        maxLength: 255
+        minLength: 1
+        type: string
+      pegawai_id:
+        type: integer
+      penyelenggara:
+        maxLength: 255
+        minLength: 1
+        type: string
+      tanggal_expired:
+        example: "2026-01-01"
+        format: date
+        type: string
+      tanggal_terbit:
+        example: "2026-01-01"
+        format: date
+        type: string
+      tipe_id:
+        type: integer
+    required:
+    - nama
+    - pegawai_id
+    - penyelenggara
+    - tipe_id
+    type: object
   dto.CreateKepegawaianPegawaiRequest:
     properties:
       description:
@@ -701,6 +739,45 @@ definitions:
       tipe:
         allOf:
         - $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_kontak_dto.TipeSimpelResponse'
+        description: TipeID      int64            `json:"tipe_id"`
+      updated_at:
+        type: string
+      updated_by:
+        $ref: '#/definitions/httputil.UserData'
+    type: object
+  dto.KepegawaianKualifikasiResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        $ref: '#/definitions/httputil.UserData'
+      days_until_expired:
+        type: integer
+      fhir_code:
+        type: string
+      fhir_system:
+        type: string
+      id:
+        type: integer
+      is_aktif:
+        type: boolean
+      is_expired:
+        type: boolean
+      nama:
+        type: string
+      nomor_sertifikat:
+        type: string
+      pegawai_id:
+        type: integer
+      penyelenggara:
+        type: string
+      tanggal_expired:
+        $ref: '#/definitions/types.DateOnly'
+      tanggal_terbit:
+        $ref: '#/definitions/types.DateOnly'
+      tipe:
+        allOf:
+        - $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_kualifikasi_dto.TipeSimpelResponse'
         description: TipeID      int64            `json:"tipe_id"`
       updated_at:
         type: string
@@ -1258,6 +1335,37 @@ definitions:
       tipe_id:
         type: integer
     type: object
+  dto.UpdateKepegawaianKualifikasiRequest:
+    properties:
+      fhir_code:
+        type: string
+      fhir_system:
+        type: string
+      is_aktif:
+        type: boolean
+      nama:
+        maxLength: 255
+        minLength: 1
+        type: string
+      nomor_sertifikat:
+        maxLength: 255
+        minLength: 1
+        type: string
+      penyelenggara:
+        maxLength: 255
+        minLength: 1
+        type: string
+      tanggal_expired:
+        example: "2026-01-01"
+        format: date
+        type: string
+      tanggal_terbit:
+        example: "2026-01-01"
+        format: date
+        type: string
+      tipe_id:
+        type: integer
+    type: object
   dto.UpdateKepegawaianPegawaiRequest:
     properties:
       description:
@@ -1759,6 +1867,57 @@ definitions:
         type: string
     type: object
   neosim_go_internal_modules_kepegawaian_kontak_dto.UpdateTipeRequest:
+    properties:
+      code:
+        maxLength: 255
+        minLength: 1
+        type: string
+      label:
+        maxLength: 255
+        minLength: 1
+        type: string
+    type: object
+  neosim_go_internal_modules_kepegawaian_kualifikasi_dto.CreateTipeRequest:
+    properties:
+      code:
+        maxLength: 255
+        minLength: 1
+        type: string
+      label:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - code
+    - label
+    type: object
+  neosim_go_internal_modules_kepegawaian_kualifikasi_dto.TipeResponse:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        $ref: '#/definitions/httputil.UserData'
+      id:
+        type: integer
+      label:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        $ref: '#/definitions/httputil.UserData'
+    type: object
+  neosim_go_internal_modules_kepegawaian_kualifikasi_dto.TipeSimpelResponse:
+    properties:
+      code:
+        type: string
+      id:
+        type: integer
+      label:
+        type: string
+    type: object
+  neosim_go_internal_modules_kepegawaian_kualifikasi_dto.UpdateTipeRequest:
     properties:
       code:
         maxLength: 255
@@ -3184,6 +3343,379 @@ paths:
       summary: Update Tipe
       tags:
       - kepegawaian/kontak/tipe
+  /kepegawaian/kualifikasi:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of KepegawaianKualifikasi
+      parameters:
+      - description: Filter by Tipe ID
+        in: query
+        name: tipe_id
+        type: integer
+      - description: Filter by nama (partial match)
+        in: query
+        name: nama
+        type: string
+      - description: Filter by penyelenggara (partial match)
+        in: query
+        name: penyelenggara
+        type: string
+      - description: Filter by Is Aktif Status
+        in: query
+        name: is_aktif
+        type: boolean
+      - description: Filter identifier yang sudah expired
+        in: query
+        name: is_expired
+        type: boolean
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.KepegawaianKualifikasiResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of KepegawaianKualifikasi
+      tags:
+      - kepegawaian/kualifikasi
+    post:
+      consumes:
+      - application/json
+      description: Create New KepegawaianKualifikasi
+      parameters:
+      - description: Create Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateKepegawaianKualifikasiRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KepegawaianKualifikasiResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create KepegawaianKualifikasi
+      tags:
+      - kepegawaian/kualifikasi
+  /kepegawaian/kualifikasi/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete KepegawaianKualifikasi by :id
+      parameters:
+      - description: KepegawaianKualifikasi ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete KepegawaianKualifikasi
+      tags:
+      - kepegawaian/kualifikasi
+    get:
+      consumes:
+      - application/json
+      description: Get KepegawaianKualifikasi by :id
+      parameters:
+      - description: KepegawaianKualifikasi ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KepegawaianKualifikasiResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get KepegawaianKualifikasi
+      tags:
+      - kepegawaian/kualifikasi
+    put:
+      consumes:
+      - application/json
+      description: Update KepegawaianKualifikasi by :id
+      parameters:
+      - description: KepegawaianKualifikasi ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateKepegawaianKualifikasiRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KepegawaianKualifikasiResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update KepegawaianKualifikasi
+      tags:
+      - kepegawaian/kualifikasi
+  /kepegawaian/kualifikasi/{pegawai_id}/pegawai:
+    get:
+      consumes:
+      - application/json
+      description: Menampilkan semua kualifikasi yang dimiliki oleh pegawai tertentu
+      parameters:
+      - description: 'Jumlah hari ke depan (default: 30)'
+        in: query
+        name: days
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.KepegawaianKualifikasiResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Daftar kualifikasi milik satu pegawai
+      tags:
+      - kepegawaian/kualifikasi
+  /kepegawaian/kualifikasi/expired:
+    get:
+      consumes:
+      - application/json
+      description: Menampilkan daftar kualifikasi yang sudah melewati tanggal expired
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.KepegawaianKualifikasiResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Kualifikasi yang sudah expired
+      tags:
+      - kepegawaian/kualifikasi
+  /kepegawaian/kualifikasi/tipes:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of Tipe
+      parameters:
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_kualifikasi_dto.TipeResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Tipe
+      tags:
+      - kepegawaian/kualifikasi
+    post:
+      consumes:
+      - application/json
+      description: Create New Tipe
+      parameters:
+      - description: Create Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_kualifikasi_dto.CreateTipeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_kualifikasi_dto.TipeResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create Tipe
+      tags:
+      - kepegawaian/kualifikasi
+  /kepegawaian/kualifikasi/tipes/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Tipe by :id
+      parameters:
+      - description: Tipe ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete Tipe
+      tags:
+      - kepegawaian/kualifikasi
+    get:
+      consumes:
+      - application/json
+      description: Get Tipe by :id
+      parameters:
+      - description: Tipe ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_kualifikasi_dto.TipeResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get Tipe
+      tags:
+      - kepegawaian/kualifikasi
+    put:
+      consumes:
+      - application/json
+      description: Update Tipe by :id
+      parameters:
+      - description: Tipe ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_kualifikasi_dto.UpdateTipeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_kualifikasi_dto.TipeResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update Tipe
+      tags:
+      - kepegawaian/kualifikasi
   /kepegawaian/pegawai:
     get:
       consumes:
