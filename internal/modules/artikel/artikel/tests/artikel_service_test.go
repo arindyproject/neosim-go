@@ -411,7 +411,7 @@ func (s *ArtikelServiceTestSuite) Test_DeleteArtikel_Superadmin_Success() {
 	existing.ID = 1
 
 	s.repo.On("GetArtikelByID", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteArtikel", int64(1)).Return(nil)
+	s.repo.On("DeleteArtikel", int64(1), actor.UserID).Return(nil)
 
 	err := s.svc.DeleteArtikel(context.Background(),1, actor)
 
@@ -426,7 +426,7 @@ func (s *ArtikelServiceTestSuite) Test_DeleteArtikel_WithPermission_Success() {
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyDelete).Return(true, nil)
 	s.repo.On("GetArtikelByID", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteArtikel", int64(1)).Return(nil)
+	s.repo.On("DeleteArtikel", int64(1), actor.UserID).Return(nil)
 
 	err := s.svc.DeleteArtikel(context.Background(),1, actor)
 
@@ -462,7 +462,7 @@ func (s *ArtikelServiceTestSuite) Test_DeleteArtikel_RepoError() {
 	existing.ID = 1
 
 	s.repo.On("GetArtikelByID", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteArtikel", int64(1)).Return(fmt.Errorf("db error"))
+	s.repo.On("DeleteArtikel", int64(1), actor.UserID).Return(fmt.Errorf("db error"))
 
 	err := s.svc.DeleteArtikel(context.Background(),1, actor)
 

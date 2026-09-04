@@ -62,8 +62,8 @@ func (m *KepegawaianPendidikanRepositoryMock) UpdatePendidikan(ctx context.Conte
 	return args.Error(0)
 }
 
-func (m *KepegawaianPendidikanRepositoryMock) DeletePendidikan(ctx context.Context, id int64) error {
-	args := m.Called(id)
+func (m *KepegawaianPendidikanRepositoryMock) DeletePendidikan(ctx context.Context, id int64, deletedBy int64) error {
+	args := m.Called(id, deletedBy)
 	return args.Error(0)
 }
 

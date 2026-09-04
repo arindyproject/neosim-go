@@ -274,5 +274,5 @@ func (s *service) DeleteKontak(ctx context.Context, id int64, actor he.AuthConte
 		}
 	}
 
-	return s.repo.DeleteKontak(ctx, id)
+	return s.repo.DeleteKontak(ctx, id, actor.UserID)
 }

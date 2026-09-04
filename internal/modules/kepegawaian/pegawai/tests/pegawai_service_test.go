@@ -412,7 +412,7 @@ func (s *KepegawaianPegawaiServiceTestSuite) Test_DeletePegawai_Superadmin_Succe
 	existing.ID = 1
 
 	s.repo.On("GetPegawaiByID", int64(1)).Return(existing, nil)
-	s.repo.On("DeletePegawai", int64(1)).Return(nil)
+	s.repo.On("DeletePegawai", int64(1), actor.UserID).Return(nil)
 
 	err := s.svc.DeletePegawai(context.Background(), 1, actor)
 
@@ -427,7 +427,7 @@ func (s *KepegawaianPegawaiServiceTestSuite) Test_DeletePegawai_WithPermission_S
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyDelete).Return(true, nil)
 	s.repo.On("GetPegawaiByID", int64(1)).Return(existing, nil)
-	s.repo.On("DeletePegawai", int64(1)).Return(nil)
+	s.repo.On("DeletePegawai", int64(1), actor.UserID).Return(nil)
 
 	err := s.svc.DeletePegawai(context.Background(), 1, actor)
 
@@ -463,7 +463,7 @@ func (s *KepegawaianPegawaiServiceTestSuite) Test_DeletePegawai_RepoError() {
 	existing.ID = 1
 
 	s.repo.On("GetPegawaiByID", int64(1)).Return(existing, nil)
-	s.repo.On("DeletePegawai", int64(1)).Return(fmt.Errorf("db error"))
+	s.repo.On("DeletePegawai", int64(1), actor.UserID).Return(fmt.Errorf("db error"))
 
 	err := s.svc.DeletePegawai(context.Background(), 1, actor)
 

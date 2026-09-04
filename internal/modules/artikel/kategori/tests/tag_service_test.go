@@ -173,7 +173,7 @@ func (s *ArtikelKategoriServiceTestSuite) Test_DeleteTag_Success() {
 	existing.ID = 1
 
 	s.repo.On("GetTagByID", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteTag", int64(1)).Return(nil)
+	s.repo.On("DeleteTag", int64(1), actor.UserID).Return(nil)
 
 	err := s.svc.DeleteTag(context.Background(),1, actor)
 

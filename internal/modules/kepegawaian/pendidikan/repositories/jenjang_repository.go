@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"errors"
+	"time"
 
 	"neosim_go/internal/modules/kepegawaian/pendidikan/contracts"
 	"neosim_go/internal/modules/kepegawaian/pendidikan/dto"
@@ -62,6 +63,12 @@ func (r *repository) UpdateJenjang(ctx context.Context, m *models.Jenjang) error
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
-func (r *repository) DeleteJenjang(ctx context.Context, id int64) error {
-	return r.db.Where("id = ?", id).Delete(&models.Jenjang{}).Error
+func (r *repository) DeleteJenjang(ctx context.Context, id int64, deletedBy int64) error {
+	return r.db.WithContext(ctx).
+		Model(&models.Jenjang{}).
+		Where("id = ? AND deleted_at IS NULL", id).
+		Updates(map[string]any{
+			"deleted_at": time.Now(),
+			"updated_by": deletedBy,
+		}).Error
 }

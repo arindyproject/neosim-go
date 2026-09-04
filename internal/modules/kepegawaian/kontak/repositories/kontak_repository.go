@@ -116,8 +116,14 @@ func (r *repository) UpdateKontak(ctx context.Context, m *models.KepegawaianKont
 }
 
 // ── Delete ───────────────────────────────────────────────────────────────────
-func (r *repository) DeleteKontak(ctx context.Context, id int64) error {
-	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&models.KepegawaianKontak{}).Error
+func (r *repository) DeleteKontak(ctx context.Context, id int64, deletedBy int64) error {
+	return r.db.WithContext(ctx).
+		Model(&models.KepegawaianKontak{}).
+		Where("id = ? AND deleted_at IS NULL", id).
+		Updates(map[string]any{
+			"deleted_at": time.Now(),
+			"updated_by": deletedBy,
+		}).Error
 }
 
 // ── ExistsByNilaiAndTipe ─────────────────────────────────────────────────────

@@ -282,5 +282,5 @@ func (s *service) DeletePendidikan(ctx context.Context, id int64, actor he.AuthC
 	if m == nil {
 		return errors.New("KepegawaianPendidikan tidak ditemukan")
 	}
-	return s.repo.DeletePendidikan(ctx, id)
+	return s.repo.DeletePendidikan(ctx, id, actor.UserID)
 }

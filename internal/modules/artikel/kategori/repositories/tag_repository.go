@@ -59,6 +59,12 @@ func (r *repository) UpdateTag(ctx context.Context,m *models.Tag) error {
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
-func (r *repository) DeleteTag(ctx context.Context,id int64) error {
-	return r.db.Where("id = ?", id).Delete(&models.Tag{}).Error
+func (r *repository) DeleteTag(ctx context.Context,id int64, deletedBy int64) error {
+	return r.db.WithContext(ctx).
+		Model(&models.Tag{}).
+		Where("id = ? AND deleted_at IS NULL", id).
+		Updates(map[string]any{
+			"deleted_at": time.Now(),
+			"updated_by": deletedBy,
+	}).Error
 }

@@ -159,5 +159,5 @@ func (s *service) DeleteArtikel(ctx context.Context,id int64, actor he.AuthConte
 	if m == nil {
 		return errors.New("Artikel tidak ditemukan")
 	}
-	return s.repo.DeleteArtikel(ctx,id)
+	return s.repo.DeleteArtikel(ctx,id, actor.UserID)
 }

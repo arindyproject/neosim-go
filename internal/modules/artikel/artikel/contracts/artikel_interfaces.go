@@ -15,7 +15,7 @@ type ArtikelRepository interface {
 	GetArtikelByID(ctx context.Context,id int64) (*models.Artikel, error)
 	ListArtikel(ctx context.Context,page, pageSize int, filter *dto.FilterArtikelRequest) ([]models.Artikel, int64, error)
 	UpdateArtikel(ctx context.Context,m *models.Artikel) error
-	DeleteArtikel(ctx context.Context,id int64) error
+	DeleteArtikel(ctx context.Context,id int64, deletedBy int64) error
 }
 
 // ArtikelService defines business logic operations for Artikel.

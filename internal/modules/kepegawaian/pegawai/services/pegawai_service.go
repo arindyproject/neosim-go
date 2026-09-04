@@ -156,5 +156,5 @@ func (s *service) DeletePegawai(ctx context.Context, id int64, actor he.AuthCont
 	if m == nil {
 		return errors.New("KepegawaianPegawai tidak ditemukan")
 	}
-	return s.repo.DeletePegawai(ctx, id)
+	return s.repo.DeletePegawai(ctx, id, actor.UserID)
 }

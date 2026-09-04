@@ -163,7 +163,7 @@ func (s *service) DeleteTag(ctx context.Context,id int64, actor he.AuthContext) 
 	if m == nil {
 		return errors.New("Tag tidak ditemukan")
 	}
-	return s.repo.DeleteTag(ctx,id)
+	return s.repo.DeleteTag(ctx,id, actor.UserID)
 }
 
 // ── helper khusus Tag (nama fungsi unik agar tidak bentrok) ───────

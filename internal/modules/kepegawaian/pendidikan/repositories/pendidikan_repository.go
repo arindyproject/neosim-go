@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"errors"
+	"time"
 
 	"neosim_go/internal/modules/kepegawaian/pendidikan/dto"
 	"neosim_go/internal/modules/kepegawaian/pendidikan/models"
@@ -109,8 +110,14 @@ func (r *repository) UpdatePendidikan(ctx context.Context, m *models.Kepegawaian
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
-func (r *repository) DeletePendidikan(ctx context.Context, id int64) error {
-	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&models.KepegawaianPendidikan{}).Error
+func (r *repository) DeletePendidikan(ctx context.Context, id int64, deletedBy int64) error {
+	return r.db.WithContext(ctx).
+		Model(&models.KepegawaianPendidikan{}).
+		Where("id = ? AND deleted_at IS NULL", id).
+		Updates(map[string]any{
+			"deleted_at": time.Now(),
+			"updated_by": deletedBy,
+		}).Error
 }
 
 // Exists ───────────────────────────────────────────────────────────────────────

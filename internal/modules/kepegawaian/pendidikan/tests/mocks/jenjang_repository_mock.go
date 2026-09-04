@@ -32,7 +32,7 @@ func (m *KepegawaianPendidikanRepositoryMock) UpdateJenjang(ctx context.Context,
 	return args.Error(0)
 }
 
-func (m *KepegawaianPendidikanRepositoryMock) DeleteJenjang(ctx context.Context, id int64) error {
-	args := m.Called(id)
+func (m *KepegawaianPendidikanRepositoryMock) DeleteJenjang(ctx context.Context, id int64, deletedBy int64) error {
+	args := m.Called(id, deletedBy)
 	return args.Error(0)
 }

@@ -411,7 +411,7 @@ func (s *ArtikelKategoriServiceTestSuite) Test_DeleteKategori_Superadmin_Success
 	existing.ID = 1
 
 	s.repo.On("GetKategoriByID", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteKategori", int64(1)).Return(nil)
+	s.repo.On("DeleteKategori", int64(1), actor.UserID).Return(nil)
 
 	err := s.svc.DeleteKategori(context.Background(),1, actor)
 
@@ -426,7 +426,7 @@ func (s *ArtikelKategoriServiceTestSuite) Test_DeleteKategori_WithPermission_Suc
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyDelete).Return(true, nil)
 	s.repo.On("GetKategoriByID", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteKategori", int64(1)).Return(nil)
+	s.repo.On("DeleteKategori", int64(1), actor.UserID).Return(nil)
 
 	err := s.svc.DeleteKategori(context.Background(),1, actor)
 
@@ -462,7 +462,7 @@ func (s *ArtikelKategoriServiceTestSuite) Test_DeleteKategori_RepoError() {
 	existing.ID = 1
 
 	s.repo.On("GetKategoriByID", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteKategori", int64(1)).Return(fmt.Errorf("db error"))
+	s.repo.On("DeleteKategori", int64(1), actor.UserID).Return(fmt.Errorf("db error"))
 
 	err := s.svc.DeleteKategori(context.Background(),1, actor)
 

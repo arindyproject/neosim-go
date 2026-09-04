@@ -174,7 +174,7 @@ func (s *KepegawaianPendidikanServiceTestSuite) Test_DeleteJenjang_Success() {
 	existing.ID = 1
 
 	s.repo.On("GetJenjangByID", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteJenjang", int64(1)).Return(nil)
+	s.repo.On("DeleteJenjang", int64(1), actor.UserID).Return(nil)
 
 	err := s.svc.DeleteJenjang(context.Background(), 1, actor)
 

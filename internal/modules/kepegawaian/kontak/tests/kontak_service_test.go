@@ -421,7 +421,7 @@ func (s *KepegawaianKontakServiceTestSuite) Test_DeleteKontak_Superadmin_Success
 	existing.IsPrimary = false
 
 	s.repo.On("GetKontakByID", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteKontak", int64(1)).Return(nil)
+	s.repo.On("DeleteKontak", int64(1), actor.UserID).Return(nil)
 
 	err := s.svc.DeleteKontak(context.Background(), 1, actor)
 
@@ -437,7 +437,7 @@ func (s *KepegawaianKontakServiceTestSuite) Test_DeleteKontak_WithPermission_Suc
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyDelete).Return(true, nil)
 	s.repo.On("GetKontakByID", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteKontak", int64(1)).Return(nil)
+	s.repo.On("DeleteKontak", int64(1), actor.UserID).Return(nil)
 
 	err := s.svc.DeleteKontak(context.Background(), 1, actor)
 
@@ -451,7 +451,7 @@ func (s *KepegawaianKontakServiceTestSuite) Test_DeleteKontak_RepoError() {
 	existing.IsPrimary = false
 
 	s.repo.On("GetKontakByID", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteKontak", int64(1)).Return(fmt.Errorf("db error"))
+	s.repo.On("DeleteKontak", int64(1), actor.UserID).Return(fmt.Errorf("db error"))
 
 	err := s.svc.DeleteKontak(context.Background(), 1, actor)
 

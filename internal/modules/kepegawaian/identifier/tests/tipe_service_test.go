@@ -223,7 +223,7 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_DeleteTipe_Success() {
 	existing.ID = 1
 
 	s.repo.On("GetTipeByID", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteTipe", int64(1)).Return(nil)
+	s.repo.On("DeleteTipe", int64(1), actor.UserID).Return(nil)
 
 	err := s.svc.DeleteTipe(context.Background(), 1, actor)
 

@@ -15,7 +15,7 @@ type KepegawaianPegawaiRepository interface {
 	GetPegawaiByID(ctx context.Context, id int64) (*models.KepegawaianPegawai, error)
 	ListPegawai(ctx context.Context, page, pageSize int, filter *dto.FilterKepegawaianPegawaiRequest) ([]models.KepegawaianPegawai, int64, error)
 	UpdatePegawai(ctx context.Context, m *models.KepegawaianPegawai) error
-	DeletePegawai(ctx context.Context, id int64) error
+	DeletePegawai(ctx context.Context, id int64, deletedBy int64) error
 }
 
 // KepegawaianPegawaiService defines business logic operations for KepegawaianPegawai.

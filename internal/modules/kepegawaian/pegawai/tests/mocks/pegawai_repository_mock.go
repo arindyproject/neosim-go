@@ -2,9 +2,10 @@ package mocks
 
 import (
 	"context"
-	"github.com/stretchr/testify/mock"
 	"neosim_go/internal/modules/kepegawaian/pegawai/dto"
 	"neosim_go/internal/modules/kepegawaian/pegawai/models"
+
+	"github.com/stretchr/testify/mock"
 )
 
 // KepegawaianPegawaiRepositoryMock is a mock implementation of contracts.Repository.
@@ -46,7 +47,7 @@ func (m *KepegawaianPegawaiRepositoryMock) UpdatePegawai(ctx context.Context, it
 	return args.Error(0)
 }
 
-func (m *KepegawaianPegawaiRepositoryMock) DeletePegawai(ctx context.Context, id int64) error {
-	args := m.Called(id)
+func (m *KepegawaianPegawaiRepositoryMock) DeletePegawai(ctx context.Context, id int64, deletedBy int64) error {
+	args := m.Called(id, deletedBy)
 	return args.Error(0)
 }

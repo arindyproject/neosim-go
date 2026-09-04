@@ -18,7 +18,7 @@ type KepegawaianKontakRepository interface {
 	GetPrimaryByTipe(ctx context.Context, pegawaiID, tipeID int64) (*models.KepegawaianKontak, error)
 	ListKontak(ctx context.Context, page, pageSize int, filter *dto.FilterKepegawaianKontakRequest) ([]models.KepegawaianKontak, int64, error)
 	UpdateKontak(ctx context.Context, m *models.KepegawaianKontak) error
-	DeleteKontak(ctx context.Context, id int64) error
+	DeleteKontak(ctx context.Context, id int64, deletedBy int64) error
 
 	// ExistsByNilaiAndTipe mengecek duplikasi nilai identifier untuk tipe tertentu,
 	// excludeID > 0 mengecualikan record itu sendiri (dipakai saat update)

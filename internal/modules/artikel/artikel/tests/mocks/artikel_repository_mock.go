@@ -46,7 +46,7 @@ func (m *ArtikelRepositoryMock) UpdateArtikel(ctx context.Context,item *models.A
 	return args.Error(0)
 }
 
-func (m *ArtikelRepositoryMock) DeleteArtikel(ctx context.Context,id int64) error {
-	args := m.Called(id)
+func (m *ArtikelRepositoryMock) DeleteArtikel(ctx context.Context,id int64, deletedBy int64) error {
+	args := m.Called(id, deletedBy)
 	return args.Error(0)
 }

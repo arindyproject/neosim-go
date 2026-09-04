@@ -164,7 +164,7 @@ func (s *service) DeleteJenjang(ctx context.Context, id int64, actor he.AuthCont
 	if m == nil {
 		return errors.New("Jenjang tidak ditemukan")
 	}
-	return s.repo.DeleteJenjang(ctx, id)
+	return s.repo.DeleteJenjang(ctx, id, actor.UserID)
 }
 
 // ── helper khusus Jenjang (nama fungsi unik agar tidak bentrok) ───────

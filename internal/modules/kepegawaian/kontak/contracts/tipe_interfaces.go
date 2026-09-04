@@ -19,7 +19,7 @@ type TipeRepository interface {
 	GetTipeByLabel(ctx context.Context, label string) (*models.Tipe, error)
 	ListTipe(ctx context.Context, page, pageSize int, filter *dto.FilterTipeRequest) ([]models.Tipe, int64, error)
 	UpdateTipe(ctx context.Context, m *models.Tipe) error
-	DeleteTipe(ctx context.Context, id int64) error
+	DeleteTipe(ctx context.Context, id int64, deletedBy int64) error
 }
 
 // TipeService defines business logic operations for Tipe.

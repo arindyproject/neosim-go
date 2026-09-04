@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"errors"
+	"time"
 
 	"neosim_go/internal/modules/kepegawaian/pegawai/dto"
 	"neosim_go/internal/modules/kepegawaian/pegawai/models"
@@ -48,13 +49,18 @@ func (r *repository) ListPegawai(ctx context.Context, page, pageSize int, filter
 	return items, total, nil
 }
 
-
 // ── Update ────────────────────────────────────────────────────────────────────
 func (r *repository) UpdatePegawai(ctx context.Context, m *models.KepegawaianPegawai) error {
 	return r.db.WithContext(ctx).Save(m).Error
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
-func (r *repository) DeletePegawai(ctx context.Context, id int64) error {
-	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&models.KepegawaianPegawai{}).Error
+func (r *repository) DeletePegawai(ctx context.Context, id int64, deletedBy int64) error {
+	return r.db.WithContext(ctx).
+		Model(&models.KepegawaianPegawai{}).
+		Where("id = ? AND deleted_at IS NULL", id).
+		Updates(map[string]any{
+			"deleted_at": time.Now(),
+			"updated_by": deletedBy,
+		}).Error
 }

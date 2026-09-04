@@ -15,7 +15,7 @@ type ArtikelKategoriRepository interface {
 	GetKategoriByID(ctx context.Context,id int64) (*models.ArtikelKategori, error)
 	ListKategori(ctx context.Context,page, pageSize int, filter *dto.FilterArtikelKategoriRequest) ([]models.ArtikelKategori, int64, error)
 	UpdateKategori(ctx context.Context,m *models.ArtikelKategori) error
-	DeleteKategori(ctx context.Context,id int64) error
+	DeleteKategori(ctx context.Context,id int64, deletedBy int64) error
 }
 
 // ArtikelKategoriService defines business logic operations for ArtikelKategori.

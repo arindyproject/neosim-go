@@ -159,5 +159,5 @@ func (s *service) DeleteKategori(ctx context.Context,id int64, actor he.AuthCont
 	if m == nil {
 		return errors.New("ArtikelKategori tidak ditemukan")
 	}
-	return s.repo.DeleteKategori(ctx,id)
+	return s.repo.DeleteKategori(ctx,id, actor.UserID)
 }

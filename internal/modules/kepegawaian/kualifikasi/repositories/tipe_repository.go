@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"errors"
+	"time"
 
 	"neosim_go/internal/modules/kepegawaian/kualifikasi/contracts"
 	"neosim_go/internal/modules/kepegawaian/kualifikasi/dto"
@@ -82,6 +83,12 @@ func (r *repository) UpdateTipe(ctx context.Context, m *models.Tipe) error {
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
-func (r *repository) DeleteTipe(ctx context.Context, id int64) error {
-	return r.db.Where("id = ?", id).Delete(&models.Tipe{}).Error
+func (r *repository) DeleteTipe(ctx context.Context, id int64, deletedBy int64) error {
+	return r.db.WithContext(ctx).
+		Model(&models.Tipe{}).
+		Where("id = ? AND deleted_at IS NULL", id).
+		Updates(map[string]any{
+			"deleted_at": time.Now(),
+			"updated_by": deletedBy,
+		}).Error
 }

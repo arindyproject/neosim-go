@@ -48,7 +48,7 @@ func (m *KepegawaianKualifikasiRepositoryMock) UpdateTipe(ctx context.Context, i
 	return args.Error(0)
 }
 
-func (m *KepegawaianKualifikasiRepositoryMock) DeleteTipe(ctx context.Context, id int64) error {
-	args := m.Called(id)
+func (m *KepegawaianKualifikasiRepositoryMock) DeleteTipe(ctx context.Context, id int64, deletedBy int64) error {
+	args := m.Called(id, deletedBy)
 	return args.Error(0)
 }

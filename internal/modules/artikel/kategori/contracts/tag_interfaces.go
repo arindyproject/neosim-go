@@ -17,7 +17,7 @@ type TagRepository interface {
 	GetTagByID(ctx context.Context,id int64) (*models.Tag, error)
 	ListTag(ctx context.Context,page, pageSize int, filter *dto.FilterTagRequest) ([]models.Tag, int64, error)
 	UpdateTag(ctx context.Context,m *models.Tag) error
-	DeleteTag(ctx context.Context,id int64) error
+	DeleteTag(ctx context.Context,id int64, deletedBy int64) error
 }
 
 // TagService defines business logic operations for Tag.

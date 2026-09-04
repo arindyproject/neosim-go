@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"errors"
+	"time"
 
 	"neosim_go/internal/modules/artikel/kategori/dto"
 	"neosim_go/internal/modules/artikel/kategori/models"
@@ -55,6 +56,12 @@ func (r *repository) UpdateKategori(ctx context.Context, m *models.ArtikelKatego
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
-func (r *repository) DeleteKategori(ctx context.Context, id int64) error {
-	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&models.ArtikelKategori{}).Error
+func (r *repository) DeleteKategori(ctx context.Context, id int64, deletedBy int64) error {
+	return r.db.WithContext(ctx).
+		Model(&models.ArtikelKategori{}).
+		Where("id = ? AND deleted_at IS NULL", id).
+		Updates(map[string]any{
+			"deleted_at": time.Now(),
+			"updated_by": deletedBy,
+		}).Error
 }

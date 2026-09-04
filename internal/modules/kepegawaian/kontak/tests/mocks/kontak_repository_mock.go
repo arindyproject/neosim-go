@@ -63,8 +63,8 @@ func (m *KepegawaianKontakRepositoryMock) UpdateKontak(ctx context.Context, item
 	return args.Error(0)
 }
 
-func (m *KepegawaianKontakRepositoryMock) DeleteKontak(ctx context.Context, id int64) error {
-	args := m.Called(id)
+func (m *KepegawaianKontakRepositoryMock) DeleteKontak(ctx context.Context, id int64, deletedBy int64) error {
+	args := m.Called(id, deletedBy)
 	return args.Error(0)
 }
 

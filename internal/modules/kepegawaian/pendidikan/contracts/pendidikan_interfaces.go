@@ -17,7 +17,7 @@ type KepegawaianPendidikanRepository interface {
 	GetByPegawaiIDAndTipe(ctx context.Context, pegawaiID, jenjangID int64) ([]models.KepegawaianPendidikan, error)
 	ListPendidikan(ctx context.Context, page, pageSize int, filter *dto.FilterKepegawaianPendidikanRequest) ([]models.KepegawaianPendidikan, int64, error)
 	UpdatePendidikan(ctx context.Context, m *models.KepegawaianPendidikan) error
-	DeletePendidikan(ctx context.Context, id int64) error
+	DeletePendidikan(ctx context.Context, id int64, deletedBy int64) error
 
 	ExistsPendidikanByID(ctx context.Context, id int64) (bool, error)
 	ExistsByNomorIjazah(ctx context.Context, jenjangID int64, nomorIjazah string, excludeID int64) (bool, error)

@@ -530,7 +530,7 @@ type {{.ModuleTitle}}Repository interface {
 	Get{{.MethodSuffix}}ByID(ctx context.Context,id int64) (*models.{{.ModuleTitle}}, error)
 	List{{.MethodSuffix}}(ctx context.Context,page, pageSize int, filter *dto.Filter{{.ModuleTitle}}Request) ([]models.{{.ModuleTitle}}, int64, error)
 	Update{{.MethodSuffix}}(ctx context.Context,m *models.{{.ModuleTitle}}) error
-	Delete{{.MethodSuffix}}(ctx context.Context,id int64) error
+	Delete{{.MethodSuffix}}(ctx context.Context,id int64, deletedBy int64) error
 }
 
 // {{.ModuleTitle}}Service defines business logic operations for {{.ModuleTitle}}.
@@ -685,6 +685,7 @@ var tmplRepository = `package repositories
 import (
 	"context"
 	"errors"
+	"time"
 
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
@@ -737,8 +738,14 @@ func (r *repository) Update{{.MethodSuffix}}(ctx context.Context, m *models.{{.M
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
-func (r *repository) Delete{{.MethodSuffix}}(ctx context.Context, id int64) error {
-	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&models.{{.ModuleTitle}}{}).Error
+func (r *repository) Delete{{.MethodSuffix}}(ctx context.Context, id int64, deletedBy int64) error {
+	return r.db.WithContext(ctx).
+		Model(&models.{{.ModuleTitle}}{}).
+		Where("id = ? AND deleted_at IS NULL", id).
+		Updates(map[string]any{
+			"deleted_at": time.Now(),
+			"updated_by": deletedBy,
+		}).Error
 }
 `
 
@@ -1066,7 +1073,7 @@ func (s *service) Delete{{.MethodSuffix}}(ctx context.Context,id int64, actor he
 	if m == nil {
 		return errors.New("{{.ModuleTitle}} tidak ditemukan")
 	}
-	return s.repo.Delete{{.MethodSuffix}}(ctx,id)
+	return s.repo.Delete{{.MethodSuffix}}(ctx,id, actor.UserID)
 }
 `
 
@@ -1665,8 +1672,8 @@ func (m *{{.ModuleTitle}}RepositoryMock) Update{{.MethodSuffix}}(ctx context.Con
 	return args.Error(0)
 }
 
-func (m *{{.ModuleTitle}}RepositoryMock) Delete{{.MethodSuffix}}(ctx context.Context,id int64) error {
-	args := m.Called(id)
+func (m *{{.ModuleTitle}}RepositoryMock) Delete{{.MethodSuffix}}(ctx context.Context,id int64, deletedBy int64) error {
+	args := m.Called(id, deletedBy)
 	return args.Error(0)
 }
 `
@@ -2404,7 +2411,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Delete{{.MethodSuffix}}_Superadm
 	existing.ID = 1
 
 	s.repo.On("Get{{.MethodSuffix}}ByID", int64(1)).Return(existing, nil)
-	s.repo.On("Delete{{.MethodSuffix}}", int64(1)).Return(nil)
+	s.repo.On("Delete{{.MethodSuffix}}", int64(1), actor.UserID).Return(nil)
 
 	err := s.svc.Delete{{.MethodSuffix}}(context.Background(),1, actor)
 
@@ -2419,7 +2426,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Delete{{.MethodSuffix}}_WithPerm
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyDelete).Return(true, nil)
 	s.repo.On("Get{{.MethodSuffix}}ByID", int64(1)).Return(existing, nil)
-	s.repo.On("Delete{{.MethodSuffix}}", int64(1)).Return(nil)
+	s.repo.On("Delete{{.MethodSuffix}}", int64(1), actor.UserID).Return(nil)
 
 	err := s.svc.Delete{{.MethodSuffix}}(context.Background(),1, actor)
 
@@ -2455,7 +2462,7 @@ func (s *{{.ModuleTitle}}ServiceTestSuite) Test_Delete{{.MethodSuffix}}_RepoErro
 	existing.ID = 1
 
 	s.repo.On("Get{{.MethodSuffix}}ByID", int64(1)).Return(existing, nil)
-	s.repo.On("Delete{{.MethodSuffix}}", int64(1)).Return(fmt.Errorf("db error"))
+	s.repo.On("Delete{{.MethodSuffix}}", int64(1), actor.UserID).Return(fmt.Errorf("db error"))
 
 	err := s.svc.Delete{{.MethodSuffix}}(context.Background(),1, actor)
 
@@ -2486,7 +2493,7 @@ type {{.ItemTitle}}Repository interface {
 	Get{{.ItemTitle}}ByID(ctx context.Context,id int64) (*models.{{.ItemTitle}}, error)
 	List{{.ItemTitle}}(ctx context.Context,page, pageSize int, filter *dto.Filter{{.ItemTitle}}Request) ([]models.{{.ItemTitle}}, int64, error)
 	Update{{.ItemTitle}}(ctx context.Context,m *models.{{.ItemTitle}}) error
-	Delete{{.ItemTitle}}(ctx context.Context,id int64) error
+	Delete{{.ItemTitle}}(ctx context.Context,id int64, deletedBy int64) error
 }
 
 // {{.ItemTitle}}Service defines business logic operations for {{.ItemTitle}}.
@@ -2673,8 +2680,14 @@ func (r *repository) Update{{.ItemTitle}}(ctx context.Context,m *models.{{.ItemT
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
-func (r *repository) Delete{{.ItemTitle}}(ctx context.Context,id int64) error {
-	return r.db.Where("id = ?", id).Delete(&models.{{.ItemTitle}}{}).Error
+func (r *repository) Delete{{.ItemTitle}}(ctx context.Context,id int64, deletedBy int64) error {
+	return r.db.WithContext(ctx).
+		Model(&models.{{.ItemTitle}}{}).
+		Where("id = ? AND deleted_at IS NULL", id).
+		Updates(map[string]any{
+			"deleted_at": time.Now(),
+			"updated_by": deletedBy,
+	}).Error
 }
 `
 
@@ -2843,7 +2856,7 @@ func (s *service) Delete{{.ItemTitle}}(ctx context.Context,id int64, actor he.Au
 	if m == nil {
 		return errors.New("{{.ItemTitle}} tidak ditemukan")
 	}
-	return s.repo.Delete{{.ItemTitle}}(ctx,id)
+	return s.repo.Delete{{.ItemTitle}}(ctx,id, actor.UserID)
 }
 
 // ── helper khusus {{.ItemTitle}} (nama fungsi unik agar tidak bentrok) ───────
@@ -3323,8 +3336,8 @@ func (m *{{.SubModuleTitle}}RepositoryMock) Update{{.ItemTitle}}(ctx context.Con
 	return args.Error(0)
 }
 
-func (m *{{.SubModuleTitle}}RepositoryMock) Delete{{.ItemTitle}}(ctx context.Context,id int64) error {
-	args := m.Called(id)
+func (m *{{.SubModuleTitle}}RepositoryMock) Delete{{.ItemTitle}}(ctx context.Context,id int64, deletedBy int64) error {
+	args := m.Called(id, deletedBy)
 	return args.Error(0)
 }
 `
@@ -3504,7 +3517,7 @@ func (s *{{.SubModuleTitle}}ServiceTestSuite) Test_Delete{{.ItemTitle}}_Success(
 	existing.ID = 1
 
 	s.repo.On("Get{{.ItemTitle}}ByID", int64(1)).Return(existing, nil)
-	s.repo.On("Delete{{.ItemTitle}}", int64(1)).Return(nil)
+	s.repo.On("Delete{{.ItemTitle}}", int64(1), actor.UserID).Return(nil)
 
 	err := s.svc.Delete{{.ItemTitle}}(context.Background(),1, actor)
 

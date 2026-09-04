@@ -48,7 +48,7 @@ func (m *KepegawaianIdentifierRepositoryMock) UpdateTipe(ctx context.Context, it
 	return args.Error(0)
 }
 
-func (m *KepegawaianIdentifierRepositoryMock) DeleteTipe(ctx context.Context, id int64) error {
-	args := m.Called(id)
+func (m *KepegawaianIdentifierRepositoryMock) DeleteTipe(ctx context.Context, id int64, deletedBy int64) error {
+	args := m.Called(id, deletedBy)
 	return args.Error(0)
 }

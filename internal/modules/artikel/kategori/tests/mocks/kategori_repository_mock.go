@@ -46,7 +46,7 @@ func (m *ArtikelKategoriRepositoryMock) UpdateKategori(ctx context.Context,item 
 	return args.Error(0)
 }
 
-func (m *ArtikelKategoriRepositoryMock) DeleteKategori(ctx context.Context,id int64) error {
-	args := m.Called(id)
+func (m *ArtikelKategoriRepositoryMock) DeleteKategori(ctx context.Context,id int64, deletedBy int64) error {
+	args := m.Called(id, deletedBy)
 	return args.Error(0)
 }

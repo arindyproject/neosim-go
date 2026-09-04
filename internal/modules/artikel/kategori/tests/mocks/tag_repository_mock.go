@@ -32,7 +32,7 @@ func (m *ArtikelKategoriRepositoryMock) UpdateTag(ctx context.Context,item *mode
 	return args.Error(0)
 }
 
-func (m *ArtikelKategoriRepositoryMock) DeleteTag(ctx context.Context,id int64) error {
-	args := m.Called(id)
+func (m *ArtikelKategoriRepositoryMock) DeleteTag(ctx context.Context,id int64, deletedBy int64) error {
+	args := m.Called(id, deletedBy)
 	return args.Error(0)
 }
