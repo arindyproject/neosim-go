@@ -4129,6 +4129,12 @@
                     },
                     {
                         "type": "string",
+                        "description": "Filter by fhir code",
+                        "name": "fhir_code",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "description": "Filter by postal code",
                         "name": "postal_code",
                         "in": "query"
@@ -4398,6 +4404,12 @@
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "description": "Filter by fhir code",
+                        "name": "fhir_code",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "description": "Page number",
                         "name": "page",
@@ -4662,6 +4674,12 @@
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "description": "Filter by fhir code",
+                        "name": "fhir_code",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "description": "Page number",
                         "name": "page",
@@ -4917,6 +4935,12 @@
                         "type": "string",
                         "description": "Filter by name (partial match)",
                         "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by fhir code",
+                        "name": "fhir_code",
                         "in": "query"
                     },
                     {
@@ -5181,6 +5205,12 @@
                         "type": "string",
                         "description": "Filter by name (partial match)",
                         "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by fhir code",
+                        "name": "fhir_code",
                         "in": "query"
                     },
                     {
@@ -9066,6 +9096,11 @@
                     "maxLength": 10,
                     "minLength": 1
                 },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 1
+                },
                 "kota_kabupaten_id": {
                     "type": "integer"
                 },
@@ -9087,6 +9122,11 @@
                 "code": {
                     "type": "string",
                     "maxLength": 15,
+                    "minLength": 1
+                },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50,
                     "minLength": 1
                 },
                 "kecamatan_id": {
@@ -9305,6 +9345,11 @@
                     "maxLength": 10,
                     "minLength": 1
                 },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 1
+                },
                 "name": {
                     "type": "string",
                     "maxLength": 255,
@@ -9495,6 +9540,11 @@
                     "type": "string",
                     "maxLength": 500
                 },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 1
+                },
                 "name": {
                     "type": "string",
                     "maxLength": 255,
@@ -9548,6 +9598,11 @@
                 "code": {
                     "type": "string",
                     "maxLength": 10,
+                    "minLength": 1
+                },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50,
                     "minLength": 1
                 },
                 "name": {
@@ -9713,6 +9768,9 @@
                 "code": {
                     "type": "string"
                 },
+                "fhir_code": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -9754,6 +9812,9 @@
                 "created_by": {
                     "type": "integer"
                 },
+                "fhir_code": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -9775,6 +9836,9 @@
             "type": "object",
             "properties": {
                 "code": {
+                    "type": "string"
+                },
+                "fhir_code": {
                     "type": "string"
                 },
                 "id": {
@@ -9823,6 +9887,9 @@
                 },
                 "created_by": {
                     "type": "integer"
+                },
+                "fhir_code": {
+                    "type": "string"
                 },
                 "id": {
                     "type": "integer"
@@ -10096,6 +10163,9 @@
                 "code": {
                     "type": "string"
                 },
+                "fhir_code": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -10133,6 +10203,9 @@
                 },
                 "created_by": {
                     "type": "integer"
+                },
+                "fhir_code": {
+                    "type": "string"
                 },
                 "id": {
                     "type": "integer"
@@ -10423,6 +10496,9 @@
                 "description": {
                     "type": "string"
                 },
+                "fhir_code": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -10466,6 +10542,9 @@
                 "code": {
                     "type": "string"
                 },
+                "fhir_code": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -10500,6 +10579,9 @@
                 },
                 "created_by": {
                     "type": "integer"
+                },
+                "fhir_code": {
+                    "type": "string"
                 },
                 "id": {
                     "type": "integer"
@@ -10748,6 +10830,11 @@
                     "maxLength": 10,
                     "minLength": 1
                 },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 1
+                },
                 "kota_kabupaten_id": {
                     "type": "integer"
                 },
@@ -10764,6 +10851,11 @@
                 "code": {
                     "type": "string",
                     "maxLength": 15,
+                    "minLength": 1
+                },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50,
                     "minLength": 1
                 },
                 "kecamatan_id": {
@@ -10941,6 +11033,11 @@
                     "maxLength": 10,
                     "minLength": 1
                 },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 1
+                },
                 "name": {
                     "type": "string",
                     "maxLength": 255,
@@ -11103,6 +11200,11 @@
                     "type": "string",
                     "maxLength": 500
                 },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 1
+                },
                 "name": {
                     "type": "string",
                     "maxLength": 255,
@@ -11130,6 +11232,11 @@
                 "code": {
                     "type": "string",
                     "maxLength": 10,
+                    "minLength": 1
+                },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50,
                     "minLength": 1
                 },
                 "name": {

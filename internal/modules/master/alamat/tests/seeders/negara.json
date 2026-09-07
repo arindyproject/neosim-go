@@ -2,6 +2,7 @@
     {
         "code": "ID",
         "name": "INDONESIA",
-        "description": "Republik Indonesia"
+        "description": "Republik Indonesia",
+        "fhir_code": "FHIR-ID"
     }
 ]

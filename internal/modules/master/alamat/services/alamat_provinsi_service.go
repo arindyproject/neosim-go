@@ -50,6 +50,7 @@ func (s *service) GetByIDProvinsi(ctx context.Context, id int64) (*dto.ProvinsiD
 		ID:             m.ID,
 		Code:           m.Code,
 		Name:           m.Name,
+		FhirCode:       m.FhirCode,
 		NegaraID:       m.NegaraID,
 		NegaraName:     m.Negara.Name,
 		TotalKota:      totalKota,
@@ -141,6 +142,7 @@ func (s *service) CreateProvinsi(ctx context.Context, req *dto.CreateProvinsiReq
 		NegaraID:  req.NegaraID,
 		Code:      req.Code,
 		Name:      req.Name,
+		FhirCode:  req.FhirCode,
 		CreatedBy: &actor.UserID,
 		UpdatedBy: &actor.UserID,
 	}
@@ -199,6 +201,13 @@ func (s *service) UpdateProvinsi(ctx context.Context, id int64, req *dto.UpdateP
 	}
 	if req.Name != nil {
 		m.Name = *req.Name
+	}
+	if req.FhirCode != nil {
+		if *req.FhirCode == "" {
+			m.FhirCode = nil
+		} else {
+			m.FhirCode = req.FhirCode
+		}
 	}
 	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()

@@ -2624,6 +2624,7 @@ var tmplItemRepository = `package repositories
 import (
 	"context"
 	"errors"
+	"time"
 
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/contracts"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"

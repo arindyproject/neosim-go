@@ -11,6 +11,7 @@ import (
 type MasterAlamatNegara struct {
 	ID          int64          `gorm:"primaryKey;autoIncrement;column:id" json:"id"`
 	Code        string         `gorm:"column:code;type:varchar(5);not null;unique" json:"code"` // Cth: ID, SG
+	FhirCode    *string        `gorm:"column:fhir_code;type:varchar(50)" json:"fhir_code"`
 	Name        string         `gorm:"column:name;type:varchar(255);not null" json:"name"`
 	Description *string        `gorm:"column:description;type:text" json:"description"`
 	CreatedBy   *int64         `gorm:"column:created_by" json:"created_by"`
@@ -30,6 +31,7 @@ type MasterAlamatProvinsi struct {
 	ID        int64          `gorm:"primaryKey;autoIncrement;column:id" json:"id"`
 	NegaraID  int64          `gorm:"column:negara_id;not null" json:"negara_id"`
 	Code      string         `gorm:"column:code;type:varchar(10);not null;unique" json:"code"` // Cth: 35
+	FhirCode  *string        `gorm:"column:fhir_code;type:varchar(50)" json:"fhir_code"`
 	Name      string         `gorm:"column:name;type:varchar(255);not null" json:"name"`
 	CreatedBy *int64         `gorm:"column:created_by" json:"created_by"`
 	UpdatedBy *int64         `gorm:"column:updated_by" json:"updated_by"`
@@ -51,6 +53,7 @@ type MasterAlamatKotaKabupaten struct {
 	ID         int64          `gorm:"primaryKey;autoIncrement;column:id" json:"id"`
 	ProvinsiID int64          `gorm:"column:provinsi_id;not null" json:"provinsi_id"`
 	Code       string         `gorm:"column:code;type:varchar(10);not null;unique" json:"code"` // Cth: 35.21
+	FhirCode   *string        `gorm:"column:fhir_code;type:varchar(50)" json:"fhir_code"`
 	Name       string         `gorm:"column:name;type:varchar(255);not null" json:"name"`
 	CreatedBy  *int64         `gorm:"column:created_by" json:"created_by"`
 	UpdatedBy  *int64         `gorm:"column:updated_by" json:"updated_by"`
@@ -71,6 +74,7 @@ type MasterAlamatKecamatan struct {
 	ID              int64          `gorm:"primaryKey;autoIncrement;column:id" json:"id"`
 	KotaKabupatenID int64          `gorm:"column:kota_kabupaten_id;not null" json:"kota_kabupaten_id"`
 	Code            string         `gorm:"column:code;type:varchar(10);not null;unique" json:"code"` // Cth: 35.21.01
+	FhirCode        *string        `gorm:"column:fhir_code;type:varchar(50)" json:"fhir_code"`
 	Name            string         `gorm:"column:name;type:varchar(255);not null" json:"name"`
 	CreatedBy       *int64         `gorm:"column:created_by" json:"created_by"`
 	UpdatedBy       *int64         `gorm:"column:updated_by" json:"updated_by"`
@@ -91,6 +95,7 @@ type MasterAlamatKelurahanDesa struct {
 	ID          int64          `gorm:"primaryKey;autoIncrement;column:id" json:"id"`
 	KecamatanID int64          `gorm:"column:kecamatan_id;not null" json:"kecamatan_id"`
 	Code        string         `gorm:"column:code;type:varchar(15);not null;unique" json:"code"` // Cth: 35.21.01.2001
+	FhirCode    *string        `gorm:"column:fhir_code;type:varchar(50)" json:"fhir_code"`
 	Name        string         `gorm:"column:name;type:varchar(255);not null" json:"name"`
 	PostalCode  *string        `gorm:"column:postal_code;type:varchar(10)" json:"postal_code"`
 	CreatedBy   *int64         `gorm:"column:created_by" json:"created_by"`

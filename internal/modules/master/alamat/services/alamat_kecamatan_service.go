@@ -42,6 +42,7 @@ func (s *service) GetByIDKecamatan(ctx context.Context, id int64) (*dto.Kecamata
 		ID:                m.ID,
 		Code:              m.Code,
 		Name:              m.Name,
+		FhirCode:          m.FhirCode,
 		KotaKabupatenID:   m.KotaKabupatenID,
 		KotaKabupatenName: m.KotaKabupaten.Name,
 		ProvinsiID:        m.KotaKabupaten.ProvinsiID,
@@ -135,6 +136,7 @@ func (s *service) CreateKecamatan(ctx context.Context, req *dto.CreateKecamatanR
 		KotaKabupatenID: req.KotaKabupatenID,
 		Code:            req.Code,
 		Name:            req.Name,
+		FhirCode:        req.FhirCode,
 		CreatedBy:       &actor.UserID,
 		UpdatedBy:       &actor.UserID,
 	}
@@ -190,6 +192,14 @@ func (s *service) UpdateKecamatan(ctx context.Context, id int64, req *dto.Update
 	}
 	if req.Name != nil {
 		m.Name = *req.Name
+	}
+
+	if req.FhirCode != nil {
+		if *req.FhirCode == "" {
+			m.FhirCode = nil
+		} else {
+			m.FhirCode = req.FhirCode
+		}
 	}
 	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()

@@ -32,18 +32,21 @@ type jsonProvinsi struct {
 	Code       string `json:"code"`
 	NegaraCode string `json:"negara_code"`
 	Name       string `json:"name"`
+	FhirCode   string `json:"fhir_code"`
 }
 
 type jsonKota struct {
 	Code         string `json:"code"`
 	ProvinsiCode string `json:"provinsi_code"`
 	Name         string `json:"name"`
+	FhirCode     string `json:"fhir_code"`
 }
 
 type jsonKecamatan struct {
 	Code              string `json:"code"`
 	KotaKabupatenCode string `json:"kota_kabupaten_code"`
 	Name              string `json:"name"`
+	FhirCode          string `json:"fhir_code"`
 }
 
 type jsonDesa struct {
@@ -51,6 +54,7 @@ type jsonDesa struct {
 	KecamatanCode string `json:"kecamatan_code"`
 	Name          string `json:"name"`
 	PostalCode    string `json:"postal_code"`
+	FhirCode      string `json:"fhir_code"`
 }
 
 type MasterAlamatSeeder struct {
@@ -109,6 +113,7 @@ func (s *MasterAlamatSeeder) Run() error {
 				NegaraID: negaraID,
 				Code:     item.Code,
 				Name:     item.Name,
+				FhirCode: &item.FhirCode,
 			}
 			if err := s.db.Create(&newProv).Error; err != nil {
 				log.Printf("   ⚠️  Gagal membuat Provinsi: %v", err)
@@ -141,6 +146,7 @@ func (s *MasterAlamatSeeder) Run() error {
 				ProvinsiID: provID,
 				Code:       item.Code,
 				Name:       item.Name,
+				FhirCode:   &item.FhirCode,
 			}
 			if err := s.db.Create(&newKota).Error; err != nil {
 				continue
@@ -172,6 +178,7 @@ func (s *MasterAlamatSeeder) Run() error {
 				KotaKabupatenID: kotaID,
 				Code:            item.Code,
 				Name:            item.Name,
+				FhirCode:        &item.FhirCode,
 			}
 			if err := s.db.Create(&newKec).Error; err != nil {
 				continue
@@ -207,6 +214,7 @@ func (s *MasterAlamatSeeder) Run() error {
 				Code:        item.Code,
 				Name:        item.Name,
 				PostalCode:  &postal,
+				FhirCode:    &item.FhirCode,
 			})
 		}
 	}

@@ -1,9 +1,9 @@
 [
-    { "code": "31.01", "provinsi_code": "31", "name": "KOTA JAKARTA PUSAT" },
-    { "code": "31.02", "provinsi_code": "31", "name": "KOTA JAKARTA UTARA" },
+    { "code": "31.01", "provinsi_code": "31", "name": "KOTA JAKARTA PUSAT", "fhir_code": "FHIR-31.01" },
+    { "code": "31.02", "provinsi_code": "31", "name": "KOTA JAKARTA UTARA", "fhir_code": "FHIR-31.02" },
 
     
-    { "code": "35.01", "provinsi_code": "35", "name": "KABUPATEN NGAWI" },
-    { "code": "35.02", "provinsi_code": "35", "name": "KOTA SURABAYA" }
+    { "code": "35.01", "provinsi_code": "35", "name": "KABUPATEN NGAWI", "fhir_code": "FHIR-35.01" },
+    { "code": "35.02", "provinsi_code": "35", "name": "KOTA SURABAYA", "fhir_code": "FHIR-35.02" }
 
 ]

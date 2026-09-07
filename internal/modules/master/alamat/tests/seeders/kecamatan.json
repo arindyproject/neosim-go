@@ -1,6 +1,5 @@
 [
-    { "code": "31.01.01", "kota_kabupaten_code": "31.01", "name": "KECAMATAN 11 DI JAKARTA PUSAT" },
-    { "code": "31.01.02", "kota_kabupaten_code": "31.01", "name": "KECAMATAN 12 DI JAKARTA PUSAT" },
-    
-    { "code": "35.01.01", "kota_kabupaten_code": "35.01", "name": "KECAMATAN 11 DI NGAWI" }
+    { "code": "31.01.01", "kota_kabupaten_code": "31.01", "name": "KECAMATAN 11 DI JAKARTA PUSAT", "fhir_code": "FHIR-31.01.01" },
+    { "code": "31.01.02", "kota_kabupaten_code": "31.01", "name": "KECAMATAN 12 DI JAKARTA PUSAT", "fhir_code": "FHIR-31.01.02" },
+    { "code": "35.01.01", "kota_kabupaten_code": "35.01", "name": "KECAMATAN 11 DI NGAWI", "fhir_code": "FHIR-35.01.01" }
 ]

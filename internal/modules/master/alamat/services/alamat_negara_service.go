@@ -110,6 +110,7 @@ func (s *service) CreateNegara(ctx context.Context, req *dto.CreateNegaraRequest
 	m := &models.MasterAlamatNegara{
 		Code:        req.Code,
 		Name:        req.Name,
+		FhirCode:    req.FhirCode,
 		Description: req.Description,
 		CreatedBy:   &actor.UserID,
 		UpdatedBy:   &actor.UserID,
@@ -164,6 +165,13 @@ func (s *service) UpdateNegara(ctx context.Context, id int64, req *dto.UpdateNeg
 	}
 	if req.Description != nil {
 		m.Description = req.Description
+	}
+	if req.FhirCode != nil {
+		if *req.FhirCode == "" {
+			m.FhirCode = nil
+		} else {
+			m.FhirCode = req.FhirCode
+		}
 	}
 	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()

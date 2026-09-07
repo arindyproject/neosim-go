@@ -37,6 +37,7 @@ func (s *service) GetByIDKelurahanDesa(ctx context.Context, id int64) (*dto.Kelu
 		ID:                m.ID,
 		Code:              m.Code,
 		Name:              m.Name,
+		FhirCode:          m.FhirCode,
 		PostalCode:        m.PostalCode,
 		KecamatanID:       m.KecamatanID,
 		KecamatanName:     m.Kecamatan.Name,
@@ -132,6 +133,7 @@ func (s *service) CreateKelurahanDesa(ctx context.Context, req *dto.CreateKelura
 		KecamatanID: req.KecamatanID,
 		Code:        req.Code,
 		Name:        req.Name,
+		FhirCode:    req.FhirCode,
 		PostalCode:  req.PostalCode,
 		CreatedBy:   &actor.UserID,
 		UpdatedBy:   &actor.UserID,
@@ -189,6 +191,13 @@ func (s *service) UpdateKelurahanDesa(ctx context.Context, id int64, req *dto.Up
 	}
 	if req.PostalCode != nil {
 		m.PostalCode = req.PostalCode
+	}
+	if req.FhirCode != nil {
+		if *req.FhirCode == "" {
+			m.FhirCode = nil
+		} else {
+			m.FhirCode = req.FhirCode
+		}
 	}
 	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()

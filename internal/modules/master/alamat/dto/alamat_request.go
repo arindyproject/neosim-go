@@ -7,6 +7,7 @@ package dto
 // CreateNegaraRequest request body untuk membuat Negara baru
 type CreateNegaraRequest struct {
 	Code        string  `json:"code" validate:"required,min=2,max=5"`
+	FhirCode    *string `json:"fhir_code" validate:"omitempty,min=1,max=50"`
 	Name        string  `json:"name" validate:"required,min=1,max=255"`
 	Description *string `json:"description" validate:"omitempty,max=500"`
 }
@@ -14,14 +15,16 @@ type CreateNegaraRequest struct {
 // UpdateNegaraRequest request body untuk update Negara
 type UpdateNegaraRequest struct {
 	Code        *string `json:"code" validate:"omitempty,min=2,max=5"`
+	FhirCode    *string `json:"fhir_code" validate:"omitempty,min=1,max=50"`
 	Name        *string `json:"name" validate:"omitempty,min=1,max=255"`
 	Description *string `json:"description" validate:"omitempty,max=500"`
 }
 
 // FilterNegaraRequest request query untuk filter Negara
 type FilterNegaraRequest struct {
-	Code string `query:"code"`
-	Name string `query:"name"`
+	Code     string  `query:"code"`
+	FhirCode *string `query:"fhir_code"`
+	Name     string  `query:"name"`
 }
 
 // =====================================================================
@@ -30,23 +33,26 @@ type FilterNegaraRequest struct {
 
 // CreateProvinsiRequest request body untuk membuat Provinsi baru
 type CreateProvinsiRequest struct {
-	NegaraID int64  `json:"negara_id" validate:"required,gt=0"`
-	Code     string `json:"code" validate:"required,min=1,max=10"`
-	Name     string `json:"name" validate:"required,min=1,max=255"`
+	NegaraID int64   `json:"negara_id" validate:"required,gt=0"`
+	Code     string  `json:"code" validate:"required,min=1,max=10"`
+	FhirCode *string `json:"fhir_code" validate:"omitempty,min=1,max=50"`
+	Name     string  `json:"name" validate:"required,min=1,max=255"`
 }
 
 // UpdateProvinsiRequest request body untuk update Provinsi
 type UpdateProvinsiRequest struct {
 	NegaraID *int64  `json:"negara_id" validate:"omitempty,gt=0"`
 	Code     *string `json:"code" validate:"omitempty,min=1,max=10"`
+	FhirCode *string `json:"fhir_code" validate:"omitempty,min=1,max=50"`
 	Name     *string `json:"name" validate:"omitempty,min=1,max=255"`
 }
 
 // FilterProvinsiRequest request query untuk filter Provinsi
 type FilterProvinsiRequest struct {
-	NegaraID *int64 `query:"negara_id"`
-	Code     string `query:"code"`
-	Name     string `query:"name"`
+	NegaraID *int64  `query:"negara_id"`
+	Code     string  `query:"code"`
+	FhirCode *string `query:"fhir_code"`
+	Name     string  `query:"name"`
 }
 
 // =====================================================================
@@ -55,23 +61,26 @@ type FilterProvinsiRequest struct {
 
 // CreateKotaKabupatenRequest request body untuk membuat Kota/Kabupaten baru
 type CreateKotaKabupatenRequest struct {
-	ProvinsiID int64  `json:"provinsi_id" validate:"required,gt=0"`
-	Code       string `json:"code" validate:"required,min=1,max=10"`
-	Name       string `json:"name" validate:"required,min=1,max=255"`
+	ProvinsiID int64   `json:"provinsi_id" validate:"required,gt=0"`
+	Code       string  `json:"code" validate:"required,min=1,max=10"`
+	FhirCode   *string `json:"fhir_code" validate:"omitempty,min=1,max=50"`
+	Name       string  `json:"name" validate:"required,min=1,max=255"`
 }
 
 // UpdateKotaKabupatenRequest request body untuk update Kota/Kabupaten
 type UpdateKotaKabupatenRequest struct {
 	ProvinsiID *int64  `json:"provinsi_id" validate:"omitempty,gt=0"`
 	Code       *string `json:"code" validate:"omitempty,min=1,max=10"`
+	FhirCode   *string `json:"fhir_code" validate:"omitempty,min=1,max=50"`
 	Name       *string `json:"name" validate:"omitempty,min=1,max=255"`
 }
 
 // FilterKotaKabupatenRequest request query untuk filter Kota/Kabupaten
 type FilterKotaKabupatenRequest struct {
-	ProvinsiID *int64 `query:"provinsi_id"`
-	Code       string `query:"code"`
-	Name       string `query:"name"`
+	ProvinsiID *int64  `query:"provinsi_id"`
+	Code       string  `query:"code"`
+	FhirCode   *string `query:"fhir_code"`
+	Name       string  `query:"name"`
 }
 
 // =====================================================================
@@ -80,23 +89,26 @@ type FilterKotaKabupatenRequest struct {
 
 // CreateKecamatanRequest request body untuk membuat Kecamatan baru
 type CreateKecamatanRequest struct {
-	KotaKabupatenID int64  `json:"kota_kabupaten_id" validate:"required,gt=0"`
-	Code            string `json:"code" validate:"required,min=1,max=10"`
-	Name            string `json:"name" validate:"required,min=1,max=255"`
+	KotaKabupatenID int64   `json:"kota_kabupaten_id" validate:"required,gt=0"`
+	Code            string  `json:"code" validate:"required,min=1,max=10"`
+	FhirCode        *string `json:"fhir_code" validate:"omitempty,min=1,max=50"`
+	Name            string  `json:"name" validate:"required,min=1,max=255"`
 }
 
 // UpdateKecamatanRequest request body untuk update Kecamatan
 type UpdateKecamatanRequest struct {
 	KotaKabupatenID *int64  `json:"kota_kabupaten_id" validate:"omitempty,gt=0"`
 	Code            *string `json:"code" validate:"omitempty,min=1,max=10"`
+	FhirCode        *string `json:"fhir_code" validate:"omitempty,min=1,max=50"`
 	Name            *string `json:"name" validate:"omitempty,min=1,max=255"`
 }
 
 // FilterKecamatanRequest request query untuk filter Kecamatan
 type FilterKecamatanRequest struct {
-	KotaKabupatenID *int64 `query:"kota_kabupaten_id"`
-	Code            string `query:"code"`
-	Name            string `query:"name"`
+	KotaKabupatenID *int64  `query:"kota_kabupaten_id"`
+	Code            string  `query:"code"`
+	FhirCode        *string `query:"fhir_code"`
+	Name            string  `query:"name"`
 }
 
 // =====================================================================
@@ -107,6 +119,7 @@ type FilterKecamatanRequest struct {
 type CreateKelurahanDesaRequest struct {
 	KecamatanID int64   `json:"kecamatan_id" validate:"required,gt=0"`
 	Code        string  `json:"code" validate:"required,min=1,max=15"`
+	FhirCode    *string `json:"fhir_code" validate:"omitempty,min=1,max=50"`
 	Name        string  `json:"name" validate:"required,min=1,max=255"`
 	PostalCode  *string `json:"postal_code" validate:"omitempty,max=10"`
 }
@@ -115,14 +128,16 @@ type CreateKelurahanDesaRequest struct {
 type UpdateKelurahanDesaRequest struct {
 	KecamatanID *int64  `json:"kecamatan_id" validate:"omitempty,gt=0"`
 	Code        *string `json:"code" validate:"omitempty,min=1,max=15"`
+	FhirCode    *string `json:"fhir_code" validate:"omitempty,min=1,max=50"`
 	Name        *string `json:"name" validate:"omitempty,min=1,max=255"`
 	PostalCode  *string `json:"postal_code" validate:"omitempty,max=10"`
 }
 
 // FilterKelurahanDesaRequest request query untuk filter Kelurahan/Desa
 type FilterKelurahanDesaRequest struct {
-	KecamatanID *int64 `query:"kecamatan_id"`
-	Code        string `query:"code"`
-	Name        string `query:"name"`
-	PostalCode  string `query:"postal_code"`
+	KecamatanID *int64  `query:"kecamatan_id"`
+	Code        string  `query:"code"`
+	FhirCode    *string `query:"fhir_code"`
+	Name        string  `query:"name"`
+	PostalCode  string  `query:"postal_code"`
 }

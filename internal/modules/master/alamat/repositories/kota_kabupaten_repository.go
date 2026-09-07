@@ -40,7 +40,9 @@ func (r *repository) ListKotaKabupaten(ctx context.Context, page, pageSize int, 
 	if filter != nil && filter.Name != "" {
 		query = query.Where("name ILIKE ?", "%"+filter.Name+"%")
 	}
-
+	if filter != nil && filter.FhirCode != nil {
+		query = query.Where("fhir_code ILIKE ?", "%"+*filter.FhirCode+"%")
+	}
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}

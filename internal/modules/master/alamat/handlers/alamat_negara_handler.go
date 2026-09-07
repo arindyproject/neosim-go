@@ -24,6 +24,7 @@ import (
 //	@Security		BearerAuth
 //	@Param			code		query		string	false	"Filter by code"
 //	@Param			name		query		string	false	"Filter by name (partial match)"
+//	@Param			fhir_code	query		string	false	"Filter by fhir code"
 //	@Param			page		query		int		false	"Page number"
 //	@Param			page_size	query		int		false	"Page size"
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.NegaraResponse}

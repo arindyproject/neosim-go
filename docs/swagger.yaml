@@ -125,6 +125,10 @@ definitions:
         maxLength: 10
         minLength: 1
         type: string
+      fhir_code:
+        maxLength: 50
+        minLength: 1
+        type: string
       kota_kabupaten_id:
         type: integer
       name:
@@ -140,6 +144,10 @@ definitions:
     properties:
       code:
         maxLength: 15
+        minLength: 1
+        type: string
+      fhir_code:
+        maxLength: 50
         minLength: 1
         type: string
       kecamatan_id:
@@ -300,6 +308,10 @@ definitions:
         maxLength: 10
         minLength: 1
         type: string
+      fhir_code:
+        maxLength: 50
+        minLength: 1
+        type: string
       name:
         maxLength: 255
         minLength: 1
@@ -437,6 +449,10 @@ definitions:
       description:
         maxLength: 500
         type: string
+      fhir_code:
+        maxLength: 50
+        minLength: 1
+        type: string
       name:
         maxLength: 255
         minLength: 1
@@ -476,6 +492,10 @@ definitions:
     properties:
       code:
         maxLength: 10
+        minLength: 1
+        type: string
+      fhir_code:
+        maxLength: 50
         minLength: 1
         type: string
       name:
@@ -595,6 +615,8 @@ definitions:
     properties:
       code:
         type: string
+      fhir_code:
+        type: string
       id:
         type: integer
       kota_kabupaten_id:
@@ -622,6 +644,8 @@ definitions:
         type: string
       created_by:
         type: integer
+      fhir_code:
+        type: string
       id:
         type: integer
       kota_kabupaten_id:
@@ -636,6 +660,8 @@ definitions:
   dto.KelurahanDesaDetailResponse:
     properties:
       code:
+        type: string
+      fhir_code:
         type: string
       id:
         type: integer
@@ -668,6 +694,8 @@ definitions:
         type: string
       created_by:
         type: integer
+      fhir_code:
+        type: string
       id:
         type: integer
       kecamatan_id:
@@ -842,6 +870,8 @@ definitions:
     properties:
       code:
         type: string
+      fhir_code:
+        type: string
       id:
         type: integer
       name:
@@ -867,6 +897,8 @@ definitions:
         type: string
       created_by:
         type: integer
+      fhir_code:
+        type: string
       id:
         type: integer
       name:
@@ -1057,6 +1089,8 @@ definitions:
         type: integer
       description:
         type: string
+      fhir_code:
+        type: string
       id:
         type: integer
       name:
@@ -1085,6 +1119,8 @@ definitions:
     properties:
       code:
         type: string
+      fhir_code:
+        type: string
       id:
         type: integer
       name:
@@ -1108,6 +1144,8 @@ definitions:
         type: string
       created_by:
         type: integer
+      fhir_code:
+        type: string
       id:
         type: integer
       name:
@@ -1276,6 +1314,10 @@ definitions:
         maxLength: 10
         minLength: 1
         type: string
+      fhir_code:
+        maxLength: 50
+        minLength: 1
+        type: string
       kota_kabupaten_id:
         type: integer
       name:
@@ -1287,6 +1329,10 @@ definitions:
     properties:
       code:
         maxLength: 15
+        minLength: 1
+        type: string
+      fhir_code:
+        maxLength: 50
         minLength: 1
         type: string
       kecamatan_id:
@@ -1416,6 +1462,10 @@ definitions:
         maxLength: 10
         minLength: 1
         type: string
+      fhir_code:
+        maxLength: 50
+        minLength: 1
+        type: string
       name:
         maxLength: 255
         minLength: 1
@@ -1533,6 +1583,10 @@ definitions:
       description:
         maxLength: 500
         type: string
+      fhir_code:
+        maxLength: 50
+        minLength: 1
+        type: string
       name:
         maxLength: 255
         minLength: 1
@@ -1552,6 +1606,10 @@ definitions:
     properties:
       code:
         maxLength: 10
+        minLength: 1
+        type: string
+      fhir_code:
+        maxLength: 50
         minLength: 1
         type: string
       name:
@@ -4384,6 +4442,10 @@ paths:
         in: query
         name: name
         type: string
+      - description: Filter by fhir code
+        in: query
+        name: fhir_code
+        type: string
       - description: Filter by postal code
         in: query
         name: postal_code
@@ -4544,6 +4606,10 @@ paths:
         in: query
         name: name
         type: string
+      - description: Filter by fhir code
+        in: query
+        name: fhir_code
+        type: string
       - description: Page number
         in: query
         name: page
@@ -4700,6 +4766,10 @@ paths:
         in: query
         name: name
         type: string
+      - description: Filter by fhir code
+        in: query
+        name: fhir_code
+        type: string
       - description: Page number
         in: query
         name: page
@@ -4851,6 +4921,10 @@ paths:
       - description: Filter by name (partial match)
         in: query
         name: name
+        type: string
+      - description: Filter by fhir code
+        in: query
+        name: fhir_code
         type: string
       - description: Page number
         in: query
@@ -5007,6 +5081,10 @@ paths:
       - description: Filter by name (partial match)
         in: query
         name: name
+        type: string
+      - description: Filter by fhir code
+        in: query
+        name: fhir_code
         type: string
       - description: Page number
         in: query

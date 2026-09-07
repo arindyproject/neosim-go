@@ -4135,6 +4135,12 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "Filter by fhir code",
+                        "name": "fhir_code",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "description": "Filter by postal code",
                         "name": "postal_code",
                         "in": "query"
@@ -4404,6 +4410,12 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "description": "Filter by fhir code",
+                        "name": "fhir_code",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "description": "Page number",
                         "name": "page",
@@ -4668,6 +4680,12 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "description": "Filter by fhir code",
+                        "name": "fhir_code",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "description": "Page number",
                         "name": "page",
@@ -4923,6 +4941,12 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Filter by name (partial match)",
                         "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by fhir code",
+                        "name": "fhir_code",
                         "in": "query"
                     },
                     {
@@ -5187,6 +5211,12 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Filter by name (partial match)",
                         "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by fhir code",
+                        "name": "fhir_code",
                         "in": "query"
                     },
                     {
@@ -9072,6 +9102,11 @@ const docTemplate = `{
                     "maxLength": 10,
                     "minLength": 1
                 },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 1
+                },
                 "kota_kabupaten_id": {
                     "type": "integer"
                 },
@@ -9093,6 +9128,11 @@ const docTemplate = `{
                 "code": {
                     "type": "string",
                     "maxLength": 15,
+                    "minLength": 1
+                },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50,
                     "minLength": 1
                 },
                 "kecamatan_id": {
@@ -9311,6 +9351,11 @@ const docTemplate = `{
                     "maxLength": 10,
                     "minLength": 1
                 },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 1
+                },
                 "name": {
                     "type": "string",
                     "maxLength": 255,
@@ -9501,6 +9546,11 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 500
                 },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 1
+                },
                 "name": {
                     "type": "string",
                     "maxLength": 255,
@@ -9554,6 +9604,11 @@ const docTemplate = `{
                 "code": {
                     "type": "string",
                     "maxLength": 10,
+                    "minLength": 1
+                },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50,
                     "minLength": 1
                 },
                 "name": {
@@ -9719,6 +9774,9 @@ const docTemplate = `{
                 "code": {
                     "type": "string"
                 },
+                "fhir_code": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -9760,6 +9818,9 @@ const docTemplate = `{
                 "created_by": {
                     "type": "integer"
                 },
+                "fhir_code": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -9781,6 +9842,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "code": {
+                    "type": "string"
+                },
+                "fhir_code": {
                     "type": "string"
                 },
                 "id": {
@@ -9829,6 +9893,9 @@ const docTemplate = `{
                 },
                 "created_by": {
                     "type": "integer"
+                },
+                "fhir_code": {
+                    "type": "string"
                 },
                 "id": {
                     "type": "integer"
@@ -10102,6 +10169,9 @@ const docTemplate = `{
                 "code": {
                     "type": "string"
                 },
+                "fhir_code": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -10139,6 +10209,9 @@ const docTemplate = `{
                 },
                 "created_by": {
                     "type": "integer"
+                },
+                "fhir_code": {
+                    "type": "string"
                 },
                 "id": {
                     "type": "integer"
@@ -10429,6 +10502,9 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
+                "fhir_code": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -10472,6 +10548,9 @@ const docTemplate = `{
                 "code": {
                     "type": "string"
                 },
+                "fhir_code": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -10506,6 +10585,9 @@ const docTemplate = `{
                 },
                 "created_by": {
                     "type": "integer"
+                },
+                "fhir_code": {
+                    "type": "string"
                 },
                 "id": {
                     "type": "integer"
@@ -10754,6 +10836,11 @@ const docTemplate = `{
                     "maxLength": 10,
                     "minLength": 1
                 },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 1
+                },
                 "kota_kabupaten_id": {
                     "type": "integer"
                 },
@@ -10770,6 +10857,11 @@ const docTemplate = `{
                 "code": {
                     "type": "string",
                     "maxLength": 15,
+                    "minLength": 1
+                },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50,
                     "minLength": 1
                 },
                 "kecamatan_id": {
@@ -10947,6 +11039,11 @@ const docTemplate = `{
                     "maxLength": 10,
                     "minLength": 1
                 },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 1
+                },
                 "name": {
                     "type": "string",
                     "maxLength": 255,
@@ -11109,6 +11206,11 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 500
                 },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 1
+                },
                 "name": {
                     "type": "string",
                     "maxLength": 255,
@@ -11136,6 +11238,11 @@ const docTemplate = `{
                 "code": {
                     "type": "string",
                     "maxLength": 10,
+                    "minLength": 1
+                },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50,
                     "minLength": 1
                 },
                 "name": {

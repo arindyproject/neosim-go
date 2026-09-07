@@ -31,6 +31,7 @@ func (f *NegaraFactory) Make() *models.MasterAlamatNegara {
 	idx := rng.Intn(999999)
 	code := fmt.Sprintf("N%d", idx%100)
 	name := fmt.Sprintf("Negara %d", idx)
+	fhirCode := fmt.Sprintf("FHIR-%d", idx)
 	desc := fmt.Sprintf("Deskripsi Negara %d", idx)
 
 	if v, ok := f.overrides["code"]; ok {
@@ -39,10 +40,14 @@ func (f *NegaraFactory) Make() *models.MasterAlamatNegara {
 	if v, ok := f.overrides["name"]; ok {
 		name = v.(string)
 	}
+	if v, ok := f.overrides["fhir_code"]; ok {
+		fhirCode = v.(string)
+	}
 
 	return &models.MasterAlamatNegara{
 		Code:        code,
 		Name:        name,
+		FhirCode:    &fhirCode,
 		Description: &desc,
 	}
 }
@@ -76,6 +81,7 @@ func (f *ProvinsiFactory) Make() *models.MasterAlamatProvinsi {
 	idx := rng.Intn(999999)
 	code := fmt.Sprintf("%d", idx%99)
 	name := fmt.Sprintf("Provinsi %d", idx)
+	fhirCode := fmt.Sprintf("FHIR-%d", idx)
 	var negaraID int64 = 1
 
 	if v, ok := f.overrides["code"]; ok {
@@ -88,10 +94,15 @@ func (f *ProvinsiFactory) Make() *models.MasterAlamatProvinsi {
 		negaraID = v.(int64)
 	}
 
+	if v, ok := f.overrides["fhir_code"]; ok {
+		fhirCode = v.(string)
+	}
+
 	return &models.MasterAlamatProvinsi{
 		NegaraID: negaraID,
 		Code:     code,
 		Name:     name,
+		FhirCode: &fhirCode,
 	}
 }
 
@@ -124,6 +135,7 @@ func (f *KotaKabupatenFactory) Make() *models.MasterAlamatKotaKabupaten {
 	idx := rng.Intn(999999)
 	code := fmt.Sprintf("35.%d", idx%99)
 	name := fmt.Sprintf("Kota %d", idx)
+	fhirCode := fmt.Sprintf("FHIR-%d", idx)
 	var provinsiID int64 = 1
 
 	if v, ok := f.overrides["code"]; ok {
@@ -131,6 +143,9 @@ func (f *KotaKabupatenFactory) Make() *models.MasterAlamatKotaKabupaten {
 	}
 	if v, ok := f.overrides["name"]; ok {
 		name = v.(string)
+	}
+	if v, ok := f.overrides["fhir_code"]; ok {
+		fhirCode = v.(string)
 	}
 	if v, ok := f.overrides["provinsi_id"]; ok {
 		provinsiID = v.(int64)
@@ -140,6 +155,7 @@ func (f *KotaKabupatenFactory) Make() *models.MasterAlamatKotaKabupaten {
 		ProvinsiID: provinsiID,
 		Code:       code,
 		Name:       name,
+		FhirCode:   &fhirCode,
 	}
 }
 
@@ -172,6 +188,7 @@ func (f *KecamatanFactory) Make() *models.MasterAlamatKecamatan {
 	idx := rng.Intn(999999)
 	code := fmt.Sprintf("35.21.%d", idx%99)
 	name := fmt.Sprintf("Kecamatan %d", idx)
+	fhirCode := fmt.Sprintf("FHIR-%d", idx)
 	var kotaKabupatenID int64 = 1
 
 	if v, ok := f.overrides["code"]; ok {
@@ -179,6 +196,9 @@ func (f *KecamatanFactory) Make() *models.MasterAlamatKecamatan {
 	}
 	if v, ok := f.overrides["name"]; ok {
 		name = v.(string)
+	}
+	if v, ok := f.overrides["fhir_code"]; ok {
+		fhirCode = v.(string)
 	}
 	if v, ok := f.overrides["kota_kabupaten_id"]; ok {
 		kotaKabupatenID = v.(int64)
@@ -188,6 +208,7 @@ func (f *KecamatanFactory) Make() *models.MasterAlamatKecamatan {
 		KotaKabupatenID: kotaKabupatenID,
 		Code:            code,
 		Name:            name,
+		FhirCode:        &fhirCode,
 	}
 }
 
@@ -220,6 +241,7 @@ func (f *KelurahanDesaFactory) Make() *models.MasterAlamatKelurahanDesa {
 	idx := rng.Intn(999999)
 	code := fmt.Sprintf("35.21.01.%d", idx%9999)
 	name := fmt.Sprintf("Desa %d", idx)
+	fhirCode := fmt.Sprintf("FHIR-%d", idx)
 	postal := fmt.Sprintf("%05d", idx%99999)
 	var kecamatanID int64 = 1
 
@@ -232,11 +254,15 @@ func (f *KelurahanDesaFactory) Make() *models.MasterAlamatKelurahanDesa {
 	if v, ok := f.overrides["kecamatan_id"]; ok {
 		kecamatanID = v.(int64)
 	}
+	if v, ok := f.overrides["fhir_code"]; ok {
+		fhirCode = v.(string)
+	}
 
 	return &models.MasterAlamatKelurahanDesa{
 		KecamatanID: kecamatanID,
 		Code:        code,
 		Name:        name,
+		FhirCode:    &fhirCode,
 		PostalCode:  &postal,
 	}
 }

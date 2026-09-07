@@ -8,43 +8,46 @@ import (
 // ProvinsiDetailResponse response detail provinsi dengan statistik turunan
 // -------------------------------------------------------------------------
 type ProvinsiDetailResponse struct {
-	ID             int64  `json:"id"`
-	Code           string `json:"code"`
-	Name           string `json:"name"`
-	NegaraID       int64  `json:"negara_id"`
-	NegaraName     string `json:"negara_name"`
-	TotalKota      int64  `json:"total_kota"`
-	TotalKecamatan int64  `json:"total_kecamatan"`
-	TotalDesa      int64  `json:"total_desa"`
+	ID             int64   `json:"id"`
+	Code           string  `json:"code"`
+	Name           string  `json:"name"`
+	FhirCode       *string `json:"fhir_code"`
+	NegaraID       int64   `json:"negara_id"`
+	NegaraName     string  `json:"negara_name"`
+	TotalKota      int64   `json:"total_kota"`
+	TotalKecamatan int64   `json:"total_kecamatan"`
+	TotalDesa      int64   `json:"total_desa"`
 } //------------------------------------------------------------------------
 
 // KotaKabupatenDetailResponse response detail kota/kabupaten dengan statistik turunan
 // -------------------------------------------------------------------------
 type KotaKabupatenDetailResponse struct {
-	ID             int64  `json:"id"`
-	Code           string `json:"code"`
-	Name           string `json:"name"`
-	ProvinsiID     int64  `json:"provinsi_id"`
-	ProvinsiName   string `json:"provinsi_name"`
-	NegaraID       int64  `json:"negara_id"`
-	NegaraName     string `json:"negara_name"`
-	TotalKecamatan int64  `json:"total_kecamatan"`
-	TotalDesa      int64  `json:"total_desa"`
+	ID             int64   `json:"id"`
+	Code           string  `json:"code"`
+	Name           string  `json:"name"`
+	FhirCode       *string `json:"fhir_code"`
+	ProvinsiID     int64   `json:"provinsi_id"`
+	ProvinsiName   string  `json:"provinsi_name"`
+	NegaraID       int64   `json:"negara_id"`
+	NegaraName     string  `json:"negara_name"`
+	TotalKecamatan int64   `json:"total_kecamatan"`
+	TotalDesa      int64   `json:"total_desa"`
 } //------------------------------------------------------------------------
 
 // KecamatanDetailResponse response detail kecamatan dengan statistik turunan
 // -------------------------------------------------------------------------
 type KecamatanDetailResponse struct {
-	ID                int64  `json:"id"`
-	Code              string `json:"code"`
-	Name              string `json:"name"`
-	KotaKabupatenID   int64  `json:"kota_kabupaten_id"`
-	KotaKabupatenName string `json:"kota_kabupaten_name"`
-	ProvinsiID        int64  `json:"provinsi_id"`
-	ProvinsiName      string `json:"provinsi_name"`
-	NegaraID          int64  `json:"negara_id"`
-	NegaraName        string `json:"negara_name"`
-	TotalDesa         int64  `json:"total_desa"`
+	ID                int64   `json:"id"`
+	Code              string  `json:"code"`
+	Name              string  `json:"name"`
+	FhirCode          *string `json:"fhir_code"`
+	KotaKabupatenID   int64   `json:"kota_kabupaten_id"`
+	KotaKabupatenName string  `json:"kota_kabupaten_name"`
+	ProvinsiID        int64   `json:"provinsi_id"`
+	ProvinsiName      string  `json:"provinsi_name"`
+	NegaraID          int64   `json:"negara_id"`
+	NegaraName        string  `json:"negara_name"`
+	TotalDesa         int64   `json:"total_desa"`
 } //------------------------------------------------------------------------
 
 // KelurahanDesaDetailResponse response detail desa/kelurahan dengan jalur hierarki lengkap
@@ -53,6 +56,7 @@ type KelurahanDesaDetailResponse struct {
 	ID                int64   `json:"id"`
 	Code              string  `json:"code"`
 	Name              string  `json:"name"`
+	FhirCode          *string `json:"fhir_code"`
 	PostalCode        *string `json:"postal_code"`
 	KecamatanID       int64   `json:"kecamatan_id"`
 	KecamatanName     string  `json:"kecamatan_name"`
@@ -73,6 +77,7 @@ type NegaraResponse struct {
 	ID          int64            `json:"id"`
 	Code        string           `json:"code"`
 	Name        string           `json:"name"`
+	FhirCode    *string          `json:"fhir_code"`
 	Description *string          `json:"description"`
 	CreatedBy   *int64           `json:"created_by"`
 	UpdatedBy   *int64           `json:"updated_by"`
@@ -86,6 +91,7 @@ type ProvinsiResponse struct {
 	NegaraID  int64            `json:"negara_id"`
 	Code      string           `json:"code"`
 	Name      string           `json:"name"`
+	FhirCode  *string          `json:"fhir_code"`
 	CreatedBy *int64           `json:"created_by"`
 	UpdatedBy *int64           `json:"updated_by"`
 	CreatedAt types.CustomTime `json:"created_at"`
@@ -98,6 +104,7 @@ type KotaKabupatenResponse struct {
 	ProvinsiID int64            `json:"provinsi_id"`
 	Code       string           `json:"code"`
 	Name       string           `json:"name"`
+	FhirCode   *string          `json:"fhir_code"`
 	CreatedBy  *int64           `json:"created_by"`
 	UpdatedBy  *int64           `json:"updated_by"`
 	CreatedAt  types.CustomTime `json:"created_at"`
@@ -110,6 +117,7 @@ type KecamatanResponse struct {
 	KotaKabupatenID int64            `json:"kota_kabupaten_id"`
 	Code            string           `json:"code"`
 	Name            string           `json:"name"`
+	FhirCode        *string          `json:"fhir_code"`
 	CreatedBy       *int64           `json:"created_by"`
 	UpdatedBy       *int64           `json:"updated_by"`
 	CreatedAt       types.CustomTime `json:"created_at"`
@@ -122,6 +130,7 @@ type KelurahanDesaResponse struct {
 	KecamatanID int64            `json:"kecamatan_id"`
 	Code        string           `json:"code"`
 	Name        string           `json:"name"`
+	FhirCode    *string          `json:"fhir_code"`
 	PostalCode  *string          `json:"postal_code"`
 	CreatedBy   *int64           `json:"created_by"`
 	UpdatedBy   *int64           `json:"updated_by"`
@@ -142,6 +151,7 @@ func ToNegaraResponse(m *models.MasterAlamatNegara) *NegaraResponse {
 		ID:          m.ID,
 		Code:        m.Code,
 		Name:        m.Name,
+		FhirCode:    m.FhirCode,
 		Description: m.Description,
 		CreatedBy:   m.CreatedBy,
 		UpdatedBy:   m.UpdatedBy,
@@ -173,6 +183,7 @@ func ToProvinsiResponse(m *models.MasterAlamatProvinsi) *ProvinsiResponse {
 		NegaraID:  m.NegaraID,
 		Code:      m.Code,
 		Name:      m.Name,
+		FhirCode:  m.FhirCode,
 		CreatedBy: m.CreatedBy,
 		UpdatedBy: m.UpdatedBy,
 		CreatedAt: types.CustomTime(m.CreatedAt),
@@ -203,6 +214,7 @@ func ToKotaKabupatenResponse(m *models.MasterAlamatKotaKabupaten) *KotaKabupaten
 		ProvinsiID: m.ProvinsiID,
 		Code:       m.Code,
 		Name:       m.Name,
+		FhirCode:   m.FhirCode,
 		CreatedBy:  m.CreatedBy,
 		UpdatedBy:  m.UpdatedBy,
 		CreatedAt:  types.CustomTime(m.CreatedAt),
@@ -233,6 +245,7 @@ func ToKecamatanResponse(m *models.MasterAlamatKecamatan) *KecamatanResponse {
 		KotaKabupatenID: m.KotaKabupatenID,
 		Code:            m.Code,
 		Name:            m.Name,
+		FhirCode:        m.FhirCode,
 		CreatedBy:       m.CreatedBy,
 		UpdatedBy:       m.UpdatedBy,
 		CreatedAt:       types.CustomTime(m.CreatedAt),
@@ -263,6 +276,7 @@ func ToKelurahanDesaResponse(m *models.MasterAlamatKelurahanDesa) *KelurahanDesa
 		KecamatanID: m.KecamatanID,
 		Code:        m.Code,
 		Name:        m.Name,
+		FhirCode:    m.FhirCode,
 		PostalCode:  m.PostalCode,
 		CreatedBy:   m.CreatedBy,
 		UpdatedBy:   m.UpdatedBy,
