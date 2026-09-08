@@ -105,6 +105,7 @@ func (s *service) CreatePendidikan(ctx context.Context, req *dto.CreateMasterPen
 	m := &models.MasterPendidikan{
 		KodeKemenkes: req.KodeKemenkes,
 		Name:         req.Name,
+		FhirCode:     req.FhirCode,
 		Description:  req.Description,
 		CreatedBy:    &actor.UserID,
 		UpdatedBy:    &actor.UserID,
@@ -158,6 +159,9 @@ func (s *service) UpdatePendidikan(ctx context.Context, id int64, req *dto.Updat
 	if req.Name != nil {
 		existing.Name = *req.Name
 	}
+	if req.FhirCode != nil {
+		existing.FhirCode = req.FhirCode
+	}
 	if req.Description != nil {
 		existing.Description = req.Description
 	}
@@ -196,7 +200,7 @@ func (s *service) DeletePendidikan(ctx context.Context, id int64, actor he.AuthC
 	}
 
 	// delete
-	err = s.repo.DeletePendidikan(ctx, id)
+	err = s.repo.DeletePendidikan(ctx, id, actor.UserID)
 	if err != nil {
 		return err
 	}

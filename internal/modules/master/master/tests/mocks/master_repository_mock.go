@@ -45,8 +45,8 @@ func (m *MasterRepositoryMock) UpdatePekerjaan(ctx context.Context, item *models
 	return args.Error(0)
 }
 
-func (m *MasterRepositoryMock) DeletePekerjaan(ctx context.Context, id int64) error {
-	args := m.Called(id)
+func (m *MasterRepositoryMock) DeletePekerjaan(ctx context.Context, id int64, deletedBy int64) error {
+	args := m.Called(id, deletedBy)
 	return args.Error(0)
 }
 
@@ -83,8 +83,8 @@ func (m *MasterRepositoryMock) UpdatePendidikan(ctx context.Context, item *model
 	return args.Error(0)
 }
 
-func (m *MasterRepositoryMock) DeletePendidikan(ctx context.Context, id int64) error {
-	args := m.Called(id)
+func (m *MasterRepositoryMock) DeletePendidikan(ctx context.Context, id int64, deletedBy int64) error {
+	args := m.Called(id, deletedBy)
 	return args.Error(0)
 }
 
@@ -121,8 +121,8 @@ func (m *MasterRepositoryMock) UpdateAgama(ctx context.Context, item *models.Mas
 	return args.Error(0)
 }
 
-func (m *MasterRepositoryMock) DeleteAgama(ctx context.Context, id int64) error {
-	args := m.Called(id)
+func (m *MasterRepositoryMock) DeleteAgama(ctx context.Context, id int64, deletedBy int64) error {
+	args := m.Called(id, deletedBy)
 	return args.Error(0)
 }
 
@@ -159,8 +159,8 @@ func (m *MasterRepositoryMock) UpdateStatusPernikahan(ctx context.Context, item 
 	return args.Error(0)
 }
 
-func (m *MasterRepositoryMock) DeleteStatusPernikahan(ctx context.Context, id int64) error {
-	args := m.Called(id)
+func (m *MasterRepositoryMock) DeleteStatusPernikahan(ctx context.Context, id int64, deletedBy int64) error {
+	args := m.Called(id, deletedBy)
 	return args.Error(0)
 }
 
@@ -197,8 +197,8 @@ func (m *MasterRepositoryMock) UpdateSuku(ctx context.Context, item *models.Mast
 	return args.Error(0)
 }
 
-func (m *MasterRepositoryMock) DeleteSuku(ctx context.Context, id int64) error {
-	args := m.Called(id)
+func (m *MasterRepositoryMock) DeleteSuku(ctx context.Context, id int64, deletedBy int64) error {
+	args := m.Called(id, deletedBy)
 	return args.Error(0)
 }
 
@@ -235,8 +235,8 @@ func (m *MasterRepositoryMock) UpdateGolonganDarah(ctx context.Context, item *mo
 	return args.Error(0)
 }
 
-func (m *MasterRepositoryMock) DeleteGolonganDarah(ctx context.Context, id int64) error {
-	args := m.Called(id)
+func (m *MasterRepositoryMock) DeleteGolonganDarah(ctx context.Context, id int64, deletedBy int64) error {
+	args := m.Called(id, deletedBy)
 	return args.Error(0)
 }
 
@@ -273,7 +273,7 @@ func (m *MasterRepositoryMock) UpdateJenisKelamin(ctx context.Context, item *mod
 	return args.Error(0)
 }
 
-func (m *MasterRepositoryMock) DeleteJenisKelamin(ctx context.Context, id int64) error {
-	args := m.Called(id)
+func (m *MasterRepositoryMock) DeleteJenisKelamin(ctx context.Context, id int64, deletedBy int64) error {
+	args := m.Called(id, deletedBy)
 	return args.Error(0)
 }

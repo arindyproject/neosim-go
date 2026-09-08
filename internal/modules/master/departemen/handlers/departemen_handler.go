@@ -5,10 +5,10 @@ import (
 	"net/http"
 
 	"neosim_go/internal/modules/master/departemen/dto"
-	"neosim_go/internal/shared/response"
-	"neosim_go/internal/shared/validator"
 	"neosim_go/internal/shared/binding"
 	he "neosim_go/internal/shared/httputil"
+	"neosim_go/internal/shared/response"
+	"neosim_go/internal/shared/validator"
 
 	"github.com/labstack/echo/v5"
 )
@@ -22,6 +22,8 @@ import (
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Param			name		query		string	false	"Filter by name (partial match)"
+//	@Param			fhir_code	query		string	false	"Filter by FHIR code (partial match)"
+//	@Param			fhir_system	query		string	false	"Filter by FHIR system (partial match)"
 //	@Param			page		query		int		false	"Page number"
 //	@Param			page_size	query		int		false	"Page size"
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.MasterDepartemenResponse}
@@ -34,7 +36,7 @@ func (h *MasterDepartemenHandler) ListDepartemen(c *echo.Context) error {
 	page, pageSize := he.ParsePagination(c, h.cfg)
 
 	actor := he.BuildAuthContext(c)
-	items, total, err := h.service.ListDepartemen(c.Request().Context(),page, pageSize, &filter, actor)
+	items, total, err := h.service.ListDepartemen(c.Request().Context(), page, pageSize, &filter, actor)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
 	}
@@ -58,7 +60,7 @@ func (h *MasterDepartemenHandler) GetDepartemenByID(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.GetDepartemenByID(c.Request().Context(),id, actor)
+	item, err := h.service.GetDepartemenByID(c.Request().Context(), id, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -90,7 +92,7 @@ func (h *MasterDepartemenHandler) CreateDepartemen(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (validator)", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.CreateDepartemen(c.Request().Context(),&req,  actor)
+	item, err := h.service.CreateDepartemen(c.Request().Context(), &req, actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
@@ -127,7 +129,7 @@ func (h *MasterDepartemenHandler) UpdateDepartemen(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (validator)", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.UpdateDepartemen(c.Request().Context(),id, &req, actor)
+	item, err := h.service.UpdateDepartemen(c.Request().Context(), id, &req, actor)
 	if err != nil {
 		status := http.StatusBadRequest
 		if err.Error() == "MasterDepartemen tidak ditemukan" {
@@ -155,7 +157,7 @@ func (h *MasterDepartemenHandler) DeleteDepartemen(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	if err := h.service.DeleteDepartemen(c.Request().Context(),id, actor); err != nil {
+	if err := h.service.DeleteDepartemen(c.Request().Context(), id, actor); err != nil {
 		status := http.StatusInternalServerError
 		if err.Error() == "MasterDepartemen tidak ditemukan" {
 			status = http.StatusNotFound

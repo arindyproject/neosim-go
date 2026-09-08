@@ -105,6 +105,7 @@ func (s *service) CreateAgama(ctx context.Context, req *dto.CreateMasterAgamaReq
 	m := &models.MasterAgama{
 		KodeKemenkes: req.KodeKemenkes,
 		Name:         req.Name,
+		FhirCode:     req.FhirCode,
 		Description:  req.Description,
 		CreatedBy:    &actor.UserID,
 		UpdatedBy:    &actor.UserID,
@@ -158,6 +159,9 @@ func (s *service) UpdateAgama(ctx context.Context, id int64, req *dto.UpdateMast
 	if req.Name != nil {
 		existing.Name = *req.Name
 	}
+	if req.FhirCode != nil {
+		existing.FhirCode = req.FhirCode
+	}
 	if req.Description != nil {
 		existing.Description = req.Description
 	}
@@ -196,7 +200,7 @@ func (s *service) DeleteAgama(ctx context.Context, id int64, actor he.AuthContex
 	}
 
 	// delete
-	err = s.repo.DeleteAgama(ctx, id)
+	err = s.repo.DeleteAgama(ctx, id, actor.UserID)
 	if err != nil {
 		return err
 	}

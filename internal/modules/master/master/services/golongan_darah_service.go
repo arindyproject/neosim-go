@@ -105,6 +105,7 @@ func (s *service) CreateGolonganDarah(ctx context.Context, req *dto.CreateMaster
 	m := &models.MasterGolonganDarah{
 		KodeKemenkes: req.KodeKemenkes,
 		Name:         req.Name,
+		FhirCode:     req.FhirCode,
 		Description:  req.Description,
 		CreatedBy:    &actor.UserID,
 		UpdatedBy:    &actor.UserID,
@@ -158,6 +159,9 @@ func (s *service) UpdateGolonganDarah(ctx context.Context, id int64, req *dto.Up
 	if req.Name != nil {
 		existing.Name = *req.Name
 	}
+	if req.FhirCode != nil {
+		existing.FhirCode = req.FhirCode
+	}
 	if req.Description != nil {
 		existing.Description = req.Description
 	}
@@ -196,7 +200,7 @@ func (s *service) DeleteGolonganDarah(ctx context.Context, id int64, actor he.Au
 	}
 
 	// delete
-	err = s.repo.DeleteGolonganDarah(ctx, id)
+	err = s.repo.DeleteGolonganDarah(ctx, id, actor.UserID)
 	if err != nil {
 		return err
 	}

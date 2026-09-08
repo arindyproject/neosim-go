@@ -267,7 +267,7 @@ func (s *MasterServiceTestSuite) Test_DeleteAgama_Superadmin_Success() {
 	existing.ID = 1
 
 	s.repo.On("GetByIDAgama", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteAgama", int64(1)).Return(nil)
+	s.repo.On("DeleteAgama", int64(1), actor.UserID).Return(nil)
 
 	err := s.svc.DeleteAgama(context.Background(), 1, actor)
 
@@ -304,7 +304,7 @@ func (s *MasterServiceTestSuite) Test_DeleteAgama_RepoError() {
 	existing.ID = 1
 
 	s.repo.On("GetByIDAgama", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteAgama", int64(1)).Return(fmt.Errorf("db error"))
+	s.repo.On("DeleteAgama", int64(1), actor.UserID).Return(fmt.Errorf("db error"))
 
 	err := s.svc.DeleteAgama(context.Background(), 1, actor)
 

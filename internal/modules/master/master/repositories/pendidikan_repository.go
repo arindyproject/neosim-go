@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"errors"
+	"time"
 
 	"neosim_go/internal/modules/master/master/dto"
 	"neosim_go/internal/modules/master/master/models"
@@ -54,6 +55,10 @@ func (r *repository) ListPendidikan(ctx context.Context, page, pageSize int, fil
 		query = query.Where("kode_kemenkes ILIKE ?", "%"+filter.KodeKemenkes+"%")
 	}
 
+	if filter != nil && filter.FhirCode != "" {
+		query = query.Where("fhir_code ILIKE ?", "%"+filter.FhirCode+"%")
+	}
+
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
@@ -72,6 +77,12 @@ func (r *repository) UpdatePendidikan(ctx context.Context, m *models.MasterPendi
 }
 
 // ------------------Delete---------------------------------------------
-func (r *repository) DeletePendidikan(ctx context.Context, id int64) error {
-	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&models.MasterPendidikan{}).Error
+func (r *repository) DeletePendidikan(ctx context.Context, id int64, deletedBy int64) error {
+	return r.db.WithContext(ctx).
+		Model(&models.MasterPendidikan{}).
+		Where("id = ? AND deleted_at IS NULL", id).
+		Updates(map[string]any{
+			"deleted_at": time.Now(),
+			"updated_by": deletedBy,
+		}).Error
 } // ===================================================================

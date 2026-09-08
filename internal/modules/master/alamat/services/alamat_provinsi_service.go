@@ -251,7 +251,7 @@ func (s *service) DeleteProvinsi(ctx context.Context, id int64, actor he.AuthCon
 		return appErrors.NotFound("Provinsi tidak ditemukan")
 	}
 
-	err = s.repo.DeleteProvinsi(ctx, id)
+	err = s.repo.DeleteProvinsi(ctx, id, actor.UserID)
 	if err == nil {
 		// Invalidate Cache
 		ctxs := context.Background()

@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"errors"
+	"time"
 
 	"neosim_go/internal/modules/master/alamat/dto"
 	"neosim_go/internal/modules/master/alamat/models"
@@ -61,8 +62,14 @@ func (r *repository) UpdateKecamatan(ctx context.Context, m *models.MasterAlamat
 	return r.db.WithContext(ctx).Save(m).Error
 }
 
-func (r *repository) DeleteKecamatan(ctx context.Context, id int64) error {
-	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&models.MasterAlamatKecamatan{}).Error
+func (r *repository) DeleteKecamatan(ctx context.Context, id int64, deletedBy int64) error {
+	return r.db.WithContext(ctx).
+		Model(&models.MasterAlamatKecamatan{}).
+		Where("id = ? AND deleted_at IS NULL", id).
+		Updates(map[string]any{
+			"deleted_at": time.Now(),
+			"updated_by": deletedBy,
+		}).Error
 }
 
 func (r *repository) ExistsKecamatanByCode(ctx context.Context, code string, excludeID *int64) (bool, error) {

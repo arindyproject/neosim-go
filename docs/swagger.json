@@ -5466,6 +5466,18 @@
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "description": "Filter by FHIR code (partial match)",
+                        "name": "fhir_code",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by FHIR system (partial match)",
+                        "name": "fhir_system",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "description": "Page number",
                         "name": "page",
@@ -9370,6 +9382,10 @@
                     "type": "string",
                     "maxLength": 500
                 },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50
+                },
                 "kode_kemenkes": {
                     "type": "string",
                     "maxLength": 50
@@ -9391,6 +9407,14 @@
                     "type": "string",
                     "maxLength": 500
                 },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "fhir_system": {
+                    "type": "string",
+                    "maxLength": 255
+                },
                 "name": {
                     "type": "string",
                     "maxLength": 255,
@@ -9407,6 +9431,10 @@
                 "description": {
                     "type": "string",
                     "maxLength": 500
+                },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50
                 },
                 "kode_kemenkes": {
                     "type": "string",
@@ -9429,6 +9457,10 @@
                     "type": "string",
                     "maxLength": 500
                 },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50
+                },
                 "kode_kemenkes": {
                     "type": "string",
                     "maxLength": 50
@@ -9449,6 +9481,10 @@
                 "description": {
                     "type": "string",
                     "maxLength": 500
+                },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50
                 },
                 "kode_kemenkes": {
                     "type": "string",
@@ -9471,6 +9507,10 @@
                     "type": "string",
                     "maxLength": 500
                 },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50
+                },
                 "kode_kemenkes": {
                     "type": "string",
                     "maxLength": 50
@@ -9492,6 +9532,10 @@
                     "type": "string",
                     "maxLength": 500
                 },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50
+                },
                 "kode_kemenkes": {
                     "type": "string",
                     "maxLength": 50
@@ -9512,6 +9556,10 @@
                 "description": {
                     "type": "string",
                     "maxLength": 500
+                },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50
                 },
                 "kode_kemenkes": {
                     "type": "string",
@@ -10264,6 +10312,9 @@
                 "description": {
                     "type": "string"
                 },
+                "fhir_code": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -10293,6 +10344,12 @@
                 "description": {
                     "type": "string"
                 },
+                "fhir_code": {
+                    "type": "string"
+                },
+                "fhir_system": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -10317,6 +10374,9 @@
                     "type": "integer"
                 },
                 "description": {
+                    "type": "string"
+                },
+                "fhir_code": {
                     "type": "string"
                 },
                 "id": {
@@ -10348,6 +10408,9 @@
                 "description": {
                     "type": "string"
                 },
+                "fhir_code": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -10375,6 +10438,9 @@
                     "type": "integer"
                 },
                 "description": {
+                    "type": "string"
+                },
+                "fhir_code": {
                     "type": "string"
                 },
                 "id": {
@@ -10406,6 +10472,9 @@
                 "description": {
                     "type": "string"
                 },
+                "fhir_code": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -10435,6 +10504,9 @@
                 "description": {
                     "type": "string"
                 },
+                "fhir_code": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -10462,6 +10534,9 @@
                     "type": "integer"
                 },
                 "description": {
+                    "type": "string"
+                },
+                "fhir_code": {
                     "type": "string"
                 },
                 "id": {
@@ -11055,6 +11130,10 @@
                     "type": "string",
                     "maxLength": 500
                 },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50
+                },
                 "kode_kemenkes": {
                     "type": "string",
                     "maxLength": 50
@@ -11073,6 +11152,14 @@
                     "type": "string",
                     "maxLength": 500
                 },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "fhir_system": {
+                    "type": "string",
+                    "maxLength": 255
+                },
                 "name": {
                     "type": "string",
                     "maxLength": 255,
@@ -11086,6 +11173,10 @@
                 "description": {
                     "type": "string",
                     "maxLength": 500
+                },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50
                 },
                 "kode_kemenkes": {
                     "type": "string",
@@ -11105,6 +11196,10 @@
                     "type": "string",
                     "maxLength": 500
                 },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50
+                },
                 "kode_kemenkes": {
                     "type": "string",
                     "maxLength": 50
@@ -11122,6 +11217,10 @@
                 "description": {
                     "type": "string",
                     "maxLength": 500
+                },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50
                 },
                 "kode_kemenkes": {
                     "type": "string",
@@ -11141,6 +11240,10 @@
                     "type": "string",
                     "maxLength": 500
                 },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50
+                },
                 "kode_kemenkes": {
                     "type": "string",
                     "maxLength": 50
@@ -11159,6 +11262,10 @@
                     "type": "string",
                     "maxLength": 500
                 },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50
+                },
                 "kode_kemenkes": {
                     "type": "string",
                     "maxLength": 50
@@ -11176,6 +11283,10 @@
                 "description": {
                     "type": "string",
                     "maxLength": 500
+                },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50
                 },
                 "kode_kemenkes": {
                     "type": "string",

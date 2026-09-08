@@ -15,7 +15,7 @@ type Repository interface {
 	GetByNamePekerjaan(ctx context.Context, name string) (*models.MasterPekerjaan, error)
 	ListPekerjaan(ctx context.Context, page, pageSize int, filter *dto.FilterMasterPekerjaanRequest) ([]models.MasterPekerjaan, int64, error)
 	UpdatePekerjaan(ctx context.Context, m *models.MasterPekerjaan) error
-	DeletePekerjaan(ctx context.Context, id int64) error
+	DeletePekerjaan(ctx context.Context, id int64, deletedBy int64) error
 	//--------------------------------------------------------------
 
 	// Pendidikan---------------------------------------------------
@@ -24,7 +24,7 @@ type Repository interface {
 	GetByNamePendidikan(ctx context.Context, name string) (*models.MasterPendidikan, error)
 	ListPendidikan(ctx context.Context, page, pageSize int, filter *dto.FilterMasterPendidikanRequest) ([]models.MasterPendidikan, int64, error)
 	UpdatePendidikan(ctx context.Context, m *models.MasterPendidikan) error
-	DeletePendidikan(ctx context.Context, id int64) error
+	DeletePendidikan(ctx context.Context, id int64, deletedBy int64) error
 	//---------------------------------------------------------------
 
 	// Agama---------------------------------------------------------
@@ -33,7 +33,7 @@ type Repository interface {
 	GetByNameAgama(ctx context.Context, name string) (*models.MasterAgama, error)
 	ListAgama(ctx context.Context, page, pageSize int, filter *dto.FilterMasterAgamaRequest) ([]models.MasterAgama, int64, error)
 	UpdateAgama(ctx context.Context, m *models.MasterAgama) error
-	DeleteAgama(ctx context.Context, id int64) error
+	DeleteAgama(ctx context.Context, id int64, deletedBy int64) error
 	//----------------------------------------------------------------
 
 	// StatusPernikahan-----------------------------------------------
@@ -42,7 +42,7 @@ type Repository interface {
 	GetByNameStatusPernikahan(ctx context.Context, name string) (*models.MasterStatusPernikahan, error)
 	ListStatusPernikahan(ctx context.Context, page, pageSize int, filter *dto.FilterMasterStatusPernikahanRequest) ([]models.MasterStatusPernikahan, int64, error)
 	UpdateStatusPernikahan(ctx context.Context, m *models.MasterStatusPernikahan) error
-	DeleteStatusPernikahan(ctx context.Context, id int64) error
+	DeleteStatusPernikahan(ctx context.Context, id int64, deletedBy int64) error
 	//----------------------------------------------------------------
 
 	// GolonganDarah--------------------------------------------------
@@ -51,7 +51,7 @@ type Repository interface {
 	GetByNameGolonganDarah(ctx context.Context, name string) (*models.MasterGolonganDarah, error)
 	ListGolonganDarah(ctx context.Context, page, pageSize int, filter *dto.FilterMasterGolonganDarahRequest) ([]models.MasterGolonganDarah, int64, error)
 	UpdateGolonganDarah(ctx context.Context, m *models.MasterGolonganDarah) error
-	DeleteGolonganDarah(ctx context.Context, id int64) error
+	DeleteGolonganDarah(ctx context.Context, id int64, deletedBy int64) error
 	//----------------------------------------------------------------
 
 	// Suku-----------------------------------------------------------
@@ -60,7 +60,7 @@ type Repository interface {
 	GetByNameSuku(ctx context.Context, name string) (*models.MasterSuku, error)
 	ListSuku(ctx context.Context, page, pageSize int, filter *dto.FilterMasterSukuRequest) ([]models.MasterSuku, int64, error)
 	UpdateSuku(ctx context.Context, m *models.MasterSuku) error
-	DeleteSuku(ctx context.Context, id int64) error
+	DeleteSuku(ctx context.Context, id int64, deletedBy int64) error
 	//----------------------------------------------------------------
 
 	// JenisKelamin---------------------------------------------------
@@ -69,7 +69,7 @@ type Repository interface {
 	GetByNameJenisKelamin(ctx context.Context, name string) (*models.MasterJenisKelamin, error)
 	ListJenisKelamin(ctx context.Context, page, pageSize int, filter *dto.FilterMasterJenisKelaminRequest) ([]models.MasterJenisKelamin, int64, error)
 	UpdateJenisKelamin(ctx context.Context, m *models.MasterJenisKelamin) error
-	DeleteJenisKelamin(ctx context.Context, id int64) error
+	DeleteJenisKelamin(ctx context.Context, id int64, deletedBy int64) error
 	//----------------------------------------------------------------
 }
 

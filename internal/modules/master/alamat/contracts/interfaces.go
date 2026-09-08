@@ -14,7 +14,7 @@ type Repository interface {
 	GetByIDNegara(ctx context.Context, id int64) (*models.MasterAlamatNegara, error)
 	ListNegara(ctx context.Context, page, pageSize int, filter *dto.FilterNegaraRequest) ([]models.MasterAlamatNegara, int64, error)
 	UpdateNegara(ctx context.Context, m *models.MasterAlamatNegara) error
-	DeleteNegara(ctx context.Context, id int64) error
+	DeleteNegara(ctx context.Context, id int64, deletedBy int64) error
 	ExistsNegaraByCode(ctx context.Context, code string, excludeID *int64) (bool, error)
 	//--------------------------------------------------------------
 
@@ -23,7 +23,7 @@ type Repository interface {
 	GetByIDProvinsi(ctx context.Context, id int64) (*models.MasterAlamatProvinsi, error)
 	ListProvinsi(ctx context.Context, page, pageSize int, negaraID *int64, filter *dto.FilterProvinsiRequest) ([]models.MasterAlamatProvinsi, int64, error)
 	UpdateProvinsi(ctx context.Context, m *models.MasterAlamatProvinsi) error
-	DeleteProvinsi(ctx context.Context, id int64) error
+	DeleteProvinsi(ctx context.Context, id int64, deletedBy int64) error
 	ExistsProvinsiByCode(ctx context.Context, code string, excludeID *int64) (bool, error)
 	//tambahan
 	CountKotaByProvinsiID(ctx context.Context, provinsiID int64) (int64, error)
@@ -36,7 +36,7 @@ type Repository interface {
 	GetByIDKotaKabupaten(ctx context.Context, id int64) (*models.MasterAlamatKotaKabupaten, error)
 	ListKotaKabupaten(ctx context.Context, page, pageSize int, provinsiID *int64, filter *dto.FilterKotaKabupatenRequest) ([]models.MasterAlamatKotaKabupaten, int64, error)
 	UpdateKotaKabupaten(ctx context.Context, m *models.MasterAlamatKotaKabupaten) error
-	DeleteKotaKabupaten(ctx context.Context, id int64) error
+	DeleteKotaKabupaten(ctx context.Context, id int64, deletedBy int64) error
 	ExistsKotaKabupatenByCode(ctx context.Context, code string, excludeID *int64) (bool, error)
 	// tambahan
 	CountKecamatanByKotaID(ctx context.Context, kotaID int64) (int64, error)
@@ -48,7 +48,7 @@ type Repository interface {
 	GetByIDKecamatan(ctx context.Context, id int64) (*models.MasterAlamatKecamatan, error)
 	ListKecamatan(ctx context.Context, page, pageSize int, kotaKabupatenID *int64, filter *dto.FilterKecamatanRequest) ([]models.MasterAlamatKecamatan, int64, error)
 	UpdateKecamatan(ctx context.Context, m *models.MasterAlamatKecamatan) error
-	DeleteKecamatan(ctx context.Context, id int64) error
+	DeleteKecamatan(ctx context.Context, id int64, deletedBy int64) error
 	ExistsKecamatanByCode(ctx context.Context, code string, excludeID *int64) (bool, error)
 	// tambahan
 	CountDesaByKecamatanID(ctx context.Context, kecamatanID int64) (int64, error)
@@ -59,7 +59,7 @@ type Repository interface {
 	GetByIDKelurahanDesa(ctx context.Context, id int64) (*models.MasterAlamatKelurahanDesa, error)
 	ListKelurahanDesa(ctx context.Context, page, pageSize int, kecamatanID *int64, filter *dto.FilterKelurahanDesaRequest) ([]models.MasterAlamatKelurahanDesa, int64, error)
 	UpdateKelurahanDesa(ctx context.Context, m *models.MasterAlamatKelurahanDesa) error
-	DeleteKelurahanDesa(ctx context.Context, id int64) error
+	DeleteKelurahanDesa(ctx context.Context, id int64, deletedBy int64) error
 	ExistsKelurahanDesaByCode(ctx context.Context, code string, excludeID *int64) (bool, error)
 	//--------------------------------------------------------------
 }

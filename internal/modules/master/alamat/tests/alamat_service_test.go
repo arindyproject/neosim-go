@@ -337,7 +337,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteNegara_Superadmin_Success() {
 	existing.ID = 1
 
 	s.repo.On("GetByIDNegara", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteNegara", int64(1)).Return(nil)
+	s.repo.On("DeleteNegara", int64(1), int64(1)).Return(nil)
 
 	err := s.svc.DeleteNegara(context.Background(), 1, actor)
 
@@ -374,7 +374,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteNegara_RepoError() {
 	existing.ID = 1
 
 	s.repo.On("GetByIDNegara", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteNegara", int64(1)).Return(fmt.Errorf("db error"))
+	s.repo.On("DeleteNegara", int64(1), int64(1)).Return(fmt.Errorf("db error"))
 
 	err := s.svc.DeleteNegara(context.Background(), 1, actor)
 
@@ -628,7 +628,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteProvinsi_Superadmin_Success() 
 	existing.ID = 1
 
 	s.repo.On("GetByIDProvinsi", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteProvinsi", int64(1)).Return(nil)
+	s.repo.On("DeleteProvinsi", int64(1), int64(1)).Return(nil)
 
 	err := s.svc.DeleteProvinsi(context.Background(), 1, actor)
 
@@ -665,7 +665,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteProvinsi_RepoError() {
 	existing.ID = 1
 
 	s.repo.On("GetByIDProvinsi", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteProvinsi", int64(1)).Return(fmt.Errorf("db error"))
+	s.repo.On("DeleteProvinsi", int64(1), int64(1)).Return(fmt.Errorf("db error"))
 
 	err := s.svc.DeleteProvinsi(context.Background(), 1, actor)
 
@@ -884,7 +884,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteKotaKabupaten_Superadmin_Succe
 	existing.ID = 1
 
 	s.repo.On("GetByIDKotaKabupaten", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteKotaKabupaten", int64(1)).Return(nil)
+	s.repo.On("DeleteKotaKabupaten", int64(1), int64(1)).Return(nil)
 
 	err := s.svc.DeleteKotaKabupaten(context.Background(), 1, actor)
 
@@ -921,7 +921,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteKotaKabupaten_RepoError() {
 	existing.ID = 1
 
 	s.repo.On("GetByIDKotaKabupaten", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteKotaKabupaten", int64(1)).Return(fmt.Errorf("db error"))
+	s.repo.On("DeleteKotaKabupaten", int64(1), int64(1)).Return(fmt.Errorf("db error"))
 
 	err := s.svc.DeleteKotaKabupaten(context.Background(), 1, actor)
 
@@ -1145,7 +1145,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteKecamatan_Superadmin_Success()
 	existing.ID = 1
 
 	s.repo.On("GetByIDKecamatan", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteKecamatan", int64(1)).Return(nil)
+	s.repo.On("DeleteKecamatan", int64(1), int64(1)).Return(nil)
 
 	err := s.svc.DeleteKecamatan(context.Background(), 1, actor)
 
@@ -1182,7 +1182,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteKecamatan_RepoError() {
 	existing.ID = 1
 
 	s.repo.On("GetByIDKecamatan", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteKecamatan", int64(1)).Return(fmt.Errorf("db error"))
+	s.repo.On("DeleteKecamatan", int64(1), int64(1)).Return(fmt.Errorf("db error"))
 
 	err := s.svc.DeleteKecamatan(context.Background(), 1, actor)
 
@@ -1424,7 +1424,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteKelurahanDesa_Superadmin_Succe
 	existing.ID = 1
 
 	s.repo.On("GetByIDKelurahanDesa", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteKelurahanDesa", int64(1)).Return(nil)
+	s.repo.On("DeleteKelurahanDesa", int64(1), int64(1)).Return(nil)
 
 	err := s.svc.DeleteKelurahanDesa(context.Background(), 1, actor)
 
@@ -1461,7 +1461,7 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteKelurahanDesa_RepoError() {
 	existing.ID = 1
 
 	s.repo.On("GetByIDKelurahanDesa", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteKelurahanDesa", int64(1)).Return(fmt.Errorf("db error"))
+	s.repo.On("DeleteKelurahanDesa", int64(1), int64(1)).Return(fmt.Errorf("db error"))
 
 	err := s.svc.DeleteKelurahanDesa(context.Background(), 1, actor)
 

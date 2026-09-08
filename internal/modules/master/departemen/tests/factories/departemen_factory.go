@@ -27,14 +27,30 @@ func (f *MasterDepartemenFactory) With(field string, value interface{}) *MasterD
 func (f *MasterDepartemenFactory) Make() *models.MasterDepartemen {
 	idx := rng.Intn(999999)
 	name := fmt.Sprintf("MasterDepartemen %d", idx)
+	fhirCode := fmt.Sprintf("FHIR_CODE_%d", idx)
+	fhirSystem := fmt.Sprintf("FHIR_SYSTEM_%d", idx)
 	desc := fmt.Sprintf("Deskripsi MasterDepartemen %d", idx)
 
 	if v, ok := f.overrides["name"]; ok {
 		name = v.(string)
 	}
 
+	if v, ok := f.overrides["fhir_code"]; ok {
+		fhirCode = v.(string)
+	}
+
+	if v, ok := f.overrides["fhir_system"]; ok {
+		fhirSystem = v.(string)
+	}
+
+	if v, ok := f.overrides["description"]; ok {
+		desc = v.(string)
+	}
+
 	return &models.MasterDepartemen{
 		Name:        name,
+		FhirCode:    &fhirCode,
+		FhirSystem:  &fhirSystem,
 		Description: &desc,
 	}
 }

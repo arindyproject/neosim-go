@@ -8,6 +8,7 @@ package dto
 type CreateMasterPekerjaanRequest struct {
 	Name         string  `json:"name" validate:"required,min=1,max=255"`
 	KodeKemenkes *string `json:"kode_kemenkes" validate:"omitempty,max=50"`
+	FhirCode     *string `json:"fhir_code" validate:"omitempty,max=50"`
 	Description  *string `json:"description" validate:"omitempty,max=500"`
 }
 
@@ -15,6 +16,7 @@ type CreateMasterPekerjaanRequest struct {
 type UpdateMasterPekerjaanRequest struct {
 	Name         *string `json:"name" validate:"omitempty,min=1,max=255"`
 	KodeKemenkes *string `json:"kode_kemenkes" validate:"omitempty,max=50"`
+	FhirCode     *string `json:"fhir_code" validate:"omitempty,max=50"`
 	Description  *string `json:"description" validate:"omitempty,max=500"`
 }
 
@@ -22,6 +24,7 @@ type UpdateMasterPekerjaanRequest struct {
 type FilterMasterPekerjaanRequest struct {
 	Name         string `query:"name"`
 	KodeKemenkes string `query:"kode_kemenkes"`
+	FhirCode     string `query:"fhir_code"`
 }
 
 // =========================================================================
@@ -32,6 +35,7 @@ type FilterMasterPekerjaanRequest struct {
 type CreateMasterPendidikanRequest struct {
 	Name         string  `json:"name" validate:"required,min=1,max=255"`
 	KodeKemenkes *string `json:"kode_kemenkes" validate:"omitempty,max=50"`
+	FhirCode     *string `json:"fhir_code" validate:"omitempty,max=50"`
 	Description  *string `json:"description" validate:"omitempty,max=500"`
 }
 
@@ -39,6 +43,7 @@ type CreateMasterPendidikanRequest struct {
 type UpdateMasterPendidikanRequest struct {
 	Name         *string `json:"name" validate:"omitempty,min=1,max=255"`
 	KodeKemenkes *string `json:"kode_kemenkes" validate:"omitempty,max=50"`
+	FhirCode     *string `json:"fhir_code" validate:"omitempty,max=50"`
 	Description  *string `json:"description" validate:"omitempty,max=500"`
 }
 
@@ -46,6 +51,7 @@ type UpdateMasterPendidikanRequest struct {
 type FilterMasterPendidikanRequest struct {
 	Name         string `query:"name"`
 	KodeKemenkes string `query:"kode_kemenkes"`
+	FhirCode     string `query:"fhir_code"`
 }
 
 // =========================================================================
@@ -56,6 +62,7 @@ type FilterMasterPendidikanRequest struct {
 type CreateMasterAgamaRequest struct {
 	Name         string  `json:"name" validate:"required,min=1,max=255"`
 	KodeKemenkes *string `json:"kode_kemenkes" validate:"omitempty,max=50"`
+	FhirCode     *string `json:"fhir_code" validate:"omitempty,max=50"`
 	Description  *string `json:"description" validate:"omitempty,max=500"`
 }
 
@@ -63,6 +70,7 @@ type CreateMasterAgamaRequest struct {
 type UpdateMasterAgamaRequest struct {
 	Name         *string `json:"name" validate:"omitempty,min=1,max=255"`
 	KodeKemenkes *string `json:"kode_kemenkes" validate:"omitempty,max=50"`
+	FhirCode     *string `json:"fhir_code" validate:"omitempty,max=50"`
 	Description  *string `json:"description" validate:"omitempty,max=500"`
 }
 
@@ -70,6 +78,7 @@ type UpdateMasterAgamaRequest struct {
 type FilterMasterAgamaRequest struct {
 	Name         string `query:"name"`
 	KodeKemenkes string `query:"kode_kemenkes"`
+	FhirCode     string `query:"fhir_code"`
 }
 
 // =========================================================================
@@ -80,6 +89,7 @@ type FilterMasterAgamaRequest struct {
 type CreateMasterStatusPernikahanRequest struct {
 	Name         string  `json:"name" validate:"required,min=1,max=255"`
 	KodeKemenkes *string `json:"kode_kemenkes" validate:"omitempty,max=50"`
+	FhirCode     *string `json:"fhir_code" validate:"omitempty,max=50"`
 	Description  *string `json:"description" validate:"omitempty,max=500"`
 }
 
@@ -87,6 +97,7 @@ type CreateMasterStatusPernikahanRequest struct {
 type UpdateMasterStatusPernikahanRequest struct {
 	Name         *string `json:"name" validate:"omitempty,min=1,max=255"`
 	KodeKemenkes *string `json:"kode_kemenkes" validate:"omitempty,max=50"`
+	FhirCode     *string `json:"fhir_code" validate:"omitempty,max=50"`
 	Description  *string `json:"description" validate:"omitempty,max=500"`
 }
 
@@ -94,6 +105,7 @@ type UpdateMasterStatusPernikahanRequest struct {
 type FilterMasterStatusPernikahanRequest struct {
 	Name         string `query:"name"`
 	KodeKemenkes string `query:"kode_kemenkes"`
+	FhirCode     string `query:"fhir_code"`
 }
 
 // =========================================================================
@@ -104,6 +116,7 @@ type FilterMasterStatusPernikahanRequest struct {
 type CreateMasterJenisKelaminRequest struct {
 	Name         string  `json:"name" validate:"required,min=1,max=255"`
 	KodeKemenkes *string `json:"kode_kemenkes" validate:"omitempty,max=50"`
+	FhirCode     *string `json:"fhir_code" validate:"omitempty,max=50"`
 	Description  *string `json:"description" validate:"omitempty,max=500"`
 }
 
@@ -111,6 +124,7 @@ type CreateMasterJenisKelaminRequest struct {
 type UpdateMasterJenisKelaminRequest struct {
 	Name         *string `json:"name" validate:"omitempty,min=1,max=255"`
 	KodeKemenkes *string `json:"kode_kemenkes" validate:"omitempty,max=50"`
+	FhirCode     *string `json:"fhir_code" validate:"omitempty,max=50"`
 	Description  *string `json:"description" validate:"omitempty,max=500"`
 }
 
@@ -118,6 +132,7 @@ type UpdateMasterJenisKelaminRequest struct {
 type FilterMasterJenisKelaminRequest struct {
 	Name         string `query:"name"`
 	KodeKemenkes string `query:"kode_kemenkes"`
+	FhirCode     string `query:"fhir_code"`
 }
 
 // =========================================================================
@@ -128,6 +143,7 @@ type FilterMasterJenisKelaminRequest struct {
 type CreateMasterGolonganDarahRequest struct {
 	Name         string  `json:"name" validate:"required,min=1,max=255"`
 	KodeKemenkes *string `json:"kode_kemenkes" validate:"omitempty,max=50"`
+	FhirCode     *string `json:"fhir_code" validate:"omitempty,max=50"`
 	Description  *string `json:"description" validate:"omitempty,max=500"`
 }
 
@@ -135,6 +151,7 @@ type CreateMasterGolonganDarahRequest struct {
 type UpdateMasterGolonganDarahRequest struct {
 	Name         *string `json:"name" validate:"omitempty,min=1,max=255"`
 	KodeKemenkes *string `json:"kode_kemenkes" validate:"omitempty,max=50"`
+	FhirCode     *string `json:"fhir_code" validate:"omitempty,max=50"`
 	Description  *string `json:"description" validate:"omitempty,max=500"`
 }
 
@@ -142,6 +159,7 @@ type UpdateMasterGolonganDarahRequest struct {
 type FilterMasterGolonganDarahRequest struct {
 	Name         string `query:"name"`
 	KodeKemenkes string `query:"kode_kemenkes"`
+	FhirCode     string `query:"fhir_code"`
 }
 
 // =========================================================================
@@ -152,6 +170,7 @@ type FilterMasterGolonganDarahRequest struct {
 type CreateMasterSukuRequest struct {
 	Name         string  `json:"name" validate:"required,min=1,max=255"`
 	KodeKemenkes *string `json:"kode_kemenkes" validate:"omitempty,max=50"`
+	FhirCode     *string `json:"fhir_code" validate:"omitempty,max=50"`
 	Description  *string `json:"description" validate:"omitempty,max=500"`
 }
 
@@ -159,6 +178,7 @@ type CreateMasterSukuRequest struct {
 type UpdateMasterSukuRequest struct {
 	Name         *string `json:"name" validate:"omitempty,min=1,max=255"`
 	KodeKemenkes *string `json:"kode_kemenkes" validate:"omitempty,max=50"`
+	FhirCode     *string `json:"fhir_code" validate:"omitempty,max=50"`
 	Description  *string `json:"description" validate:"omitempty,max=500"`
 }
 
@@ -166,4 +186,5 @@ type UpdateMasterSukuRequest struct {
 type FilterMasterSukuRequest struct {
 	Name         string `query:"name"`
 	KodeKemenkes string `query:"kode_kemenkes"`
+	FhirCode     string `query:"fhir_code"`
 }

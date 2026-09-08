@@ -12,6 +12,7 @@ type MasterPekerjaan struct {
 	ID           int64          `gorm:"primaryKey;autoIncrement;column:id" json:"id"`
 	Name         string         `gorm:"column:name;type:varchar(255);not null;index:idx_name_active,unique,where:deleted_at IS NULL" json:"name"`
 	KodeKemenkes *string        `gorm:"column:kode_kemenkes;type:varchar(50)" json:"kode_kemenkes"`
+	FhirCode     *string        `gorm:"column:fhir_code;type:varchar(255)" json:"fhir_code"`
 	Description  *string        `gorm:"column:description;type:text" json:"description"`
 	CreatedBy    *int64         `gorm:"column:created_by" json:"created_by"`
 	UpdatedBy    *int64         `gorm:"column:updated_by" json:"updated_by"`
@@ -30,6 +31,7 @@ type MasterPendidikan struct {
 	ID           int64          `gorm:"primaryKey;autoIncrement;column:id" json:"id"`
 	Name         string         `gorm:"column:name;type:varchar(255);not null;index:idx_pendidikan_name_active,unique,where:deleted_at IS NULL" json:"name"`
 	KodeKemenkes *string        `gorm:"column:kode_kemenkes;type:varchar(50)" json:"kode_kemenkes"`
+	FhirCode     *string        `gorm:"column:fhir_code;type:varchar(255)" json:"fhir_code"`
 	Description  *string        `gorm:"column:description;type:text" json:"description"`
 	CreatedBy    *int64         `gorm:"column:created_by" json:"created_by"`
 	UpdatedBy    *int64         `gorm:"column:updated_by" json:"updated_by"`
@@ -48,6 +50,7 @@ type MasterStatusPernikahan struct {
 	ID           int64          `gorm:"primaryKey;autoIncrement;column:id" json:"id"`
 	Name         string         `gorm:"column:name;type:varchar(255);not null;index:idx_marital_name_active,unique,where:deleted_at IS NULL" json:"name"`
 	KodeKemenkes *string        `gorm:"column:kode_kemenkes;type:varchar(50)" json:"kode_kemenkes"` // Mapping kode HL7 / SatuSehat
+	FhirCode     *string        `gorm:"column:fhir_code;type:varchar(255)" json:"fhir_code"`
 	Description  *string        `gorm:"column:description;type:text" json:"description"`
 	CreatedBy    *int64         `gorm:"column:created_by" json:"created_by"`
 	UpdatedBy    *int64         `gorm:"column:updated_by" json:"updated_by"`
@@ -66,6 +69,7 @@ type MasterAgama struct {
 	ID           int64          `gorm:"primaryKey;autoIncrement;column:id" json:"id"`
 	Name         string         `gorm:"column:name;type:varchar(255);not null;index:idx_agama_name_active,unique,where:deleted_at IS NULL" json:"name"`
 	KodeKemenkes *string        `gorm:"column:kode_kemenkes;type:varchar(50)" json:"kode_kemenkes"` // Mapping kode SatuSehat / SIRS
+	FhirCode     *string        `gorm:"column:fhir_code;type:varchar(255)" json:"fhir_code"`
 	Description  *string        `gorm:"column:description;type:text" json:"description"`
 	CreatedBy    *int64         `gorm:"column:created_by" json:"created_by"`
 	UpdatedBy    *int64         `gorm:"column:updated_by" json:"updated_by"`
@@ -84,6 +88,7 @@ type MasterJenisKelamin struct {
 	ID           int64          `gorm:"primaryKey;autoIncrement;column:id" json:"id"`
 	Name         string         `gorm:"column:name;type:varchar(255);not null;index:idx_agama_name_active,unique,where:deleted_at IS NULL" json:"name"`
 	KodeKemenkes *string        `gorm:"column:kode_kemenkes;type:varchar(50)" json:"kode_kemenkes"` // Mapping kode SatuSehat / SIRS
+	FhirCode     *string        `gorm:"column:fhir_code;type:varchar(255)" json:"fhir_code"`
 	Description  *string        `gorm:"column:description;type:text" json:"description"`
 	CreatedBy    *int64         `gorm:"column:created_by" json:"created_by"`
 	UpdatedBy    *int64         `gorm:"column:updated_by" json:"updated_by"`
@@ -102,6 +107,7 @@ type MasterGolonganDarah struct {
 	ID           int64          `gorm:"primaryKey;autoIncrement;column:id" json:"id"`
 	Name         string         `gorm:"column:name;type:varchar(255);not null;index:idx_agama_name_active,unique,where:deleted_at IS NULL" json:"name"`
 	KodeKemenkes *string        `gorm:"column:kode_kemenkes;type:varchar(50)" json:"kode_kemenkes"` // Mapping kode SatuSehat / SIRS
+	FhirCode     *string        `gorm:"column:fhir_code;type:varchar(255)" json:"fhir_code"`
 	Description  *string        `gorm:"column:description;type:text" json:"description"`
 	CreatedBy    *int64         `gorm:"column:created_by" json:"created_by"`
 	UpdatedBy    *int64         `gorm:"column:updated_by" json:"updated_by"`
@@ -120,6 +126,7 @@ type MasterSuku struct {
 	ID           int64          `gorm:"primaryKey;autoIncrement;column:id" json:"id"`
 	Name         string         `gorm:"column:name;type:varchar(255);not null;index:idx_agama_name_active,unique,where:deleted_at IS NULL" json:"name"`
 	KodeKemenkes *string        `gorm:"column:kode_kemenkes;type:varchar(50)" json:"kode_kemenkes"` // Mapping kode SatuSehat / SIRS
+	FhirCode     *string        `gorm:"column:fhir_code;type:varchar(255)" json:"fhir_code"`
 	Description  *string        `gorm:"column:description;type:text" json:"description"`
 	CreatedBy    *int64         `gorm:"column:created_by" json:"created_by"`
 	UpdatedBy    *int64         `gorm:"column:updated_by" json:"updated_by"`

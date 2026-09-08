@@ -211,7 +211,7 @@ func (s *service) DeleteNegara(ctx context.Context, id int64, actor he.AuthConte
 		return appErrors.NotFound("Negara tidak ditemukan")
 	}
 
-	err = s.repo.DeleteNegara(ctx, id)
+	err = s.repo.DeleteNegara(ctx, id, actor.UserID)
 	if err == nil {
 		// Invalidate Cache
 		ctxs := context.Background()

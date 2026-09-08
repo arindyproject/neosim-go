@@ -241,7 +241,7 @@ func (s *service) DeleteKecamatan(ctx context.Context, id int64, actor he.AuthCo
 		return appErrors.NotFound("Kecamatan tidak ditemukan")
 	}
 
-	err = s.repo.DeleteKecamatan(ctx, id)
+	err = s.repo.DeleteKecamatan(ctx, id, actor.UserID)
 	if err == nil {
 		// Invalidate Cache
 		ctxs := context.Background()

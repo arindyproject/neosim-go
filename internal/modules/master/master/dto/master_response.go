@@ -14,6 +14,7 @@ type MasterPekerjaanResponse struct {
 	ID           int64     `json:"id"`
 	Name         string    `json:"name"`
 	KodeKemenkes *string   `json:"kode_kemenkes"`
+	FhirCode     *string   `json:"fhir_code"`
 	Description  *string   `json:"description"`
 	CreatedBy    *int64    `json:"created_by"`
 	UpdatedBy    *int64    `json:"updated_by"`
@@ -27,6 +28,7 @@ func ToMasterPekerjaanResponse(m *models.MasterPekerjaan) *MasterPekerjaanRespon
 		ID:           m.ID,
 		Name:         m.Name,
 		KodeKemenkes: m.KodeKemenkes,
+		FhirCode:     m.FhirCode,
 		Description:  m.Description,
 		CreatedBy:    m.CreatedBy,
 		UpdatedBy:    m.UpdatedBy,
@@ -52,6 +54,7 @@ type MasterPendidikanResponse struct {
 	ID           int64     `json:"id"`
 	Name         string    `json:"name"`
 	KodeKemenkes *string   `json:"kode_kemenkes"`
+	FhirCode     *string   `json:"fhir_code"`
 	Description  *string   `json:"description"`
 	CreatedBy    *int64    `json:"created_by"`
 	UpdatedBy    *int64    `json:"updated_by"`
@@ -65,6 +68,7 @@ func ToMasterPendidikanResponse(m *models.MasterPendidikan) *MasterPendidikanRes
 		ID:           m.ID,
 		Name:         m.Name,
 		KodeKemenkes: m.KodeKemenkes,
+		FhirCode:     m.FhirCode,
 		Description:  m.Description,
 		CreatedBy:    m.CreatedBy,
 		UpdatedBy:    m.UpdatedBy,
@@ -90,6 +94,7 @@ type MasterStatusPernikahanResponse struct {
 	ID           int64     `json:"id"`
 	Name         string    `json:"name"`
 	KodeKemenkes *string   `json:"kode_kemenkes"`
+	FhirCode     *string   `json:"fhir_code"`
 	Description  *string   `json:"description"`
 	CreatedBy    *int64    `json:"created_by"`
 	UpdatedBy    *int64    `json:"updated_by"`
@@ -103,6 +108,7 @@ func ToMasterStatusPernikahanResponse(m *models.MasterStatusPernikahan) *MasterS
 		ID:           m.ID,
 		Name:         m.Name,
 		KodeKemenkes: m.KodeKemenkes,
+		FhirCode:     m.FhirCode,
 		Description:  m.Description,
 		CreatedBy:    m.CreatedBy,
 		UpdatedBy:    m.UpdatedBy,
@@ -128,6 +134,7 @@ type MasterAgamaResponse struct {
 	ID           int64     `json:"id"`
 	Name         string    `json:"name"`
 	KodeKemenkes *string   `json:"kode_kemenkes"`
+	FhirCode     *string   `json:"fhir_code"`
 	Description  *string   `json:"description"`
 	CreatedBy    *int64    `json:"created_by"`
 	UpdatedBy    *int64    `json:"updated_by"`
@@ -141,6 +148,7 @@ func ToMasterAgamaResponse(m *models.MasterAgama) *MasterAgamaResponse {
 		ID:           m.ID,
 		Name:         m.Name,
 		KodeKemenkes: m.KodeKemenkes,
+		FhirCode:     m.FhirCode,
 		Description:  m.Description,
 		CreatedBy:    m.CreatedBy,
 		UpdatedBy:    m.UpdatedBy,
@@ -166,6 +174,7 @@ type MasterJenisKelaminResponse struct {
 	ID           int64     `json:"id"`
 	Name         string    `json:"name"`
 	KodeKemenkes *string   `json:"kode_kemenkes"`
+	FhirCode     *string   `json:"fhir_code"`
 	Description  *string   `json:"description"`
 	CreatedBy    *int64    `json:"created_by"`
 	UpdatedBy    *int64    `json:"updated_by"`
@@ -179,6 +188,7 @@ func ToMasterJenisKelaminResponse(m *models.MasterJenisKelamin) *MasterJenisKela
 		ID:           m.ID,
 		Name:         m.Name,
 		KodeKemenkes: m.KodeKemenkes,
+		FhirCode:     m.FhirCode,
 		Description:  m.Description,
 		CreatedBy:    m.CreatedBy,
 		UpdatedBy:    m.UpdatedBy,
@@ -204,6 +214,7 @@ type MasterGolonganDarahResponse struct {
 	ID           int64     `json:"id"`
 	Name         string    `json:"name"`
 	KodeKemenkes *string   `json:"kode_kemenkes"`
+	FhirCode     *string   `json:"fhir_code"`
 	Description  *string   `json:"description"`
 	CreatedBy    *int64    `json:"created_by"`
 	UpdatedBy    *int64    `json:"updated_by"`
@@ -217,6 +228,7 @@ func ToMasterGolonganDarahResponse(m *models.MasterGolonganDarah) *MasterGolonga
 		ID:           m.ID,
 		Name:         m.Name,
 		KodeKemenkes: m.KodeKemenkes,
+		FhirCode:     m.FhirCode,
 		Description:  m.Description,
 		CreatedBy:    m.CreatedBy,
 		UpdatedBy:    m.UpdatedBy,
@@ -242,6 +254,7 @@ type MasterSukuResponse struct {
 	ID           int64     `json:"id"`
 	Name         string    `json:"name"`
 	KodeKemenkes *string   `json:"kode_kemenkes"`
+	FhirCode     *string   `json:"fhir_code"`
 	Description  *string   `json:"description"`
 	CreatedBy    *int64    `json:"created_by"`
 	UpdatedBy    *int64    `json:"updated_by"`
@@ -255,6 +268,7 @@ func ToMasterSukuResponse(m *models.MasterSuku) *MasterSukuResponse {
 		ID:           m.ID,
 		Name:         m.Name,
 		KodeKemenkes: m.KodeKemenkes,
+		FhirCode:     m.FhirCode,
 		Description:  m.Description,
 		CreatedBy:    m.CreatedBy,
 		UpdatedBy:    m.UpdatedBy,

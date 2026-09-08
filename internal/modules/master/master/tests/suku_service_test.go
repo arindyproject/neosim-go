@@ -267,7 +267,7 @@ func (s *MasterServiceTestSuite) Test_DeleteSuku_Superadmin_Success() {
 	existing.ID = 1
 
 	s.repo.On("GetByIDSuku", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteSuku", int64(1)).Return(nil)
+	s.repo.On("DeleteSuku", int64(1), actor.UserID).Return(nil)
 
 	err := s.svc.DeleteSuku(context.Background(), 1, actor)
 
@@ -304,7 +304,7 @@ func (s *MasterServiceTestSuite) Test_DeleteSuku_RepoError() {
 	existing.ID = 1
 
 	s.repo.On("GetByIDSuku", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteSuku", int64(1)).Return(fmt.Errorf("db error"))
+	s.repo.On("DeleteSuku", int64(1), actor.UserID).Return(fmt.Errorf("db error"))
 
 	err := s.svc.DeleteSuku(context.Background(), 1, actor)
 

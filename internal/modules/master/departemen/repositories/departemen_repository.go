@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"errors"
+	"time"
 
 	"neosim_go/internal/modules/master/departemen/dto"
 	"neosim_go/internal/modules/master/departemen/models"
@@ -36,6 +37,14 @@ func (r *repository) ListDepartemen(ctx context.Context, page, pageSize int, fil
 		query = query.Where("name ILIKE ?", "%"+filter.Name+"%")
 	}
 
+	if filter.FhirCode != nil {
+		query = query.Where("fhir_code ILIKE ?", "%"+*filter.FhirCode+"%")
+	}
+
+	if filter.FhirSystem != nil {
+		query = query.Where("fhir_system ILIKE ?", "%"+*filter.FhirSystem+"%")
+	}
+
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
@@ -48,13 +57,18 @@ func (r *repository) ListDepartemen(ctx context.Context, page, pageSize int, fil
 	return items, total, nil
 }
 
-
 // ── Update ────────────────────────────────────────────────────────────────────
 func (r *repository) UpdateDepartemen(ctx context.Context, m *models.MasterDepartemen) error {
 	return r.db.WithContext(ctx).Save(m).Error
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
-func (r *repository) DeleteDepartemen(ctx context.Context, id int64) error {
-	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&models.MasterDepartemen{}).Error
+func (r *repository) DeleteDepartemen(ctx context.Context, id int64, deletedBy int64) error {
+	return r.db.WithContext(ctx).
+		Model(&models.MasterDepartemen{}).
+		Where("id = ? AND deleted_at IS NULL", id).
+		Updates(map[string]any{
+			"deleted_at": time.Now(),
+			"updated_by": deletedBy,
+		}).Error
 }

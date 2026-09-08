@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"errors"
+	"time"
 
 	"neosim_go/internal/modules/master/alamat/dto"
 	"neosim_go/internal/modules/master/alamat/models"
@@ -55,8 +56,14 @@ func (r *repository) UpdateNegara(ctx context.Context, m *models.MasterAlamatNeg
 	return r.db.WithContext(ctx).Save(m).Error
 }
 
-func (r *repository) DeleteNegara(ctx context.Context, id int64) error {
-	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&models.MasterAlamatNegara{}).Error
+func (r *repository) DeleteNegara(ctx context.Context, id int64, deletedBy int64) error {
+	return r.db.WithContext(ctx).
+		Model(&models.MasterAlamatNegara{}).
+		Where("id = ? AND deleted_at IS NULL", id).
+		Updates(map[string]any{
+			"deleted_at": time.Now(),
+			"updated_by": deletedBy,
+		}).Error
 }
 
 func (r *repository) ExistsNegaraByCode(ctx context.Context, code string, excludeID *int64) (bool, error) {

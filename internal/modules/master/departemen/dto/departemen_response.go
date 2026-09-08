@@ -1,27 +1,28 @@
 package dto
 
 import (
-
 	"neosim_go/internal/modules/master/departemen/models"
-	"neosim_go/internal/shared/types"
 	he "neosim_go/internal/shared/httputil"
+	"neosim_go/internal/shared/types"
 )
 
 // MasterDepartemenResponse response untuk single MasterDepartemen
 type MasterDepartemenResponse struct {
-	ID          int64     `json:"id"`
-	Name        string    `json:"name"`
-	Description *string   `json:"description"`
-	CreatedBy   *he.UserData `json:"created_by"`
-	UpdatedBy   *he.UserData `json:"updated_by"`
+	ID          int64            `json:"id"`
+	Name        string           `json:"name"`
+	FhirCode    *string          `json:"fhir_code"`
+	FhirSystem  *string          `json:"fhir_system"`
+	Description *string          `json:"description"`
+	CreatedBy   *he.UserData     `json:"created_by"`
+	UpdatedBy   *he.UserData     `json:"updated_by"`
 	CreatedAt   types.CustomTime `json:"created_at"`
 	UpdatedAt   types.CustomTime `json:"updated_at"`
 }
 
 type MasterDepartemenResponseParams struct {
 	MasterDepartemen *models.MasterDepartemen
-	Creator         *he.UserData
-	Updater         *he.UserData
+	Creator          *he.UserData
+	Updater          *he.UserData
 }
 
 // ToMasterDepartemenResponse mengubah model menjadi response
@@ -29,6 +30,8 @@ func ToMasterDepartemenResponse(params MasterDepartemenResponseParams) *MasterDe
 	return &MasterDepartemenResponse{
 		ID:          params.MasterDepartemen.ID,
 		Name:        params.MasterDepartemen.Name,
+		FhirCode:    params.MasterDepartemen.FhirCode,
+		FhirSystem:  params.MasterDepartemen.FhirSystem,
 		Description: params.MasterDepartemen.Description,
 		CreatedBy:   params.Creator,
 		UpdatedBy:   params.Updater,
@@ -57,8 +60,8 @@ func ToMasterDepartemenListResponse(
 
 		responses = append(responses, *ToMasterDepartemenResponse(MasterDepartemenResponseParams{
 			MasterDepartemen: &m,
-			Creator:    creator,
-			Updater:    updater,
+			Creator:          creator,
+			Updater:          updater,
 		}))
 	}
 

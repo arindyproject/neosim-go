@@ -238,7 +238,7 @@ func (s *service) DeleteKelurahanDesa(ctx context.Context, id int64, actor he.Au
 		return appErrors.NotFound("Kelurahan/Desa tidak ditemukan")
 	}
 
-	err = s.repo.DeleteKelurahanDesa(ctx, id)
+	err = s.repo.DeleteKelurahanDesa(ctx, id, actor.UserID)
 	if err == nil {
 		// Invalidate Cache
 		ctxs := context.Background()

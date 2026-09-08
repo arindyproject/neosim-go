@@ -267,7 +267,7 @@ func (s *MasterServiceTestSuite) Test_DeleteGolonganDarah_Superadmin_Success() {
 	existing.ID = 1
 
 	s.repo.On("GetByIDGolonganDarah", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteGolonganDarah", int64(1)).Return(nil)
+	s.repo.On("DeleteGolonganDarah", int64(1), actor.UserID).Return(nil)
 
 	err := s.svc.DeleteGolonganDarah(context.Background(), 1, actor)
 
@@ -304,7 +304,7 @@ func (s *MasterServiceTestSuite) Test_DeleteGolonganDarah_RepoError() {
 	existing.ID = 1
 
 	s.repo.On("GetByIDGolonganDarah", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteGolonganDarah", int64(1)).Return(fmt.Errorf("db error"))
+	s.repo.On("DeleteGolonganDarah", int64(1), actor.UserID).Return(fmt.Errorf("db error"))
 
 	err := s.svc.DeleteGolonganDarah(context.Background(), 1, actor)
 

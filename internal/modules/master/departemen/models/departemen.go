@@ -10,6 +10,8 @@ import (
 type MasterDepartemen struct {
 	ID          int64          `gorm:"primaryKey;autoIncrement;column:id" json:"id"`
 	Name        string         `gorm:"column:name;type:varchar(255);not null" json:"name"`
+	FhirCode    *string        `gorm:"column:fhir_code;type:varchar(255)" json:"fhir_code"`
+	FhirSystem  *string        `gorm:"column:fhir_system;type:varchar(255)" json:"fhir_system"`
 	Description *string        `gorm:"column:description;type:text" json:"description"`
 	CreatedBy   *int64         `gorm:"column:created_by" json:"created_by"`
 	UpdatedBy   *int64         `gorm:"column:updated_by" json:"updated_by"`

@@ -412,7 +412,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_DeleteDepartemen_Superadmin_Succ
 	existing.ID = 1
 
 	s.repo.On("GetDepartemenByID", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteDepartemen", int64(1)).Return(nil)
+	s.repo.On("DeleteDepartemen", int64(1), actor.UserID).Return(nil)
 
 	err := s.svc.DeleteDepartemen(context.Background(), 1, actor)
 
@@ -427,7 +427,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_DeleteDepartemen_WithPermission_
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyDelete).Return(true, nil)
 	s.repo.On("GetDepartemenByID", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteDepartemen", int64(1)).Return(nil)
+	s.repo.On("DeleteDepartemen", int64(1), actor.UserID).Return(nil)
 
 	err := s.svc.DeleteDepartemen(context.Background(), 1, actor)
 
@@ -463,7 +463,7 @@ func (s *MasterDepartemenServiceTestSuite) Test_DeleteDepartemen_RepoError() {
 	existing.ID = 1
 
 	s.repo.On("GetDepartemenByID", int64(1)).Return(existing, nil)
-	s.repo.On("DeleteDepartemen", int64(1)).Return(fmt.Errorf("db error"))
+	s.repo.On("DeleteDepartemen", int64(1), int64(1)).Return(fmt.Errorf("db error"))
 
 	err := s.svc.DeleteDepartemen(context.Background(), 1, actor)
 

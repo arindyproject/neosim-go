@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"errors"
+	"time"
 
 	"neosim_go/internal/modules/master/alamat/dto"
 	"neosim_go/internal/modules/master/alamat/models"
@@ -58,8 +59,14 @@ func (r *repository) UpdateProvinsi(ctx context.Context, m *models.MasterAlamatP
 	return r.db.WithContext(ctx).Save(m).Error
 }
 
-func (r *repository) DeleteProvinsi(ctx context.Context, id int64) error {
-	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&models.MasterAlamatProvinsi{}).Error
+func (r *repository) DeleteProvinsi(ctx context.Context, id int64, deletedBy int64) error {
+	return r.db.WithContext(ctx).
+		Model(&models.MasterAlamatProvinsi{}).
+		Where("id = ? AND deleted_at IS NULL", id).
+		Updates(map[string]any{
+			"deleted_at": time.Now(),
+			"updated_by": deletedBy,
+		}).Error
 }
 
 func (r *repository) ExistsProvinsiByCode(ctx context.Context, code string, excludeID *int64) (bool, error) {

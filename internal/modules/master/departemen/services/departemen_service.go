@@ -13,8 +13,8 @@ import (
 )
 
 // ── Create ────────────────────────────────────────────────────────────────────
-func (s *service) CreateDepartemen(ctx context.Context,req *dto.CreateMasterDepartemenRequest, actor he.AuthContext) (*dto.MasterDepartemenResponse, error) {
-	can, err := s.canCreateMasterDepartemen(ctx,actor)
+func (s *service) CreateDepartemen(ctx context.Context, req *dto.CreateMasterDepartemenRequest, actor he.AuthContext) (*dto.MasterDepartemenResponse, error) {
+	can, err := s.canCreateMasterDepartemen(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -25,27 +25,28 @@ func (s *service) CreateDepartemen(ctx context.Context,req *dto.CreateMasterDepa
 
 	m := &models.MasterDepartemen{
 		Name:        req.Name,
+		FhirCode:    req.FhirCode,
+		FhirSystem:  req.FhirSystem,
 		Description: req.Description,
 		CreatedBy:   &actor.UserID,
 		UpdatedBy:   &actor.UserID,
 	}
-	if err := s.repo.CreateDepartemen(ctx,m); err != nil {
+	if err := s.repo.CreateDepartemen(ctx, m); err != nil {
 		return nil, err
 	}
-	
-	creator := s.buildCreator(ctx,m.CreatedBy)
+
+	creator := s.buildCreator(ctx, m.CreatedBy)
 
 	return dto.ToMasterDepartemenResponse(dto.MasterDepartemenResponseParams{
 		MasterDepartemen: m,
-		Creator:    creator,
-		Updater:    creator,
+		Creator:          creator,
+		Updater:          creator,
 	}), nil
 }
 
-
 // ── GetByID ───────────────────────────────────────────────────────────────────
-func (s *service) GetDepartemenByID(ctx context.Context,id int64, actor he.AuthContext) (*dto.MasterDepartemenResponse, error) {
-	can, err := s.canReadMasterDepartemen(ctx,actor)
+func (s *service) GetDepartemenByID(ctx context.Context, id int64, actor he.AuthContext) (*dto.MasterDepartemenResponse, error) {
+	can, err := s.canReadMasterDepartemen(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -54,28 +55,27 @@ func (s *service) GetDepartemenByID(ctx context.Context,id int64, actor he.AuthC
 			"Akses ditolak. Anda tidak memiliki hak akses untuk Melihat MasterDepartemen.", nil)
 	}
 
-	m, err := s.repo.GetDepartemenByID(ctx,id)
+	m, err := s.repo.GetDepartemenByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 	if m == nil {
 		return nil, errors.New("MasterDepartemen tidak ditemukan")
 	}
-	
-	creator := s.buildCreator(ctx,m.CreatedBy)
-	updater := s.buildCreator(ctx,m.UpdatedBy)
+
+	creator := s.buildCreator(ctx, m.CreatedBy)
+	updater := s.buildCreator(ctx, m.UpdatedBy)
 
 	return dto.ToMasterDepartemenResponse(dto.MasterDepartemenResponseParams{
 		MasterDepartemen: m,
-		Creator:    creator,
-		Updater:    updater,
+		Creator:          creator,
+		Updater:          updater,
 	}), nil
 }
 
-
 // ── List ──────────────────────────────────────────────────────────────────────
-func (s *service) ListDepartemen(ctx context.Context,page, pageSize int, filter *dto.FilterMasterDepartemenRequest, actor he.AuthContext) ([]dto.MasterDepartemenResponse, int64, error) {
-	can, err := s.canReadMasterDepartemen(ctx,actor)
+func (s *service) ListDepartemen(ctx context.Context, page, pageSize int, filter *dto.FilterMasterDepartemenRequest, actor he.AuthContext) ([]dto.MasterDepartemenResponse, int64, error) {
+	can, err := s.canReadMasterDepartemen(ctx, actor)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal cek akses")
 	}
@@ -90,7 +90,7 @@ func (s *service) ListDepartemen(ctx context.Context,page, pageSize int, filter 
 	if pageSize < 1 || pageSize > s.cfg.DefaultPageSizeMax {
 		pageSize = s.cfg.DefaultPageSizeMax
 	}
-	items, total, err := s.repo.ListDepartemen(ctx,page, pageSize, filter)
+	items, total, err := s.repo.ListDepartemen(ctx, page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -99,10 +99,9 @@ func (s *service) ListDepartemen(ctx context.Context,page, pageSize int, filter 
 	return dto.ToMasterDepartemenListResponse(items, creatorsMap, updatersMap), total, nil
 }
 
-
 // ── Update ────────────────────────────────────────────────────────────────────
-func (s *service) UpdateDepartemen(ctx context.Context,id int64, req *dto.UpdateMasterDepartemenRequest, actor he.AuthContext) (*dto.MasterDepartemenResponse, error) {
-	can, err := s.canUpdateMasterDepartemen(ctx,actor)
+func (s *service) UpdateDepartemen(ctx context.Context, id int64, req *dto.UpdateMasterDepartemenRequest, actor he.AuthContext) (*dto.MasterDepartemenResponse, error) {
+	can, err := s.canUpdateMasterDepartemen(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -111,7 +110,7 @@ func (s *service) UpdateDepartemen(ctx context.Context,id int64, req *dto.Update
 			"Akses ditolak. Anda tidak memiliki hak akses untuk mengubah MasterDepartemen.", nil)
 	}
 
-	m, err := s.repo.GetDepartemenByID(ctx,id)
+	m, err := s.repo.GetDepartemenByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -121,29 +120,35 @@ func (s *service) UpdateDepartemen(ctx context.Context,id int64, req *dto.Update
 	if req.Name != nil {
 		m.Name = *req.Name
 	}
+	if req.FhirCode != nil {
+		m.FhirCode = req.FhirCode
+	}
+	if req.FhirSystem != nil {
+		m.FhirSystem = req.FhirSystem
+	}
 	if req.Description != nil {
 		m.Description = req.Description
 	}
 	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()
 
-	if err := s.repo.UpdateDepartemen(ctx,m); err != nil {
+	if err := s.repo.UpdateDepartemen(ctx, m); err != nil {
 		return nil, err
 	}
-	
-	creator := s.buildCreator(ctx,m.CreatedBy)
-	updater := s.buildCreator(ctx,m.UpdatedBy)
+
+	creator := s.buildCreator(ctx, m.CreatedBy)
+	updater := s.buildCreator(ctx, m.UpdatedBy)
 
 	return dto.ToMasterDepartemenResponse(dto.MasterDepartemenResponseParams{
 		MasterDepartemen: m,
-		Creator:    creator,
-		Updater:    updater,
+		Creator:          creator,
+		Updater:          updater,
 	}), nil
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
-func (s *service) DeleteDepartemen(ctx context.Context,id int64, actor he.AuthContext) error {
-	can, err := s.canDeleteMasterDepartemen(ctx,actor)
+func (s *service) DeleteDepartemen(ctx context.Context, id int64, actor he.AuthContext) error {
+	can, err := s.canDeleteMasterDepartemen(ctx, actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
 	}
@@ -152,12 +157,12 @@ func (s *service) DeleteDepartemen(ctx context.Context,id int64, actor he.AuthCo
 			"Akses ditolak. Anda tidak memiliki hak akses untuk menghapus MasterDepartemen.", nil)
 	}
 
-	m, err := s.repo.GetDepartemenByID(ctx,id)
+	m, err := s.repo.GetDepartemenByID(ctx, id)
 	if err != nil {
 		return err
 	}
 	if m == nil {
 		return errors.New("MasterDepartemen tidak ditemukan")
 	}
-	return s.repo.DeleteDepartemen(ctx,id)
+	return s.repo.DeleteDepartemen(ctx, id, actor.UserID)
 }

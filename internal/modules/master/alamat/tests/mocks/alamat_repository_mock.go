@@ -38,8 +38,8 @@ func (m *MasterAlamatRepositoryMock) UpdateNegara(ctx context.Context, item *mod
 	return args.Error(0)
 }
 
-func (m *MasterAlamatRepositoryMock) DeleteNegara(ctx context.Context, id int64) error {
-	args := m.Called(id)
+func (m *MasterAlamatRepositoryMock) DeleteNegara(ctx context.Context, id int64, deletedBy int64) error {
+	args := m.Called(id, deletedBy)
 	return args.Error(0)
 }
 
@@ -73,8 +73,8 @@ func (m *MasterAlamatRepositoryMock) UpdateProvinsi(ctx context.Context, item *m
 	return args.Error(0)
 }
 
-func (m *MasterAlamatRepositoryMock) DeleteProvinsi(ctx context.Context, id int64) error {
-	args := m.Called(id)
+func (m *MasterAlamatRepositoryMock) DeleteProvinsi(ctx context.Context, id int64, deletedBy int64) error {
+	args := m.Called(id, deletedBy)
 	return args.Error(0)
 }
 
@@ -123,8 +123,8 @@ func (m *MasterAlamatRepositoryMock) UpdateKotaKabupaten(ctx context.Context, it
 	return args.Error(0)
 }
 
-func (m *MasterAlamatRepositoryMock) DeleteKotaKabupaten(ctx context.Context, id int64) error {
-	args := m.Called(id)
+func (m *MasterAlamatRepositoryMock) DeleteKotaKabupaten(ctx context.Context, id int64, deletedBy int64) error {
+	args := m.Called(id, deletedBy)
 	return args.Error(0)
 }
 
@@ -168,8 +168,8 @@ func (m *MasterAlamatRepositoryMock) UpdateKecamatan(ctx context.Context, item *
 	return args.Error(0)
 }
 
-func (m *MasterAlamatRepositoryMock) DeleteKecamatan(ctx context.Context, id int64) error {
-	args := m.Called(id)
+func (m *MasterAlamatRepositoryMock) DeleteKecamatan(ctx context.Context, id int64, deletedBy int64) error {
+	args := m.Called(id, deletedBy)
 	return args.Error(0)
 }
 
@@ -208,8 +208,8 @@ func (m *MasterAlamatRepositoryMock) UpdateKelurahanDesa(ctx context.Context, it
 	return args.Error(0)
 }
 
-func (m *MasterAlamatRepositoryMock) DeleteKelurahanDesa(ctx context.Context, id int64) error {
-	args := m.Called(id)
+func (m *MasterAlamatRepositoryMock) DeleteKelurahanDesa(ctx context.Context, id int64, deletedBy int64) error {
+	args := m.Called(id, deletedBy)
 	return args.Error(0)
 }
 

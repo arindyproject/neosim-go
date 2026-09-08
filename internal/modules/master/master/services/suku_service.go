@@ -105,6 +105,7 @@ func (s *service) CreateSuku(ctx context.Context, req *dto.CreateMasterSukuReque
 	m := &models.MasterSuku{
 		KodeKemenkes: req.KodeKemenkes,
 		Name:         req.Name,
+		FhirCode:     req.FhirCode,
 		Description:  req.Description,
 		CreatedBy:    &actor.UserID,
 		UpdatedBy:    &actor.UserID,
@@ -158,6 +159,9 @@ func (s *service) UpdateSuku(ctx context.Context, id int64, req *dto.UpdateMaste
 	if req.Name != nil {
 		existing.Name = *req.Name
 	}
+	if req.FhirCode != nil {
+		existing.FhirCode = req.FhirCode
+	}
 	if req.Description != nil {
 		existing.Description = req.Description
 	}
@@ -196,7 +200,7 @@ func (s *service) DeleteSuku(ctx context.Context, id int64, actor he.AuthContext
 	}
 
 	// delete
-	err = s.repo.DeleteSuku(ctx, id)
+	err = s.repo.DeleteSuku(ctx, id, actor.UserID)
 	if err != nil {
 		return err
 	}

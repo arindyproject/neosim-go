@@ -32,6 +32,7 @@ func (f *PekerjaanFactory) Make() *models.MasterPekerjaan {
 	kodeKemenkes := fmt.Sprintf("N%d", idx%100)
 	name := fmt.Sprintf("Negara %d", idx)
 	desc := fmt.Sprintf("Deskripsi Negara %d", idx)
+	fhir_code := fmt.Sprintf("F%d", idx%100)
 
 	if v, ok := f.overrides["kode_kemenkes"]; ok {
 		kodeKemenkes = v.(string)
@@ -39,10 +40,14 @@ func (f *PekerjaanFactory) Make() *models.MasterPekerjaan {
 	if v, ok := f.overrides["name"]; ok {
 		name = v.(string)
 	}
+	if v, ok := f.overrides["fhir_code"]; ok {
+		fhir_code = v.(string)
+	}
 
 	return &models.MasterPekerjaan{
 		KodeKemenkes: &kodeKemenkes,
 		Name:         name,
+		FhirCode:     &fhir_code,
 		Description:  &desc,
 	}
 }
@@ -77,6 +82,7 @@ func (f *PendidikanFactory) Make() *models.MasterPendidikan {
 	kodeKemenkes := fmt.Sprintf("N%d", idx%100)
 	name := fmt.Sprintf("Negara %d", idx)
 	desc := fmt.Sprintf("Deskripsi Negara %d", idx)
+	fhir_code := fmt.Sprintf("F%d", idx%100)
 
 	if v, ok := f.overrides["kode_kemenkes"]; ok {
 		kodeKemenkes = v.(string)
@@ -84,10 +90,14 @@ func (f *PendidikanFactory) Make() *models.MasterPendidikan {
 	if v, ok := f.overrides["name"]; ok {
 		name = v.(string)
 	}
+	if v, ok := f.overrides["fhir_code"]; ok {
+		fhir_code = v.(string)
+	}
 
 	return &models.MasterPendidikan{
 		KodeKemenkes: &kodeKemenkes,
 		Name:         name,
+		FhirCode:     &fhir_code,
 		Description:  &desc,
 	}
 }
@@ -122,6 +132,7 @@ func (f *AgamaFactory) Make() *models.MasterAgama {
 	kodeKemenkes := fmt.Sprintf("N%d", idx%100)
 	name := fmt.Sprintf("Negara %d", idx)
 	desc := fmt.Sprintf("Deskripsi Negara %d", idx)
+	fhir_code := fmt.Sprintf("F%d", idx%100)
 
 	if v, ok := f.overrides["kode_kemenkes"]; ok {
 		kodeKemenkes = v.(string)
@@ -129,10 +140,14 @@ func (f *AgamaFactory) Make() *models.MasterAgama {
 	if v, ok := f.overrides["name"]; ok {
 		name = v.(string)
 	}
+	if v, ok := f.overrides["fhir_code"]; ok {
+		fhir_code = v.(string)
+	}
 
 	return &models.MasterAgama{
 		KodeKemenkes: &kodeKemenkes,
 		Name:         name,
+		FhirCode:     &fhir_code,
 		Description:  &desc,
 	}
 }
@@ -167,6 +182,7 @@ func (f *StatusPernikahanFactory) Make() *models.MasterStatusPernikahan {
 	kodeKemenkes := fmt.Sprintf("N%d", idx%100)
 	name := fmt.Sprintf("Negara %d", idx)
 	desc := fmt.Sprintf("Deskripsi Negara %d", idx)
+	fhir_code := fmt.Sprintf("F%d", idx%100)
 
 	if v, ok := f.overrides["kode_kemenkes"]; ok {
 		kodeKemenkes = v.(string)
@@ -174,10 +190,14 @@ func (f *StatusPernikahanFactory) Make() *models.MasterStatusPernikahan {
 	if v, ok := f.overrides["name"]; ok {
 		name = v.(string)
 	}
+	if v, ok := f.overrides["fhir_code"]; ok {
+		fhir_code = v.(string)
+	}
 
 	return &models.MasterStatusPernikahan{
 		KodeKemenkes: &kodeKemenkes,
 		Name:         name,
+		FhirCode:     &fhir_code,
 		Description:  &desc,
 	}
 }
@@ -211,6 +231,7 @@ func (f *SukuFactory) Make() *models.MasterSuku {
 	id := rng.Intn(999999)
 	name := fmt.Sprintf("Suku %d", id)
 	desc := fmt.Sprintf("Deskripsi Suku %d", id)
+	fhir_code := fmt.Sprintf("F%d", id%100)
 
 	if v, ok := f.overrides["name"]; ok {
 		name = v.(string)
@@ -218,9 +239,13 @@ func (f *SukuFactory) Make() *models.MasterSuku {
 	if v, ok := f.overrides["description"]; ok {
 		desc = v.(string)
 	}
+	if v, ok := f.overrides["fhir_code"]; ok {
+		fhir_code = v.(string)
+	}
 
 	return &models.MasterSuku{
 		Name:        name,
+		FhirCode:    &fhir_code,
 		Description: &desc,
 	}
 }
@@ -254,6 +279,7 @@ func (f *GolonganDarahFactory) Make() *models.MasterGolonganDarah {
 	id := rng.Intn(999999)
 	name := fmt.Sprintf("Golongan Darah %d", id%10)
 	desc := fmt.Sprintf("Deskripsi Golongan Darah %d", id)
+	fhir_code := fmt.Sprintf("F%d", id%100)
 
 	if v, ok := f.overrides["name"]; ok {
 		name = v.(string)
@@ -261,9 +287,13 @@ func (f *GolonganDarahFactory) Make() *models.MasterGolonganDarah {
 	if v, ok := f.overrides["description"]; ok {
 		desc = v.(string)
 	}
+	if v, ok := f.overrides["fhir_code"]; ok {
+		fhir_code = v.(string)
+	}
 
 	return &models.MasterGolonganDarah{
 		Name:        name,
+		FhirCode:    &fhir_code,
 		Description: &desc,
 	}
 }
@@ -300,6 +330,7 @@ func (f *JenisKelaminFactory) Make() *models.MasterJenisKelamin {
 		name = "Perempuan"
 	}
 	desc := fmt.Sprintf("Deskripsi Jenis Kelamin %d", id)
+	fhir_code := fmt.Sprintf("F%d", id%100)
 
 	if v, ok := f.overrides["name"]; ok {
 		name = v.(string)
@@ -307,9 +338,13 @@ func (f *JenisKelaminFactory) Make() *models.MasterJenisKelamin {
 	if v, ok := f.overrides["description"]; ok {
 		desc = v.(string)
 	}
+	if v, ok := f.overrides["fhir_code"]; ok {
+		fhir_code = v.(string)
+	}
 
 	return &models.MasterJenisKelamin{
 		Name:        name,
+		FhirCode:    &fhir_code,
 		Description: &desc,
 	}
 }

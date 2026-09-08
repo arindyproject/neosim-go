@@ -246,7 +246,7 @@ func (s *service) DeleteKotaKabupaten(ctx context.Context, id int64, actor he.Au
 		return appErrors.NotFound("Kota/Kabupaten tidak ditemukan")
 	}
 
-	err = s.repo.DeleteKotaKabupaten(ctx, id)
+	err = s.repo.DeleteKotaKabupaten(ctx, id, actor.UserID)
 	if err == nil {
 		// Invalidate Cache
 		ctxs := context.Background()

@@ -2,9 +2,10 @@ package mocks
 
 import (
 	"context"
-	"github.com/stretchr/testify/mock"
 	"neosim_go/internal/modules/master/departemen/dto"
 	"neosim_go/internal/modules/master/departemen/models"
+
+	"github.com/stretchr/testify/mock"
 )
 
 // MasterDepartemenRepositoryMock is a mock implementation of contracts.Repository.
@@ -46,7 +47,7 @@ func (m *MasterDepartemenRepositoryMock) UpdateDepartemen(ctx context.Context, i
 	return args.Error(0)
 }
 
-func (m *MasterDepartemenRepositoryMock) DeleteDepartemen(ctx context.Context, id int64) error {
-	args := m.Called(id)
+func (m *MasterDepartemenRepositoryMock) DeleteDepartemen(ctx context.Context, id int64, deletedBy int64) error {
+	args := m.Called(id, deletedBy)
 	return args.Error(0)
 }

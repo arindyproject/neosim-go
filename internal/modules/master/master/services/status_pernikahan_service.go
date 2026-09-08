@@ -105,6 +105,7 @@ func (s *service) CreateStatusPernikahan(ctx context.Context, req *dto.CreateMas
 	m := &models.MasterStatusPernikahan{
 		KodeKemenkes: req.KodeKemenkes,
 		Name:         req.Name,
+		FhirCode:     req.FhirCode,
 		Description:  req.Description,
 		CreatedBy:    &actor.UserID,
 		UpdatedBy:    &actor.UserID,
@@ -158,6 +159,9 @@ func (s *service) UpdateStatusPernikahan(ctx context.Context, id int64, req *dto
 	if req.Name != nil {
 		existing.Name = *req.Name
 	}
+	if req.FhirCode != nil {
+		existing.FhirCode = req.FhirCode
+	}
 	if req.Description != nil {
 		existing.Description = req.Description
 	}
@@ -196,7 +200,7 @@ func (s *service) DeleteStatusPernikahan(ctx context.Context, id int64, actor he
 	}
 
 	// delete
-	err = s.repo.DeleteStatusPernikahan(ctx, id)
+	err = s.repo.DeleteStatusPernikahan(ctx, id, actor.UserID)
 	if err != nil {
 		return err
 	}

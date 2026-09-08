@@ -105,6 +105,7 @@ func (s *service) CreateJenisKelamin(ctx context.Context, req *dto.CreateMasterJ
 	m := &models.MasterJenisKelamin{
 		KodeKemenkes: req.KodeKemenkes,
 		Name:         req.Name,
+		FhirCode:     req.FhirCode,
 		Description:  req.Description,
 		CreatedBy:    &actor.UserID,
 		UpdatedBy:    &actor.UserID,
@@ -158,6 +159,9 @@ func (s *service) UpdateJenisKelamin(ctx context.Context, id int64, req *dto.Upd
 	if req.Name != nil {
 		existing.Name = *req.Name
 	}
+	if req.FhirCode != nil {
+		existing.FhirCode = req.FhirCode
+	}
 	if req.Description != nil {
 		existing.Description = req.Description
 	}
@@ -196,7 +200,7 @@ func (s *service) DeleteJenisKelamin(ctx context.Context, id int64, actor he.Aut
 	}
 
 	// delete
-	err = s.repo.DeleteJenisKelamin(ctx, id)
+	err = s.repo.DeleteJenisKelamin(ctx, id, actor.UserID)
 	if err != nil {
 		return err
 	}
