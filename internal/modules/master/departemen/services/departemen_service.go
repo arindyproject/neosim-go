@@ -73,6 +73,19 @@ func (s *service) GetDepartemenByID(ctx context.Context, id int64, actor he.Auth
 	}), nil
 }
 
+// ── ListSelect ────────────────────────────────────────────────────────────────
+func (s *service) ListSelectDepartemen(ctx context.Context, search string) ([]dto.MasterDepartemenListSimpelResponse, error) {
+	items, err := s.repo.ListSelectDepartemen(ctx, search)
+	if err != nil {
+		return nil, err
+	}
+	if len(items) == 0 {
+		return nil, errors.New("MasterDepartemen tidak ditemukan")
+	}
+
+	return dto.ToMasterDepartemenListSimpelResponse(items), nil
+}
+
 // ── List ──────────────────────────────────────────────────────────────────────
 func (s *service) ListDepartemen(ctx context.Context, page, pageSize int, filter *dto.FilterMasterDepartemenRequest, actor he.AuthContext) ([]dto.MasterDepartemenResponse, int64, error) {
 	can, err := s.canReadMasterDepartemen(ctx, actor)

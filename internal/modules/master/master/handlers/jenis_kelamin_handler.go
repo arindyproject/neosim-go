@@ -10,6 +10,32 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
+// ─────────────── ListSelect ───────────────────────────────────────────────────────
+//
+//	 MasterHandler godoc
+//
+//		@Summary		Get list of JenisKelamin for select
+//		@Description	Get list of JenisKelamin for select
+//		@Tags			master/jenis_kelamin
+//		@Accept			json
+//		@Produce		json
+//		@Security		BearerAuth
+//		@Param			search	query	string	false	"Filter by name (partial match)"
+//		@Success		200	{object}	response.MyGoResponse{data=[]dto.MasterJenisKelaminListSimpelResponse}
+//		@Router			/master/jenis_kelamin/select [get]
+//
+// ListSelectJenisKelamin handles GET /api/v1/master/jenis_kelamin/select
+func (h *MasterHandler) ListSelectJenisKelamin(c *echo.Context) error {
+	search := c.QueryParam("search")
+
+	items, err := h.service.ListSelectJenisKelamin(c.Request().Context(), search)
+	if err != nil {
+		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
+	}
+
+	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", items, nil)
+} // ───────────── ListSelect ─────────────────────────────────────────────────────
+
 // ─────────────── List ─────────────────────────────────────────────────────────────
 //
 //	 MasterHandler godoc

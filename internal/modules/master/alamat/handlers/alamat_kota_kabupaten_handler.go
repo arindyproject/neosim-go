@@ -48,6 +48,37 @@ func (h *MasterAlamatHandler) ListKotaKabupaten(c *echo.Context) error {
 	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data", items, total, page, pageSize)
 } // ───────────── List ───────────────────────────────────────────────────────────
 
+// ─────────────── ListSelect ─────────────────────────────────────────────────────
+// MasterAlamatHandler godoc
+//
+//	@Summary		Get list of Kota/Kabupaten (Select)
+//	@Description	Get list of Kota/Kabupaten for select dropdown
+//	@Tags			master/alamat/kota
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			provinsi_id	query		int		true	"Filter by provinsi_id"
+//	@Param			search		query		string	false	"Filter by name/code (partial match)"
+//	@Success		200			{object}	response.MyGoResponse{data=[]dto.KotaKabupatenSimpelResponse}
+//	@Router			/master/alamat/kota/select [get]
+//
+// ListSelectKotaKabupaten handles GET /api/v1/master/alamat/kota/select
+func (h *MasterAlamatHandler) ListSelectKotaKabupaten(c *echo.Context) error {
+	provinsiID, err := he.ParseInt64Query(c, "provinsi_id")
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
+	}
+
+	search := c.QueryParam("search")
+
+	items, err := h.service.ListSelectKotaKabupaten(c.Request().Context(), provinsiID, search)
+	if err != nil {
+		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
+	}
+
+	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", items, nil)
+} // ───────────── ListSelect ─────────────────────────────────────────────────────
+
 // ─────────────── GetByID ────────────────────────────────────────────────────────
 // MasterAlamatHandler godoc
 //

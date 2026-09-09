@@ -36,6 +36,36 @@ func (s *service) GetByIDGolonganDarah(ctx context.Context, id int64) (*dto.Mast
 	return res, nil
 }
 
+// ─────────────── ListSelect ──────────────────────────────────────────────────────
+func (s *service) ListSelectGolonganDarah(ctx context.Context, search string) ([]dto.MasterGolonganDarahListSimpelResponse, error) {
+	ctxs := context.Background()
+	cacheKey := cacheKeyGolonganDarahListSelect(search)
+
+	// 1. Cek Cache
+	var cachedRes []dto.MasterGolonganDarahListSimpelResponse
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
+		if len(cachedRes) == 0 {
+			return nil, appErrors.NotFound("GolonganDarah tidak ditemukan")
+		}
+		return cachedRes, nil
+	}
+
+	// 2. Hit Database
+	items, err := s.repo.ListSelectGolonganDarah(ctx, search)
+	if err != nil {
+		return nil, err
+	}
+	if len(items) == 0 {
+		return nil, appErrors.NotFound("GolonganDarah tidak ditemukan")
+	}
+
+	res := dto.ToMasterGolonganDarahListSimpelResponse(items)
+
+	// 3. Simpan ke Cache
+	s.cache.SetDefault(ctxs, cacheKey, res)
+	return res, nil
+}
+
 // ─────────────── List ────────────────────────────────────────────────────────────
 func (s *service) ListGolonganDarah(ctx context.Context, page, pageSize int, filter *dto.FilterMasterGolonganDarahRequest) ([]dto.MasterGolonganDarahResponse, int64, error) {
 	ctxs := context.Background()
@@ -118,6 +148,7 @@ func (s *service) CreateGolonganDarah(ctx context.Context, req *dto.CreateMaster
 
 	// Invalidate Cache
 	s.cache.InvalidateList(context.Background(), cachePrefixGolonganDarahList)
+	s.cache.InvalidateList(context.Background(), cachePrefixGolonganDarahListSelect)
 
 	return res, nil
 
@@ -176,6 +207,7 @@ func (s *service) UpdateGolonganDarah(ctx context.Context, id int64, req *dto.Up
 	// Invalidate Cache
 	s.cache.InvalidateDetail(context.Background(), cacheKeyGolonganDarahDetail(id))
 	s.cache.InvalidateList(context.Background(), cachePrefixGolonganDarahList)
+	s.cache.InvalidateList(context.Background(), cachePrefixGolonganDarahListSelect)
 
 	return res, nil
 

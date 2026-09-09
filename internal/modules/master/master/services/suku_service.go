@@ -36,6 +36,35 @@ func (s *service) GetByIDSuku(ctx context.Context, id int64) (*dto.MasterSukuRes
 	return res, nil
 }
 
+// ─────────────── ListSelect ──────────────────────────────────────────────────────
+func (s *service) ListSelectSuku(ctx context.Context, search string) ([]dto.MasterSukuListSimpelResponse, error) {
+	ctxs := context.Background()
+	cacheKey := cacheKeySukuListSelect(search)
+
+	// 1. Cek Cache
+	var cachedRes []dto.MasterSukuListSimpelResponse
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
+		if len(cachedRes) == 0 {
+			return nil, appErrors.NotFound("Suku tidak ditemukan")
+		}
+		return cachedRes, nil
+	}
+
+	// 2. Hit Database
+	items, err := s.repo.ListSelectSuku(ctx, search)
+	if err != nil {
+		return nil, err
+	}
+	if len(items) == 0 {
+		return nil, appErrors.NotFound("Suku tidak ditemukan")
+	}
+	res := dto.ToMasterSukuListSimpelResponse(items)
+
+	// 3. Simpan ke Cache
+	s.cache.SetDefault(ctxs, cacheKey, res)
+	return res, nil
+}
+
 // ─────────────── List ────────────────────────────────────────────────────────────
 func (s *service) ListSuku(ctx context.Context, page, pageSize int, filter *dto.FilterMasterSukuRequest) ([]dto.MasterSukuResponse, int64, error) {
 	ctxs := context.Background()
@@ -118,6 +147,7 @@ func (s *service) CreateSuku(ctx context.Context, req *dto.CreateMasterSukuReque
 
 	// Invalidate Cache
 	s.cache.InvalidateList(context.Background(), cachePrefixSukuList)
+	s.cache.InvalidateList(context.Background(), cachePrefixSukuListSelect)
 
 	return res, nil
 
@@ -176,6 +206,7 @@ func (s *service) UpdateSuku(ctx context.Context, id int64, req *dto.UpdateMaste
 	// Invalidate Cache
 	s.cache.InvalidateDetail(context.Background(), cacheKeySukuDetail(id))
 	s.cache.InvalidateList(context.Background(), cachePrefixSukuList)
+	s.cache.InvalidateList(context.Background(), cachePrefixSukuListSelect)
 
 	return res, nil
 

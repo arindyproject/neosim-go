@@ -36,6 +36,36 @@ func (s *service) GetByIDAgama(ctx context.Context, id int64) (*dto.MasterAgamaR
 	return res, nil
 }
 
+// ─────────────── ListSelect ──────────────────────────────────────────────────────
+func (s *service) ListSelectAgama(ctx context.Context, search string) ([]dto.MasterAgamaListSimpelResponse, error) {
+	ctxs := context.Background()
+	cacheKey := cacheKeyAgamaListSelect(search)
+
+	// 1. Cek Cache
+	var cachedRes []dto.MasterAgamaListSimpelResponse
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
+		if len(cachedRes) == 0 {
+			return nil, appErrors.NotFound("Agama tidak ditemukan")
+		}
+		return cachedRes, nil
+	}
+
+	// 2. Hit Database
+	items, err := s.repo.ListSelectAgama(ctx, search)
+	if err != nil {
+		return nil, err
+	}
+	if len(items) == 0 {
+		return nil, appErrors.NotFound("Agama tidak ditemukan")
+	}
+
+	res := dto.ToMasterAgamaListSimpelResponse(items)
+
+	// 3. Simpan ke Cache
+	s.cache.SetDefault(ctxs, cacheKey, res)
+	return res, nil
+}
+
 // ─────────────── List ────────────────────────────────────────────────────────────
 func (s *service) ListAgama(ctx context.Context, page, pageSize int, filter *dto.FilterMasterAgamaRequest) ([]dto.MasterAgamaResponse, int64, error) {
 	ctxs := context.Background()
@@ -118,6 +148,7 @@ func (s *service) CreateAgama(ctx context.Context, req *dto.CreateMasterAgamaReq
 
 	// Invalidate Cache
 	s.cache.InvalidateList(context.Background(), cachePrefixAgamaList)
+	s.cache.InvalidateList(context.Background(), cachePrefixAgamaListSelect)
 
 	return res, nil
 
@@ -176,6 +207,7 @@ func (s *service) UpdateAgama(ctx context.Context, id int64, req *dto.UpdateMast
 	// Invalidate Cache
 	s.cache.InvalidateDetail(context.Background(), cacheKeyAgamaDetail(id))
 	s.cache.InvalidateList(context.Background(), cachePrefixAgamaList)
+	s.cache.InvalidateList(context.Background(), cachePrefixAgamaListSelect)
 
 	return res, nil
 

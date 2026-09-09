@@ -310,3 +310,42 @@ func (s *MasterServiceTestSuite) Test_DeleteAgama_RepoError() {
 
 	s.Error(err)
 }
+
+func (s *MasterServiceTestSuite) Test_ListSelectAgama_Success() {
+	search := "some search"
+	items := []models.MasterAgama{
+		*factories.NewAgamaFactory().Make(),
+		*factories.NewAgamaFactory().Make(),
+	}
+
+	s.repo.On("ListSelectAgama", search).Return(items, nil)
+
+	result, err := s.svc.ListSelectAgama(context.Background(), search)
+
+	s.NoError(err)
+	s.Len(result, 2)
+	s.repo.AssertExpectations(s.T())
+}
+
+func (s *MasterServiceTestSuite) Test_ListSelectAgama_NotFound() {
+	search := "notfound"
+
+	s.repo.On("ListSelectAgama", search).Return([]models.MasterAgama{}, nil)
+
+	result, err := s.svc.ListSelectAgama(context.Background(), search)
+
+	s.Nil(result)
+	s.Error(err)
+	s.Contains(err.Error(), "tidak ditemukan")
+}
+
+func (s *MasterServiceTestSuite) Test_ListSelectAgama_RepoError() {
+	search := "error"
+
+	s.repo.On("ListSelectAgama", search).Return([]models.MasterAgama{}, fmt.Errorf("db error"))
+
+	result, err := s.svc.ListSelectAgama(context.Background(), search)
+
+	s.Nil(result)
+	s.Error(err)
+}

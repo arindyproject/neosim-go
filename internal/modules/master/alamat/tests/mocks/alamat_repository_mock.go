@@ -28,6 +28,11 @@ func (m *MasterAlamatRepositoryMock) GetByIDNegara(ctx context.Context, id int64
 	return args.Get(0).(*models.MasterAlamatNegara), args.Error(1)
 }
 
+func (m *MasterAlamatRepositoryMock) ListSelectNegara(ctx context.Context, search string) ([]models.MasterAlamatNegara, error) {
+	args := m.Called(search)
+	return args.Get(0).([]models.MasterAlamatNegara), args.Error(1)
+}
+
 func (m *MasterAlamatRepositoryMock) ListNegara(ctx context.Context, page, pageSize int, filter *dto.FilterNegaraRequest) ([]models.MasterAlamatNegara, int64, error) {
 	args := m.Called(page, pageSize, filter)
 	return args.Get(0).([]models.MasterAlamatNegara), args.Get(1).(int64), args.Error(2)
@@ -61,6 +66,11 @@ func (m *MasterAlamatRepositoryMock) GetByIDProvinsi(ctx context.Context, id int
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*models.MasterAlamatProvinsi), args.Error(1)
+}
+
+func (m *MasterAlamatRepositoryMock) ListSelectProvinsi(ctx context.Context, negaraID int64, search string) ([]models.MasterAlamatProvinsi, error) {
+	args := m.Called(negaraID, search)
+	return args.Get(0).([]models.MasterAlamatProvinsi), args.Error(1)
 }
 
 func (m *MasterAlamatRepositoryMock) ListProvinsi(ctx context.Context, page, pageSize int, negaraID *int64, filter *dto.FilterProvinsiRequest) ([]models.MasterAlamatProvinsi, int64, error) {
@@ -113,6 +123,11 @@ func (m *MasterAlamatRepositoryMock) GetByIDKotaKabupaten(ctx context.Context, i
 	return args.Get(0).(*models.MasterAlamatKotaKabupaten), args.Error(1)
 }
 
+func (m *MasterAlamatRepositoryMock) ListSelectKotaKabupaten(ctx context.Context, provinsiID int64, search string) ([]models.MasterAlamatKotaKabupaten, error) {
+	args := m.Called(provinsiID, search)
+	return args.Get(0).([]models.MasterAlamatKotaKabupaten), args.Error(1)
+}
+
 func (m *MasterAlamatRepositoryMock) ListKotaKabupaten(ctx context.Context, page, pageSize int, provinsiID *int64, filter *dto.FilterKotaKabupatenRequest) ([]models.MasterAlamatKotaKabupaten, int64, error) {
 	args := m.Called(page, pageSize, provinsiID, filter)
 	return args.Get(0).([]models.MasterAlamatKotaKabupaten), args.Get(1).(int64), args.Error(2)
@@ -158,6 +173,11 @@ func (m *MasterAlamatRepositoryMock) GetByIDKecamatan(ctx context.Context, id in
 	return args.Get(0).(*models.MasterAlamatKecamatan), args.Error(1)
 }
 
+func (m *MasterAlamatRepositoryMock) ListSelectKecamatan(ctx context.Context, kotaKabupatenID int64, search string) ([]models.MasterAlamatKecamatan, error) {
+	args := m.Called(kotaKabupatenID, search)
+	return args.Get(0).([]models.MasterAlamatKecamatan), args.Error(1)
+}
+
 func (m *MasterAlamatRepositoryMock) ListKecamatan(ctx context.Context, page, pageSize int, kotaKabupatenID *int64, filter *dto.FilterKecamatanRequest) ([]models.MasterAlamatKecamatan, int64, error) {
 	args := m.Called(page, pageSize, kotaKabupatenID, filter)
 	return args.Get(0).([]models.MasterAlamatKecamatan), args.Get(1).(int64), args.Error(2)
@@ -196,6 +216,11 @@ func (m *MasterAlamatRepositoryMock) GetByIDKelurahanDesa(ctx context.Context, i
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*models.MasterAlamatKelurahanDesa), args.Error(1)
+}
+
+func (m *MasterAlamatRepositoryMock) ListSelectKelurahanDesa(ctx context.Context, kecamatanID int64, search string) ([]models.MasterAlamatKelurahanDesa, error) {
+	args := m.Called(kecamatanID, search)
+	return args.Get(0).([]models.MasterAlamatKelurahanDesa), args.Error(1)
 }
 
 func (m *MasterAlamatRepositoryMock) ListKelurahanDesa(ctx context.Context, page, pageSize int, kecamatanID *int64, filter *dto.FilterKelurahanDesaRequest) ([]models.MasterAlamatKelurahanDesa, int64, error) {

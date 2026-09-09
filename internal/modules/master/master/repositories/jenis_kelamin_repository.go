@@ -40,6 +40,25 @@ func (r *repository) GetByNameJenisKelamin(ctx context.Context, name string) (*m
 	return &m, result.Error
 }
 
+// ------------------ListSelect-----------------------------------------
+func (r *repository) ListSelectJenisKelamin(ctx context.Context, search string) ([]models.MasterJenisKelamin, error) {
+	var items []models.MasterJenisKelamin
+
+	query := r.db.WithContext(ctx).Model(&models.MasterJenisKelamin{}).
+		Select("id, name, kode_kemenkes").
+		Where("master_jenis_kelamin.deleted_at IS NULL")
+
+	if search != "" {
+		query = query.Where("name ILIKE ?", "%"+search+"%")
+	}
+
+	if err := query.Order("name ASC").Find(&items).Error; err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
 // ------------------List-----------------------------------------------
 func (r *repository) ListJenisKelamin(ctx context.Context, page, pageSize int, filter *dto.FilterMasterJenisKelaminRequest) ([]models.MasterJenisKelamin, int64, error) {
 	var items []models.MasterJenisKelamin
@@ -85,4 +104,6 @@ func (r *repository) DeleteJenisKelamin(ctx context.Context, id int64, deletedBy
 			"deleted_at": time.Now(),
 			"updated_by": deletedBy,
 		}).Error
-} // ===================================================================
+}
+
+// ===================================================================

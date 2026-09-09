@@ -16,6 +16,7 @@ func RegisterRoutes(e *echo.Echo, h *handlers.MasterAlamatHandler, jwtManager *u
 	// Negara ---------------------------------------------------------
 	negara := g.Group("/negara")
 	negara.GET("", h.ListNegara)
+	negara.GET("/select", h.ListSelectNegara)
 	negara.GET("/:id", h.GetByIDNegara)
 	negara.POST("", h.CreateNegara)
 	negara.PUT("/:id", h.UpdateNegara)
@@ -24,6 +25,7 @@ func RegisterRoutes(e *echo.Echo, h *handlers.MasterAlamatHandler, jwtManager *u
 	// Provinsi ---------------------------------------------------------
 	provinsi := g.Group("/provinsi")
 	provinsi.GET("", h.ListProvinsi)
+	provinsi.GET("/select", h.ListSelectProvinsi)
 	provinsi.GET("/:id", h.GetByIDProvinsi)
 	provinsi.POST("", h.CreateProvinsi)
 	provinsi.PUT("/:id", h.UpdateProvinsi)
@@ -32,6 +34,7 @@ func RegisterRoutes(e *echo.Echo, h *handlers.MasterAlamatHandler, jwtManager *u
 	// Kota/Kabupaten -----------------------------------------------------
 	kota := g.Group("/kota")
 	kota.GET("", h.ListKotaKabupaten)
+	kota.GET("/select", h.ListSelectKotaKabupaten)
 	kota.GET("/:id", h.GetByIDKotaKabupaten)
 	kota.POST("", h.CreateKotaKabupaten)
 	kota.PUT("/:id", h.UpdateKotaKabupaten)
@@ -40,6 +43,7 @@ func RegisterRoutes(e *echo.Echo, h *handlers.MasterAlamatHandler, jwtManager *u
 	// Kecamatan -----------------------------------------------------
 	kecamatan := g.Group("/kecamatan")
 	kecamatan.GET("", h.ListKecamatan)
+	kecamatan.GET("/select", h.ListSelectKecamatan)
 	kecamatan.GET("/:id", h.GetByIDKecamatan)
 	kecamatan.POST("", h.CreateKecamatan)
 	kecamatan.PUT("/:id", h.UpdateKecamatan)
@@ -48,6 +52,7 @@ func RegisterRoutes(e *echo.Echo, h *handlers.MasterAlamatHandler, jwtManager *u
 	// Kelurahan/Desa -----------------------------------------------------
 	desa := g.Group("/desa")
 	desa.GET("", h.ListKelurahanDesa)
+	desa.GET("/select", h.ListSelectKelurahanDesa)
 	desa.GET("/:id", h.GetByIDKelurahanDesa)
 	desa.POST("", h.CreateKelurahanDesa)
 	desa.PUT("/:id", h.UpdateKelurahanDesa)

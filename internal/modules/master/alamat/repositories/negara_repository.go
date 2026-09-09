@@ -28,6 +28,26 @@ func (r *repository) GetByIDNegara(ctx context.Context, id int64) (*models.Maste
 	return &m, result.Error
 }
 
+func (r *repository) ListSelectNegara(ctx context.Context, search string) ([]models.MasterAlamatNegara, error) {
+	var items []models.MasterAlamatNegara
+
+	// Filter kota_kabupaten_id dibuat wajib
+	query := r.db.WithContext(ctx).Model(&models.MasterAlamatNegara{}).
+		Select("id, name, code").
+		Where("master_alamat_negara.deleted_at IS NULL")
+
+	// Filter pencarian berdasarkan nama jika parameter search diisi
+	if search != "" {
+		query = query.Where("name ILIKE ?", "%"+search+"%")
+	}
+
+	if err := query.Order("name ASC").Find(&items).Error; err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
 func (r *repository) ListNegara(ctx context.Context, page, pageSize int, filter *dto.FilterNegaraRequest) ([]models.MasterAlamatNegara, int64, error) {
 	var items []models.MasterAlamatNegara
 	var total int64

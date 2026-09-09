@@ -22,6 +22,25 @@ type MasterPekerjaanResponse struct {
 	UpdatedAt    time.Time `json:"updated_at"`
 }
 
+type MasterPekerjaanListSimpelResponse struct {
+	ID           int64   `json:"id"`
+	Name         string  `json:"name"`
+	KodeKemenkes *string `json:"kode_kemenkes"`
+}
+
+// ToMasterPekerjaanListSimpelResponse mengubah slice model menjadi slice response simpel
+func ToMasterPekerjaanListSimpelResponse(items []models.MasterPekerjaan) []MasterPekerjaanListSimpelResponse {
+	var responses []MasterPekerjaanListSimpelResponse
+	for _, m := range items {
+		responses = append(responses, MasterPekerjaanListSimpelResponse{
+			ID:           m.ID,
+			Name:         m.Name,
+			KodeKemenkes: m.KodeKemenkes,
+		})
+	}
+	return responses
+} // -------------------------------------------------------------------
+
 // ToMasterPekerjaanResponse mengubah model menjadi response
 func ToMasterPekerjaanResponse(m *models.MasterPekerjaan) *MasterPekerjaanResponse {
 	return &MasterPekerjaanResponse{
@@ -61,6 +80,25 @@ type MasterPendidikanResponse struct {
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }
+
+type MasterPendidikanListSimpelResponse struct {
+	ID           int64   `json:"id"`
+	Name         string  `json:"name"`
+	KodeKemenkes *string `json:"kode_kemenkes"`
+}
+
+// ToMasterPendidikanListSimpelResponse mengubah slice model menjadi slice response simpel
+func ToMasterPendidikanListSimpelResponse(items []models.MasterPendidikan) []MasterPendidikanListSimpelResponse {
+	var responses []MasterPendidikanListSimpelResponse
+	for _, m := range items {
+		responses = append(responses, MasterPendidikanListSimpelResponse{
+			ID:           m.ID,
+			Name:         m.Name,
+			KodeKemenkes: m.KodeKemenkes,
+		})
+	}
+	return responses
+} // -------------------------------------------------------------------
 
 // ToMasterPendidikanResponse mengubah model menjadi response
 func ToMasterPendidikanResponse(m *models.MasterPendidikan) *MasterPendidikanResponse {
@@ -102,6 +140,25 @@ type MasterStatusPernikahanResponse struct {
 	UpdatedAt    time.Time `json:"updated_at"`
 }
 
+type MasterStatusPernikahanListSimpelResponse struct {
+	ID           int64   `json:"id"`
+	Name         string  `json:"name"`
+	KodeKemenkes *string `json:"kode_kemenkes"`
+}
+
+// ToMasterStatusPernikahanListSimpelResponse mengubah slice model menjadi slice response simpel
+func ToMasterStatusPernikahanListSimpelResponse(items []models.MasterStatusPernikahan) []MasterStatusPernikahanListSimpelResponse {
+	var responses []MasterStatusPernikahanListSimpelResponse
+	for _, m := range items {
+		responses = append(responses, MasterStatusPernikahanListSimpelResponse{
+			ID:           m.ID,
+			Name:         m.Name,
+			KodeKemenkes: m.KodeKemenkes,
+		})
+	}
+	return responses
+} // -------------------------------------------------------------------
+
 // ToMasterStatusPernikahanResponse mengubah model menjadi response
 func ToMasterStatusPernikahanResponse(m *models.MasterStatusPernikahan) *MasterStatusPernikahanResponse {
 	return &MasterStatusPernikahanResponse{
@@ -141,6 +198,24 @@ type MasterAgamaResponse struct {
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }
+
+type MasterAgamaListSimpelResponse struct {
+	ID           int64   `json:"id"`
+	Name         string  `json:"name"`
+	KodeKemenkes *string `json:"kode_kemenkes"`
+}
+
+func ToMasterAgamaListSimpelResponse(items []models.MasterAgama) []MasterAgamaListSimpelResponse {
+	var responses []MasterAgamaListSimpelResponse
+	for _, m := range items {
+		responses = append(responses, MasterAgamaListSimpelResponse{
+			ID:           m.ID,
+			Name:         m.Name,
+			KodeKemenkes: m.KodeKemenkes,
+		})
+	}
+	return responses
+} // -------------------------------------------------------------------
 
 // ToMasterAgamaResponse mengubah model menjadi response
 func ToMasterAgamaResponse(m *models.MasterAgama) *MasterAgamaResponse {
@@ -182,6 +257,24 @@ type MasterJenisKelaminResponse struct {
 	UpdatedAt    time.Time `json:"updated_at"`
 }
 
+type MasterJenisKelaminListSimpelResponse struct {
+	ID           int64   `json:"id"`
+	Name         string  `json:"name"`
+	KodeKemenkes *string `json:"kode_kemenkes"`
+}
+
+func ToMasterJenisKelaminListSimpelResponse(items []models.MasterJenisKelamin) []MasterJenisKelaminListSimpelResponse {
+	var responses []MasterJenisKelaminListSimpelResponse
+	for _, m := range items {
+		responses = append(responses, MasterJenisKelaminListSimpelResponse{
+			ID:           m.ID,
+			Name:         m.Name,
+			KodeKemenkes: m.KodeKemenkes,
+		})
+	}
+	return responses
+} // -------------------------------------------------------------------
+
 // ToMasterJenisKelaminResponse mengubah model menjadi response
 func ToMasterJenisKelaminResponse(m *models.MasterJenisKelamin) *MasterJenisKelaminResponse {
 	return &MasterJenisKelaminResponse{
@@ -222,6 +315,24 @@ type MasterGolonganDarahResponse struct {
 	UpdatedAt    time.Time `json:"updated_at"`
 }
 
+type MasterGolonganDarahListSimpelResponse struct {
+	ID           int64   `json:"id"`
+	Name         string  `json:"name"`
+	KodeKemenkes *string `json:"kode_kemenkes"`
+}
+
+func ToMasterGolonganDarahListSimpelResponse(items []models.MasterGolonganDarah) []MasterGolonganDarahListSimpelResponse {
+	var responses []MasterGolonganDarahListSimpelResponse
+	for _, m := range items {
+		responses = append(responses, MasterGolonganDarahListSimpelResponse{
+			ID:           m.ID,
+			Name:         m.Name,
+			KodeKemenkes: m.KodeKemenkes,
+		})
+	}
+	return responses
+} // -------------------------------------------------------------------
+
 // ToMasterGolonganDarahResponse mengubah model menjadi response
 func ToMasterGolonganDarahResponse(m *models.MasterGolonganDarah) *MasterGolonganDarahResponse {
 	return &MasterGolonganDarahResponse{
@@ -261,6 +372,24 @@ type MasterSukuResponse struct {
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }
+
+type MasterSukuListSimpelResponse struct {
+	ID           int64   `json:"id"`
+	Name         string  `json:"name"`
+	KodeKemenkes *string `json:"kode_kemenkes"`
+}
+
+func ToMasterSukuListSimpelResponse(items []models.MasterSuku) []MasterSukuListSimpelResponse {
+	var responses []MasterSukuListSimpelResponse
+	for _, m := range items {
+		responses = append(responses, MasterSukuListSimpelResponse{
+			ID:           m.ID,
+			Name:         m.Name,
+			KodeKemenkes: m.KodeKemenkes,
+		})
+	}
+	return responses
+} // -------------------------------------------------------------------
 
 // ToMasterSukuResponse mengubah model menjadi response
 func ToMasterSukuResponse(m *models.MasterSuku) *MasterSukuResponse {

@@ -13,6 +13,7 @@ import (
 type MasterDepartemenRepository interface {
 	CreateDepartemen(ctx context.Context, m *models.MasterDepartemen) error
 	GetDepartemenByID(ctx context.Context, id int64) (*models.MasterDepartemen, error)
+	ListSelectDepartemen(ctx context.Context, search string) ([]models.MasterDepartemen, error)
 	ListDepartemen(ctx context.Context, page, pageSize int, filter *dto.FilterMasterDepartemenRequest) ([]models.MasterDepartemen, int64, error)
 	UpdateDepartemen(ctx context.Context, m *models.MasterDepartemen) error
 	DeleteDepartemen(ctx context.Context, id int64, deletedBy int64) error
@@ -24,6 +25,7 @@ type MasterDepartemenRepository interface {
 type MasterDepartemenService interface {
 	CreateDepartemen(ctx context.Context, req *dto.CreateMasterDepartemenRequest, actor he.AuthContext) (*dto.MasterDepartemenResponse, error)
 	GetDepartemenByID(ctx context.Context, id int64, actor he.AuthContext) (*dto.MasterDepartemenResponse, error)
+	ListSelectDepartemen(ctx context.Context, search string) ([]dto.MasterDepartemenListSimpelResponse, error)
 	ListDepartemen(ctx context.Context, page, pageSize int, filter *dto.FilterMasterDepartemenRequest, actor he.AuthContext) ([]dto.MasterDepartemenResponse, int64, error)
 	UpdateDepartemen(ctx context.Context, id int64, req *dto.UpdateMasterDepartemenRequest, actor he.AuthContext) (*dto.MasterDepartemenResponse, error)
 	DeleteDepartemen(ctx context.Context, id int64, actor he.AuthContext) error

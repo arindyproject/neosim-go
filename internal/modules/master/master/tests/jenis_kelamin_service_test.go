@@ -310,3 +310,43 @@ func (s *MasterServiceTestSuite) Test_DeleteJenisKelamin_RepoError() {
 
 	s.Error(err)
 }
+
+func (s *MasterServiceTestSuite) Test_ListSelectJenisKelamin_Success() {
+	search := "Laki"
+	items := []models.MasterJenisKelamin{
+		*factories.NewJenisKelaminFactory().Make(),
+		*factories.NewJenisKelaminFactory().Make(),
+	}
+
+	s.repo.On("ListSelectJenisKelamin", search).Return(items, nil)
+
+	result, err := s.svc.ListSelectJenisKelamin(context.Background(), search)
+
+	s.NoError(err)
+	s.Len(result, 2)
+	s.Equal(items[0].ID, result[0].ID)
+	s.Equal(items[1].ID, result[1].ID)
+}
+
+func (s *MasterServiceTestSuite) Test_ListSelectJenisKelamin_NotFound() {
+	search := "Nonexistent"
+
+	s.repo.On("ListSelectJenisKelamin", search).Return([]models.MasterJenisKelamin{}, nil)
+
+	result, err := s.svc.ListSelectJenisKelamin(context.Background(), search)
+
+	s.Nil(result)
+	s.Error(err)
+	s.Contains(err.Error(), "tidak ditemukan")
+}
+
+func (s *MasterServiceTestSuite) Test_ListSelectJenisKelamin_RepoError() {
+	search := "Laki"
+
+	s.repo.On("ListSelectJenisKelamin", search).Return([]models.MasterJenisKelamin{}, fmt.Errorf("db error"))
+
+	result, err := s.svc.ListSelectJenisKelamin(context.Background(), search)
+
+	s.Nil(result)
+	s.Error(err)
+}

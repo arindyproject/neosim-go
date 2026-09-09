@@ -310,3 +310,41 @@ func (s *MasterServiceTestSuite) Test_DeleteStatusPernikahan_RepoError() {
 
 	s.Error(err)
 }
+
+func (s *MasterServiceTestSuite) Test_ListSelectStatusPernikahan_Success() {
+	search := "some search"
+	items := []models.MasterStatusPernikahan{
+		*factories.NewStatusPernikahanFactory().Make(),
+		*factories.NewStatusPernikahanFactory().Make(),
+	}
+
+	s.repo.On("ListSelectStatusPernikahan", search).Return(items, nil)
+
+	result, err := s.svc.ListSelectStatusPernikahan(context.Background(), search)
+
+	s.NoError(err)
+	s.Len(result, 2)
+	s.Equal(items[0].ID, result[0].ID)
+	s.Equal(items[1].ID, result[1].ID)
+}
+
+func (s *MasterServiceTestSuite) Test_ListSelectStatusPernikahan_NotFound() {
+	search := "nonexistent"
+	s.repo.On("ListSelectStatusPernikahan", search).Return([]models.MasterStatusPernikahan{}, nil)
+
+	result, err := s.svc.ListSelectStatusPernikahan(context.Background(), search)
+
+	s.Nil(result)
+	s.Error(err)
+	s.Contains(err.Error(), "tidak ditemukan")
+}
+
+func (s *MasterServiceTestSuite) Test_ListSelectStatusPernikahan_RepoError() {
+	search := "error"
+	s.repo.On("ListSelectStatusPernikahan", search).Return([]models.MasterStatusPernikahan{}, fmt.Errorf("db error"))
+
+	result, err := s.svc.ListSelectStatusPernikahan(context.Background(), search)
+
+	s.Nil(result)
+	s.Error(err)
+}

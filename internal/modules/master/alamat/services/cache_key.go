@@ -18,6 +18,14 @@ func cacheKeyNegaraDetail(id int64) string {
 	return fmt.Sprintf("master_alamat:negara:detail:%d", id)
 }
 
+func cacheKeyNegaraGetDetail(id int64) string {
+	return fmt.Sprintf("master_alamat:negara:getdetail:%d", id)
+}
+
+func cacheKeyNegaraSelectList(search string) string {
+	return fmt.Sprintf("master_alamat:negara:selectlist:search%s", search)
+}
+
 func cacheKeyNegaraList(page, pageSize int, filter *dto.FilterNegaraRequest) string {
 	f := ""
 	if filter != nil {
@@ -33,6 +41,10 @@ func cacheKeyProvinsiDetail(id int64) string {
 
 func cacheKeyProvinsiGetDetail(id int64) string {
 	return fmt.Sprintf("master_alamat:provinsi:getdetail:%d", id)
+}
+
+func cacheKeyProvinsiSelectList(negaraID int64, search string) string {
+	return fmt.Sprintf("master_alamat:provinsi:selectlist:negaraid%d:search%s", negaraID, search)
 }
 
 func cacheKeyProvinsiList(page, pageSize int, negaraID *int64, filter *dto.FilterProvinsiRequest) string {
@@ -56,6 +68,10 @@ func cacheKeyKotaGetDetail(id int64) string {
 	return fmt.Sprintf("master_alamat:kota:getdetail:%d", id)
 }
 
+func cacheKeyKotaSelectList(provinsiID int64, search string) string {
+	return fmt.Sprintf("master_alamat:kota:selectlist:provinsiid%d:search%s", provinsiID, search)
+}
+
 func cacheKeyKotaList(page, pageSize int, provinsiID *int64, filter *dto.FilterKotaKabupatenRequest) string {
 	pID := "all"
 	if provinsiID != nil {
@@ -77,6 +93,10 @@ func cacheKeyKecamatanGetDetail(id int64) string {
 	return fmt.Sprintf("master_alamat:kecamatan:getdetail:%d", id)
 }
 
+func cacheKeyKecamatanSelectList(kotaKabupatenID int64, search string) string {
+	return fmt.Sprintf("master_alamat:kecamatan:selectlist:kotaid%d:search%s", kotaKabupatenID, search)
+}
+
 func cacheKeyKecamatanList(page, pageSize int, kotaID *int64, filter *dto.FilterKecamatanRequest) string {
 	kID := "all"
 	if kotaID != nil {
@@ -92,6 +112,10 @@ func cacheKeyKecamatanList(page, pageSize int, kotaID *int64, filter *dto.Filter
 // Kelurahan/Desa ──────────────────────────────────────────────────────────────────
 func cacheKeyDesaDetail(id int64) string {
 	return fmt.Sprintf("master_alamat:desa:detail:%d", id)
+}
+
+func cacheKeyDesaSelectList(kecamatanID int64, search string) string {
+	return fmt.Sprintf("master_alamat:desa:selectlist:kecid%d:search%s", kecamatanID, search)
 }
 
 func cacheKeyDesaGetDetail(id int64) string {
@@ -113,9 +137,14 @@ func cacheKeyDesaList(page, pageSize int, kecamatanID *int64, filter *dto.Filter
 // ─── Cache Prefix Constants ───────────────────────────────────────────────────────
 // Digunakan untuk InvalidateList agar konsisten dan tidak typo
 const (
-	cachePrefixNegaraList    = "master_alamat:negara:list:"
-	cachePrefixProvinsiList  = "master_alamat:provinsi:list:"
-	cachePrefixKotaList      = "master_alamat:kota:list:"
-	cachePrefixKecamatanList = "master_alamat:kecamatan:list:"
-	cachePrefixDesaList      = "master_alamat:desa:list:"
+	cachePrefixNegaraList          = "master_alamat:negara:list:"
+	cachePrefixNegaraSelectList    = "master_alamat:negara:selectlist:"
+	cachePrefixProvinsiList        = "master_alamat:provinsi:list:"
+	cachePrefixProvinsiSelectList  = "master_alamat:provinsi:selectlist:"
+	cachePrefixKotaList            = "master_alamat:kota:list:"
+	cachePrefixKotaSelectList      = "master_alamat:kota:selectlist:"
+	cachePrefixKecamatanList       = "master_alamat:kecamatan:list:"
+	cachePrefixKecamatanSelectList = "master_alamat:kecamatan:selectlist:"
+	cachePrefixDesaList            = "master_alamat:desa:list:"
+	cachePrefixDesaSelectList      = "master_alamat:desa:selectlist:"
 )

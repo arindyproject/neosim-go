@@ -40,6 +40,33 @@ func (s *service) GetByIDNegara(ctx context.Context, id int64) (*dto.NegaraRespo
 	return res, nil
 }
 
+// ─────────────── ListSelect ──────────────────────────────────────────────────────
+func (s *service) ListSelectNegara(ctx context.Context, search string) ([]dto.NegaraSimpelResponse, error) {
+	ctxs := context.Background()
+	cacheKey := cacheKeyNegaraSelectList(search)
+
+	// 1. Cek Cache
+	var cachedRes []dto.NegaraSimpelResponse
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
+		return cachedRes, nil
+	}
+
+	// 2. Ambil dari DB
+	items, err := s.repo.ListSelectNegara(ctx, search)
+	if err != nil {
+		return nil, err
+	}
+	if len(items) == 0 {
+		return nil, appErrors.NotFound("Negara tidak ditemukan")
+	}
+
+	res := dto.ToNegaraListSimpelResponse(items)
+
+	// 3. Simpan ke Cache
+	s.cache.SetDefault(ctxs, cacheKey, res)
+	return res, nil
+}
+
 // ─────────────── List ────────────────────────────────────────────────────────────
 func (s *service) ListNegara(ctx context.Context, page, pageSize int, filter *dto.FilterNegaraRequest) ([]dto.NegaraResponse, int64, error) {
 	ctxs := context.Background()
@@ -123,6 +150,7 @@ func (s *service) CreateNegara(ctx context.Context, req *dto.CreateNegaraRequest
 
 	// Invalidate Cache
 	s.cache.InvalidateList(context.Background(), cachePrefixNegaraList)
+	s.cache.InvalidateList(context.Background(), cachePrefixNegaraSelectList)
 
 	return res, nil
 }
@@ -186,6 +214,7 @@ func (s *service) UpdateNegara(ctx context.Context, id int64, req *dto.UpdateNeg
 	ctxs := context.Background()
 	s.cache.InvalidateDetail(ctxs, cacheKeyNegaraDetail(id))
 	s.cache.InvalidateList(ctxs, cachePrefixNegaraList)
+	s.cache.InvalidateList(ctxs, cachePrefixNegaraSelectList)
 
 	return res, nil
 }

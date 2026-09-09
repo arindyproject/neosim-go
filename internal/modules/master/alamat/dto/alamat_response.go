@@ -85,6 +85,12 @@ type NegaraResponse struct {
 	UpdatedAt   types.CustomTime `json:"updated_at"`
 }
 
+type NegaraSimpelResponse struct {
+	ID   int64  `json:"id"`
+	Code string `json:"code"`
+	Name string `json:"name"`
+}
+
 // ProvinsiResponse response untuk single Provinsi
 type ProvinsiResponse struct {
 	ID        int64            `json:"id"`
@@ -96,6 +102,13 @@ type ProvinsiResponse struct {
 	UpdatedBy *int64           `json:"updated_by"`
 	CreatedAt types.CustomTime `json:"created_at"`
 	UpdatedAt types.CustomTime `json:"updated_at"`
+}
+
+type ProvinsiSimpelResponse struct {
+	ID       int64  `json:"id"`
+	NegaraID int64  `json:"negara_id"`
+	Code     string `json:"code"`
+	Name     string `json:"name"`
 }
 
 // KotaKabupatenResponse response untuk single Kota/Kabupaten
@@ -111,6 +124,13 @@ type KotaKabupatenResponse struct {
 	UpdatedAt  types.CustomTime `json:"updated_at"`
 }
 
+type KotaKabupatenSimpelResponse struct {
+	ID         int64  `json:"id"`
+	ProvinsiID int64  `json:"provinsi_id"`
+	Code       string `json:"code"`
+	Name       string `json:"name"`
+}
+
 // KecamatanResponse response untuk single Kecamatan
 type KecamatanResponse struct {
 	ID              int64            `json:"id"`
@@ -122,6 +142,13 @@ type KecamatanResponse struct {
 	UpdatedBy       *int64           `json:"updated_by"`
 	CreatedAt       types.CustomTime `json:"created_at"`
 	UpdatedAt       types.CustomTime `json:"updated_at"`
+}
+
+type KecamatanSimpelResponse struct {
+	ID              int64  `json:"id"`
+	KotaKabupatenID int64  `json:"kota_kabupaten_id"`
+	Code            string `json:"code"`
+	Name            string `json:"name"`
 }
 
 // KelurahanDesaResponse response untuk single Kelurahan/Desa
@@ -136,6 +163,14 @@ type KelurahanDesaResponse struct {
 	UpdatedBy   *int64           `json:"updated_by"`
 	CreatedAt   types.CustomTime `json:"created_at"`
 	UpdatedAt   types.CustomTime `json:"updated_at"`
+}
+
+type KelurahanDesaSimpelResponse struct {
+	ID          int64   `json:"id"`
+	KecamatanID int64   `json:"kecamatan_id"`
+	Code        string  `json:"code"`
+	Name        string  `json:"name"`
+	PostalCode  *string `json:"postal_code"`
 }
 
 // =====================================================================
@@ -158,6 +193,18 @@ func ToNegaraResponse(m *models.MasterAlamatNegara) *NegaraResponse {
 		CreatedAt:   types.CustomTime(m.CreatedAt),
 		UpdatedAt:   types.CustomTime(m.UpdatedAt),
 	}
+}
+
+func ToNegaraListSimpelResponse(items []models.MasterAlamatNegara) []NegaraSimpelResponse {
+	result := make([]NegaraSimpelResponse, 0, len(items))
+	for _, item := range items {
+		result = append(result, NegaraSimpelResponse{
+			ID:   item.ID,
+			Code: item.Code,
+			Name: item.Name,
+		})
+	}
+	return result
 }
 
 // ToNegaraListResponse mengubah slice model Negara menjadi slice response
@@ -191,6 +238,19 @@ func ToProvinsiResponse(m *models.MasterAlamatProvinsi) *ProvinsiResponse {
 	}
 }
 
+func ToProvinsiListSimpelResponse(items []models.MasterAlamatProvinsi) []ProvinsiSimpelResponse {
+	result := make([]ProvinsiSimpelResponse, 0, len(items))
+	for _, item := range items {
+		result = append(result, ProvinsiSimpelResponse{
+			ID:       item.ID,
+			NegaraID: item.NegaraID,
+			Code:     item.Code,
+			Name:     item.Name,
+		})
+	}
+	return result
+}
+
 // ToProvinsiListResponse mengubah slice model Provinsi menjadi slice response
 func ToProvinsiListResponse(items []models.MasterAlamatProvinsi) []ProvinsiResponse {
 	result := make([]ProvinsiResponse, 0, len(items))
@@ -220,6 +280,19 @@ func ToKotaKabupatenResponse(m *models.MasterAlamatKotaKabupaten) *KotaKabupaten
 		CreatedAt:  types.CustomTime(m.CreatedAt),
 		UpdatedAt:  types.CustomTime(m.UpdatedAt),
 	}
+}
+
+func ToKotaKabupatenListSimpelResponse(items []models.MasterAlamatKotaKabupaten) []KotaKabupatenSimpelResponse {
+	result := make([]KotaKabupatenSimpelResponse, 0, len(items))
+	for _, item := range items {
+		result = append(result, KotaKabupatenSimpelResponse{
+			ID:         item.ID,
+			ProvinsiID: item.ProvinsiID,
+			Code:       item.Code,
+			Name:       item.Name,
+		})
+	}
+	return result
 }
 
 // ToKotaKabupatenListResponse mengubah slice model Kota/Kabupaten menjadi slice response
@@ -253,6 +326,19 @@ func ToKecamatanResponse(m *models.MasterAlamatKecamatan) *KecamatanResponse {
 	}
 }
 
+func ToKecamatanListSimpelResponse(items []models.MasterAlamatKecamatan) []KecamatanSimpelResponse {
+	result := make([]KecamatanSimpelResponse, 0, len(items))
+	for _, item := range items {
+		result = append(result, KecamatanSimpelResponse{
+			ID:              item.ID,
+			KotaKabupatenID: item.KotaKabupatenID,
+			Code:            item.Code,
+			Name:            item.Name,
+		})
+	}
+	return result
+}
+
 // ToKecamatanListResponse mengubah slice model Kecamatan menjadi slice response
 func ToKecamatanListResponse(items []models.MasterAlamatKecamatan) []KecamatanResponse {
 	result := make([]KecamatanResponse, 0, len(items))
@@ -283,6 +369,20 @@ func ToKelurahanDesaResponse(m *models.MasterAlamatKelurahanDesa) *KelurahanDesa
 		CreatedAt:   types.CustomTime(m.CreatedAt),
 		UpdatedAt:   types.CustomTime(m.UpdatedAt),
 	}
+}
+
+func ToKelurahanDesaListSimpelResponse(items []models.MasterAlamatKelurahanDesa) []KelurahanDesaSimpelResponse {
+	result := make([]KelurahanDesaSimpelResponse, 0, len(items))
+	for _, item := range items {
+		result = append(result, KelurahanDesaSimpelResponse{
+			ID:          item.ID,
+			KecamatanID: item.KecamatanID,
+			Code:        item.Code,
+			Name:        item.Name,
+			PostalCode:  item.PostalCode,
+		})
+	}
+	return result
 }
 
 // ToKelurahanDesaListResponse mengubah slice model Kelurahan/Desa menjadi slice response

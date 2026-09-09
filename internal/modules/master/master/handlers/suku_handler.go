@@ -10,6 +10,31 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
+// ─────────────── ListSelect ───────────────────────────────────────────────────────
+// MasterHandler godoc
+//
+//	@Summary		Get list of Suku for select
+//	@Description	Get list of Suku for select
+//	@Tags			master/suku
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			search	query	string	false	"Filter by name (partial match)"
+//	@Success		200	{object}	response.MyGoResponse{data=[]dto.MasterSukuListSimpelResponse}
+//	@Router			/master/suku/select [get]
+//
+// ListSelectSuku handles GET /api/v1/master/suku/select
+func (h *MasterHandler) ListSelectSuku(c *echo.Context) error {
+	search := c.QueryParam("search")
+
+	items, err := h.service.ListSelectSuku(c.Request().Context(), search)
+	if err != nil {
+		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
+	}
+
+	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", items, nil)
+} // ───────────── ListSelect ─────────────────────────────────────────────────────
+
 // ─────────────── List ─────────────────────────────────────────────────────────────
 //
 //	 MasterHandler godoc

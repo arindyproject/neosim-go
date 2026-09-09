@@ -28,6 +28,27 @@ func (r *repository) GetByIDKecamatan(ctx context.Context, id int64) (*models.Ma
 	return &m, result.Error
 }
 
+func (r *repository) ListSelectKecamatan(ctx context.Context, kotaKabupatenID int64, search string) ([]models.MasterAlamatKecamatan, error) {
+	var items []models.MasterAlamatKecamatan
+
+	// Filter kota_kabupaten_id dibuat wajib
+	query := r.db.WithContext(ctx).Model(&models.MasterAlamatKecamatan{}).
+		Select("id, name, code, kota_kabupaten_id").
+		Where("master_alamat_kecamatan.deleted_at IS NULL").
+		Where("kota_kabupaten_id = ?", kotaKabupatenID)
+
+	// Filter pencarian berdasarkan nama jika parameter search diisi
+	if search != "" {
+		query = query.Where("name ILIKE ?", "%"+search+"%")
+	}
+
+	if err := query.Order("name ASC").Find(&items).Error; err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
 func (r *repository) ListKecamatan(ctx context.Context, page, pageSize int, kotaKabupatenID *int64, filter *dto.FilterKecamatanRequest) ([]models.MasterAlamatKecamatan, int64, error) {
 	var items []models.MasterAlamatKecamatan
 	var total int64

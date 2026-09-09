@@ -381,6 +381,44 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteNegara_RepoError() {
 	s.Error(err)
 }
 
+func (s *MasterAlamatServiceTestSuite) Test_ListSelectNegara_Success() {
+	search := "Indo"
+	items := []models.MasterAlamatNegara{
+		*factories.NewNegaraFactory().Make(),
+	}
+
+	s.repo.On("ListSelectNegara", search).Return(items, nil)
+
+	result, err := s.svc.ListSelectNegara(context.Background(), search)
+
+	s.NoError(err)
+	s.Len(result, 1)
+	s.repo.AssertExpectations(s.T())
+}
+
+func (s *MasterAlamatServiceTestSuite) Test_ListSelectNegara_NotFound() {
+	search := "Unknown"
+
+	s.repo.On("ListSelectNegara", search).Return([]models.MasterAlamatNegara{}, nil)
+
+	result, err := s.svc.ListSelectNegara(context.Background(), search)
+
+	s.Nil(result)
+	s.Error(err)
+	s.Contains(err.Error(), "tidak ditemukan")
+}
+
+func (s *MasterAlamatServiceTestSuite) Test_ListSelectNegara_RepoError() {
+	search := ""
+
+	s.repo.On("ListSelectNegara", search).Return([]models.MasterAlamatNegara{}, fmt.Errorf("db error"))
+
+	result, err := s.svc.ListSelectNegara(context.Background(), search)
+
+	s.Nil(result)
+	s.Error(err)
+}
+
 // =====================================================================
 // PROVINSI
 // =====================================================================
@@ -672,6 +710,46 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteProvinsi_RepoError() {
 	s.Error(err)
 }
 
+func (s *MasterAlamatServiceTestSuite) Test_ListSelectProvinsi_Success() {
+	var negaraID int64 = 1
+	search := "Jawa"
+	items := []models.MasterAlamatProvinsi{
+		*factories.NewProvinsiFactory().Make(),
+	}
+
+	s.repo.On("ListSelectProvinsi", negaraID, search).Return(items, nil)
+
+	result, err := s.svc.ListSelectProvinsi(context.Background(), negaraID, search)
+
+	s.NoError(err)
+	s.Len(result, 1)
+	s.repo.AssertExpectations(s.T())
+}
+
+func (s *MasterAlamatServiceTestSuite) Test_ListSelectProvinsi_NotFound() {
+	var negaraID int64 = 1
+	search := "Unknown"
+
+	s.repo.On("ListSelectProvinsi", negaraID, search).Return([]models.MasterAlamatProvinsi{}, nil)
+
+	result, err := s.svc.ListSelectProvinsi(context.Background(), negaraID, search)
+
+	s.Nil(result)
+	s.Error(err)
+	s.Contains(err.Error(), "tidak ditemukan")
+}
+
+func (s *MasterAlamatServiceTestSuite) Test_ListSelectProvinsi_RepoError() {
+	var negaraID int64 = 1
+
+	s.repo.On("ListSelectProvinsi", negaraID, "").Return([]models.MasterAlamatProvinsi{}, fmt.Errorf("db error"))
+
+	result, err := s.svc.ListSelectProvinsi(context.Background(), negaraID, "")
+
+	s.Nil(result)
+	s.Error(err)
+}
+
 // =====================================================================
 // KOTA / KABUPATEN
 // =====================================================================
@@ -925,6 +1003,46 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteKotaKabupaten_RepoError() {
 
 	err := s.svc.DeleteKotaKabupaten(context.Background(), 1, actor)
 
+	s.Error(err)
+}
+
+func (s *MasterAlamatServiceTestSuite) Test_ListSelectKotaKabupaten_Success() {
+	var provinsiID int64 = 1
+	search := "Sura"
+	items := []models.MasterAlamatKotaKabupaten{
+		*factories.NewKotaKabupatenFactory().Make(),
+	}
+
+	s.repo.On("ListSelectKotaKabupaten", provinsiID, search).Return(items, nil)
+
+	result, err := s.svc.ListSelectKotaKabupaten(context.Background(), provinsiID, search)
+
+	s.NoError(err)
+	s.Len(result, 1)
+	s.repo.AssertExpectations(s.T())
+}
+
+func (s *MasterAlamatServiceTestSuite) Test_ListSelectKotaKabupaten_NotFound() {
+	var provinsiID int64 = 1
+	search := "Unknown"
+
+	s.repo.On("ListSelectKotaKabupaten", provinsiID, search).Return([]models.MasterAlamatKotaKabupaten{}, nil)
+
+	result, err := s.svc.ListSelectKotaKabupaten(context.Background(), provinsiID, search)
+
+	s.Nil(result)
+	s.Error(err)
+	s.Contains(err.Error(), "tidak ditemukan")
+}
+
+func (s *MasterAlamatServiceTestSuite) Test_ListSelectKotaKabupaten_RepoError() {
+	var provinsiID int64 = 1
+
+	s.repo.On("ListSelectKotaKabupaten", provinsiID, "").Return([]models.MasterAlamatKotaKabupaten{}, fmt.Errorf("db error"))
+
+	result, err := s.svc.ListSelectKotaKabupaten(context.Background(), provinsiID, "")
+
+	s.Nil(result)
 	s.Error(err)
 }
 
@@ -1186,6 +1304,46 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteKecamatan_RepoError() {
 
 	err := s.svc.DeleteKecamatan(context.Background(), 1, actor)
 
+	s.Error(err)
+}
+
+func (s *MasterAlamatServiceTestSuite) Test_ListSelectKecamatan_Success() {
+	var kotaKabupatenID int64 = 1
+	search := "Gubeng"
+	items := []models.MasterAlamatKecamatan{
+		*factories.NewKecamatanFactory().Make(),
+	}
+
+	s.repo.On("ListSelectKecamatan", kotaKabupatenID, search).Return(items, nil)
+
+	result, err := s.svc.ListSelectKecamatan(context.Background(), kotaKabupatenID, search)
+
+	s.NoError(err)
+	s.Len(result, 1)
+	s.repo.AssertExpectations(s.T())
+}
+
+func (s *MasterAlamatServiceTestSuite) Test_ListSelectKecamatan_NotFound() {
+	var kotaKabupatenID int64 = 1
+	search := "Unknown"
+
+	s.repo.On("ListSelectKecamatan", kotaKabupatenID, search).Return([]models.MasterAlamatKecamatan{}, nil)
+
+	result, err := s.svc.ListSelectKecamatan(context.Background(), kotaKabupatenID, search)
+
+	s.Nil(result)
+	s.Error(err)
+	s.Contains(err.Error(), "tidak ditemukan")
+}
+
+func (s *MasterAlamatServiceTestSuite) Test_ListSelectKecamatan_RepoError() {
+	var kotaKabupatenID int64 = 1
+
+	s.repo.On("ListSelectKecamatan", kotaKabupatenID, "").Return([]models.MasterAlamatKecamatan{}, fmt.Errorf("db error"))
+
+	result, err := s.svc.ListSelectKecamatan(context.Background(), kotaKabupatenID, "")
+
+	s.Nil(result)
 	s.Error(err)
 }
 
@@ -1465,5 +1623,45 @@ func (s *MasterAlamatServiceTestSuite) Test_DeleteKelurahanDesa_RepoError() {
 
 	err := s.svc.DeleteKelurahanDesa(context.Background(), 1, actor)
 
+	s.Error(err)
+}
+
+func (s *MasterAlamatServiceTestSuite) Test_ListSelectKelurahanDesa_Success() {
+	var kecamatanID int64 = 1
+	search := "Mojo"
+	items := []models.MasterAlamatKelurahanDesa{
+		*factories.NewKelurahanDesaFactory().Make(),
+	}
+
+	s.repo.On("ListSelectKelurahanDesa", kecamatanID, search).Return(items, nil)
+
+	result, err := s.svc.ListSelectKelurahanDesa(context.Background(), kecamatanID, search)
+
+	s.NoError(err)
+	s.Len(result, 1)
+	s.repo.AssertExpectations(s.T())
+}
+
+func (s *MasterAlamatServiceTestSuite) Test_ListSelectKelurahanDesa_NotFound() {
+	var kecamatanID int64 = 1
+	search := "Unknown"
+
+	s.repo.On("ListSelectKelurahanDesa", kecamatanID, search).Return([]models.MasterAlamatKelurahanDesa{}, nil)
+
+	result, err := s.svc.ListSelectKelurahanDesa(context.Background(), kecamatanID, search)
+
+	s.Nil(result)
+	s.Error(err)
+	s.Contains(err.Error(), "tidak ditemukan")
+}
+
+func (s *MasterAlamatServiceTestSuite) Test_ListSelectKelurahanDesa_RepoError() {
+	var kecamatanID int64 = 1
+
+	s.repo.On("ListSelectKelurahanDesa", kecamatanID, "").Return([]models.MasterAlamatKelurahanDesa{}, fmt.Errorf("db error"))
+
+	result, err := s.svc.ListSelectKelurahanDesa(context.Background(), kecamatanID, "")
+
+	s.Nil(result)
 	s.Error(err)
 }

@@ -310,3 +310,43 @@ func (s *MasterServiceTestSuite) Test_DeleteGolonganDarah_RepoError() {
 
 	s.Error(err)
 }
+
+func (s *MasterServiceTestSuite) Test_ListSelectGolonganDarah_Success() {
+	search := "A"
+	items := []models.MasterGolonganDarah{
+		*factories.NewGolonganDarahFactory().Make(),
+		*factories.NewGolonganDarahFactory().Make(),
+	}
+
+	s.repo.On("ListSelectGolonganDarah", search).Return(items, nil)
+
+	result, err := s.svc.ListSelectGolonganDarah(context.Background(), search)
+
+	s.NoError(err)
+	s.Len(result, 2)
+	s.Equal(items[0].ID, result[0].ID)
+	s.Equal(items[1].ID, result[1].ID)
+}
+
+func (s *MasterServiceTestSuite) Test_ListSelectGolonganDarah_NotFound() {
+	search := "NonExistent"
+
+	s.repo.On("ListSelectGolonganDarah", search).Return([]models.MasterGolonganDarah{}, nil)
+
+	result, err := s.svc.ListSelectGolonganDarah(context.Background(), search)
+
+	s.Nil(result)
+	s.Error(err)
+	s.Contains(err.Error(), "tidak ditemukan")
+}
+
+func (s *MasterServiceTestSuite) Test_ListSelectGolonganDarah_RepoError() {
+	search := "A"
+
+	s.repo.On("ListSelectGolonganDarah", search).Return([]models.MasterGolonganDarah{}, fmt.Errorf("db error"))
+
+	result, err := s.svc.ListSelectGolonganDarah(context.Background(), search)
+
+	s.Nil(result)
+	s.Error(err)
+}

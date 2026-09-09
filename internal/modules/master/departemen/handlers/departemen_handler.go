@@ -13,6 +13,26 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
+// ─── ListSelectDepartemen ───────────────────────────────────────────────
+//
+//	@Summary		Get list of MasterDepartemen (select)
+//	@Description	Get list of MasterDepartemen (select) for dropdowns
+//	@Tags			master/departemen
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			search	query		string	false	"Search by name"
+//	@Success		200		{object}	response.MyGoResponse{data=[]dto.MasterDepartemenListSimpelResponse}
+//	@Router			/master/departemen/select [get]
+func (h *MasterDepartemenHandler) ListSelectDepartemen(c *echo.Context) error {
+	search := c.QueryParam("search")
+	items, err := h.service.ListSelectDepartemen(c.Request().Context(), search)
+	if err != nil {
+		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", items, nil)
+}
+
 // ─── ListDepartemen ─────────────────────────────────────────────────────
 //
 //	@Summary		Get list of MasterDepartemen

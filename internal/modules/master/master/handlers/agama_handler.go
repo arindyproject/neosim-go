@@ -10,6 +10,32 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
+// ─────────────── ListSelect ───────────────────────────────────────────────────────
+//
+//	 MasterHandler godoc
+//
+//		@Summary		Get list of Agama for select
+//		@Description	Get list of Agama for select
+//		@Tags			master/agama
+//		@Accept			json
+//		@Produce		json
+//		@Security		BearerAuth
+//		@Param			search	query	string	false	"Filter by name (partial match)"
+//		@Success		200	{object}	response.MyGoResponse{data=[]dto.MasterAgamaListSimpelResponse}
+//		@Router			/master/agama/select [get]
+//
+// ListSelectAgama handles GET /api/v1/master/agama/select
+func (h *MasterHandler) ListSelectAgama(c *echo.Context) error {
+	search := c.QueryParam("search")
+
+	items, err := h.service.ListSelectAgama(c.Request().Context(), search)
+	if err != nil {
+		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
+	}
+
+	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", items, nil)
+} // ───────────── ListSelect ─────────────────────────────────────────────────────
+
 // ─────────────── List ─────────────────────────────────────────────────────────────
 //
 //	 MasterHandler godoc

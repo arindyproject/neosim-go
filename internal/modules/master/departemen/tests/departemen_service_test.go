@@ -469,3 +469,42 @@ func (s *MasterDepartemenServiceTestSuite) Test_DeleteDepartemen_RepoError() {
 
 	s.Error(err)
 }
+
+func (s *MasterDepartemenServiceTestSuite) Test_ListSelectDepartemen_Success() {
+	search := "test"
+	items := []models.MasterDepartemen{
+		*factories.NewMasterDepartemenFactory().Make(),
+		*factories.NewMasterDepartemenFactory().Make(),
+	}
+
+	s.repo.On("ListSelectDepartemen", search).Return(items, nil)
+
+	result, err := s.svc.ListSelectDepartemen(context.Background(), search)
+
+	s.NoError(err)
+	s.Len(result, 2)
+	s.repo.AssertExpectations(s.T())
+}
+
+func (s *MasterDepartemenServiceTestSuite) Test_ListSelectDepartemen_NotFound() {
+	search := "Unknown"
+
+	s.repo.On("ListSelectDepartemen", search).Return([]models.MasterDepartemen{}, nil)
+
+	result, err := s.svc.ListSelectDepartemen(context.Background(), search)
+
+	s.Nil(result)
+	s.Error(err)
+	s.Contains(err.Error(), "tidak ditemukan")
+}
+
+func (s *MasterDepartemenServiceTestSuite) Test_ListSelectDepartemen_RepoError() {
+	search := "test"
+
+	s.repo.On("ListSelectDepartemen", search).Return([]models.MasterDepartemen{}, fmt.Errorf("db error"))
+
+	result, err := s.svc.ListSelectDepartemen(context.Background(), search)
+
+	s.Nil(result)
+	s.Error(err)
+}

@@ -48,6 +48,36 @@ func (h *MasterAlamatHandler) ListProvinsi(c *echo.Context) error {
 	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data", items, total, page, pageSize)
 } // ───────────── List ───────────────────────────────────────────────────────────
 
+// ─────────────── ListSelect ─────────────────────────────────────────────────────
+// MasterAlamatHandler godoc
+//
+//	@Summary		Get list of Provinsi (Select)
+//	@Description	Get list of Provinsi for select dropdown
+//	@Tags			master/alamat/provinsi
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			negara_id	query		int		true	"Filter by negara_id"
+//	@Param			search		query		string	false	"Filter by name (partial match)"
+//	@Success		200			{object}	response.MyGoResponse{data=[]dto.ProvinsiSimpelResponse}
+//	@Router			/master/alamat/provinsi/select [get]
+//
+// ListSelectProvinsi handles GET /api/v1/master/alamat/alamat/provinsi/select
+func (h *MasterAlamatHandler) ListSelectProvinsi(c *echo.Context) error {
+	negaraID, err := he.ParseInt64Query(c, "negara_id")
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
+	}
+	search := c.QueryParam("search")
+
+	items, err := h.service.ListSelectProvinsi(c.Request().Context(), negaraID, search)
+	if err != nil {
+		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
+	}
+
+	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", items, nil)
+}
+
 // ─────────────── GetByID ────────────────────────────────────────────────────────
 // MasterAlamatHandler godoc
 //

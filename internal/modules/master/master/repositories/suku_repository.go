@@ -40,6 +40,25 @@ func (r *repository) GetByNameSuku(ctx context.Context, name string) (*models.Ma
 	return &m, result.Error
 }
 
+// ------------------ListSelect-----------------------------------------
+func (r *repository) ListSelectSuku(ctx context.Context, search string) ([]models.MasterSuku, error) {
+	var items []models.MasterSuku
+
+	query := r.db.WithContext(ctx).Model(&models.MasterSuku{}).
+		Select("id, name, kode_kemenkes").
+		Where("master_suku.deleted_at IS NULL")
+
+	if search != "" {
+		query = query.Where("name ILIKE ?", "%"+search+"%")
+	}
+
+	if err := query.Order("name ASC").Find(&items).Error; err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
 // ------------------List-----------------------------------------------
 func (r *repository) ListSuku(ctx context.Context, page, pageSize int, filter *dto.FilterMasterSukuRequest) ([]models.MasterSuku, int64, error) {
 	var items []models.MasterSuku
@@ -85,4 +104,6 @@ func (r *repository) DeleteSuku(ctx context.Context, id int64, deletedBy int64) 
 			"deleted_at": time.Now(),
 			"updated_by": deletedBy,
 		}).Error
-} // ===================================================================
+}
+
+// ===================================================================

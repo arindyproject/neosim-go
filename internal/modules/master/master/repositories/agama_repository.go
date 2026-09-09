@@ -40,6 +40,25 @@ func (r *repository) GetByNameAgama(ctx context.Context, name string) (*models.M
 	return &m, result.Error
 }
 
+// ------------------ListSelect-----------------------------------------
+func (r *repository) ListSelectAgama(ctx context.Context, search string) ([]models.MasterAgama, error) {
+	var items []models.MasterAgama
+
+	query := r.db.WithContext(ctx).Model(&models.MasterAgama{}).
+		Select("id, name, kode_kemenkes").
+		Where("master_agama.deleted_at IS NULL")
+
+	if search != "" {
+		query = query.Where("name ILIKE ?", "%"+search+"%")
+	}
+
+	if err := query.Order("name ASC").Find(&items).Error; err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
 // ------------------List-----------------------------------------------
 func (r *repository) ListAgama(ctx context.Context, page, pageSize int, filter *dto.FilterMasterAgamaRequest) ([]models.MasterAgama, int64, error) {
 	var items []models.MasterAgama
@@ -85,4 +104,6 @@ func (r *repository) DeleteAgama(ctx context.Context, id int64, deletedBy int64)
 			"deleted_at": time.Now(),
 			"updated_by": deletedBy,
 		}).Error
-} // ===================================================================
+}
+
+// ===================================================================

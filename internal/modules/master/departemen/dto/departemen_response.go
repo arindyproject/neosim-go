@@ -19,10 +19,28 @@ type MasterDepartemenResponse struct {
 	UpdatedAt   types.CustomTime `json:"updated_at"`
 }
 
+type MasterDepartemenListSimpelResponse struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+}
+
 type MasterDepartemenResponseParams struct {
 	MasterDepartemen *models.MasterDepartemen
 	Creator          *he.UserData
 	Updater          *he.UserData
+}
+
+func ToMasterDepartemenListSimpelResponse(items []models.MasterDepartemen) []MasterDepartemenListSimpelResponse {
+	responses := make([]MasterDepartemenListSimpelResponse, 0, len(items))
+
+	for _, m := range items {
+		responses = append(responses, MasterDepartemenListSimpelResponse{
+			ID:   m.ID,
+			Name: m.Name,
+		})
+	}
+
+	return responses
 }
 
 // ToMasterDepartemenResponse mengubah model menjadi response

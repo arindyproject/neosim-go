@@ -27,6 +27,27 @@ func (r *repository) GetByIDProvinsi(ctx context.Context, id int64) (*models.Mas
 	return &m, result.Error
 }
 
+func (r *repository) ListSelectProvinsi(ctx context.Context, negaraID int64, search string) ([]models.MasterAlamatProvinsi, error) {
+	var items []models.MasterAlamatProvinsi
+
+	// Filter kota_kabupaten_id dibuat wajib
+	query := r.db.WithContext(ctx).Model(&models.MasterAlamatProvinsi{}).
+		Select("id, name, code, negara_id").
+		Where("master_alamat_provinsi.deleted_at IS NULL").
+		Where("negara_id = ?", negaraID)
+
+	// Filter pencarian berdasarkan nama jika parameter search diisi
+	if search != "" {
+		query = query.Where("name ILIKE ?", "%"+search+"%")
+	}
+
+	if err := query.Order("name ASC").Find(&items).Error; err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
 func (r *repository) ListProvinsi(ctx context.Context, page, pageSize int, negaraID *int64, filter *dto.FilterProvinsiRequest) ([]models.MasterAlamatProvinsi, int64, error) {
 	var items []models.MasterAlamatProvinsi
 	var total int64

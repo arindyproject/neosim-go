@@ -10,6 +10,32 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
+// ─────────────── ListSelect ───────────────────────────────────────────────────────
+//
+//	 MasterHandler godoc
+//
+//		@Summary		Get list of StatusPernikahan for select
+//		@Description	Get list of StatusPernikahan for select
+//		@Tags			master/status_pernikahan
+//		@Accept			json
+//		@Produce		json
+//		@Security		BearerAuth
+//		@Param			search	query	string	false	"Filter by name (partial match)"
+//		@Success		200	{object}	response.MyGoResponse{data=[]dto.MasterStatusPernikahanListSimpelResponse}
+//		@Router			/master/status_pernikahan/select [get]
+//
+// ListSelectStatusPernikahan handles GET /api/v1/master/status_pernikahan/select
+func (h *MasterHandler) ListSelectStatusPernikahan(c *echo.Context) error {
+	search := c.QueryParam("search")
+
+	items, err := h.service.ListSelectStatusPernikahan(c.Request().Context(), search)
+	if err != nil {
+		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
+	}
+
+	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", items, nil)
+} // ───────────── ListSelect ─────────────────────────────────────────────────────
+
 // ─────────────── List ─────────────────────────────────────────────────────────────
 //
 //	 MasterHandler godoc

@@ -50,6 +50,39 @@ func (h *MasterAlamatHandler) ListKelurahanDesa(c *echo.Context) error {
 	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data", items, total, page, pageSize)
 } // ───────────── List ───────────────────────────────────────────────────────────
 
+// ─────────────── ListSelect ─────────────────────────────────────────────────────
+// MasterAlamatHandler godoc
+//
+//	@Summary		Get list of Kelurahan/Desa (Select)
+//	@Description	Get list of Kelurahan/Desa for select dropdown
+//	@Tags			master/alamat/desa
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			kecamatan_id	query		int		false	"Filter by kecamatan_id"
+//	@Param			search			query		string	false	"Search term"
+//	@Success		200				{object}	response.MyGoResponse{data=[]dto.KelurahanDesaSimpelResponse}
+//	@Router			/master/alamat/desa/select [get]
+//
+// ListSelectKelurahanDesa handles GET /api/v1/master/alamat/desa/select
+func (h *MasterAlamatHandler) ListSelectKelurahanDesa(c *echo.Context) error {
+	// 1. Parse sebagai parameter wajib (atau gunakan c.QueryParam)
+	kecamatanID, err := he.ParseInt64Query(c, "kecamatan_id")
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
+	}
+
+	search := c.QueryParam("search")
+
+	// 2. Panggil service dengan aman (kecamatanID langsung dikirim tanpa tanda *)
+	items, err := h.service.ListSelectKelurahanDesa(c.Request().Context(), kecamatanID, search)
+	if err != nil {
+		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
+	}
+
+	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", items, nil)
+} // ───────────── ListSelect ─────────────────────────────────────────────────────
+
 // ─────────────── GetByID ────────────────────────────────────────────────────────
 // MasterAlamatHandler godoc
 //

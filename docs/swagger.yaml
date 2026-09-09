@@ -684,6 +684,17 @@ definitions:
       updated_by:
         type: integer
     type: object
+  dto.KecamatanSimpelResponse:
+    properties:
+      code:
+        type: string
+      id:
+        type: integer
+      kota_kabupaten_id:
+        type: integer
+      name:
+        type: string
+    type: object
   dto.KelurahanDesaDetailResponse:
     properties:
       code:
@@ -735,6 +746,19 @@ definitions:
         type: string
       updated_by:
         type: integer
+    type: object
+  dto.KelurahanDesaSimpelResponse:
+    properties:
+      code:
+        type: string
+      id:
+        type: integer
+      kecamatan_id:
+        type: integer
+      name:
+        type: string
+      postal_code:
+        type: string
     type: object
   dto.KepegawaianIdentifierResponse:
     properties:
@@ -937,6 +961,17 @@ definitions:
       updated_by:
         type: integer
     type: object
+  dto.KotaKabupatenSimpelResponse:
+    properties:
+      code:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      provinsi_id:
+        type: integer
+    type: object
   dto.LoginRequest:
     properties:
       identifier:
@@ -976,6 +1011,13 @@ definitions:
         type: string
       updated_by:
         type: integer
+    type: object
+  dto.MasterDepartemenListSimpelResponse:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
     type: object
   dto.MasterDepartemenResponse:
     properties:
@@ -1145,6 +1187,15 @@ definitions:
       updated_by:
         type: integer
     type: object
+  dto.NegaraSimpelResponse:
+    properties:
+      code:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
   dto.PermissionResponse:
     properties:
       action:
@@ -1200,6 +1251,17 @@ definitions:
       updated_at:
         type: string
       updated_by:
+        type: integer
+    type: object
+  dto.ProvinsiSimpelResponse:
+    properties:
+      code:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      negara_id:
         type: integer
     type: object
   dto.RefreshTokenRequest:
@@ -4660,6 +4722,39 @@ paths:
       summary: Update Kelurahan/Desa
       tags:
       - master/alamat/desa
+  /master/alamat/desa/select:
+    get:
+      consumes:
+      - application/json
+      description: Get list of Kelurahan/Desa for select dropdown
+      parameters:
+      - description: Filter by kecamatan_id
+        in: query
+        name: kecamatan_id
+        type: integer
+      - description: Search term
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.KelurahanDesaSimpelResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Kelurahan/Desa (Select)
+      tags:
+      - master/alamat/desa
   /master/alamat/kecamatan:
     get:
       consumes:
@@ -4818,6 +4913,40 @@ paths:
       security:
       - BearerAuth: []
       summary: Update Kecamatan
+      tags:
+      - master/alamat/kecamatan
+  /master/alamat/kecamatan/select:
+    get:
+      consumes:
+      - application/json
+      description: Get list of Kecamatan for select dropdown
+      parameters:
+      - description: Filter by kota_kabupaten_id
+        in: query
+        name: kota_kabupaten_id
+        required: true
+        type: integer
+      - description: Filter by name (partial match)
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.KecamatanSimpelResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Kecamatan (Select)
       tags:
       - master/alamat/kecamatan
   /master/alamat/kota:
@@ -4980,6 +5109,40 @@ paths:
       summary: Update Kota/Kabupaten
       tags:
       - master/alamat/kota
+  /master/alamat/kota/select:
+    get:
+      consumes:
+      - application/json
+      description: Get list of Kota/Kabupaten for select dropdown
+      parameters:
+      - description: Filter by provinsi_id
+        in: query
+        name: provinsi_id
+        required: true
+        type: integer
+      - description: Filter by name/code (partial match)
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.KotaKabupatenSimpelResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Kota/Kabupaten (Select)
+      tags:
+      - master/alamat/kota
   /master/alamat/negara:
     get:
       consumes:
@@ -5134,6 +5297,35 @@ paths:
       security:
       - BearerAuth: []
       summary: Update Negara
+      tags:
+      - master/alamat/negara
+  /master/alamat/negara/select:
+    get:
+      consumes:
+      - application/json
+      description: Get list of Negara for select dropdown
+      parameters:
+      - description: Filter by name (partial match)
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.NegaraSimpelResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Negara (Select)
       tags:
       - master/alamat/negara
   /master/alamat/provinsi:
@@ -5296,6 +5488,40 @@ paths:
       summary: Update Provinsi
       tags:
       - master/alamat/provinsi
+  /master/alamat/provinsi/select:
+    get:
+      consumes:
+      - application/json
+      description: Get list of Provinsi for select dropdown
+      parameters:
+      - description: Filter by negara_id
+        in: query
+        name: negara_id
+        required: true
+        type: integer
+      - description: Filter by name (partial match)
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.ProvinsiSimpelResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Provinsi (Select)
+      tags:
+      - master/alamat/provinsi
   /master/departemen:
     get:
       consumes:
@@ -5450,6 +5676,35 @@ paths:
       security:
       - BearerAuth: []
       summary: Update MasterDepartemen
+      tags:
+      - master/departemen
+  /master/departemen/select:
+    get:
+      consumes:
+      - application/json
+      description: Get list of MasterDepartemen (select) for dropdowns
+      parameters:
+      - description: Search by name
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.MasterDepartemenListSimpelResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of MasterDepartemen (select)
       tags:
       - master/departemen
   /master/golongan_darah:

@@ -310,3 +310,41 @@ func (s *MasterServiceTestSuite) Test_DeleteSuku_RepoError() {
 
 	s.Error(err)
 }
+
+func (s *MasterServiceTestSuite) Test_ListSelectSuku_Success() {
+	search := "some search"
+	items := []models.MasterSuku{
+		*factories.NewSukuFactory().Make(),
+		*factories.NewSukuFactory().Make(),
+	}
+
+	s.repo.On("ListSelectSuku", search).Return(items, nil)
+
+	result, err := s.svc.ListSelectSuku(context.Background(), search)
+
+	s.NoError(err)
+	s.Len(result, 2)
+	s.Equal(items[0].ID, result[0].ID)
+	s.Equal(items[1].ID, result[1].ID)
+}
+
+func (s *MasterServiceTestSuite) Test_ListSelectSuku_NotFound() {
+	search := "nonexistent"
+	s.repo.On("ListSelectSuku", search).Return([]models.MasterSuku{}, nil)
+
+	result, err := s.svc.ListSelectSuku(context.Background(), search)
+
+	s.Nil(result)
+	s.Error(err)
+	s.Contains(err.Error(), "tidak ditemukan")
+}
+
+func (s *MasterServiceTestSuite) Test_ListSelectSuku_RepoError() {
+	search := "error"
+	s.repo.On("ListSelectSuku", search).Return([]models.MasterSuku{}, fmt.Errorf("db error"))
+
+	result, err := s.svc.ListSelectSuku(context.Background(), search)
+
+	s.Nil(result)
+	s.Error(err)
+}

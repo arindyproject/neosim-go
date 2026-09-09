@@ -54,6 +54,38 @@ func (s *service) GetByIDKelurahanDesa(ctx context.Context, id int64) (*dto.Kelu
 	return res, nil
 }
 
+// ─────────────── ListSelect ──────────────────────────────────────────────────────
+func (s *service) ListSelectKelurahanDesa(ctx context.Context, kecamatanID int64, search string) ([]dto.KelurahanDesaSimpelResponse, error) {
+	ctxs := context.Background()
+
+	if kecamatanID <= 0 {
+		return nil, appErrors.BadRequest("ID kecamatan wajib diisi dan harus lebih dari 0")
+	}
+
+	cacheKey := cacheKeyDesaSelectList(kecamatanID, search)
+
+	// 1. Cek Cache
+	var cachedRes []dto.KelurahanDesaSimpelResponse
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
+		return cachedRes, nil
+	}
+
+	// 2. Ambil dari DB
+	items, err := s.repo.ListSelectKelurahanDesa(ctx, kecamatanID, search)
+	if err != nil {
+		return nil, err
+	}
+	if len(items) == 0 {
+		return nil, appErrors.NotFound("Kelurahan/Desa tidak ditemukan")
+	}
+
+	res := dto.ToKelurahanDesaListSimpelResponse(items)
+
+	// 3. Simpan ke Cache
+	s.cache.SetDefault(ctxs, cacheKey, res)
+	return res, nil
+}
+
 // ─────────────── List ────────────────────────────────────────────────────────────
 func (s *service) ListKelurahanDesa(ctx context.Context, page, pageSize int, kecamatanID *int64, filter *dto.FilterKelurahanDesaRequest) ([]dto.KelurahanDesaResponse, int64, error) {
 	ctxs := context.Background()
@@ -146,6 +178,7 @@ func (s *service) CreateKelurahanDesa(ctx context.Context, req *dto.CreateKelura
 
 	// Invalidate Cache
 	s.cache.InvalidateList(context.Background(), cachePrefixDesaList)
+	s.cache.InvalidateList(context.Background(), cachePrefixDesaSelectList)
 
 	return res, nil
 }
@@ -212,6 +245,7 @@ func (s *service) UpdateKelurahanDesa(ctx context.Context, id int64, req *dto.Up
 	ctxs := context.Background()
 	s.cache.InvalidateDetail(ctxs, cacheKeyDesaDetail(id))
 	s.cache.InvalidateDetail(ctxs, cacheKeyDesaGetDetail(id))
+	s.cache.InvalidateList(ctxs, cachePrefixDesaSelectList)
 	s.cache.InvalidateList(ctxs, cachePrefixDesaList)
 
 	return res, nil
@@ -245,6 +279,7 @@ func (s *service) DeleteKelurahanDesa(ctx context.Context, id int64, actor he.Au
 		s.cache.InvalidateDetail(ctxs, cacheKeyDesaDetail(id))
 		s.cache.InvalidateDetail(ctxs, cacheKeyDesaGetDetail(id))
 		s.cache.InvalidateList(ctxs, cachePrefixDesaList)
+		s.cache.InvalidateList(ctxs, cachePrefixDesaSelectList)
 	}
 	return err
 }

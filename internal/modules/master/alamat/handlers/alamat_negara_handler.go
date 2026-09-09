@@ -46,6 +46,31 @@ func (h *MasterAlamatHandler) ListNegara(c *echo.Context) error {
 	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data", items, total, page, pageSize)
 } // ───────────── List ───────────────────────────────────────────────────────────
 
+// ─────────────── ListSelect ─────────────────────────────────────────────────────
+// MasterAlamatHandler godoc
+//
+//	@Summary		Get list of Negara (Select)
+//	@Description	Get list of Negara for select dropdown
+//	@Tags			master/alamat/negara
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			search	query		string	false	"Filter by name (partial match)"
+//	@Success		200		{object}	response.MyGoResponse{data=[]dto.NegaraSimpelResponse}
+//	@Router			/master/alamat/negara/select [get]
+//
+// ListSelectNegara handles GET /api/v1/master/alamat/alamat/negara/select
+func (h *MasterAlamatHandler) ListSelectNegara(c *echo.Context) error {
+	search := c.QueryParam("search")
+
+	items, err := h.service.ListSelectNegara(c.Request().Context(), search)
+	if err != nil {
+		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
+	}
+
+	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", items, nil)
+} // ───────────── ListSelect ─────────────────────────────────────────────────────
+
 // ─────────────── GetByID ────────────────────────────────────────────────────────
 // MasterAlamatHandler godoc
 //

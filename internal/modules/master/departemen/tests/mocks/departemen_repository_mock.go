@@ -42,6 +42,14 @@ func (m *MasterDepartemenRepositoryMock) ListDepartemen(ctx context.Context, pag
 	return args.Get(0).([]models.MasterDepartemen), args.Get(1).(int64), args.Error(2)
 }
 
+func (m *MasterDepartemenRepositoryMock) ListSelectDepartemen(ctx context.Context, search string) ([]models.MasterDepartemen, error) {
+	args := m.Called(search)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.MasterDepartemen), args.Error(1)
+}
+
 func (m *MasterDepartemenRepositoryMock) UpdateDepartemen(ctx context.Context, item *models.MasterDepartemen) error {
 	args := m.Called(item)
 	return args.Error(0)

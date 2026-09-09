@@ -35,6 +35,11 @@ func (m *MasterRepositoryMock) GetByNamePekerjaan(ctx context.Context, name stri
 	return args.Get(0).(*models.MasterPekerjaan), args.Error(1)
 }
 
+func (m *MasterRepositoryMock) ListSelectPekerjaan(ctx context.Context, search string) ([]models.MasterPekerjaan, error) {
+	args := m.Called(search)
+	return args.Get(0).([]models.MasterPekerjaan), args.Error(1)
+}
+
 func (m *MasterRepositoryMock) ListPekerjaan(ctx context.Context, page, pageSize int, filter *dto.FilterMasterPekerjaanRequest) ([]models.MasterPekerjaan, int64, error) {
 	args := m.Called(page, pageSize, filter)
 	return args.Get(0).([]models.MasterPekerjaan), args.Get(1).(int64), args.Error(2)
@@ -71,6 +76,11 @@ func (m *MasterRepositoryMock) GetByNamePendidikan(ctx context.Context, name str
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*models.MasterPendidikan), args.Error(1)
+}
+
+func (m *MasterRepositoryMock) ListSelectPendidikan(ctx context.Context, search string) ([]models.MasterPendidikan, error) {
+	args := m.Called(search)
+	return args.Get(0).([]models.MasterPendidikan), args.Error(1)
 }
 
 func (m *MasterRepositoryMock) ListPendidikan(ctx context.Context, page, pageSize int, filter *dto.FilterMasterPendidikanRequest) ([]models.MasterPendidikan, int64, error) {
@@ -116,6 +126,11 @@ func (m *MasterRepositoryMock) ListAgama(ctx context.Context, page, pageSize int
 	return args.Get(0).([]models.MasterAgama), args.Get(1).(int64), args.Error(2)
 }
 
+func (m *MasterRepositoryMock) ListSelectAgama(ctx context.Context, search string) ([]models.MasterAgama, error) {
+	args := m.Called(search)
+	return args.Get(0).([]models.MasterAgama), args.Error(1)
+}
+
 func (m *MasterRepositoryMock) UpdateAgama(ctx context.Context, item *models.MasterAgama) error {
 	args := m.Called(item)
 	return args.Error(0)
@@ -147,6 +162,11 @@ func (m *MasterRepositoryMock) GetByNameStatusPernikahan(ctx context.Context, na
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*models.MasterStatusPernikahan), args.Error(1)
+}
+
+func (m *MasterRepositoryMock) ListSelectStatusPernikahan(ctx context.Context, search string) ([]models.MasterStatusPernikahan, error) {
+	args := m.Called(search)
+	return args.Get(0).([]models.MasterStatusPernikahan), args.Error(1)
 }
 
 func (m *MasterRepositoryMock) ListStatusPernikahan(ctx context.Context, page, pageSize int, filter *dto.FilterMasterStatusPernikahanRequest) ([]models.MasterStatusPernikahan, int64, error) {
@@ -187,6 +207,11 @@ func (m *MasterRepositoryMock) GetByNameSuku(ctx context.Context, name string) (
 	return args.Get(0).(*models.MasterSuku), args.Error(1)
 }
 
+func (m *MasterRepositoryMock) ListSelectSuku(ctx context.Context, search string) ([]models.MasterSuku, error) {
+	args := m.Called(search)
+	return args.Get(0).([]models.MasterSuku), args.Error(1)
+}
+
 func (m *MasterRepositoryMock) ListSuku(ctx context.Context, page, pageSize int, filter *dto.FilterMasterSukuRequest) ([]models.MasterSuku, int64, error) {
 	args := m.Called(page, pageSize, filter)
 	return args.Get(0).([]models.MasterSuku), args.Get(1).(int64), args.Error(2)
@@ -225,6 +250,11 @@ func (m *MasterRepositoryMock) GetByNameGolonganDarah(ctx context.Context, name 
 	return args.Get(0).(*models.MasterGolonganDarah), args.Error(1)
 }
 
+func (m *MasterRepositoryMock) ListSelectGolonganDarah(ctx context.Context, search string) ([]models.MasterGolonganDarah, error) {
+	args := m.Called(search)
+	return args.Get(0).([]models.MasterGolonganDarah), args.Error(1)
+}
+
 func (m *MasterRepositoryMock) ListGolonganDarah(ctx context.Context, page, pageSize int, filter *dto.FilterMasterGolonganDarahRequest) ([]models.MasterGolonganDarah, int64, error) {
 	args := m.Called(page, pageSize, filter)
 	return args.Get(0).([]models.MasterGolonganDarah), args.Get(1).(int64), args.Error(2)
@@ -261,6 +291,11 @@ func (m *MasterRepositoryMock) GetByNameJenisKelamin(ctx context.Context, name s
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*models.MasterJenisKelamin), args.Error(1)
+}
+
+func (m *MasterRepositoryMock) ListSelectJenisKelamin(ctx context.Context, search string) ([]models.MasterJenisKelamin, error) {
+	args := m.Called(search)
+	return args.Get(0).([]models.MasterJenisKelamin), args.Error(1)
 }
 
 func (m *MasterRepositoryMock) ListJenisKelamin(ctx context.Context, page, pageSize int, filter *dto.FilterMasterJenisKelaminRequest) ([]models.MasterJenisKelamin, int64, error) {

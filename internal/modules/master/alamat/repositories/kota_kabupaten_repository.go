@@ -28,6 +28,27 @@ func (r *repository) GetByIDKotaKabupaten(ctx context.Context, id int64) (*model
 	return &m, result.Error
 }
 
+func (r *repository) ListSelectKotaKabupaten(ctx context.Context, provinsiID int64, search string) ([]models.MasterAlamatKotaKabupaten, error) {
+	var items []models.MasterAlamatKotaKabupaten
+
+	// Filter kota_kabupaten_id dibuat wajib
+	query := r.db.WithContext(ctx).Model(&models.MasterAlamatKotaKabupaten{}).
+		Select("id, name, code, provinsi_id").
+		Where("master_alamat_kota_kabupaten.deleted_at IS NULL").
+		Where("provinsi_id = ?", provinsiID)
+
+	// Filter pencarian berdasarkan nama jika parameter search diisi
+	if search != "" {
+		query = query.Where("name ILIKE ?", "%"+search+"%")
+	}
+
+	if err := query.Order("name ASC").Find(&items).Error; err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
 func (r *repository) ListKotaKabupaten(ctx context.Context, page, pageSize int, provinsiID *int64, filter *dto.FilterKotaKabupatenRequest) ([]models.MasterAlamatKotaKabupaten, int64, error) {
 	var items []models.MasterAlamatKotaKabupaten
 	var total int64

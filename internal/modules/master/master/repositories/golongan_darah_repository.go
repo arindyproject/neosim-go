@@ -40,6 +40,25 @@ func (r *repository) GetByNameGolonganDarah(ctx context.Context, name string) (*
 	return &m, result.Error
 }
 
+// ------------------ListSelect-----------------------------------------
+func (r *repository) ListSelectGolonganDarah(ctx context.Context, search string) ([]models.MasterGolonganDarah, error) {
+	var items []models.MasterGolonganDarah
+
+	query := r.db.WithContext(ctx).Model(&models.MasterGolonganDarah{}).
+		Select("id, name, kode_kemenkes").
+		Where("master_golongan_darah.deleted_at IS NULL")
+
+	if search != "" {
+		query = query.Where("name ILIKE ?", "%"+search+"%")
+	}
+
+	if err := query.Order("name ASC").Find(&items).Error; err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
 // ------------------List-----------------------------------------------
 func (r *repository) ListGolonganDarah(ctx context.Context, page, pageSize int, filter *dto.FilterMasterGolonganDarahRequest) ([]models.MasterGolonganDarah, int64, error) {
 	var items []models.MasterGolonganDarah
@@ -85,4 +104,6 @@ func (r *repository) DeleteGolonganDarah(ctx context.Context, id int64, deletedB
 			"deleted_at": time.Now(),
 			"updated_by": deletedBy,
 		}).Error
-} // ===================================================================
+}
+
+// ===================================================================

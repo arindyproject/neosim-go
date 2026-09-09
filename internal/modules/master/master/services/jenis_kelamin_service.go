@@ -36,6 +36,36 @@ func (s *service) GetByIDJenisKelamin(ctx context.Context, id int64) (*dto.Maste
 	return res, nil
 }
 
+// ─────────────── ListSelect ──────────────────────────────────────────────────────
+func (s *service) ListSelectJenisKelamin(ctx context.Context, search string) ([]dto.MasterJenisKelaminListSimpelResponse, error) {
+	ctxs := context.Background()
+	cacheKey := cacheKeyJenisKelaminListSelect(search)
+
+	// 1. Cek Cache
+	var cachedRes []dto.MasterJenisKelaminListSimpelResponse
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
+		if len(cachedRes) == 0 {
+			return nil, appErrors.NotFound("JenisKelamin tidak ditemukan")
+		}
+		return cachedRes, nil
+	}
+
+	// 2. Hit Database
+	items, err := s.repo.ListSelectJenisKelamin(ctx, search)
+	if err != nil {
+		return nil, err
+	}
+	if len(items) == 0 {
+		return nil, appErrors.NotFound("JenisKelamin tidak ditemukan")
+	}
+
+	res := dto.ToMasterJenisKelaminListSimpelResponse(items)
+
+	// 3. Simpan ke Cache
+	s.cache.SetDefault(ctxs, cacheKey, res)
+	return res, nil
+}
+
 // ─────────────── List ────────────────────────────────────────────────────────────
 func (s *service) ListJenisKelamin(ctx context.Context, page, pageSize int, filter *dto.FilterMasterJenisKelaminRequest) ([]dto.MasterJenisKelaminResponse, int64, error) {
 	ctxs := context.Background()
@@ -118,6 +148,7 @@ func (s *service) CreateJenisKelamin(ctx context.Context, req *dto.CreateMasterJ
 
 	// Invalidate Cache
 	s.cache.InvalidateList(context.Background(), cachePrefixJenisKelaminList)
+	s.cache.InvalidateList(context.Background(), cachePrefixJenisKelaminListSelect)
 
 	return res, nil
 
@@ -176,6 +207,7 @@ func (s *service) UpdateJenisKelamin(ctx context.Context, id int64, req *dto.Upd
 	// Invalidate Cache
 	s.cache.InvalidateDetail(context.Background(), cacheKeyJenisKelaminDetail(id))
 	s.cache.InvalidateList(context.Background(), cachePrefixJenisKelaminList)
+	s.cache.InvalidateList(context.Background(), cachePrefixJenisKelaminListSelect)
 
 	return res, nil
 

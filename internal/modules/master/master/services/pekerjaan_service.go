@@ -36,6 +36,36 @@ func (s *service) GetByIDPekerjaan(ctx context.Context, id int64) (*dto.MasterPe
 	return res, nil
 }
 
+// ─────────────── ListSelect ──────────────────────────────────────────────────────
+func (s *service) ListSelectPekerjaan(ctx context.Context, search string) ([]dto.MasterPekerjaanListSimpelResponse, error) {
+	ctxs := context.Background()
+	cacheKey := cacheKeyPekerjaanListSelect(search)
+
+	// 1. Cek Cache
+	var cachedRes []dto.MasterPekerjaanListSimpelResponse
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
+		if len(cachedRes) == 0 {
+			return nil, appErrors.NotFound("Pekerjaan tidak ditemukan")
+		}
+		return cachedRes, nil
+	}
+
+	// 2. Hit Database
+	items, err := s.repo.ListSelectPekerjaan(ctx, search)
+	if err != nil {
+		return nil, err
+	}
+	if len(items) == 0 {
+		return nil, appErrors.NotFound("Pekerjaan tidak ditemukan")
+	}
+
+	res := dto.ToMasterPekerjaanListSimpelResponse(items)
+
+	// 3. Simpan ke Cache
+	s.cache.SetDefault(ctxs, cacheKey, res)
+	return res, nil
+}
+
 // ─────────────── List ────────────────────────────────────────────────────────────
 func (s *service) ListPekerjaan(ctx context.Context, page, pageSize int, filter *dto.FilterMasterPekerjaanRequest) ([]dto.MasterPekerjaanResponse, int64, error) {
 	ctxs := context.Background()
@@ -118,6 +148,7 @@ func (s *service) CreatePekerjaan(ctx context.Context, req *dto.CreateMasterPeke
 
 	// Invalidate Cache
 	s.cache.InvalidateList(context.Background(), cachePrefixPekerjaanList)
+	s.cache.InvalidateList(context.Background(), cachePrefixPekerjaanListSelect)
 
 	return res, nil
 
@@ -176,6 +207,7 @@ func (s *service) UpdatePekerjaan(ctx context.Context, id int64, req *dto.Update
 	// Invalidate Cache
 	s.cache.InvalidateDetail(context.Background(), cacheKeyPekerjaanDetail(id))
 	s.cache.InvalidateList(context.Background(), cachePrefixPekerjaanList)
+	s.cache.InvalidateList(context.Background(), cachePrefixPekerjaanListSelect)
 
 	return res, nil
 

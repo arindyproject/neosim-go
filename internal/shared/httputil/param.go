@@ -1,6 +1,7 @@
 package httputil
 
 import (
+	"fmt"
 	"neosim_go/config"
 	"strconv"
 
@@ -66,4 +67,24 @@ func ParseOptionalInt64Query(c *echo.Context, key string) *int64 {
 		return nil
 	}
 	return &v
+}
+
+// ParseInt64Query mengambil query parameter dan mengonversinya ke int64.
+// Mengembalikan error jika parameter kosong atau bukan angka yang valid.
+func ParseInt64Query(c *echo.Context, param string) (int64, error) {
+	valStr := c.QueryParam(param)
+	if valStr == "" {
+		return 0, fmt.Errorf("query parameter '%s' wajib diisi", param)
+	}
+
+	val, err := strconv.ParseInt(valStr, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("query parameter '%s' harus berupa angka valid", param)
+	}
+
+	if val <= 0 {
+		return 0, fmt.Errorf("query parameter '%s' harus lebih besar dari 0", param)
+	}
+
+	return val, nil
 }

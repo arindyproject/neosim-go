@@ -310,3 +310,43 @@ func (s *MasterServiceTestSuite) Test_DeletePekerjaan_RepoError() {
 
 	s.Error(err)
 }
+
+func (s *MasterServiceTestSuite) Test_ListSelectPekerjaan_Success() {
+	search := "Dokter"
+	items := []models.MasterPekerjaan{
+		*factories.NewPekerjaanFactory().Make(),
+		*factories.NewPekerjaanFactory().Make(),
+	}
+
+	s.repo.On("ListSelectPekerjaan", search).Return(items, nil)
+
+	result, err := s.svc.ListSelectPekerjaan(context.Background(), search)
+
+	s.NoError(err)
+	s.Len(result, 2)
+	s.Equal(items[0].ID, result[0].ID)
+	s.Equal(items[1].ID, result[1].ID)
+}
+
+func (s *MasterServiceTestSuite) Test_ListSelectPekerjaan_NotFound() {
+	search := "NonExistent"
+
+	s.repo.On("ListSelectPekerjaan", search).Return([]models.MasterPekerjaan{}, nil)
+
+	result, err := s.svc.ListSelectPekerjaan(context.Background(), search)
+
+	s.Nil(result)
+	s.Error(err)
+	s.Contains(err.Error(), "tidak ditemukan")
+}
+
+func (s *MasterServiceTestSuite) Test_ListSelectPekerjaan_RepoError() {
+	search := "Dokter"
+
+	s.repo.On("ListSelectPekerjaan", search).Return([]models.MasterPekerjaan{}, fmt.Errorf("db error"))
+
+	result, err := s.svc.ListSelectPekerjaan(context.Background(), search)
+
+	s.Nil(result)
+	s.Error(err)
+}

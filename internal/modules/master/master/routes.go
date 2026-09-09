@@ -17,6 +17,7 @@ func RegisterRoutes(e *echo.Echo, h *handlers.MasterHandler, jwtManager *utils.J
 	// Pekerjaan------------------------------------------------------
 	g.GET("/pekerjaan", h.ListPekerjaan)
 	g.GET("/pekerjaan/:id", h.GetByIDPekerjaan)
+	g.GET("/pekerjaan/select", h.ListSelectPekerjaan)
 	g.POST("/pekerjaan", h.CreatePekerjaan)
 	g.PUT("/pekerjaan/:id", h.UpdatePekerjaan)
 	g.DELETE("/pekerjaan/:id", h.DeletePekerjaan)
@@ -24,6 +25,7 @@ func RegisterRoutes(e *echo.Echo, h *handlers.MasterHandler, jwtManager *utils.J
 	// Pendidikan------------------------------------------------------
 	g.GET("/pendidikan", h.ListPendidikan)
 	g.GET("/pendidikan/:id", h.GetByIDPendidikan)
+	g.GET("/pendidikan/select", h.ListSelectPendidikan)
 	g.POST("/pendidikan", h.CreatePendidikan)
 	g.PUT("/pendidikan/:id", h.UpdatePendidikan)
 	g.DELETE("/pendidikan/:id", h.DeletePendidikan)
@@ -31,6 +33,7 @@ func RegisterRoutes(e *echo.Echo, h *handlers.MasterHandler, jwtManager *utils.J
 	// Agama------------------------------------------------------
 	g.GET("/agama", h.ListAgama)
 	g.GET("/agama/:id", h.GetByIDAgama)
+	g.GET("/agama/select", h.ListSelectAgama)
 	g.POST("/agama", h.CreateAgama)
 	g.PUT("/agama/:id", h.UpdateAgama)
 	g.DELETE("/agama/:id", h.DeleteAgama)
@@ -38,6 +41,7 @@ func RegisterRoutes(e *echo.Echo, h *handlers.MasterHandler, jwtManager *utils.J
 	// Status Pernikahan------------------------------------------------------
 	g.GET("/status_pernikahan", h.ListStatusPernikahan)
 	g.GET("/status_pernikahan/:id", h.GetByIDStatusPernikahan)
+	g.GET("/status_pernikahan/select", h.ListSelectStatusPernikahan)
 	g.POST("/status_pernikahan", h.CreateStatusPernikahan)
 	g.PUT("/status_pernikahan/:id", h.UpdateStatusPernikahan)
 	g.DELETE("/status_pernikahan/:id", h.DeleteStatusPernikahan)
@@ -45,6 +49,7 @@ func RegisterRoutes(e *echo.Echo, h *handlers.MasterHandler, jwtManager *utils.J
 	// Suku------------------------------------------------------
 	g.GET("/suku", h.ListSuku)
 	g.GET("/suku/:id", h.GetByIDSuku)
+	g.GET("/suku/select", h.ListSelectSuku)
 	g.POST("/suku", h.CreateSuku)
 	g.PUT("/suku/:id", h.UpdateSuku)
 	g.DELETE("/suku/:id", h.DeleteSuku)
@@ -52,6 +57,7 @@ func RegisterRoutes(e *echo.Echo, h *handlers.MasterHandler, jwtManager *utils.J
 	// Golongan Darah------------------------------------------------------
 	g.GET("/golongan_darah", h.ListGolonganDarah)
 	g.GET("/golongan_darah/:id", h.GetByIDGolonganDarah)
+	g.GET("/golongan_darah/select", h.ListSelectGolonganDarah)
 	g.POST("/golongan_darah", h.CreateGolonganDarah)
 	g.PUT("/golongan_darah/:id", h.UpdateGolonganDarah)
 	g.DELETE("/golongan_darah/:id", h.DeleteGolonganDarah)
@@ -59,6 +65,7 @@ func RegisterRoutes(e *echo.Echo, h *handlers.MasterHandler, jwtManager *utils.J
 	// Jenis Kelamin------------------------------------------------------
 	g.GET("/jenis_kelamin", h.ListJenisKelamin)
 	g.GET("/jenis_kelamin/:id", h.GetByIDJenisKelamin)
+	g.GET("/jenis_kelamin/select", h.ListSelectJenisKelamin)
 	g.POST("/jenis_kelamin", h.CreateJenisKelamin)
 	g.PUT("/jenis_kelamin/:id", h.UpdateJenisKelamin)
 	g.DELETE("/jenis_kelamin/:id", h.DeleteJenisKelamin)

@@ -28,6 +28,27 @@ func (r *repository) GetByIDKelurahanDesa(ctx context.Context, id int64) (*model
 	return &m, result.Error
 }
 
+func (r *repository) ListSelectKelurahanDesa(ctx context.Context, kecamatanID int64, search string) ([]models.MasterAlamatKelurahanDesa, error) {
+	var items []models.MasterAlamatKelurahanDesa
+
+	// Filter kecamatan_id dibuat wajib
+	query := r.db.WithContext(ctx).Model(&models.MasterAlamatKelurahanDesa{}).
+		Select("id, name, code, kecamatan_id, postal_code").
+		Where("master_alamat_kelurahan_desa.deleted_at IS NULL").
+		Where("kecamatan_id = ?", kecamatanID)
+
+	// Filter pencarian berdasarkan nama jika parameter search diisi
+	if search != "" {
+		query = query.Where("name ILIKE ?", "%"+search+"%")
+	}
+
+	if err := query.Order("name ASC").Find(&items).Error; err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
 func (r *repository) ListKelurahanDesa(ctx context.Context, page, pageSize int, kecamatanID *int64, filter *dto.FilterKelurahanDesaRequest) ([]models.MasterAlamatKelurahanDesa, int64, error) {
 	var items []models.MasterAlamatKelurahanDesa
 	var total int64

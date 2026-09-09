@@ -40,6 +40,25 @@ func (r *repository) GetByNamePendidikan(ctx context.Context, name string) (*mod
 	return &m, result.Error
 }
 
+// ------------------ListSelect-----------------------------------------
+func (r *repository) ListSelectPendidikan(ctx context.Context, search string) ([]models.MasterPendidikan, error) {
+	var items []models.MasterPendidikan
+
+	query := r.db.WithContext(ctx).Model(&models.MasterPendidikan{}).
+		Select("id, name, kode_kemenkes").
+		Where("master_pendidikan.deleted_at IS NULL")
+
+	if search != "" {
+		query = query.Where("name ILIKE ?", "%"+search+"%")
+	}
+
+	if err := query.Order("name ASC").Find(&items).Error; err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
 // ------------------List-----------------------------------------------
 func (r *repository) ListPendidikan(ctx context.Context, page, pageSize int, filter *dto.FilterMasterPendidikanRequest) ([]models.MasterPendidikan, int64, error) {
 	var items []models.MasterPendidikan
@@ -85,4 +104,6 @@ func (r *repository) DeletePendidikan(ctx context.Context, id int64, deletedBy i
 			"deleted_at": time.Now(),
 			"updated_by": deletedBy,
 		}).Error
-} // ===================================================================
+}
+
+// ===================================================================

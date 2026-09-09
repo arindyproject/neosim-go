@@ -40,6 +40,25 @@ func (r *repository) GetByNamePekerjaan(ctx context.Context, name string) (*mode
 	return &m, result.Error
 }
 
+// ------------------ListSelect-----------------------------------------
+func (r *repository) ListSelectPekerjaan(ctx context.Context, search string) ([]models.MasterPekerjaan, error) {
+	var items []models.MasterPekerjaan
+
+	query := r.db.WithContext(ctx).Model(&models.MasterPekerjaan{}).
+		Select("id, name, kode_kemenkes").
+		Where("master_pekerjaan.deleted_at IS NULL")
+
+	if search != "" {
+		query = query.Where("name ILIKE ?", "%"+search+"%")
+	}
+
+	if err := query.Order("name ASC").Find(&items).Error; err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
 // ------------------List-----------------------------------------------
 func (r *repository) ListPekerjaan(ctx context.Context, page, pageSize int, filter *dto.FilterMasterPekerjaanRequest) ([]models.MasterPekerjaan, int64, error) {
 	var items []models.MasterPekerjaan
@@ -85,4 +104,6 @@ func (r *repository) DeletePekerjaan(ctx context.Context, id int64, deletedBy in
 			"deleted_at": time.Now(),
 			"updated_by": deletedBy,
 		}).Error
-} // ===================================================================
+}
+
+// ===================================================================

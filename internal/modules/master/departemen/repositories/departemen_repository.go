@@ -26,6 +26,21 @@ func (r *repository) GetDepartemenByID(ctx context.Context, id int64) (*models.M
 	return &m, result.Error
 }
 
+// ── ListSelect ────────────────────────────────────────────────────────────────
+func (r *repository) ListSelectDepartemen(ctx context.Context, search string) ([]models.MasterDepartemen, error) {
+	var items []models.MasterDepartemen
+	query := r.db.WithContext(ctx).Model(&models.MasterDepartemen{}).
+		Select("id, name").
+		Where("deleted_at IS NULL")
+	if search != "" {
+		query = query.Where("name ILIKE ?", "%"+search+"%")
+	}
+	if err := query.Find(&items).Error; err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 // ── List ──────────────────────────────────────────────────────────────────────
 func (r *repository) ListDepartemen(ctx context.Context, page, pageSize int, filter *dto.FilterMasterDepartemenRequest) ([]models.MasterDepartemen, int64, error) {
 	var items []models.MasterDepartemen

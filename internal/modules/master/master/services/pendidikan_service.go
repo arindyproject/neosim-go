@@ -36,6 +36,36 @@ func (s *service) GetByIDPendidikan(ctx context.Context, id int64) (*dto.MasterP
 	return res, nil
 }
 
+// ─────────────── ListSelect ──────────────────────────────────────────────────────
+func (s *service) ListSelectPendidikan(ctx context.Context, search string) ([]dto.MasterPendidikanListSimpelResponse, error) {
+	ctxs := context.Background()
+	cacheKey := cacheKeyPendidikanListSelect(search)
+
+	// 1. Cek Cache
+	var cachedRes []dto.MasterPendidikanListSimpelResponse
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
+		if len(cachedRes) == 0 {
+			return nil, appErrors.NotFound("Pendidikan tidak ditemukan")
+		}
+		return cachedRes, nil
+	}
+
+	// 2. Hit Database
+	items, err := s.repo.ListSelectPendidikan(ctx, search)
+	if err != nil {
+		return nil, err
+	}
+	if len(items) == 0 {
+		return nil, appErrors.NotFound("Pendidikan tidak ditemukan")
+	}
+
+	res := dto.ToMasterPendidikanListSimpelResponse(items)
+
+	// 3. Simpan ke Cache
+	s.cache.SetDefault(ctxs, cacheKey, res)
+	return res, nil
+}
+
 // ─────────────── List ────────────────────────────────────────────────────────────
 func (s *service) ListPendidikan(ctx context.Context, page, pageSize int, filter *dto.FilterMasterPendidikanRequest) ([]dto.MasterPendidikanResponse, int64, error) {
 	ctxs := context.Background()
@@ -118,6 +148,7 @@ func (s *service) CreatePendidikan(ctx context.Context, req *dto.CreateMasterPen
 
 	// Invalidate Cache
 	s.cache.InvalidateList(context.Background(), cachePrefixPendidikanList)
+	s.cache.InvalidateList(context.Background(), cachePrefixPendidikanListSelect)
 
 	return res, nil
 
@@ -176,6 +207,7 @@ func (s *service) UpdatePendidikan(ctx context.Context, id int64, req *dto.Updat
 	// Invalidate Cache
 	s.cache.InvalidateDetail(context.Background(), cacheKeyPendidikanDetail(id))
 	s.cache.InvalidateList(context.Background(), cachePrefixPendidikanList)
+	s.cache.InvalidateList(context.Background(), cachePrefixPendidikanListSelect)
 
 	return res, nil
 

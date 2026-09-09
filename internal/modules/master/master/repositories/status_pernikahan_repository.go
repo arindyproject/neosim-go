@@ -40,6 +40,25 @@ func (r *repository) GetByNameStatusPernikahan(ctx context.Context, name string)
 	return &m, result.Error
 }
 
+// ------------------ListSelect-----------------------------------------
+func (r *repository) ListSelectStatusPernikahan(ctx context.Context, search string) ([]models.MasterStatusPernikahan, error) {
+	var items []models.MasterStatusPernikahan
+
+	query := r.db.WithContext(ctx).Model(&models.MasterStatusPernikahan{}).
+		Select("id, name, kode_kemenkes").
+		Where("master_status_pernikahan.deleted_at IS NULL")
+
+	if search != "" {
+		query = query.Where("name ILIKE ?", "%"+search+"%")
+	}
+
+	if err := query.Order("name ASC").Find(&items).Error; err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
 // ------------------List-----------------------------------------------
 // PERBAIKAN TYPO: LisStatusPernikahan -> ListStatusPernikahan
 func (r *repository) ListStatusPernikahan(ctx context.Context, page, pageSize int, filter *dto.FilterMasterStatusPernikahanRequest) ([]models.MasterStatusPernikahan, int64, error) {
@@ -86,4 +105,6 @@ func (r *repository) DeleteStatusPernikahan(ctx context.Context, id int64, delet
 			"deleted_at": time.Now(),
 			"updated_by": deletedBy,
 		}).Error
-} // ===================================================================
+}
+
+// ===================================================================

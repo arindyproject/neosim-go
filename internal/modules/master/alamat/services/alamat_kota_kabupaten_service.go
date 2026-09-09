@@ -61,6 +61,38 @@ func (s *service) GetByIDKotaKabupaten(ctx context.Context, id int64) (*dto.Kota
 	return res, nil
 }
 
+// ─────────────── ListSelect ──────────────────────────────────────────────────────
+func (s *service) ListSelectKotaKabupaten(ctx context.Context, provinsiID int64, search string) ([]dto.KotaKabupatenSimpelResponse, error) {
+	ctxs := context.Background()
+
+	if provinsiID <= 0 {
+		return nil, appErrors.BadRequest("ID provinsi wajib diisi dan harus lebih dari 0")
+	}
+
+	cacheKey := cacheKeyKotaSelectList(provinsiID, search)
+
+	// 1. Cek Cache
+	var cachedRes []dto.KotaKabupatenSimpelResponse
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
+		return cachedRes, nil
+	}
+
+	// 2. Ambil dari DB
+	items, err := s.repo.ListSelectKotaKabupaten(ctx, provinsiID, search)
+	if err != nil {
+		return nil, err
+	}
+	if len(items) == 0 {
+		return nil, appErrors.NotFound("Kota/Kabupaten tidak ditemukan")
+	}
+
+	res := dto.ToKotaKabupatenListSimpelResponse(items)
+
+	// 3. Simpan ke Cache
+	s.cache.SetDefault(ctxs, cacheKey, res)
+	return res, nil
+}
+
 // ─────────────── List ────────────────────────────────────────────────────────────
 func (s *service) ListKotaKabupaten(ctx context.Context, page, pageSize int, provinsiID *int64, filter *dto.FilterKotaKabupatenRequest) ([]dto.KotaKabupatenResponse, int64, error) {
 	ctxs := context.Background()
@@ -155,6 +187,9 @@ func (s *service) CreateKotaKabupaten(ctx context.Context, req *dto.CreateKotaKa
 	s.cache.InvalidateList(ctxs, cachePrefixKotaList)
 	s.cache.InvalidateList(ctxs, cachePrefixKecamatanList)
 	s.cache.InvalidateList(ctxs, cachePrefixDesaList)
+	s.cache.InvalidateList(ctxs, cachePrefixKotaSelectList)
+	s.cache.InvalidateList(ctxs, cachePrefixKecamatanSelectList)
+	s.cache.InvalidateList(ctxs, cachePrefixDesaSelectList)
 
 	return res, nil
 }
@@ -221,6 +256,9 @@ func (s *service) UpdateKotaKabupaten(ctx context.Context, id int64, req *dto.Up
 	s.cache.InvalidateList(ctxs, cachePrefixKotaList)
 	s.cache.InvalidateList(ctxs, cachePrefixKecamatanList)
 	s.cache.InvalidateList(ctxs, cachePrefixDesaList)
+	s.cache.InvalidateList(ctxs, cachePrefixKotaSelectList)
+	s.cache.InvalidateList(ctxs, cachePrefixKecamatanSelectList)
+	s.cache.InvalidateList(ctxs, cachePrefixDesaSelectList)
 
 	return res, nil
 }

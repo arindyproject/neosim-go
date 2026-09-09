@@ -63,6 +63,38 @@ func (s *service) GetByIDProvinsi(ctx context.Context, id int64) (*dto.ProvinsiD
 	return res, nil
 }
 
+// ─────────────── ListSelect ──────────────────────────────────────────────────────
+func (s *service) ListSelectProvinsi(ctx context.Context, negaraID int64, search string) ([]dto.ProvinsiSimpelResponse, error) {
+	ctxs := context.Background()
+
+	if negaraID <= 0 {
+		return nil, appErrors.BadRequest("ID negara wajib diisi dan harus lebih dari 0")
+	}
+
+	cacheKey := cacheKeyProvinsiSelectList(negaraID, search)
+
+	// 1. Cek Cache
+	var cachedRes []dto.ProvinsiSimpelResponse
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
+		return cachedRes, nil
+	}
+
+	// 2. Ambil dari DB
+	items, err := s.repo.ListSelectProvinsi(ctx, negaraID, search)
+	if err != nil {
+		return nil, err
+	}
+	if len(items) == 0 {
+		return nil, appErrors.NotFound("Provinsi tidak ditemukan")
+	}
+
+	res := dto.ToProvinsiListSimpelResponse(items)
+
+	// 3. Simpan ke Cache
+	s.cache.SetDefault(ctxs, cacheKey, res)
+	return res, nil
+}
+
 // ─────────────── List ────────────────────────────────────────────────────────────
 func (s *service) ListProvinsi(ctx context.Context, page, pageSize int, negaraID *int64, filter *dto.FilterProvinsiRequest) ([]dto.ProvinsiResponse, int64, error) {
 	ctxs := context.Background()
@@ -159,6 +191,10 @@ func (s *service) CreateProvinsi(ctx context.Context, req *dto.CreateProvinsiReq
 	s.cache.InvalidateList(ctxs, cachePrefixKotaList)
 	s.cache.InvalidateList(ctxs, cachePrefixKecamatanList)
 	s.cache.InvalidateList(ctxs, cachePrefixDesaList)
+	s.cache.InvalidateList(ctxs, cachePrefixProvinsiSelectList)
+	s.cache.InvalidateList(ctxs, cachePrefixKotaSelectList)
+	s.cache.InvalidateList(ctxs, cachePrefixKecamatanSelectList)
+	s.cache.InvalidateList(ctxs, cachePrefixDesaSelectList)
 
 	return res, nil
 }
@@ -226,6 +262,10 @@ func (s *service) UpdateProvinsi(ctx context.Context, id int64, req *dto.UpdateP
 	s.cache.InvalidateList(ctxs, cachePrefixKotaList)
 	s.cache.InvalidateList(ctxs, cachePrefixKecamatanList)
 	s.cache.InvalidateList(ctxs, cachePrefixDesaList)
+	s.cache.InvalidateList(ctxs, cachePrefixProvinsiSelectList)
+	s.cache.InvalidateList(ctxs, cachePrefixKotaSelectList)
+	s.cache.InvalidateList(ctxs, cachePrefixKecamatanSelectList)
+	s.cache.InvalidateList(ctxs, cachePrefixDesaSelectList)
 
 	return res, nil
 }
