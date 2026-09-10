@@ -18,6 +18,28 @@ import (
 // diberi suffix Jenjang agar tidak bentrok dengan method entitas utama
 // pada struct handler yang sama.
 
+// ─── ListSelectJenjang ────────────────────────────────────────────────
+//
+//	@Summary		Get list of Jenjang for select
+//	@Description	Get list of Jenjang for select with optional search
+//	@Tags			kepegawaian/pendidikan/jenjang
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			search	query	string	false	"Search by label or code"
+//	@Success		200		{object}	response.MyGoResponse{data=[]dto.JenjangSelectResponse}
+//	@Router			/kepegawaian/pendidikan/jenjangs/select [get]
+func (h *KepegawaianPendidikanHandler) ListSelectJenjang(c *echo.Context) error {
+	search := c.QueryParam("search")
+
+	actor := he.BuildAuthContext(c)
+	items, err := h.service.ListSelectJenjang(c.Request().Context(), search, actor)
+	if err != nil {
+		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", items, nil)
+}
+
 // ─── ListJenjang ──────────────────────────────────────────────────────
 //
 //	@Summary		Get list of Jenjang

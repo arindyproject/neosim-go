@@ -62,7 +62,7 @@ func (s *KepegawaianKontakServiceTestSuite) SetupTest() {
 		DefaultPageSize:    10,
 		DefaultPageSizeMax: 10,
 	}
-	s.svc = services.NewKepegawaianKontakService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.cfg)
+	s.svc = services.NewKepegawaianKontakService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.cfg, nil)
 
 	// Stub default agar buildCreator/buildAuditMaps tidak panic saat memanggil userRepo.
 	// Boleh dipanggil 0 kali atau lebih (.Maybe()) tergantung skenario test.

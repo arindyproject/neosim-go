@@ -16,6 +16,8 @@ type CreateKepegawaianKualifikasiRequest struct {
 
 	IsAktif bool `json:"is_aktif"`
 
+	Point *float64 `json:"point" validate:"omitempty,gte=0"`
+
 	FhirCode   *string `json:"fhir_code"`
 	FhirSystem *string `json:"fhir_system"`
 }
@@ -32,6 +34,8 @@ type UpdateKepegawaianKualifikasiRequest struct {
 	TanggalExpired *types.DateOnly `json:"tanggal_expired" swaggertype:"string" format:"date" example:"2026-01-01"`
 
 	IsAktif *bool `json:"is_aktif"`
+
+	Point *float64 `json:"point" validate:"omitempty,gte=0"`
 
 	FhirCode   *string `json:"fhir_code"`
 	FhirSystem *string `json:"fhir_system"`

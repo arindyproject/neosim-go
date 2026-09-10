@@ -16,6 +16,7 @@ type TipeResponse struct {
 	HasExpiry   bool             `json:"has_expiry"`
 	IsNakes     bool             `json:"is_nakes"`
 	IsRequired  bool             `json:"is_required"`
+	Point       *float64         `json:"point"`
 	Description *string          `json:"description"`
 	CreatedBy   *he.UserData     `json:"created_by"`
 	UpdatedBy   *he.UserData     `json:"updated_by"`
@@ -24,21 +25,40 @@ type TipeResponse struct {
 }
 
 type TipeSimpelResponse struct {
-	ID          int64   `json:"id"`
-	Code        string  `json:"code"`
-	Label       string  `json:"label"`
-	Penerbit    *string `json:"penerbit"`
-	FHIRSystem  *string `json:"fhir_system"`
-	HasExpiry   bool    `json:"has_expiry"`
-	IsNakes     bool    `json:"is_nakes"`
-	IsRequired  bool    `json:"is_required"`
-	Description *string `json:"description"`
+	ID          int64    `json:"id"`
+	Code        string   `json:"code"`
+	Label       string   `json:"label"`
+	Penerbit    *string  `json:"penerbit"`
+	FHIRSystem  *string  `json:"fhir_system"`
+	HasExpiry   bool     `json:"has_expiry"`
+	IsNakes     bool     `json:"is_nakes"`
+	IsRequired  bool     `json:"is_required"`
+	Point       *float64 `json:"point"`
+	Description *string  `json:"description"`
+}
+
+type TipeSelectResponse struct {
+	ID    int64  `json:"id"`
+	Code  string `json:"code"`
+	Label string `json:"label"`
 }
 
 type TipeResponseParams struct {
 	Tipe    *models.Tipe
 	Creator *he.UserData
 	Updater *he.UserData
+}
+
+func ToTipeSelectResponse(items []models.Tipe) []TipeSelectResponse {
+	responses := make([]TipeSelectResponse, 0, len(items))
+	for _, item := range items {
+		responses = append(responses, TipeSelectResponse{
+			ID:    item.ID,
+			Code:  item.Code,
+			Label: item.Label,
+		})
+	}
+	return responses
 }
 
 // ToTipeResponse mengubah model menjadi response
@@ -56,6 +76,7 @@ func ToTipeResponse(params TipeResponseParams) *TipeResponse {
 		HasExpiry:   params.Tipe.HasExpiry,
 		IsNakes:     params.Tipe.IsNakes,
 		IsRequired:  params.Tipe.IsRequired,
+		Point:       params.Tipe.Point,
 		Description: params.Tipe.Description,
 		CreatedBy:   params.Creator,
 		UpdatedBy:   params.Updater,

@@ -1421,6 +1421,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/kepegawaian/identifier/tipes/select": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get list of Tipe for select with optional search",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/identifier/tipe"
+                ],
+                "summary": "Get list of Tipe for select",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search by label or code",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.TipeSelectResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/kepegawaian/identifier/tipes/{id}": {
             "get": {
                 "security": [
@@ -3494,6 +3545,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/kepegawaian/pendidikan/jenjangs/select": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get list of Jenjang for select with optional search",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/pendidikan/jenjang"
+                ],
+                "summary": "Get list of Jenjang for select",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search by label or code",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.JenjangSelectResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/kepegawaian/pendidikan/jenjangs/{id}": {
             "get": {
                 "security": [
@@ -3947,6 +4049,57 @@ const docTemplate = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/dto.MasterAgamaResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/master/agama/select": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get list of Agama for select",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/agama"
+                ],
+                "summary": "Get list of Agama for select",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by name (partial match)",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.MasterAgamaListSimpelResponse"
+                                            }
                                         }
                                     }
                                 }
@@ -6161,6 +6314,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/master/golongan_darah/select": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get list of GolonganDarah for select",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/golongan_darah"
+                ],
+                "summary": "Get list of GolonganDarah for select",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by name (partial match)",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.MasterGolonganDarahListSimpelResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/master/golongan_darah/{id}": {
             "get": {
                 "security": [
@@ -6410,6 +6614,57 @@ const docTemplate = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/dto.MasterJenisKelaminResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/master/jenis_kelamin/select": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get list of JenisKelamin for select",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/jenis_kelamin"
+                ],
+                "summary": "Get list of JenisKelamin for select",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by name (partial match)",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.MasterJenisKelaminListSimpelResponse"
+                                            }
                                         }
                                     }
                                 }
@@ -6677,6 +6932,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/master/pekerjaan/select": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get list of Pekerjaan for select",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/pekerjaan"
+                ],
+                "summary": "Get list of Pekerjaan for select",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by name (partial match)",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.MasterPekerjaanListSimpelResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/master/pekerjaan/{id}": {
             "get": {
                 "security": [
@@ -6926,6 +7232,57 @@ const docTemplate = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/dto.MasterPendidikanResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/master/pendidikan/select": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get list of Pendidikan for select",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/pendidikan"
+                ],
+                "summary": "Get list of Pendidikan for select",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by name (partial match)",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.MasterPendidikanListSimpelResponse"
+                                            }
                                         }
                                     }
                                 }
@@ -7193,6 +7550,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/master/status_pernikahan/select": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get list of StatusPernikahan for select",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/status_pernikahan"
+                ],
+                "summary": "Get list of StatusPernikahan for select",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by name (partial match)",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.MasterStatusPernikahanListSimpelResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/master/status_pernikahan/{id}": {
             "get": {
                 "security": [
@@ -7442,6 +7850,57 @@ const docTemplate = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/dto.MasterSukuResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/master/suku/select": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get list of Suku for select",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "master/suku"
+                ],
+                "summary": "Get list of Suku for select",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by name (partial match)",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.MasterSukuListSimpelResponse"
+                                            }
                                         }
                                     }
                                 }
@@ -9431,6 +9890,10 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 255,
                     "minLength": 1
+                },
+                "point": {
+                    "type": "number",
+                    "minimum": 0
                 }
             }
         },
@@ -9597,6 +10060,10 @@ const docTemplate = `{
                     "maxLength": 255,
                     "minLength": 1
                 },
+                "point": {
+                    "type": "number",
+                    "minimum": 0
+                },
                 "tanggal_expired": {
                     "type": "string",
                     "format": "date",
@@ -9670,6 +10137,10 @@ const docTemplate = `{
                 },
                 "pegawai_id": {
                     "type": "integer"
+                },
+                "point": {
+                    "type": "number",
+                    "minimum": 0
                 },
                 "tanggal_lulus": {
                     "type": "string",
@@ -10124,11 +10595,28 @@ const docTemplate = `{
                 "label": {
                     "type": "string"
                 },
+                "point": {
+                    "type": "number"
+                },
                 "updated_at": {
                     "type": "string"
                 },
                 "updated_by": {
                     "$ref": "#/definitions/httputil.UserData"
+                }
+            }
+        },
+        "dto.JenjangSelectResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "label": {
+                    "type": "string"
                 }
             }
         },
@@ -10146,6 +10634,9 @@ const docTemplate = `{
                 },
                 "label": {
                     "type": "string"
+                },
+                "point": {
+                    "type": "number"
                 }
             }
         },
@@ -10475,6 +10966,9 @@ const docTemplate = `{
                 "penyelenggara": {
                     "type": "string"
                 },
+                "point": {
+                    "type": "number"
+                },
                 "tanggal_expired": {
                     "$ref": "#/definitions/types.DateOnly"
                 },
@@ -10566,6 +11060,9 @@ const docTemplate = `{
                 },
                 "pegawai_id": {
                     "type": "integer"
+                },
+                "point": {
+                    "type": "number"
                 },
                 "tanggal_lulus": {
                     "$ref": "#/definitions/types.DateOnly"
@@ -10693,6 +11190,20 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.MasterAgamaListSimpelResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "kode_kemenkes": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.MasterAgamaResponse": {
             "type": "object",
             "properties": {
@@ -10768,6 +11279,20 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.MasterGolonganDarahListSimpelResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "kode_kemenkes": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.MasterGolonganDarahResponse": {
             "type": "object",
             "properties": {
@@ -10797,6 +11322,20 @@ const docTemplate = `{
                 },
                 "updated_by": {
                     "type": "integer"
+                }
+            }
+        },
+        "dto.MasterJenisKelaminListSimpelResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "kode_kemenkes": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },
@@ -10832,6 +11371,20 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.MasterPekerjaanListSimpelResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "kode_kemenkes": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.MasterPekerjaanResponse": {
             "type": "object",
             "properties": {
@@ -10861,6 +11414,20 @@ const docTemplate = `{
                 },
                 "updated_by": {
                     "type": "integer"
+                }
+            }
+        },
+        "dto.MasterPendidikanListSimpelResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "kode_kemenkes": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },
@@ -10896,6 +11463,20 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.MasterStatusPernikahanListSimpelResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "kode_kemenkes": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.MasterStatusPernikahanResponse": {
             "type": "object",
             "properties": {
@@ -10925,6 +11506,20 @@ const docTemplate = `{
                 },
                 "updated_by": {
                     "type": "integer"
+                }
+            }
+        },
+        "dto.MasterSukuListSimpelResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "kode_kemenkes": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },
@@ -11263,6 +11858,20 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.TipeSelectResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "label": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.TokenResponse": {
             "type": "object",
             "properties": {
@@ -11329,6 +11938,10 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 255,
                     "minLength": 1
+                },
+                "point": {
+                    "type": "number",
+                    "minimum": 0
                 }
             }
         },
@@ -11460,6 +12073,10 @@ const docTemplate = `{
                     "maxLength": 255,
                     "minLength": 1
                 },
+                "point": {
+                    "type": "number",
+                    "minimum": 0
+                },
                 "tanggal_expired": {
                     "type": "string",
                     "format": "date",
@@ -11522,6 +12139,10 @@ const docTemplate = `{
                 "nomor_ijazah": {
                     "type": "string",
                     "maxLength": 255
+                },
+                "point": {
+                    "type": "number",
+                    "minimum": 0
                 },
                 "tanggal_lulus": {
                     "type": "string",
@@ -12071,6 +12692,10 @@ const docTemplate = `{
                 "penerbit": {
                     "type": "string",
                     "maxLength": 255
+                },
+                "point": {
+                    "type": "number",
+                    "minimum": 0
                 }
             }
         },
@@ -12110,6 +12735,9 @@ const docTemplate = `{
                 "penerbit": {
                     "type": "string"
                 },
+                "point": {
+                    "type": "number"
+                },
                 "updated_at": {
                     "type": "string"
                 },
@@ -12147,6 +12775,9 @@ const docTemplate = `{
                 },
                 "penerbit": {
                     "type": "string"
+                },
+                "point": {
+                    "type": "number"
                 }
             }
         },
@@ -12183,6 +12814,10 @@ const docTemplate = `{
                 "penerbit": {
                     "type": "string",
                     "maxLength": 255
+                },
+                "point": {
+                    "type": "number",
+                    "minimum": 0
                 }
             }
         },

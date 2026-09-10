@@ -21,6 +21,7 @@ func RegisterRoutes(e *echo.Echo, h *handlers.KepegawaianPendidikanHandler, jwtM
 	gJenjang := e.Group("/api/v1/kepegawaian/pendidikan/jenjangs", jwt)
 	gJenjang.GET("", h.ListJenjang)
 	gJenjang.GET("/:id", h.GetJenjangByID)
+	gJenjang.GET("/select", h.ListSelectJenjang)
 	gJenjang.POST("", h.CreateJenjang)
 	gJenjang.PUT("/:id", h.UpdateJenjang)
 	gJenjang.DELETE("/:id", h.DeleteJenjang)

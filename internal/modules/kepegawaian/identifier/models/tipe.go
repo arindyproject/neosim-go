@@ -16,6 +16,7 @@ type Tipe struct {
 	HasExpiry   bool           `gorm:"column:has_expiry;type:boolean;not null;default:false" json:"has_expiry"`
 	IsNakes     bool           `gorm:"column:is_nakes;type:boolean;not null;default:false" json:"is_nakes"`
 	IsRequired  bool           `gorm:"column:is_required;type:boolean;not null;default:false" json:"is_required"`
+	Point       *float64       `gorm:"column:point;type:decimal(10,2);default:0.00" json:"point"`
 	Description *string        `gorm:"column:description;type:text" json:"description"`
 	CreatedBy   *int64         `gorm:"column:created_by" json:"created_by"`
 	UpdatedBy   *int64         `gorm:"column:updated_by" json:"updated_by"`

@@ -115,6 +115,9 @@ definitions:
         maxLength: 255
         minLength: 1
         type: string
+      point:
+        minimum: 0
+        type: number
     required:
     - code
     - label
@@ -234,6 +237,9 @@ definitions:
         maxLength: 255
         minLength: 1
         type: string
+      point:
+        minimum: 0
+        type: number
       tanggal_expired:
         example: "2026-01-01"
         format: date
@@ -289,6 +295,9 @@ definitions:
         type: string
       pegawai_id:
         type: integer
+      point:
+        minimum: 0
+        type: number
       tanggal_lulus:
         example: "2026-01-01"
         format: date
@@ -622,10 +631,21 @@ definitions:
         type: integer
       label:
         type: string
+      point:
+        type: number
       updated_at:
         type: string
       updated_by:
         $ref: '#/definitions/httputil.UserData'
+    type: object
+  dto.JenjangSelectResponse:
+    properties:
+      code:
+        type: string
+      id:
+        type: integer
+      label:
+        type: string
     type: object
   dto.JenjangSimpelResponse:
     properties:
@@ -637,6 +657,8 @@ definitions:
         type: integer
       label:
         type: string
+      point:
+        type: number
     type: object
   dto.KecamatanDetailResponse:
     properties:
@@ -850,6 +872,8 @@ definitions:
         type: integer
       penyelenggara:
         type: string
+      point:
+        type: number
       tanggal_expired:
         $ref: '#/definitions/types.DateOnly'
       tanggal_terbit:
@@ -908,6 +932,8 @@ definitions:
         type: string
       pegawai_id:
         type: integer
+      point:
+        type: number
       tanggal_lulus:
         $ref: '#/definitions/types.DateOnly'
       tanggal_masuk:
@@ -991,6 +1017,15 @@ definitions:
     required:
     - refresh_token
     type: object
+  dto.MasterAgamaListSimpelResponse:
+    properties:
+      id:
+        type: integer
+      kode_kemenkes:
+        type: string
+      name:
+        type: string
+    type: object
   dto.MasterAgamaResponse:
     properties:
       created_at:
@@ -1040,6 +1075,15 @@ definitions:
       updated_by:
         $ref: '#/definitions/httputil.UserData'
     type: object
+  dto.MasterGolonganDarahListSimpelResponse:
+    properties:
+      id:
+        type: integer
+      kode_kemenkes:
+        type: string
+      name:
+        type: string
+    type: object
   dto.MasterGolonganDarahResponse:
     properties:
       created_at:
@@ -1060,6 +1104,15 @@ definitions:
         type: string
       updated_by:
         type: integer
+    type: object
+  dto.MasterJenisKelaminListSimpelResponse:
+    properties:
+      id:
+        type: integer
+      kode_kemenkes:
+        type: string
+      name:
+        type: string
     type: object
   dto.MasterJenisKelaminResponse:
     properties:
@@ -1082,6 +1135,15 @@ definitions:
       updated_by:
         type: integer
     type: object
+  dto.MasterPekerjaanListSimpelResponse:
+    properties:
+      id:
+        type: integer
+      kode_kemenkes:
+        type: string
+      name:
+        type: string
+    type: object
   dto.MasterPekerjaanResponse:
     properties:
       created_at:
@@ -1102,6 +1164,15 @@ definitions:
         type: string
       updated_by:
         type: integer
+    type: object
+  dto.MasterPendidikanListSimpelResponse:
+    properties:
+      id:
+        type: integer
+      kode_kemenkes:
+        type: string
+      name:
+        type: string
     type: object
   dto.MasterPendidikanResponse:
     properties:
@@ -1124,6 +1195,15 @@ definitions:
       updated_by:
         type: integer
     type: object
+  dto.MasterStatusPernikahanListSimpelResponse:
+    properties:
+      id:
+        type: integer
+      kode_kemenkes:
+        type: string
+      name:
+        type: string
+    type: object
   dto.MasterStatusPernikahanResponse:
     properties:
       created_at:
@@ -1144,6 +1224,15 @@ definitions:
         type: string
       updated_by:
         type: integer
+    type: object
+  dto.MasterSukuListSimpelResponse:
+    properties:
+      id:
+        type: integer
+      kode_kemenkes:
+        type: string
+      name:
+        type: string
     type: object
   dto.MasterSukuResponse:
     properties:
@@ -1366,6 +1455,15 @@ definitions:
       updated_by:
         $ref: '#/definitions/httputil.UserData'
     type: object
+  dto.TipeSelectResponse:
+    properties:
+      code:
+        type: string
+      id:
+        type: integer
+      label:
+        type: string
+    type: object
   dto.TokenResponse:
     properties:
       access_token:
@@ -1414,6 +1512,9 @@ definitions:
         maxLength: 255
         minLength: 1
         type: string
+      point:
+        minimum: 0
+        type: number
     type: object
   dto.UpdateKecamatanRequest:
     properties:
@@ -1508,6 +1609,9 @@ definitions:
         maxLength: 255
         minLength: 1
         type: string
+      point:
+        minimum: 0
+        type: number
       tanggal_expired:
         example: "2026-01-01"
         format: date
@@ -1554,6 +1658,9 @@ definitions:
       nomor_ijazah:
         maxLength: 255
         type: string
+      point:
+        minimum: 0
+        type: number
       tanggal_lulus:
         example: "2026-01-01"
         format: date
@@ -1938,6 +2045,9 @@ definitions:
       penerbit:
         maxLength: 255
         type: string
+      point:
+        minimum: 0
+        type: number
     required:
     - code
     - label
@@ -1966,6 +2076,8 @@ definitions:
         type: string
       penerbit:
         type: string
+      point:
+        type: number
       updated_at:
         type: string
       updated_by:
@@ -1991,6 +2103,8 @@ definitions:
         type: string
       penerbit:
         type: string
+      point:
+        type: number
     type: object
   neosim_go_internal_modules_kepegawaian_identifier_dto.UpdateTipeRequest:
     properties:
@@ -2017,6 +2131,9 @@ definitions:
       penerbit:
         maxLength: 255
         type: string
+      point:
+        minimum: 0
+        type: number
     type: object
   neosim_go_internal_modules_kepegawaian_kontak_dto.CreateTipeRequest:
     properties:
@@ -3181,6 +3298,35 @@ paths:
       security:
       - BearerAuth: []
       summary: Update Tipe
+      tags:
+      - kepegawaian/identifier/tipe
+  /kepegawaian/identifier/tipes/select:
+    get:
+      consumes:
+      - application/json
+      description: Get list of Tipe for select with optional search
+      parameters:
+      - description: Search by label or code
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.TipeSelectResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Tipe for select
       tags:
       - kepegawaian/identifier/tipe
   /kepegawaian/kontak:
@@ -4406,6 +4552,35 @@ paths:
       summary: Update Jenjang
       tags:
       - kepegawaian/pendidikan/jenjang
+  /kepegawaian/pendidikan/jenjangs/select:
+    get:
+      consumes:
+      - application/json
+      description: Get list of Jenjang for select with optional search
+      parameters:
+      - description: Search by label or code
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.JenjangSelectResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Jenjang for select
+      tags:
+      - kepegawaian/pendidikan/jenjang
   /master/agama:
     get:
       consumes:
@@ -4556,6 +4731,35 @@ paths:
       security:
       - BearerAuth: []
       summary: Update Agama
+      tags:
+      - master/agama
+  /master/agama/select:
+    get:
+      consumes:
+      - application/json
+      description: Get list of Agama for select
+      parameters:
+      - description: Filter by name (partial match)
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.MasterAgamaListSimpelResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Agama for select
       tags:
       - master/agama
   /master/alamat/desa:
@@ -5859,6 +6063,35 @@ paths:
       summary: Update GolonganDarah
       tags:
       - master/golongan_darah
+  /master/golongan_darah/select:
+    get:
+      consumes:
+      - application/json
+      description: Get list of GolonganDarah for select
+      parameters:
+      - description: Filter by name (partial match)
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.MasterGolonganDarahListSimpelResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of GolonganDarah for select
+      tags:
+      - master/golongan_darah
   /master/jenis_kelamin:
     get:
       consumes:
@@ -6009,6 +6242,35 @@ paths:
       security:
       - BearerAuth: []
       summary: Update JenisKelamin
+      tags:
+      - master/jenis_kelamin
+  /master/jenis_kelamin/select:
+    get:
+      consumes:
+      - application/json
+      description: Get list of JenisKelamin for select
+      parameters:
+      - description: Filter by name (partial match)
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.MasterJenisKelaminListSimpelResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of JenisKelamin for select
       tags:
       - master/jenis_kelamin
   /master/pekerjaan:
@@ -6163,6 +6425,35 @@ paths:
       summary: Update Pekerjaan
       tags:
       - master/pekerjaan
+  /master/pekerjaan/select:
+    get:
+      consumes:
+      - application/json
+      description: Get list of Pekerjaan for select
+      parameters:
+      - description: Filter by name (partial match)
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.MasterPekerjaanListSimpelResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Pekerjaan for select
+      tags:
+      - master/pekerjaan
   /master/pendidikan:
     get:
       consumes:
@@ -6313,6 +6604,35 @@ paths:
       security:
       - BearerAuth: []
       summary: Update Pendidikan
+      tags:
+      - master/pendidikan
+  /master/pendidikan/select:
+    get:
+      consumes:
+      - application/json
+      description: Get list of Pendidikan for select
+      parameters:
+      - description: Filter by name (partial match)
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.MasterPendidikanListSimpelResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Pendidikan for select
       tags:
       - master/pendidikan
   /master/status_pernikahan:
@@ -6467,6 +6787,35 @@ paths:
       summary: Update StatusPernikahan
       tags:
       - master/status_pernikahan
+  /master/status_pernikahan/select:
+    get:
+      consumes:
+      - application/json
+      description: Get list of StatusPernikahan for select
+      parameters:
+      - description: Filter by name (partial match)
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.MasterStatusPernikahanListSimpelResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of StatusPernikahan for select
+      tags:
+      - master/status_pernikahan
   /master/suku:
     get:
       consumes:
@@ -6617,6 +6966,35 @@ paths:
       security:
       - BearerAuth: []
       summary: Update Suku
+      tags:
+      - master/suku
+  /master/suku/select:
+    get:
+      consumes:
+      - application/json
+      description: Get list of Suku for select
+      parameters:
+      - description: Filter by name (partial match)
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.MasterSukuListSimpelResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Suku for select
       tags:
       - master/suku
   /rbac/permissions:

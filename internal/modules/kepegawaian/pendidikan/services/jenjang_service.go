@@ -31,6 +31,7 @@ func (s *service) CreateJenjang(ctx context.Context, req *dto.CreateJenjangReque
 		Code:       req.Code,
 		Label:      req.Label,
 		FHIRSystem: req.FHIRSystem,
+		Point:      req.Point,
 		CreatedBy:  &actor.UserID,
 		UpdatedBy:  &actor.UserID,
 	}
@@ -74,6 +75,29 @@ func (s *service) GetJenjangByID(ctx context.Context, id int64, actor he.AuthCon
 		Creator: creator,
 		Updater: updater,
 	}), nil
+}
+
+// ── ListSelect ────────────────────────────────────────────────────────────────
+func (s *service) ListSelectJenjang(ctx context.Context, search string, actor he.AuthContext) ([]dto.JenjangSelectResponse, error) {
+	can, err := s.canReadJenjang(ctx, actor)
+	if err != nil {
+		return nil, appErrors.Internal("gagal cek akses")
+	}
+	if !can {
+		return nil, appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda tidak memiliki hak akses untuk melihat daftar Jenjang.", nil)
+	}
+
+	items, err := s.repo.ListSelectJenjang(ctx, search)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(items) == 0 {
+		return nil, appErrors.Wrap(http.StatusNotFound, "data Jenjang tidak ditemukan", nil)
+	}
+
+	return dto.ToJenjangSelectResponse(items), nil
 }
 
 // ── List ──────────────────────────────────────────────────────────────────────
@@ -128,6 +152,9 @@ func (s *service) UpdateJenjang(ctx context.Context, id int64, req *dto.UpdateJe
 	}
 	if req.FHIRSystem != nil {
 		m.FHIRSystem = req.FHIRSystem
+	}
+	if req.Point != nil {
+		m.Point = req.Point
 	}
 	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()

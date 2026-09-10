@@ -252,3 +252,42 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_DeleteTipe_Forbidden() {
 	s.ErrorAs(err, &appErr)
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
+
+func (s *KepegawaianIdentifierServiceTestSuite) Test_ListSelectTipe_Success() {
+	actor := superadminActor()
+	search := "NIK"
+	items := []models.Tipe{
+		*factories.NewTipeFactory().Make(),
+		*factories.NewTipeFactory().Make(),
+	}
+
+	s.repo.On("ListSelectTipe", search).Return(items, nil)
+
+	result, err := s.svc.ListSelectTipe(context.Background(), search, actor)
+
+	s.NoError(err)
+	s.Len(result, 2)
+}
+
+// not found
+func (s *KepegawaianIdentifierServiceTestSuite) Test_ListSelectTipe_NotFound() {
+	search := "Unknown"
+	actor := superadminActor()
+	s.repo.On("ListSelectTipe", search).Return([]models.Tipe{}, nil)
+
+	result, err := s.svc.ListSelectTipe(context.Background(), search, actor)
+
+	s.NoError(err)
+	s.Empty(result) // Accepts both nil and empty slices safely
+}
+
+func (s *KepegawaianIdentifierServiceTestSuite) Test_ListSelectTipe_RepoError() {
+	actor := superadminActor()
+
+	s.repo.On("ListSelectTipe", "").Return([]models.Tipe{}, fmt.Errorf("db error"))
+
+	result, err := s.svc.ListSelectTipe(context.Background(), "", actor)
+
+	s.Nil(result)
+	s.Error(err)
+}

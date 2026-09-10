@@ -9,6 +9,7 @@ import (
 	"neosim_go/internal/modules/kepegawaian/kontak/models"
 	rbacContracts "neosim_go/internal/modules/rbac/contracts"
 	userContracts "neosim_go/internal/modules/users/contracts"
+	"neosim_go/internal/shared/cache"
 	he "neosim_go/internal/shared/httputil"
 )
 
@@ -24,6 +25,7 @@ type service struct {
 	authRepo authContracts.AuthRepository
 	userRepo userContracts.Repository
 	cfg      *config.Config
+	cache    *cache.Manager // <--- Gunakan Cache Manager
 }
 
 // NewKepegawaianKontakService membuat instance service baru
@@ -33,6 +35,7 @@ func NewKepegawaianKontakService(
 	authRepo authContracts.AuthRepository,
 	userRepo userContracts.Repository,
 	cfg *config.Config,
+	cacheManager *cache.Manager, // <--- Terima Cache Manager
 ) kontakContracts.Service {
 	return &service{
 		repo:     repo,
@@ -40,6 +43,7 @@ func NewKepegawaianKontakService(
 		authRepo: authRepo,
 		userRepo: userRepo,
 		cfg:      cfg,
+		cache:    cacheManager,
 	}
 }
 

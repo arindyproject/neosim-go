@@ -28,6 +28,8 @@ type KepegawaianKualifikasiResponse struct {
 	FhirCode   *string `json:"fhir_code"`
 	FhirSystem *string `json:"fhir_system"`
 
+	Point *float64 `json:"point"`
+
 	CreatedBy *he.UserData     `json:"created_by"`
 	UpdatedBy *he.UserData     `json:"updated_by"`
 	CreatedAt types.CustomTime `json:"created_at"`
@@ -74,6 +76,8 @@ func ToKepegawaianKualifikasiResponse(params KepegawaianKualifikasiResponseParam
 
 		FhirCode:   m.FhirCode,
 		FhirSystem: m.FhirSystem,
+
+		Point: m.Point,
 
 		CreatedBy: params.Creator,
 		UpdatedBy: params.Updater,

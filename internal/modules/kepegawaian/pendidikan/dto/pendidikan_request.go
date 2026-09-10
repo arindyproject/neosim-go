@@ -15,6 +15,7 @@ type CreateKepegawaianPendidikanRequest struct {
 	TanggalLulus    *types.DateOnly `json:"tanggal_lulus" swaggertype:"string" format:"date" example:"2026-01-01"`
 	FHIRCode        *string         `json:"fhir_code" validate:"omitempty,max=255"`
 	FHIRSystem      *string         `json:"fhir_system" validate:"omitempty,max=255"`
+	Point           *float64        `json:"point" validate:"omitempty,gte=0"`
 }
 
 // UpdateKepegawaianPendidikanRequest request body untuk update KepegawaianPendidikan
@@ -29,6 +30,7 @@ type UpdateKepegawaianPendidikanRequest struct {
 	TanggalLulus    *types.DateOnly `json:"tanggal_lulus" swaggertype:"string" format:"date" example:"2026-01-01"`
 	FHIRCode        *string         `json:"fhir_code" validate:"omitempty,max=255"`
 	FHIRSystem      *string         `json:"fhir_system" validate:"omitempty,max=255"`
+	Point           *float64        `json:"point" validate:"omitempty,gte=0"`
 }
 
 // FilterKepegawaianPendidikanRequest request body untuk filter KepegawaianPendidikan

@@ -52,6 +52,7 @@ func (s *service) CreateKualifikasi(ctx context.Context, req *dto.CreateKepegawa
 		IsAktif:         req.IsAktif,
 		FhirCode:        req.FhirCode,
 		FhirSystem:      req.FhirSystem,
+		Point:           req.Point,
 		CreatedBy:       &actor.UserID,
 		UpdatedBy:       &actor.UserID,
 	}
@@ -239,6 +240,10 @@ func (s *service) UpdateKualifikasi(ctx context.Context, id int64, req *dto.Upda
 
 	if req.FhirSystem != nil {
 		m.FhirSystem = req.FhirSystem
+	}
+
+	if req.Point != nil {
+		m.Point = req.Point
 	}
 
 	m.UpdatedBy = &actor.UserID

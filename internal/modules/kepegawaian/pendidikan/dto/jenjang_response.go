@@ -12,6 +12,7 @@ type JenjangResponse struct {
 	Code       string           `json:"code"`
 	Label      string           `json:"label"`
 	FHIRSystem *string          `json:"fhir_system"`
+	Point      *float64         `json:"point"`
 	CreatedBy  *he.UserData     `json:"created_by"`
 	UpdatedBy  *he.UserData     `json:"updated_by"`
 	CreatedAt  types.CustomTime `json:"created_at"`
@@ -19,16 +20,35 @@ type JenjangResponse struct {
 }
 
 type JenjangSimpelResponse struct {
-	ID         int64   `json:"id"`
-	Code       string  `json:"code"`
-	Label      string  `json:"label"`
-	FHIRSystem *string `json:"fhir_system"`
+	ID         int64    `json:"id"`
+	Code       string   `json:"code"`
+	Label      string   `json:"label"`
+	FHIRSystem *string  `json:"fhir_system"`
+	Point      *float64 `json:"point"`
+}
+
+type JenjangSelectResponse struct {
+	ID    int64  `json:"id"`
+	Code  string `json:"code"`
+	Label string `json:"label"`
 }
 
 type JenjangResponseParams struct {
 	Jenjang *models.Jenjang
 	Creator *he.UserData
 	Updater *he.UserData
+}
+
+func ToJenjangSelectResponse(items []models.Jenjang) []JenjangSelectResponse {
+	responses := make([]JenjangSelectResponse, 0, len(items))
+	for _, item := range items {
+		responses = append(responses, JenjangSelectResponse{
+			ID:    item.ID,
+			Code:  item.Code,
+			Label: item.Label,
+		})
+	}
+	return responses
 }
 
 // ToJenjangResponse mengubah model menjadi response
@@ -38,6 +58,7 @@ func ToJenjangResponse(params JenjangResponseParams) *JenjangResponse {
 		Code:       params.Jenjang.Code,
 		Label:      params.Jenjang.Label,
 		FHIRSystem: params.Jenjang.FHIRSystem,
+		Point:      params.Jenjang.Point,
 		CreatedBy:  params.Creator,
 		UpdatedBy:  params.Updater,
 		CreatedAt:  types.CustomTime(params.Jenjang.CreatedAt),

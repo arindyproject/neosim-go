@@ -12,6 +12,7 @@ type Jenjang struct {
 	Code       string         `gorm:"column:code;type:varchar(100);not null;uniqueIndex" json:"code"`
 	Label      string         `gorm:"column:label;type:varchar(255);not null;uniqueIndex" json:"label"`
 	FHIRSystem *string        `gorm:"column:fhir_system;type:text" json:"fhir_system"`
+	Point      *float64       `gorm:"column:point;type:decimal(10,2);default:0.00" json:"point"`
 	CreatedBy  *int64         `gorm:"column:created_by" json:"created_by"`
 	UpdatedBy  *int64         `gorm:"column:updated_by" json:"updated_by"`
 	CreatedAt  time.Time      `gorm:"column:created_at;type:timestamptz;not null;default:NOW()" json:"created_at"`

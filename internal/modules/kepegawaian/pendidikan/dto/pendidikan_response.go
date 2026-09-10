@@ -21,6 +21,7 @@ type KepegawaianPendidikanResponse struct {
 	TanggalLulus    *types.DateOnly        `json:"tanggal_lulus"`
 	FHIRCode        *string                `json:"fhir_code"`
 	FHIRSystem      *string                `json:"fhir_system"`
+	Point           *float64               `json:"point"`
 
 	CreatedBy *he.UserData     `json:"created_by"`
 	UpdatedBy *he.UserData     `json:"updated_by"`
@@ -49,6 +50,7 @@ func ToKepegawaianPendidikanResponse(params KepegawaianPendidikanResponseParams)
 			Code:       m.Jenjang.Code,
 			Label:      m.Jenjang.Label,
 			FHIRSystem: m.Jenjang.FHIRSystem,
+			Point:      m.Jenjang.Point,
 		}
 	}
 
@@ -66,6 +68,7 @@ func ToKepegawaianPendidikanResponse(params KepegawaianPendidikanResponseParams)
 		TanggalLulus:    types.NewDateOnlyPtr(params.KepegawaianPendidikan.TanggalLulus),
 		FHIRCode:        params.KepegawaianPendidikan.FHIRCode,
 		FHIRSystem:      params.KepegawaianPendidikan.FHIRSystem,
+		Point:           params.KepegawaianPendidikan.Point,
 
 		CreatedBy: params.Creator,
 		UpdatedBy: params.Updater,

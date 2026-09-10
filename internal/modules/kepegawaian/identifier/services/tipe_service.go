@@ -54,6 +54,7 @@ func (s *service) CreateTipe(ctx context.Context, req *dto.CreateTipeRequest, ac
 		IsNakes:     req.IsNakes,
 		IsRequired:  req.IsRequired,
 		Description: req.Description,
+		Point:       req.Point,
 		CreatedBy:   &actor.UserID,
 		UpdatedBy:   &actor.UserID,
 	}
@@ -156,6 +157,28 @@ func (s *service) GetTipeByLabel(ctx context.Context, label string, actor he.Aut
 	}), nil
 }
 
+func (s *service) ListSelectTipe(ctx context.Context, search string, actor he.AuthContext) ([]dto.TipeSelectResponse, error) {
+	can, err := s.canReadTipe(ctx, actor)
+	if err != nil {
+		return nil, appErrors.Internal("gagal cek akses")
+	}
+	if !can {
+		return nil, appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda tidak memiliki hak akses untuk melihat daftar Tipe.", nil)
+	}
+
+	items, err := s.repo.ListSelectTipe(ctx, search)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(items) == 0 {
+		return nil, appErrors.Wrap(http.StatusNotFound, "data tipe tidak ditemukan", nil)
+	}
+
+	return dto.ToTipeSelectResponse(items), nil
+}
+
 func (s *service) ListTipe(ctx context.Context, page, pageSize int, filter *dto.FilterTipeRequest, actor he.AuthContext) ([]dto.TipeResponse, int64, error) {
 	can, err := s.canReadTipe(ctx, actor)
 	if err != nil {
@@ -245,6 +268,10 @@ func (s *service) UpdateTipe(ctx context.Context, id int64, req *dto.UpdateTipeR
 	}
 	if req.Description != nil {
 		m.Description = req.Description
+	}
+
+	if req.Point != nil {
+		m.Point = req.Point
 	}
 
 	m.UpdatedBy = &actor.UserID

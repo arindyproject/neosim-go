@@ -203,3 +203,43 @@ func (s *KepegawaianPendidikanServiceTestSuite) Test_DeleteJenjang_Forbidden() {
 	s.ErrorAs(err, &appErr)
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
+
+func (s *KepegawaianPendidikanServiceTestSuite) Test_ListSelectJenjang_Success() {
+	actor := superadminActor()
+	search := "SD"
+	items := []models.Jenjang{
+		*factories.NewJenjangFactory().Make(),
+		*factories.NewJenjangFactory().Make(),
+	}
+
+	s.repo.On("ListSelectJenjang", search).Return(items, nil)
+
+	result, err := s.svc.ListSelectJenjang(context.Background(), search, actor)
+
+	s.NoError(err)
+	s.Len(result, 2)
+}
+
+// not found
+func (s *KepegawaianPendidikanServiceTestSuite) Test_ListSelectJenjang_NotFound() {
+	search := "Unknown"
+	actor := superadminActor()
+	s.repo.On("ListSelectJenjang", search).Return([]models.Jenjang{}, nil)
+
+	result, err := s.svc.ListSelectJenjang(context.Background(), search, actor)
+
+	s.Nil(result)
+	s.Error(err)
+	s.Contains(err.Error(), "tidak ditemukan")
+}
+
+func (s *KepegawaianPendidikanServiceTestSuite) Test_ListSelectJenjang_RepoError() {
+	actor := superadminActor()
+
+	s.repo.On("ListSelectJenjang", "").Return([]models.Jenjang{}, fmt.Errorf("db error"))
+
+	result, err := s.svc.ListSelectJenjang(context.Background(), "", actor)
+
+	s.Nil(result)
+	s.Error(err)
+}

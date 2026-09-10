@@ -58,6 +58,7 @@ func (s *service) CreatePendidikan(ctx context.Context, req *dto.CreateKepegawai
 		TanggalLulus:    req.TanggalLulus.ToTimePtr(),
 		FHIRCode:        req.FHIRCode,
 		FHIRSystem:      req.FHIRSystem,
+		Point:           req.Point,
 		CreatedBy:       &actor.UserID,
 		UpdatedBy:       &actor.UserID,
 	}
@@ -246,6 +247,9 @@ func (s *service) UpdatePendidikan(ctx context.Context, id int64, req *dto.Updat
 	}
 	if req.FHIRSystem != nil {
 		m.FHIRSystem = req.FHIRSystem
+	}
+	if req.Point != nil {
+		m.Point = req.Point
 	}
 	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()

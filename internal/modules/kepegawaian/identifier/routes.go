@@ -27,6 +27,7 @@ func RegisterRoutes(e *echo.Echo, h *handlers.KepegawaianIdentifierHandler, jwtM
 	gTipe := e.Group("/api/v1/kepegawaian/identifier/tipes", jwt)
 	gTipe.GET("", h.ListTipe)
 	gTipe.GET("/:id", h.GetTipeByID)
+	gTipe.GET("/select", h.ListSelectTipe)
 	gTipe.POST("", h.CreateTipe)
 	gTipe.PUT("/:id", h.UpdateTipe)
 	gTipe.DELETE("/:id", h.DeleteTipe)

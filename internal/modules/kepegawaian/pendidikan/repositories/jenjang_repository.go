@@ -35,6 +35,27 @@ func (r *repository) GetJenjangByID(ctx context.Context, id int64) (*models.Jenj
 	return &m, result.Error
 }
 
+// ── ListSelect ────────────────────────────────────────────────────────────────
+func (r *repository) ListSelectJenjang(ctx context.Context, search string) ([]models.Jenjang, error) {
+	var items []models.Jenjang
+
+	// Filter kecamatan_id dibuat wajib
+	query := r.db.WithContext(ctx).Model(&models.Jenjang{}).
+		Select("id, label, code").
+		Where("kepegawaian_pendidikan_jenjangs.deleted_at IS NULL")
+
+	// Filter pencarian berdasarkan nama jika parameter search diisi
+	if search != "" {
+		query = query.Where("label ILIKE ? OR code ILIKE ?", "%"+search+"%", "%"+search+"%")
+	}
+
+	if err := query.Order("label ASC").Find(&items).Error; err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
 // ── List ──────────────────────────────────────────────────────────────────────
 func (r *repository) ListJenjang(ctx context.Context, page, pageSize int, filter *dto.FilterJenjangRequest) ([]models.Jenjang, int64, error) {
 	var items []models.Jenjang

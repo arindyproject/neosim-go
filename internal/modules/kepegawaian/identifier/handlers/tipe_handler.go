@@ -63,6 +63,28 @@ func (h *KepegawaianIdentifierHandler) ListTipe(c *echo.Context) error {
 	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data", items, total, page, pageSize)
 }
 
+// ─── ListSelectTipe ────────────────────────────────────────────────
+//
+//	@Summary		Get list of Tipe for select
+//	@Description	Get list of Tipe for select with optional search
+//	@Tags			kepegawaian/identifier/tipe
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			search	query	string	false	"Search by label or code"
+//	@Success		200		{object}	response.MyGoResponse{data=[]dto.TipeSelectResponse}
+//	@Router			/kepegawaian/identifier/tipes/select [get]
+func (h *KepegawaianIdentifierHandler) ListSelectTipe(c *echo.Context) error {
+	search := c.QueryParam("search")
+
+	actor := he.BuildAuthContext(c)
+	items, err := h.service.ListSelectTipe(c.Request().Context(), search, actor)
+	if err != nil {
+		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", items, nil)
+}
+
 // ─── GetTipeByID ───────────────────────────────────────────────────
 //
 //	@Summary		Get Tipe

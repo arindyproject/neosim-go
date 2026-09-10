@@ -26,8 +26,9 @@ type KepegawaianPendidikan struct {
 	TanggalMasuk *time.Time `gorm:"column:tanggal_masuk;type:date" json:"tanggal_masuk"`
 	TanggalLulus *time.Time `gorm:"column:tanggal_lulus;type:date" json:"tanggal_lulus"`
 
-	FHIRCode   *string `gorm:"column:fhir_code;type:varchar(255)" json:"fhir_code"`
-	FHIRSystem *string `gorm:"column:fhir_system;type:varchar(255)" json:"fhir_system"`
+	FHIRCode   *string  `gorm:"column:fhir_code;type:varchar(255)" json:"fhir_code"`
+	FHIRSystem *string  `gorm:"column:fhir_system;type:varchar(255)" json:"fhir_system"`
+	Point      *float64 `gorm:"column:point;type:decimal(10,2);default:0.00" json:"point"`
 
 	CreatedBy *int64         `gorm:"column:created_by" json:"created_by"`
 	UpdatedBy *int64         `gorm:"column:updated_by" json:"updated_by"`

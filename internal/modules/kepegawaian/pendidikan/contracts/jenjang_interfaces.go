@@ -15,6 +15,7 @@ import (
 type JenjangRepository interface {
 	CreateJenjang(ctx context.Context, m *models.Jenjang) error
 	GetJenjangByID(ctx context.Context, id int64) (*models.Jenjang, error)
+	ListSelectJenjang(ctx context.Context, search string) ([]models.Jenjang, error)
 	ListJenjang(ctx context.Context, page, pageSize int, filter *dto.FilterJenjangRequest) ([]models.Jenjang, int64, error)
 	UpdateJenjang(ctx context.Context, m *models.Jenjang) error
 	DeleteJenjang(ctx context.Context, id int64, deletedBy int64) error
@@ -25,6 +26,7 @@ type JenjangRepository interface {
 type JenjangService interface {
 	CreateJenjang(ctx context.Context, req *dto.CreateJenjangRequest, actor he.AuthContext) (*dto.JenjangResponse, error)
 	GetJenjangByID(ctx context.Context, id int64, actor he.AuthContext) (*dto.JenjangResponse, error)
+	ListSelectJenjang(ctx context.Context, search string, actor he.AuthContext) ([]dto.JenjangSelectResponse, error)
 	ListJenjang(ctx context.Context, page, pageSize int, filter *dto.FilterJenjangRequest, actor he.AuthContext) ([]dto.JenjangResponse, int64, error)
 	UpdateJenjang(ctx context.Context, id int64, req *dto.UpdateJenjangRequest, actor he.AuthContext) (*dto.JenjangResponse, error)
 	DeleteJenjang(ctx context.Context, id int64, actor he.AuthContext) error

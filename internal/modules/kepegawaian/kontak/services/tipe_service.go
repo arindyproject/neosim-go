@@ -58,6 +58,9 @@ func (s *service) CreateTipe(ctx context.Context, req *dto.CreateTipeRequest, ac
 
 	creator := s.buildCreator(ctx, m.CreatedBy)
 
+	// Invalidate Cache
+	s.cache.InvalidateList(context.Background(), cachePrefixTipeSelectList)
+
 	return dto.ToTipeResponse(dto.TipeResponseParams{
 		Tipe:    m,
 		Creator: creator,

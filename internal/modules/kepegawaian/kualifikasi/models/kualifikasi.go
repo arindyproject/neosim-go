@@ -28,6 +28,8 @@ type KepegawaianKualifikasi struct {
 	FhirCode   *string `gorm:"column:fhir_code;type:varchar(255)" json:"fhir_code"`
 	FhirSystem *string `gorm:"column:fhir_system;type:varchar(255)" json:"fhir_system"`
 
+	Point *float64 `gorm:"column:point;type:decimal(10,2);default:0.00" json:"point"`
+
 	CreatedBy *int64         `gorm:"column:created_by" json:"created_by"`
 	UpdatedBy *int64         `gorm:"column:updated_by" json:"updated_by"`
 	CreatedAt time.Time      `gorm:"column:created_at;type:timestamptz;not null;default:NOW()" json:"created_at"`
