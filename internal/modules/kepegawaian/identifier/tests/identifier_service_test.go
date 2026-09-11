@@ -21,6 +21,7 @@ import (
 	identifierContracts "neosim_go/internal/modules/kepegawaian/identifier/contracts"
 	rbacModels "neosim_go/internal/modules/rbac/models"
 	userModels "neosim_go/internal/modules/users/models"
+	"neosim_go/internal/shared/cache"
 	appErrors "neosim_go/internal/shared/errors"
 	he "neosim_go/internal/shared/httputil"
 )
@@ -58,7 +59,8 @@ func (s *KepegawaianIdentifierServiceTestSuite) SetupTest() {
 	s.authRepo = new(mocks.AuthRepositoryMock)
 	s.userRepo = new(mocks.UserRepositoryMock)
 	s.cfg = &config.Config{DefaultPageSize: 10, DefaultPageSizeMax: 100}
-	s.svc = services.NewKepegawaianIdentifierService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.cfg)
+	cacheManager := cache.NewManager(nil, false, 0)
+	s.svc = services.NewKepegawaianIdentifierService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.cfg, cacheManager)
 	s.ctx = context.Background()
 	s.userRepo.On("GetByIDs", mock.Anything).Return([]userModels.User{}, nil).Maybe()
 

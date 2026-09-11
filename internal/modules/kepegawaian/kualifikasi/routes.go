@@ -25,6 +25,7 @@ func RegisterRoutes(e *echo.Echo, h *handlers.KepegawaianKualifikasiHandler, jwt
 	gTipe := e.Group("/api/v1/kepegawaian/kualifikasi/tipes", jwt)
 	gTipe.GET("", h.ListTipe)
 	gTipe.GET("/:id", h.GetTipeByID)
+	gTipe.GET("/select", h.ListSelectTipe)
 	gTipe.POST("", h.CreateTipe)
 	gTipe.PUT("/:id", h.UpdateTipe)
 	gTipe.DELETE("/:id", h.DeleteTipe)

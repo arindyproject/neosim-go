@@ -41,6 +41,9 @@ func (s *service) CreateJenjang(ctx context.Context, req *dto.CreateJenjangReque
 
 	creator := s.buildCreator(ctx, m.CreatedBy)
 
+	// Invalidate Cache
+	s.cache.InvalidateList(context.Background(), cachePrefixJenjangSelectList)
+
 	return dto.ToJenjangResponse(dto.JenjangResponseParams{
 		Jenjang: m,
 		Creator: creator,
@@ -79,6 +82,9 @@ func (s *service) GetJenjangByID(ctx context.Context, id int64, actor he.AuthCon
 
 // ── ListSelect ────────────────────────────────────────────────────────────────
 func (s *service) ListSelectJenjang(ctx context.Context, search string, actor he.AuthContext) ([]dto.JenjangSelectResponse, error) {
+	ctxs := context.Background()
+	cacheKey := cacheKeyJenjangSelectList(search)
+
 	can, err := s.canReadJenjang(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -86,6 +92,12 @@ func (s *service) ListSelectJenjang(ctx context.Context, search string, actor he
 	if !can {
 		return nil, appErrors.Wrap(http.StatusForbidden,
 			"Akses ditolak. Anda tidak memiliki hak akses untuk melihat daftar Jenjang.", nil)
+	}
+
+	// 1. Cek Cache
+	var cachedRes []dto.JenjangSelectResponse
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
+		return cachedRes, nil
 	}
 
 	items, err := s.repo.ListSelectJenjang(ctx, search)
@@ -97,7 +109,10 @@ func (s *service) ListSelectJenjang(ctx context.Context, search string, actor he
 		return nil, appErrors.Wrap(http.StatusNotFound, "data Jenjang tidak ditemukan", nil)
 	}
 
-	return dto.ToJenjangSelectResponse(items), nil
+	res := dto.ToJenjangSelectResponse(items)
+
+	s.cache.SetDefault(ctxs, cacheKey, res)
+	return res, nil
 }
 
 // ── List ──────────────────────────────────────────────────────────────────────
@@ -166,11 +181,15 @@ func (s *service) UpdateJenjang(ctx context.Context, id int64, req *dto.UpdateJe
 	creator := s.buildCreator(ctx, m.CreatedBy)
 	updater := s.buildCreator(ctx, m.UpdatedBy)
 
-	return dto.ToJenjangResponse(dto.JenjangResponseParams{
+	res := dto.ToJenjangResponse(dto.JenjangResponseParams{
 		Jenjang: m,
 		Creator: creator,
 		Updater: updater,
-	}), nil
+	})
+
+	ctxs := context.Background()
+	s.cache.InvalidateList(ctxs, cachePrefixJenjangSelectList)
+	return res, nil
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
@@ -191,7 +210,12 @@ func (s *service) DeleteJenjang(ctx context.Context, id int64, actor he.AuthCont
 	if m == nil {
 		return errors.New("Jenjang tidak ditemukan")
 	}
-	return s.repo.DeleteJenjang(ctx, id, actor.UserID)
+	err = s.repo.DeleteJenjang(ctx, id, actor.UserID)
+	if err == nil {
+		ctxs := context.Background()
+		s.cache.InvalidateList(ctxs, cachePrefixJenjangSelectList)
+	}
+	return err
 }
 
 // ── helper khusus Jenjang (nama fungsi unik agar tidak bentrok) ───────

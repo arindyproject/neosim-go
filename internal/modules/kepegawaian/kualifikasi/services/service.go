@@ -1,15 +1,15 @@
 package services
 
 import (
-    "context"
+	"context"
 	"neosim_go/config"
 	kualifikasiContracts "neosim_go/internal/modules/kepegawaian/kualifikasi/contracts"
-	
 
-	"neosim_go/internal/modules/kepegawaian/kualifikasi/models"
 	authContracts "neosim_go/internal/modules/auth/contracts"
+	"neosim_go/internal/modules/kepegawaian/kualifikasi/models"
 	rbacContracts "neosim_go/internal/modules/rbac/contracts"
 	userContracts "neosim_go/internal/modules/users/contracts"
+	"neosim_go/internal/shared/cache"
 	he "neosim_go/internal/shared/httputil"
 )
 
@@ -25,6 +25,7 @@ type service struct {
 	authRepo authContracts.AuthRepository
 	userRepo userContracts.Repository
 	cfg      *config.Config
+	cache    *cache.Manager // <--- Gunakan Cache Manager
 }
 
 // NewKepegawaianKualifikasiService membuat instance service baru
@@ -33,7 +34,8 @@ func NewKepegawaianKualifikasiService(
 	rbacRepo rbacContracts.RBACRepository,
 	authRepo authContracts.AuthRepository,
 	userRepo userContracts.Repository,
-	cfg    *config.Config,
+	cfg *config.Config,
+	cacheManager *cache.Manager, // <--- Terima Cache Manager
 ) kualifikasiContracts.Service {
 	return &service{
 		repo:     repo,
@@ -41,15 +43,16 @@ func NewKepegawaianKualifikasiService(
 		authRepo: authRepo,
 		userRepo: userRepo,
 		cfg:      cfg,
+		cache:    cacheManager,
 	}
 }
 
 // buildCreator mengambil data creator user
-func (s *service) buildCreator(ctx context.Context,createdBy *int64) *he.UserData {
+func (s *service) buildCreator(ctx context.Context, createdBy *int64) *he.UserData {
 	if createdBy == nil {
 		return nil
 	}
-	creator, err := s.userRepo.GetByID(ctx,*createdBy)
+	creator, err := s.userRepo.GetByID(ctx, *createdBy)
 	if err != nil || creator == nil {
 		return nil
 	}
@@ -61,7 +64,7 @@ func (s *service) buildCreator(ctx context.Context,createdBy *int64) *he.UserDat
 }
 
 // ── helper: build creator/updater maps ───────────────────────────────────────
-func (s *service) buildAuditMaps(ctx context.Context,items []models.KepegawaianKualifikasi) (map[int64]*he.UserData, map[int64]*he.UserData) {
+func (s *service) buildAuditMaps(ctx context.Context, items []models.KepegawaianKualifikasi) (map[int64]*he.UserData, map[int64]*he.UserData) {
 	idSet := make(map[int64]struct{})
 	for _, item := range items {
 		if item.CreatedBy != nil {
@@ -76,7 +79,7 @@ func (s *service) buildAuditMaps(ctx context.Context,items []models.KepegawaianK
 		ids = append(ids, id)
 	}
 
-	users, err := s.userRepo.GetByIDs(ctx,ids) // ← 1 query total, bukan 40
+	users, err := s.userRepo.GetByIDs(ctx, ids) // ← 1 query total, bukan 40
 	if err != nil {
 		return map[int64]*he.UserData{}, map[int64]*he.UserData{}
 	}
@@ -88,4 +91,3 @@ func (s *service) buildAuditMaps(ctx context.Context,items []models.KepegawaianK
 	// creator dan updater sekarang share map yang sama — reuse otomatis, kode lebih pendek juga
 	return userMap, userMap
 }
-

@@ -2,11 +2,13 @@ package kualifikasi
 
 import (
 	"database/sql"
+	"log"
 
 	"neosim_go/config"
 	"neosim_go/internal/apps"
 	"neosim_go/internal/modules/kepegawaian/kualifikasi/migrations"
 	"neosim_go/internal/modules/kepegawaian/kualifikasi/models"
+	"neosim_go/internal/shared/cache"
 	"neosim_go/internal/shared/utils"
 
 	authContracts "neosim_go/internal/modules/auth/contracts"
@@ -20,10 +22,11 @@ import (
 )
 
 type registryModule struct {
-	db       *gorm.DB
-	cfg      *config.Config
-	rbacRepo rbacContracts.RBACRepository
-	authRepo authContracts.AuthRepository
+	db           *gorm.DB
+	cfg          *config.Config
+	rbacRepo     rbacContracts.RBACRepository
+	authRepo     authContracts.AuthRepository
+	cacheManager *cache.Manager //CACHE
 }
 
 func init() {
@@ -38,6 +41,20 @@ func (r *registryModule) SetDB(db *gorm.DB) {
 
 func (r *registryModule) SetConfig(cfg *config.Config) {
 	r.cfg = cfg
+
+	// ─── Inisialisasi Cache Manager ─────────────────────────────────────────
+	if cfg.CacheMasterAlamat {
+		client, err := cfg.ConnectRedis()
+		if err != nil {
+			log.Printf("⚠️ Warning: Gagal koneksi ke Redis untuk cache Kepegawaian -> Kontak -> Tipe: %v", err)
+			r.cacheManager = cache.NewManager(nil, false, 0)
+		} else {
+			r.cacheManager = cache.NewManager(client, true, cfg.CacheMasterAlamatTTLDay)
+			log.Println("✅ Cache Manager untukKepegawaian -> Kontak -> Tipe berhasil diinisialisasi")
+		}
+	} else {
+		r.cacheManager = cache.NewManager(nil, false, 0)
+	}
 }
 
 func (r *registryModule) InitRoutes(e *echo.Echo) {
@@ -48,7 +65,7 @@ func (r *registryModule) InitRoutes(e *echo.Echo) {
 		r.cfg.JWTRefreshTokenExpDays,
 	)
 	userRepo := userRepositories.NewRepository(r.db)
-	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo, userRepo, r.cfg).InitRoutes(e)
+	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo, userRepo, r.cfg, r.cacheManager).InitRoutes(e)
 }
 
 func (r *registryModule) Models() []interface{} {

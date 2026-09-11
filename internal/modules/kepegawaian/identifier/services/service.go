@@ -9,6 +9,7 @@ import (
 	"neosim_go/internal/modules/kepegawaian/identifier/models"
 	rbacContracts "neosim_go/internal/modules/rbac/contracts"
 	userContracts "neosim_go/internal/modules/users/contracts"
+	"neosim_go/internal/shared/cache"
 	he "neosim_go/internal/shared/httputil"
 )
 
@@ -24,6 +25,7 @@ type service struct {
 	authRepo authContracts.AuthRepository
 	userRepo userContracts.Repository
 	cfg      *config.Config
+	cache    *cache.Manager // <--- Gunakan Cache Manager
 }
 
 // NewKepegawaianIdentifierService membuat instance service baru
@@ -33,6 +35,7 @@ func NewKepegawaianIdentifierService(
 	authRepo authContracts.AuthRepository,
 	userRepo userContracts.Repository,
 	cfg *config.Config,
+	cacheManager *cache.Manager, // <--- Terima Cache Manager
 ) identifierContracts.Service {
 	return &service{
 		repo:     repo,
@@ -40,6 +43,7 @@ func NewKepegawaianIdentifierService(
 		authRepo: authRepo,
 		userRepo: userRepo,
 		cfg:      cfg,
+		cache:    cacheManager,
 	}
 }
 

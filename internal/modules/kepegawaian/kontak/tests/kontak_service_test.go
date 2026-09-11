@@ -20,6 +20,7 @@ import (
 
 	kontakContracts "neosim_go/internal/modules/kepegawaian/kontak/contracts"
 	rbacModels "neosim_go/internal/modules/rbac/models"
+	"neosim_go/internal/shared/cache"
 	appErrors "neosim_go/internal/shared/errors"
 	he "neosim_go/internal/shared/httputil"
 )
@@ -62,7 +63,8 @@ func (s *KepegawaianKontakServiceTestSuite) SetupTest() {
 		DefaultPageSize:    10,
 		DefaultPageSizeMax: 10,
 	}
-	s.svc = services.NewKepegawaianKontakService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.cfg, nil)
+	cacheManager := cache.NewManager(nil, false, 0)
+	s.svc = services.NewKepegawaianKontakService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.cfg, cacheManager)
 
 	// Stub default agar buildCreator/buildAuditMaps tidak panic saat memanggil userRepo.
 	// Boleh dipanggil 0 kali atau lebih (.Maybe()) tergantung skenario test.

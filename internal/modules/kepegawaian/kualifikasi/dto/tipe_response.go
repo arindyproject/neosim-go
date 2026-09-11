@@ -29,6 +29,18 @@ type TipeResponseParams struct {
 	Updater *he.UserData
 }
 
+func ToTipeSimpelResponse(items []models.Tipe) []TipeSimpelResponse {
+	responses := make([]TipeSimpelResponse, 0, len(items))
+	for _, item := range items {
+		responses = append(responses, TipeSimpelResponse{
+			ID:    item.ID,
+			Code:  item.Code,
+			Label: item.Label,
+		})
+	}
+	return responses
+}
+
 // ToTipeResponse mengubah model menjadi response
 func ToTipeResponse(params TipeResponseParams) *TipeResponse {
 	return &TipeResponse{

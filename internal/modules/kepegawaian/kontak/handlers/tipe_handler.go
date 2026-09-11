@@ -18,6 +18,28 @@ import (
 // diberi suffix Tipe agar tidak bentrok dengan method entitas utama
 // pada struct handler yang sama.
 
+// ─── ListSelectTipe ────────────────────────────────────────────────
+//
+//	@Summary		Get list of Tipe for select
+//	@Description	Get list of Tipe for select with optional search
+//	@Tags			kepegawaian/kontak/tipe
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			search	query	string	false	"Search by label or code"
+//	@Success		200		{object}	response.MyGoResponse{data=[]dto.TipeSimpelResponse}
+//	@Router			/kepegawaian/kontak/tipes/select [get]
+func (h *KepegawaianKontakHandler) ListSelectTipe(c *echo.Context) error {
+	search := c.QueryParam("search")
+
+	actor := he.BuildAuthContext(c)
+	items, err := h.service.ListSelectTipe(c.Request().Context(), search, actor)
+	if err != nil {
+		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", items, nil)
+}
+
 // ─── ListTipe ──────────────────────────────────────────────────────
 //
 //	@Summary		Get list of Tipe

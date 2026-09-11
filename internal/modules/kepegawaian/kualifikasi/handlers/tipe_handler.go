@@ -18,11 +18,33 @@ import (
 // diberi suffix Tipe agar tidak bentrok dengan method entitas utama
 // pada struct handler yang sama.
 
+// ─── ListSelectTipe ────────────────────────────────────────────────
+//
+//	@Summary		Get list of Tipe for select
+//	@Description	Get list of Tipe for select with optional search
+//	@Tags			kepegawaian/kualifikasi/tipe
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			search	query	string	false	"Search by label or code"
+//	@Success		200		{object}	response.MyGoResponse{data=[]dto.TipeSimpelResponse}
+//	@Router			/kepegawaian/kualifikasi/tipes/select [get]
+func (h *KepegawaianKualifikasiHandler) ListSelectTipe(c *echo.Context) error {
+	search := c.QueryParam("search")
+
+	actor := he.BuildAuthContext(c)
+	items, err := h.service.ListSelectTipe(c.Request().Context(), search, actor)
+	if err != nil {
+		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", items, nil)
+}
+
 // ─── ListTipe ──────────────────────────────────────────────────────
 //
 //	@Summary		Get list of Tipe
 //	@Description	Get paginated list of Tipe
-//	@Tags			kepegawaian/kualifikasi
+//	@Tags			kepegawaian/kualifikasi/tipe
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
@@ -47,7 +69,7 @@ func (h *KepegawaianKualifikasiHandler) ListTipe(c *echo.Context) error {
 //
 //	@Summary		Get Tipe
 //	@Description	Get Tipe by :id
-//	@Tags			kepegawaian/kualifikasi
+//	@Tags			kepegawaian/kualifikasi/tipe
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
@@ -71,7 +93,7 @@ func (h *KepegawaianKualifikasiHandler) GetTipeByID(c *echo.Context) error {
 //
 //	@Summary		Create Tipe
 //	@Description	Create New Tipe
-//	@Tags			kepegawaian/kualifikasi
+//	@Tags			kepegawaian/kualifikasi/tipe
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
@@ -103,7 +125,7 @@ func (h *KepegawaianKualifikasiHandler) CreateTipe(c *echo.Context) error {
 //
 //	@Summary		Update Tipe
 //	@Description	Update Tipe by :id
-//	@Tags			kepegawaian/kualifikasi
+//	@Tags			kepegawaian/kualifikasi/tipe
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
@@ -145,7 +167,7 @@ func (h *KepegawaianKualifikasiHandler) UpdateTipe(c *echo.Context) error {
 //
 //	@Summary		Delete Tipe
 //	@Description	Delete Tipe by :id
-//	@Tags			kepegawaian/kualifikasi
+//	@Tags			kepegawaian/kualifikasi/tipe
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth

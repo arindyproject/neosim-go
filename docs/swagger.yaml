@@ -167,6 +167,18 @@ definitions:
     - kecamatan_id
     - name
     type: object
+  dto.CreateKepegawaianAlamatRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
   dto.CreateKepegawaianIdentifierRequest:
     properties:
       is_aktif:
@@ -781,6 +793,23 @@ definitions:
         type: string
       postal_code:
         type: string
+    type: object
+  dto.KepegawaianAlamatResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        $ref: '#/definitions/httputil.UserData'
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        $ref: '#/definitions/httputil.UserData'
     type: object
   dto.KepegawaianIdentifierResponse:
     properties:
@@ -1553,6 +1582,16 @@ definitions:
         maxLength: 10
         type: string
     type: object
+  dto.UpdateKepegawaianAlamatRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    type: object
   dto.UpdateKepegawaianIdentifierRequest:
     properties:
       is_aktif:
@@ -2019,6 +2058,45 @@ definitions:
       type:
         type: string
       value: {}
+    type: object
+  neosim_go_internal_modules_kepegawaian_alamat_dto.CreateTipeRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
+  neosim_go_internal_modules_kepegawaian_alamat_dto.TipeResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        $ref: '#/definitions/httputil.UserData'
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        $ref: '#/definitions/httputil.UserData'
+    type: object
+  neosim_go_internal_modules_kepegawaian_alamat_dto.UpdateTipeRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
     type: object
   neosim_go_internal_modules_kepegawaian_identifier_dto.CreateTipeRequest:
     properties:
@@ -2875,6 +2953,302 @@ paths:
       summary: Reset password
       tags:
       - Auth
+  /kepegawaian/alamat:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of KepegawaianAlamat
+      parameters:
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.KepegawaianAlamatResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of KepegawaianAlamat
+      tags:
+      - kepegawaian/alamat
+    post:
+      consumes:
+      - application/json
+      description: Create New KepegawaianAlamat
+      parameters:
+      - description: Create Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateKepegawaianAlamatRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KepegawaianAlamatResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create KepegawaianAlamat
+      tags:
+      - kepegawaian/alamat
+  /kepegawaian/alamat/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete KepegawaianAlamat by :id
+      parameters:
+      - description: KepegawaianAlamat ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete KepegawaianAlamat
+      tags:
+      - kepegawaian/alamat
+    get:
+      consumes:
+      - application/json
+      description: Get KepegawaianAlamat by :id
+      parameters:
+      - description: KepegawaianAlamat ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KepegawaianAlamatResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get KepegawaianAlamat
+      tags:
+      - kepegawaian/alamat
+    put:
+      consumes:
+      - application/json
+      description: Update KepegawaianAlamat by :id
+      parameters:
+      - description: KepegawaianAlamat ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateKepegawaianAlamatRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KepegawaianAlamatResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update KepegawaianAlamat
+      tags:
+      - kepegawaian/alamat
+  /kepegawaian/alamat/tipes:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of Tipe
+      parameters:
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_alamat_dto.TipeResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Tipe
+      tags:
+      - kepegawaian/alamat
+    post:
+      consumes:
+      - application/json
+      description: Create New Tipe
+      parameters:
+      - description: Create Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_alamat_dto.CreateTipeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_alamat_dto.TipeResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create Tipe
+      tags:
+      - kepegawaian/alamat
+  /kepegawaian/alamat/tipes/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Tipe by :id
+      parameters:
+      - description: Tipe ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete Tipe
+      tags:
+      - kepegawaian/alamat
+    get:
+      consumes:
+      - application/json
+      description: Get Tipe by :id
+      parameters:
+      - description: Tipe ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_alamat_dto.TipeResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get Tipe
+      tags:
+      - kepegawaian/alamat
+    put:
+      consumes:
+      - application/json
+      description: Update Tipe by :id
+      parameters:
+      - description: Tipe ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_alamat_dto.UpdateTipeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_alamat_dto.TipeResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update Tipe
+      tags:
+      - kepegawaian/alamat
   /kepegawaian/identifier:
     get:
       consumes:
@@ -3681,6 +4055,35 @@ paths:
       summary: Update Tipe
       tags:
       - kepegawaian/kontak/tipe
+  /kepegawaian/kontak/tipes/select:
+    get:
+      consumes:
+      - application/json
+      description: Get list of Tipe for select with optional search
+      parameters:
+      - description: Search by label or code
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_kontak_dto.TipeSimpelResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Tipe for select
+      tags:
+      - kepegawaian/kontak/tipe
   /kepegawaian/kualifikasi:
     get:
       consumes:
@@ -3942,7 +4345,7 @@ paths:
       - BearerAuth: []
       summary: Get list of Tipe
       tags:
-      - kepegawaian/kualifikasi
+      - kepegawaian/kualifikasi/tipe
     post:
       consumes:
       - application/json
@@ -3970,7 +4373,7 @@ paths:
       - BearerAuth: []
       summary: Create Tipe
       tags:
-      - kepegawaian/kualifikasi
+      - kepegawaian/kualifikasi/tipe
   /kepegawaian/kualifikasi/tipes/{id}:
     delete:
       consumes:
@@ -3993,7 +4396,7 @@ paths:
       - BearerAuth: []
       summary: Delete Tipe
       tags:
-      - kepegawaian/kualifikasi
+      - kepegawaian/kualifikasi/tipe
     get:
       consumes:
       - application/json
@@ -4020,7 +4423,7 @@ paths:
       - BearerAuth: []
       summary: Get Tipe
       tags:
-      - kepegawaian/kualifikasi
+      - kepegawaian/kualifikasi/tipe
     put:
       consumes:
       - application/json
@@ -4053,7 +4456,36 @@ paths:
       - BearerAuth: []
       summary: Update Tipe
       tags:
-      - kepegawaian/kualifikasi
+      - kepegawaian/kualifikasi/tipe
+  /kepegawaian/kualifikasi/tipes/select:
+    get:
+      consumes:
+      - application/json
+      description: Get list of Tipe for select with optional search
+      parameters:
+      - description: Search by label or code
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_kualifikasi_dto.TipeSimpelResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Tipe for select
+      tags:
+      - kepegawaian/kualifikasi/tipe
   /kepegawaian/pegawai:
     get:
       consumes:

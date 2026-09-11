@@ -58,6 +58,9 @@ func (s *service) CreateTipe(ctx context.Context, req *dto.CreateTipeRequest, ac
 
 	creator := s.buildCreator(ctx, m.CreatedBy)
 
+	// Invalidate Cache
+	s.cache.InvalidateList(context.Background(), cachePrefixTipeSelectList)
+
 	return dto.ToTipeResponse(dto.TipeResponseParams{
 		Tipe:    m,
 		Creator: creator,
@@ -125,6 +128,7 @@ func (s *service) GetTipeByCode(ctx context.Context, code string, actor he.AuthC
 
 // ── GetByLabel ────────────────────────────────────────────────────────────────
 func (s *service) GetTipeByLabel(ctx context.Context, label string, actor he.AuthContext) (*dto.TipeResponse, error) {
+
 	can, err := s.canReadTipe(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
@@ -150,6 +154,41 @@ func (s *service) GetTipeByLabel(ctx context.Context, label string, actor he.Aut
 		Creator: creator,
 		Updater: updater,
 	}), nil
+}
+
+// ── ListSelect ────────────────────────────────────────────────────────────────
+func (s *service) ListSelectTipe(ctx context.Context, search string, actor he.AuthContext) ([]dto.TipeSimpelResponse, error) {
+	ctxs := context.Background()
+	cacheKey := cacheKeyTipeSelectList(search)
+
+	can, err := s.canReadTipe(ctx, actor)
+	if err != nil {
+		return nil, appErrors.Internal("gagal cek akses")
+	}
+	if !can {
+		return nil, appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda tidak memiliki hak akses untuk melihat daftar Tipe Kualifikasi Pegawai.", nil)
+	}
+
+	// 1. Cek Cache
+	var cachedRes []dto.TipeSimpelResponse
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
+		return cachedRes, nil
+	}
+
+	items, err := s.repo.ListSelectTipe(ctx, search)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(items) == 0 {
+		return nil, appErrors.Wrap(http.StatusNotFound, "data tipe tidak ditemukan", nil)
+	}
+
+	res := dto.ToTipeSimpelResponse(items)
+
+	s.cache.SetDefault(ctxs, cacheKey, res)
+	return res, nil
 }
 
 // ── List ──────────────────────────────────────────────────────────────────────
@@ -236,11 +275,15 @@ func (s *service) UpdateTipe(ctx context.Context, id int64, req *dto.UpdateTipeR
 	creator := s.buildCreator(ctx, m.CreatedBy)
 	updater := s.buildCreator(ctx, m.UpdatedBy)
 
-	return dto.ToTipeResponse(dto.TipeResponseParams{
+	ctxs := context.Background()
+	s.cache.InvalidateList(ctxs, cachePrefixTipeSelectList)
+
+	res := dto.ToTipeResponse(dto.TipeResponseParams{
 		Tipe:    m,
 		Creator: creator,
 		Updater: updater,
-	}), nil
+	})
+	return res, nil
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
@@ -261,7 +304,12 @@ func (s *service) DeleteTipe(ctx context.Context, id int64, actor he.AuthContext
 	if m == nil {
 		return errors.New("Tipe tidak ditemukan")
 	}
-	return s.repo.DeleteTipe(ctx, id, actor.UserID)
+	err = s.repo.DeleteTipe(ctx, id, actor.UserID)
+	if err == nil {
+		ctxs := context.Background()
+		s.cache.InvalidateList(ctxs, cachePrefixTipeSelectList)
+	}
+	return err
 }
 
 // ── helper khusus Tipe (nama fungsi unik agar tidak bentrok) ───────

@@ -277,8 +277,9 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_ListSelectTipe_NotFound() {
 
 	result, err := s.svc.ListSelectTipe(context.Background(), search, actor)
 
-	s.NoError(err)
-	s.Empty(result) // Accepts both nil and empty slices safely
+	s.Nil(result)
+	s.Error(err)
+	s.Contains(err.Error(), "tidak ditemukan")
 }
 
 func (s *KepegawaianIdentifierServiceTestSuite) Test_ListSelectTipe_RepoError() {

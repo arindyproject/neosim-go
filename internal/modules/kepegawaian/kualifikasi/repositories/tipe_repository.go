@@ -55,6 +55,25 @@ func (r *repository) GetTipeByLabel(ctx context.Context, label string) (*models.
 	return &m, result.Error
 }
 
+// ── ListSelect ────────────────────────────────────────────────────────────────
+func (r *repository) ListSelectTipe(ctx context.Context, search string) ([]models.Tipe, error) {
+	var items []models.Tipe
+
+	query := r.db.WithContext(ctx).Model(&models.Tipe{}).
+		Select("id, code, label").
+		Where("kepegawaian_kualifikasi_tipes.deleted_at IS NULL")
+
+	if search != "" {
+		query = query.Where("label ILIKE ? OR code ILIKE ?", "%"+search+"%", "%"+search+"%")
+	}
+
+	if err := query.Order("label ASC").Find(&items).Error; err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
 // ── List ──────────────────────────────────────────────────────────────────────
 func (r *repository) ListTipe(ctx context.Context, page, pageSize int, filter *dto.FilterTipeRequest) ([]models.Tipe, int64, error) {
 	var items []models.Tipe

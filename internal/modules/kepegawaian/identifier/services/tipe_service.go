@@ -66,6 +66,9 @@ func (s *service) CreateTipe(ctx context.Context, req *dto.CreateTipeRequest, ac
 	creator := s.buildCreator(ctx, m.CreatedBy)
 	updater := s.buildCreator(ctx, m.UpdatedBy)
 
+	// Invalidate Cache
+	s.cache.InvalidateList(context.Background(), cachePrefixTipeSelectList)
+
 	return dto.ToTipeResponse(dto.TipeResponseParams{
 		Tipe:    m,
 		Creator: creator,
@@ -148,12 +151,11 @@ func (s *service) GetTipeByLabel(ctx context.Context, label string, actor he.Aut
 	}
 
 	creator := s.buildCreator(ctx, m.CreatedBy)
-	updater := s.buildCreator(ctx, m.UpdatedBy)
 
 	return dto.ToTipeResponse(dto.TipeResponseParams{
 		Tipe:    m,
 		Creator: creator,
-		Updater: updater,
+		Updater: creator,
 	}), nil
 }
 
@@ -167,6 +169,15 @@ func (s *service) ListSelectTipe(ctx context.Context, search string, actor he.Au
 			"Akses ditolak. Anda tidak memiliki hak akses untuk melihat daftar Tipe.", nil)
 	}
 
+	ctxs := context.Background()
+	cacheKey := cacheKeyTipeSelectList(search)
+
+	// 1. Cek Cache
+	var cachedRes []dto.TipeSelectResponse
+	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
+		return cachedRes, nil
+	}
+
 	items, err := s.repo.ListSelectTipe(ctx, search)
 	if err != nil {
 		return nil, err
@@ -176,7 +187,9 @@ func (s *service) ListSelectTipe(ctx context.Context, search string, actor he.Au
 		return nil, appErrors.Wrap(http.StatusNotFound, "data tipe tidak ditemukan", nil)
 	}
 
-	return dto.ToTipeSelectResponse(items), nil
+	res := dto.ToTipeSelectResponse(items)
+	s.cache.SetDefault(ctxs, cacheKey, res)
+	return res, nil
 }
 
 func (s *service) ListTipe(ctx context.Context, page, pageSize int, filter *dto.FilterTipeRequest, actor he.AuthContext) ([]dto.TipeResponse, int64, error) {
@@ -284,6 +297,9 @@ func (s *service) UpdateTipe(ctx context.Context, id int64, req *dto.UpdateTipeR
 	creator := s.buildCreator(ctx, m.CreatedBy)
 	updater := s.buildCreator(ctx, m.UpdatedBy)
 
+	ctxs := context.Background()
+	s.cache.InvalidateList(ctxs, cachePrefixTipeSelectList)
+
 	return dto.ToTipeResponse(dto.TipeResponseParams{
 		Tipe:    m,
 		Creator: creator,
@@ -308,7 +324,12 @@ func (s *service) DeleteTipe(ctx context.Context, id int64, actor he.AuthContext
 	if m == nil {
 		return errors.New("Tipe tidak ditemukan")
 	}
-	return s.repo.DeleteTipe(ctx, id, actor.UserID)
+	err = s.repo.DeleteTipe(ctx, id, actor.UserID)
+	if err == nil {
+		ctxs := context.Background()
+		s.cache.InvalidateList(ctxs, cachePrefixTipeSelectList)
+	}
+	return err
 }
 
 // ── helper khusus Tipe (nama fungsi unik agar tidak bentrok) ───────

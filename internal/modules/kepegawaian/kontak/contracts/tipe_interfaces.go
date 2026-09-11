@@ -17,6 +17,7 @@ type TipeRepository interface {
 	GetTipeByID(ctx context.Context, id int64) (*models.Tipe, error)
 	GetTipeByCode(ctx context.Context, code string) (*models.Tipe, error)
 	GetTipeByLabel(ctx context.Context, label string) (*models.Tipe, error)
+	ListSelectTipe(ctx context.Context, search string) ([]models.Tipe, error)
 	ListTipe(ctx context.Context, page, pageSize int, filter *dto.FilterTipeRequest) ([]models.Tipe, int64, error)
 	UpdateTipe(ctx context.Context, m *models.Tipe) error
 	DeleteTipe(ctx context.Context, id int64, deletedBy int64) error
@@ -29,6 +30,7 @@ type TipeService interface {
 	GetTipeByID(ctx context.Context, id int64, actor he.AuthContext) (*dto.TipeResponse, error)
 	GetTipeByCode(ctx context.Context, code string, actor he.AuthContext) (*dto.TipeResponse, error)
 	GetTipeByLabel(ctx context.Context, label string, actor he.AuthContext) (*dto.TipeResponse, error)
+	ListSelectTipe(ctx context.Context, search string, actor he.AuthContext) ([]dto.TipeSimpelResponse, error)
 	ListTipe(ctx context.Context, page, pageSize int, filter *dto.FilterTipeRequest, actor he.AuthContext) ([]dto.TipeResponse, int64, error)
 	UpdateTipe(ctx context.Context, id int64, req *dto.UpdateTipeRequest, actor he.AuthContext) (*dto.TipeResponse, error)
 	DeleteTipe(ctx context.Context, id int64, actor he.AuthContext) error

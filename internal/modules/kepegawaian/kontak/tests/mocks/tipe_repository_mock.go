@@ -38,6 +38,11 @@ func (m *KepegawaianKontakRepositoryMock) GetTipeByLabel(ctx context.Context, la
 	return args.Get(0).(*models.Tipe), args.Error(1)
 }
 
+func (m *KepegawaianKontakRepositoryMock) ListSelectTipe(ctx context.Context, search string) ([]models.Tipe, error) {
+	args := m.Called(search)
+	return args.Get(0).([]models.Tipe), args.Error(1)
+}
+
 func (m *KepegawaianKontakRepositoryMock) ListTipe(ctx context.Context, page, pageSize int, filter *dto.FilterTipeRequest) ([]models.Tipe, int64, error) {
 	args := m.Called(page, pageSize, filter)
 	return args.Get(0).([]models.Tipe), args.Get(1).(int64), args.Error(2)

@@ -20,6 +20,7 @@ import (
 
 	kualifikasiContracts "neosim_go/internal/modules/kepegawaian/kualifikasi/contracts"
 	rbacModels "neosim_go/internal/modules/rbac/models"
+	"neosim_go/internal/shared/cache"
 	appErrors "neosim_go/internal/shared/errors"
 	he "neosim_go/internal/shared/httputil"
 )
@@ -62,7 +63,8 @@ func (s *KepegawaianKualifikasiServiceTestSuite) SetupTest() {
 		DefaultPageSize:    10,
 		DefaultPageSizeMax: 10,
 	}
-	s.svc = services.NewKepegawaianKualifikasiService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.cfg)
+	cacheManager := cache.NewManager(nil, false, 0)
+	s.svc = services.NewKepegawaianKualifikasiService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.cfg, cacheManager)
 
 	// Stub default agar buildCreator/buildAuditMaps tidak panic saat memanggil userRepo.
 	s.userRepo.On("GetByID", mock.Anything).Return(nil, nil).Maybe()
