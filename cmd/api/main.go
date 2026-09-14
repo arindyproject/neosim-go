@@ -55,6 +55,7 @@ import (
 	_ "neosim_go/internal/modules/master/master"
 
 	// Kepegawaian
+	_ "neosim_go/internal/modules/kepegawaian/alamat"
 	_ "neosim_go/internal/modules/kepegawaian/identifier"
 	_ "neosim_go/internal/modules/kepegawaian/kontak"
 	_ "neosim_go/internal/modules/kepegawaian/kualifikasi"

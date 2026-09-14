@@ -12,6 +12,7 @@ type TipeResponse struct {
 	Code        string           `json:"code"`
 	Label       string           `json:"label"`
 	Penerbit    *string          `json:"penerbit"`
+	FHIRCode    *string          `json:"fhir_code"`
 	FHIRSystem  *string          `json:"fhir_system"`
 	HasExpiry   bool             `json:"has_expiry"`
 	IsNakes     bool             `json:"is_nakes"`
@@ -29,6 +30,7 @@ type TipeSimpelResponse struct {
 	Code        string   `json:"code"`
 	Label       string   `json:"label"`
 	Penerbit    *string  `json:"penerbit"`
+	FHIRCode    *string  `json:"fhir_code"`
 	FHIRSystem  *string  `json:"fhir_system"`
 	HasExpiry   bool     `json:"has_expiry"`
 	IsNakes     bool     `json:"is_nakes"`
@@ -72,6 +74,7 @@ func ToTipeResponse(params TipeResponseParams) *TipeResponse {
 		Code:        params.Tipe.Code,
 		Label:       params.Tipe.Label,
 		Penerbit:    params.Tipe.Penerbit,
+		FHIRCode:    params.Tipe.FHIRCode,
 		FHIRSystem:  params.Tipe.FHIRSystem,
 		HasExpiry:   params.Tipe.HasExpiry,
 		IsNakes:     params.Tipe.IsNakes,

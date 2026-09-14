@@ -4,6 +4,7 @@ package dto
 type CreateJenjangRequest struct {
 	Code       string   `json:"code" validate:"required,min=1,max=100"`
 	Label      string   `json:"label" validate:"required,min=1,max=255"`
+	FHIRCode   *string  `json:"fhir_code" validate:"omitempty,max=500"`
 	FHIRSystem *string  `json:"fhir_system" validate:"omitempty,max=500"`
 	Point      *float64 `json:"point" validate:"omitempty,gte=0"`
 }
@@ -12,6 +13,7 @@ type CreateJenjangRequest struct {
 type UpdateJenjangRequest struct {
 	Code       *string  `json:"code" validate:"omitempty,min=1,max=100"`
 	Label      *string  `json:"label" validate:"omitempty,min=1,max=255"`
+	FHIRCode   *string  `json:"fhir_code" validate:"omitempty,max=500"`
 	FHIRSystem *string  `json:"fhir_system" validate:"omitempty,max=500"`
 	Point      *float64 `json:"point" validate:"omitempty,gte=0"`
 }

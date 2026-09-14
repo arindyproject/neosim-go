@@ -3,12 +3,13 @@ package handlers
 import (
 	"io"
 	"net/http"
+	"strconv"
 
 	"neosim_go/internal/modules/kepegawaian/alamat/dto"
-	"neosim_go/internal/shared/response"
-	"neosim_go/internal/shared/validator"
 	"neosim_go/internal/shared/binding"
 	he "neosim_go/internal/shared/httputil"
+	"neosim_go/internal/shared/response"
+	"neosim_go/internal/shared/validator"
 
 	"github.com/labstack/echo/v5"
 )
@@ -21,20 +22,63 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			name		query		string	false	"Filter by name (partial match)"
+//	@Param			jalan		query		string	false	"Filter by jalan (partial match)"
+//	@Param			tipe_id		query		string	false	"Filter by tipe_id"
+//	@Param			negara_id		query		int	false	"Filter by negara_id"
+//	@Param			provinsi_id		query		int	false	"Filter by provinsi_id"
+//	@Param			kota_kabupaten_id		query		int	false	"Filter by kota_kabupaten_id"
+//	@Param			kecamatan_id		query		int	false	"Filter by kecamatan_id"
+//	@Param			kelurahan_desa_id		query		int	false	"Filter by kelurahan_desa_id"
 //	@Param			page		query		int		false	"Page number"
 //	@Param			page_size	query		int		false	"Page size"
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.KepegawaianAlamatResponse}
 //	@Router			/kepegawaian/alamat [get]
 func (h *KepegawaianAlamatHandler) ListAlamat(c *echo.Context) error {
-
+	jalan := c.QueryParam("jalan")
 	filter := dto.FilterKepegawaianAlamatRequest{
-		Name: c.QueryParam("name"),
+		Jalan: &jalan,
 	}
+
+	if tipeIDStr := c.QueryParam("tipe_id"); tipeIDStr != "" {
+		if val, err := strconv.ParseInt(tipeIDStr, 10, 64); err == nil {
+			filter.TipeID = &val
+		}
+	}
+
+	if negaraIDStr := c.QueryParam("negara_id"); negaraIDStr != "" {
+		if val, err := strconv.ParseInt(negaraIDStr, 10, 64); err == nil {
+			filter.NegaraID = &val
+		}
+	}
+
+	if provensiIDStr := c.QueryParam("provinsi_id"); provensiIDStr != "" {
+		if val, err := strconv.ParseInt(provensiIDStr, 10, 64); err == nil {
+			filter.ProvinsiID = &val
+		}
+	}
+
+	if kotaKabupatenIDStr := c.QueryParam("kota_kabupaten_id"); kotaKabupatenIDStr != "" {
+		if val, err := strconv.ParseInt(kotaKabupatenIDStr, 10, 64); err == nil {
+			filter.KotaKabupatenID = &val
+		}
+	}
+
+	if kecamatanIDStr := c.QueryParam("kecamatan_id"); kecamatanIDStr != "" {
+		if val, err := strconv.ParseInt(kecamatanIDStr, 10, 64); err == nil {
+			filter.KecamatanID = &val
+		}
+	}
+
+	if kelurahanDesaIDStr := c.QueryParam("kelurahan_desa_id"); kelurahanDesaIDStr != "" {
+		if val, err := strconv.ParseInt(kelurahanDesaIDStr, 10, 64); err == nil {
+			filter.KelurahanDesaID = &val
+		}
+	}
+
 	page, pageSize := he.ParsePagination(c, h.cfg)
 
 	actor := he.BuildAuthContext(c)
-	items, total, err := h.service.ListAlamat(c.Request().Context(),page, pageSize, &filter, actor)
+	items, total, err := h.service.ListAlamat(c.Request().Context(), page, pageSize, &filter, actor)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
 	}
@@ -58,7 +102,7 @@ func (h *KepegawaianAlamatHandler) GetAlamatByID(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.GetAlamatByID(c.Request().Context(),id, actor)
+	item, err := h.service.GetAlamatByID(c.Request().Context(), id, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -90,7 +134,7 @@ func (h *KepegawaianAlamatHandler) CreateAlamat(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (validator)", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.CreateAlamat(c.Request().Context(),&req,  actor)
+	item, err := h.service.CreateAlamat(c.Request().Context(), &req, actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
@@ -127,7 +171,7 @@ func (h *KepegawaianAlamatHandler) UpdateAlamat(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (validator)", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.UpdateAlamat(c.Request().Context(),id, &req, actor)
+	item, err := h.service.UpdateAlamat(c.Request().Context(), id, &req, actor)
 	if err != nil {
 		status := http.StatusBadRequest
 		if err.Error() == "KepegawaianAlamat tidak ditemukan" {
@@ -155,7 +199,7 @@ func (h *KepegawaianAlamatHandler) DeleteAlamat(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	if err := h.service.DeleteAlamat(c.Request().Context(),id, actor); err != nil {
+	if err := h.service.DeleteAlamat(c.Request().Context(), id, actor); err != nil {
 		status := http.StatusInternalServerError
 		if err.Error() == "KepegawaianAlamat tidak ditemukan" {
 			status = http.StatusNotFound

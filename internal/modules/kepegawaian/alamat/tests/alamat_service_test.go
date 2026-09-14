@@ -20,6 +20,7 @@ import (
 
 	alamatContracts "neosim_go/internal/modules/kepegawaian/alamat/contracts"
 	rbacModels "neosim_go/internal/modules/rbac/models"
+	"neosim_go/internal/shared/cache"
 	appErrors "neosim_go/internal/shared/errors"
 	he "neosim_go/internal/shared/httputil"
 )
@@ -54,7 +55,7 @@ type KepegawaianAlamatServiceTestSuite struct {
 }
 
 func (s *KepegawaianAlamatServiceTestSuite) SetupTest() {
-	s.repo     = new(mocks.KepegawaianAlamatRepositoryMock)
+	s.repo = new(mocks.KepegawaianAlamatRepositoryMock)
 	s.rbacRepo = new(mocks.RBACRepositoryMock)
 	s.authRepo = new(mocks.AuthRepositoryMock)
 	s.userRepo = new(mocks.UserRepositoryMock)
@@ -62,12 +63,15 @@ func (s *KepegawaianAlamatServiceTestSuite) SetupTest() {
 		DefaultPageSize:    10,
 		DefaultPageSizeMax: 10,
 	}
-	s.svc = services.NewKepegawaianAlamatService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.cfg)
+	cacheManager := cache.NewManager(nil, false, 0)
+	s.svc = services.NewKepegawaianAlamatService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.cfg, cacheManager)
 
 	// Stub default agar buildCreator/buildAuditMaps tidak panic saat memanggil userRepo.
 	// Boleh dipanggil 0 kali atau lebih (.Maybe()) tergantung skenario test.
 	s.userRepo.On("GetByID", mock.Anything).Return(nil, nil).Maybe()
 	s.userRepo.On("GetByIDs", mock.Anything).Return(nil, nil).Maybe()
+	s.repo.On("GetTipeByCode", mock.Anything).Return(nil, nil).Maybe()
+	s.repo.On("GetTipeByLabel", mock.Anything).Return(nil, nil).Maybe()
 }
 
 func TestKepegawaianAlamatService(t *testing.T) {
@@ -111,7 +115,7 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_CreateAlamat_WithPermission_Suc
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(true, nil)
 	s.repo.On("CreateAlamat", mock.AnythingOfType("*models.KepegawaianAlamat")).Return(nil)
 
-	result, err := s.svc.CreateAlamat(context.Background(),req, actor)
+	result, err := s.svc.CreateAlamat(context.Background(), req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -126,7 +130,7 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_CreateAlamat_WithManagePermissi
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyManage).Return(true, nil)
 	s.repo.On("CreateAlamat", mock.AnythingOfType("*models.KepegawaianAlamat")).Return(nil)
 
-	result, err := s.svc.CreateAlamat(context.Background(),req, actor)
+	result, err := s.svc.CreateAlamat(context.Background(), req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -137,7 +141,7 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_CreateAlamat_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.CreateAlamat(context.Background(),req, actor)
+	result, err := s.svc.CreateAlamat(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -152,7 +156,7 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_CreateAlamat_RepoError() {
 
 	s.repo.On("CreateAlamat", mock.AnythingOfType("*models.KepegawaianAlamat")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.CreateAlamat(context.Background(),req, actor)
+	result, err := s.svc.CreateAlamat(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -165,7 +169,7 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_GetAlamatByID_Superadmin_Succes
 
 	s.repo.On("GetAlamatByID", int64(1)).Return(item, nil)
 
-	result, err := s.svc.GetAlamatByID(context.Background(),1, actor)
+	result, err := s.svc.GetAlamatByID(context.Background(), 1, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -181,7 +185,7 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_GetAlamatByID_WithPermission_Su
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyRead).Return(true, nil)
 	s.repo.On("GetAlamatByID", int64(1)).Return(item, nil)
 
-	result, err := s.svc.GetAlamatByID(context.Background(),1, actor)
+	result, err := s.svc.GetAlamatByID(context.Background(), 1, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -191,7 +195,7 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_GetAlamatByID_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.GetAlamatByID(context.Background(),1, actor)
+	result, err := s.svc.GetAlamatByID(context.Background(), 1, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -205,7 +209,7 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_GetAlamatByID_NotFound() {
 
 	s.repo.On("GetAlamatByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.GetAlamatByID(context.Background(),999, actor)
+	result, err := s.svc.GetAlamatByID(context.Background(), 999, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -217,7 +221,7 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_GetAlamatByID_RepoError() {
 
 	s.repo.On("GetAlamatByID", int64(1)).Return(nil, fmt.Errorf("db error"))
 
-	result, err := s.svc.GetAlamatByID(context.Background(),1, actor)
+	result, err := s.svc.GetAlamatByID(context.Background(), 1, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -233,7 +237,7 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_ListAlamat_Superadmin_Success()
 
 	s.repo.On("ListAlamat", 1, 10, filter).Return(items, int64(2), nil)
 
-	result, total, err := s.svc.ListAlamat(context.Background(),1, 10, filter, actor)
+	result, total, err := s.svc.ListAlamat(context.Background(), 1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(2), total)
@@ -248,7 +252,7 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_ListAlamat_WithPermission_Succe
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyRead).Return(true, nil)
 	s.repo.On("ListAlamat", 1, 10, filter).Return(items, int64(1), nil)
 
-	result, total, err := s.svc.ListAlamat(context.Background(),1, 10, filter, actor)
+	result, total, err := s.svc.ListAlamat(context.Background(), 1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
@@ -260,7 +264,7 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_ListAlamat_Forbidden() {
 	filter := &dto.FilterKepegawaianAlamatRequest{}
 	s.mockNoPermissions()
 
-	result, total, err := s.svc.ListAlamat(context.Background(),1, 10, filter, actor)
+	result, total, err := s.svc.ListAlamat(context.Background(), 1, 10, filter, actor)
 
 	s.Nil(result)
 	s.Equal(int64(0), total)
@@ -276,7 +280,7 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_ListAlamat_DefaultPagination() 
 
 	s.repo.On("ListAlamat", 1, 10, filter).Return([]models.KepegawaianAlamat{}, int64(0), nil)
 
-	result, total, err := s.svc.ListAlamat(context.Background(),0, 0, filter, actor)
+	result, total, err := s.svc.ListAlamat(context.Background(), 0, 0, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(0), total)
@@ -289,7 +293,7 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_ListAlamat_PageSizeCapped() {
 
 	s.repo.On("ListAlamat", 1, 10, filter).Return([]models.KepegawaianAlamat{}, int64(0), nil)
 
-	_, _, err := s.svc.ListAlamat(context.Background(),1, 999, filter, actor)
+	_, _, err := s.svc.ListAlamat(context.Background(), 1, 999, filter, actor)
 
 	s.NoError(err)
 	s.repo.AssertCalled(s.T(), "ListAlamat", 1, 10, filter)
@@ -302,7 +306,7 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_ListAlamat_WithNameFilter() {
 
 	s.repo.On("ListAlamat", 1, 10, filter).Return(items, int64(1), nil)
 
-	result, total, err := s.svc.ListAlamat(context.Background(),1, 10, filter, actor)
+	result, total, err := s.svc.ListAlamat(context.Background(), 1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
@@ -319,7 +323,7 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_UpdateAlamat_Superadmin_Success
 	s.repo.On("GetAlamatByID", int64(1)).Return(existing, nil)
 	s.repo.On("UpdateAlamat", mock.AnythingOfType("*models.KepegawaianAlamat")).Return(nil)
 
-	result, err := s.svc.UpdateAlamat(context.Background(),1, req, actor)
+	result, err := s.svc.UpdateAlamat(context.Background(), 1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -337,7 +341,7 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_UpdateAlamat_WithPermission_Suc
 	s.repo.On("GetAlamatByID", int64(1)).Return(existing, nil)
 	s.repo.On("UpdateAlamat", mock.AnythingOfType("*models.KepegawaianAlamat")).Return(nil)
 
-	result, err := s.svc.UpdateAlamat(context.Background(),1, req, actor)
+	result, err := s.svc.UpdateAlamat(context.Background(), 1, req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
@@ -348,7 +352,7 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_UpdateAlamat_Forbidden() {
 	req := &dto.UpdateKepegawaianAlamatRequest{}
 	s.mockNoPermissions()
 
-	result, err := s.svc.UpdateAlamat(context.Background(),1, req, actor)
+	result, err := s.svc.UpdateAlamat(context.Background(), 1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -363,7 +367,7 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_UpdateAlamat_NotFound() {
 
 	s.repo.On("GetAlamatByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.UpdateAlamat(context.Background(),999, req, actor)
+	result, err := s.svc.UpdateAlamat(context.Background(), 999, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -383,7 +387,7 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_UpdateAlamat_PartialFields() {
 		return m.Name == originalName && *m.Description == newDesc
 	})).Return(nil)
 
-	result, err := s.svc.UpdateAlamat(context.Background(),1, req, actor)
+	result, err := s.svc.UpdateAlamat(context.Background(), 1, req, actor)
 
 	s.NoError(err)
 	s.Equal(originalName, result.Name)
@@ -399,7 +403,7 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_UpdateAlamat_RepoError() {
 	s.repo.On("GetAlamatByID", int64(1)).Return(existing, nil)
 	s.repo.On("UpdateAlamat", mock.AnythingOfType("*models.KepegawaianAlamat")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.UpdateAlamat(context.Background(),1, req, actor)
+	result, err := s.svc.UpdateAlamat(context.Background(), 1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -413,7 +417,7 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_DeleteAlamat_Superadmin_Success
 	s.repo.On("GetAlamatByID", int64(1)).Return(existing, nil)
 	s.repo.On("DeleteAlamat", int64(1), actor.UserID).Return(nil)
 
-	err := s.svc.DeleteAlamat(context.Background(),1, actor)
+	err := s.svc.DeleteAlamat(context.Background(), 1, actor)
 
 	s.NoError(err)
 	s.repo.AssertExpectations(s.T())
@@ -428,7 +432,7 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_DeleteAlamat_WithPermission_Suc
 	s.repo.On("GetAlamatByID", int64(1)).Return(existing, nil)
 	s.repo.On("DeleteAlamat", int64(1), actor.UserID).Return(nil)
 
-	err := s.svc.DeleteAlamat(context.Background(),1, actor)
+	err := s.svc.DeleteAlamat(context.Background(), 1, actor)
 
 	s.NoError(err)
 }
@@ -437,7 +441,7 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_DeleteAlamat_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	err := s.svc.DeleteAlamat(context.Background(),1, actor)
+	err := s.svc.DeleteAlamat(context.Background(), 1, actor)
 
 	s.Error(err)
 	var appErr *appErrors.AppError
@@ -450,7 +454,7 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_DeleteAlamat_NotFound() {
 
 	s.repo.On("GetAlamatByID", int64(999)).Return(nil, nil)
 
-	err := s.svc.DeleteAlamat(context.Background(),999, actor)
+	err := s.svc.DeleteAlamat(context.Background(), 999, actor)
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
@@ -464,7 +468,7 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_DeleteAlamat_RepoError() {
 	s.repo.On("GetAlamatByID", int64(1)).Return(existing, nil)
 	s.repo.On("DeleteAlamat", int64(1), actor.UserID).Return(fmt.Errorf("db error"))
 
-	err := s.svc.DeleteAlamat(context.Background(),1, actor)
+	err := s.svc.DeleteAlamat(context.Background(), 1, actor)
 
 	s.Error(err)
 }

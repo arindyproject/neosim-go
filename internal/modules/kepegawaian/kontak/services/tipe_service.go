@@ -49,6 +49,7 @@ func (s *service) CreateTipe(ctx context.Context, req *dto.CreateTipeRequest, ac
 	m := &models.Tipe{
 		Code:      req.Code,
 		Label:     req.Label,
+		FHIRCode:  req.FHIRCode,
 		CreatedBy: &actor.UserID,
 		UpdatedBy: &actor.UserID,
 	}
@@ -263,6 +264,9 @@ func (s *service) UpdateTipe(ctx context.Context, id int64, req *dto.UpdateTipeR
 	}
 	if req.Label != nil {
 		m.Label = *req.Label
+	}
+	if req.FHIRCode != nil {
+		m.FHIRCode = req.FHIRCode
 	}
 	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()

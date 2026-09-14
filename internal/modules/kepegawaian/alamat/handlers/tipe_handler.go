@@ -5,10 +5,10 @@ import (
 	"net/http"
 
 	"neosim_go/internal/modules/kepegawaian/alamat/dto"
+	"neosim_go/internal/shared/binding"
 	he "neosim_go/internal/shared/httputil"
 	"neosim_go/internal/shared/response"
 	"neosim_go/internal/shared/validator"
-	"neosim_go/internal/shared/binding"
 
 	"github.com/labstack/echo/v5"
 )
@@ -18,11 +18,33 @@ import (
 // diberi suffix Tipe agar tidak bentrok dengan method entitas utama
 // pada struct handler yang sama.
 
+// ─── ListSelectTipe ────────────────────────────────────────────────
+//
+//	@Summary		Get list of Tipe for select
+//	@Description	Get list of Tipe for select with optional search
+//	@Tags			kepegawaian/alamat/tipe
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			search	query	string	false	"Search by label or code"
+//	@Success		200		{object}	response.MyGoResponse{data=[]dto.TipeSimpelResponse}
+//	@Router			/kepegawaian/alamat/tipes/select [get]
+func (h *KepegawaianAlamatHandler) ListSelectTipe(c *echo.Context) error {
+	search := c.QueryParam("search")
+
+	actor := he.BuildAuthContext(c)
+	items, err := h.service.ListSelectTipe(c.Request().Context(), search, actor)
+	if err != nil {
+		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", items, nil)
+}
+
 // ─── ListTipe ──────────────────────────────────────────────────────
 //
 //	@Summary		Get list of Tipe
 //	@Description	Get paginated list of Tipe
-//	@Tags			kepegawaian/alamat
+//	@Tags			kepegawaian/alamat/tipe
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
@@ -32,11 +54,11 @@ import (
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.TipeResponse}
 //	@Router			/kepegawaian/alamat/tipes [get]
 func (h *KepegawaianAlamatHandler) ListTipe(c *echo.Context) error {
-	filter := dto.FilterTipeRequest{Name: c.QueryParam("name")}
+	filter := dto.FilterTipeRequest{Code: c.QueryParam("code"), Label: c.QueryParam("label")}
 	page, pageSize := he.ParsePagination(c, h.cfg)
 
 	actor := he.BuildAuthContext(c)
-	items, total, err := h.service.ListTipe(c.Request().Context(),page, pageSize, &filter, actor)
+	items, total, err := h.service.ListTipe(c.Request().Context(), page, pageSize, &filter, actor)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
 	}
@@ -47,7 +69,7 @@ func (h *KepegawaianAlamatHandler) ListTipe(c *echo.Context) error {
 //
 //	@Summary		Get Tipe
 //	@Description	Get Tipe by :id
-//	@Tags			kepegawaian/alamat
+//	@Tags			kepegawaian/alamat/tipe
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
@@ -60,7 +82,7 @@ func (h *KepegawaianAlamatHandler) GetTipeByID(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.GetTipeByID(c.Request().Context(),id, actor)
+	item, err := h.service.GetTipeByID(c.Request().Context(), id, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -71,7 +93,7 @@ func (h *KepegawaianAlamatHandler) GetTipeByID(c *echo.Context) error {
 //
 //	@Summary		Create Tipe
 //	@Description	Create New Tipe
-//	@Tags			kepegawaian/alamat
+//	@Tags			kepegawaian/alamat/tipe
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
@@ -92,7 +114,7 @@ func (h *KepegawaianAlamatHandler) CreateTipe(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (validator)", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.CreateTipe(c.Request().Context(),&req, actor)
+	item, err := h.service.CreateTipe(c.Request().Context(), &req, actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
@@ -103,7 +125,7 @@ func (h *KepegawaianAlamatHandler) CreateTipe(c *echo.Context) error {
 //
 //	@Summary		Update Tipe
 //	@Description	Update Tipe by :id
-//	@Tags			kepegawaian/alamat
+//	@Tags			kepegawaian/alamat/tipe
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
@@ -130,7 +152,7 @@ func (h *KepegawaianAlamatHandler) UpdateTipe(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (validator)", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.UpdateTipe(c.Request().Context(),id, &req, actor)
+	item, err := h.service.UpdateTipe(c.Request().Context(), id, &req, actor)
 	if err != nil {
 		status := http.StatusBadRequest
 		if err.Error() == "Tipe tidak ditemukan" {
@@ -145,7 +167,7 @@ func (h *KepegawaianAlamatHandler) UpdateTipe(c *echo.Context) error {
 //
 //	@Summary		Delete Tipe
 //	@Description	Delete Tipe by :id
-//	@Tags			kepegawaian/alamat
+//	@Tags			kepegawaian/alamat/tipe
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
@@ -158,7 +180,7 @@ func (h *KepegawaianAlamatHandler) DeleteTipe(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	if err := h.service.DeleteTipe(c.Request().Context(),id, actor); err != nil {
+	if err := h.service.DeleteTipe(c.Request().Context(), id, actor); err != nil {
 		status := http.StatusInternalServerError
 		if err.Error() == "Tipe tidak ditemukan" {
 			status = http.StatusNotFound

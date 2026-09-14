@@ -1,8 +1,8 @@
 package alamat
 
 import (
-	"neosim_go/internal/modules/kepegawaian/alamat/handlers"
 	authMiddlewares "neosim_go/internal/modules/auth/middlewares"
+	"neosim_go/internal/modules/kepegawaian/alamat/handlers"
 	"neosim_go/internal/shared/utils"
 
 	"github.com/labstack/echo/v5"
@@ -17,9 +17,11 @@ func RegisterRoutes(e *echo.Echo, h *handlers.KepegawaianAlamatHandler, jwtManag
 	g.POST("", h.CreateAlamat)
 	g.PUT("/:id", h.UpdateAlamat)
 	g.DELETE("/:id", h.DeleteAlamat)
+
 	gTipe := e.Group("/api/v1/kepegawaian/alamat/tipes", jwt)
 	gTipe.GET("", h.ListTipe)
 	gTipe.GET("/:id", h.GetTipeByID)
+	gTipe.GET("/select", h.ListSelectTipe)
 	gTipe.POST("", h.CreateTipe)
 	gTipe.PUT("/:id", h.UpdateTipe)
 	gTipe.DELETE("/:id", h.DeleteTipe)

@@ -1,34 +1,80 @@
 package dto
 
 import (
-
 	"neosim_go/internal/modules/kepegawaian/alamat/models"
-	"neosim_go/internal/shared/types"
 	he "neosim_go/internal/shared/httputil"
+	"neosim_go/internal/shared/types"
 )
 
 // KepegawaianAlamatResponse response untuk single KepegawaianAlamat
 type KepegawaianAlamatResponse struct {
-	ID          int64     `json:"id"`
-	Name        string    `json:"name"`
-	Description *string   `json:"description"`
-	CreatedBy   *he.UserData `json:"created_by"`
-	UpdatedBy   *he.UserData `json:"updated_by"`
+	ID        int64 `json:"id"`
+	PegawaiID int64 `json:"pegawai_id"`
+	//TipeID      int64            `json:"tipe_id"`
+	Tipe *TipeSimpelResponse `json:"tipe,omitempty"`
+
+	Jalan   string `json:"jalan"`
+	RT      string `json:"rt"`
+	RW      string `json:"rw"`
+	KodePos string `json:"kode_pos"`
+
+	NegaraID        int64 `json:"negara_id"`
+	ProvinsiID      int64 `json:"provinsi_id"`
+	KotaKabupatenID int64 `json:"kota_kabupaten_id"`
+	KecamatanID     int64 `json:"kecamatan_id"`
+	KelurahanDesaID int64 `json:"kelurahan_desa_id"`
+
+	IsPrimary bool `json:"is_primary"`
+
+	Description *string          `json:"description"`
+	CreatedBy   *he.UserData     `json:"created_by"`
+	UpdatedBy   *he.UserData     `json:"updated_by"`
 	CreatedAt   types.CustomTime `json:"created_at"`
 	UpdatedAt   types.CustomTime `json:"updated_at"`
 }
 
 type KepegawaianAlamatResponseParams struct {
 	KepegawaianAlamat *models.KepegawaianAlamat
-	Creator         *he.UserData
-	Updater         *he.UserData
+	Creator           *he.UserData
+	Updater           *he.UserData
 }
 
 // ToKepegawaianAlamatResponse mengubah model menjadi response
 func ToKepegawaianAlamatResponse(params KepegawaianAlamatResponseParams) *KepegawaianAlamatResponse {
+	if params.KepegawaianAlamat == nil {
+		return nil
+	}
+
+	m := params.KepegawaianAlamat
+
+	var tipeResponse *TipeSimpelResponse
+
+	if m.Tipe != nil {
+		tipeResponse = &TipeSimpelResponse{
+			ID:    m.Tipe.ID,
+			Code:  m.Tipe.Code,
+			Label: m.Tipe.Label,
+		}
+	}
+
 	return &KepegawaianAlamatResponse{
-		ID:          params.KepegawaianAlamat.ID,
-		Name:        params.KepegawaianAlamat.Name,
+		ID:        m.ID,
+		PegawaiID: m.PegawaiID,
+		//TipeID:      params.KepegawaianKontak.TipeID,
+		Tipe: tipeResponse,
+
+		Jalan:   m.Jalan,
+		RT:      *m.RT,
+		RW:      *m.RW,
+		KodePos: *m.KodePos,
+
+		NegaraID:        *m.NegaraID,
+		ProvinsiID:      *m.ProvinsiID,
+		KotaKabupatenID: *m.KotaKabupatenID,
+		KecamatanID:     *m.KecamatanID,
+		KelurahanDesaID: *m.KelurahanDesaID,
+
+		IsPrimary:   m.IsPrimary,
 		Description: params.KepegawaianAlamat.Description,
 		CreatedBy:   params.Creator,
 		UpdatedBy:   params.Updater,
@@ -57,8 +103,8 @@ func ToKepegawaianAlamatListResponse(
 
 		responses = append(responses, *ToKepegawaianAlamatResponse(KepegawaianAlamatResponseParams{
 			KepegawaianAlamat: &m,
-			Creator:    creator,
-			Updater:    updater,
+			Creator:           creator,
+			Updater:           updater,
 		}))
 	}
 

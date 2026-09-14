@@ -21,6 +21,7 @@ import (
 	_ "neosim_go/internal/modules/master/master"
 
 	// Kepegawaian
+	_ "neosim_go/internal/modules/kepegawaian/alamat"
 	_ "neosim_go/internal/modules/kepegawaian/identifier"
 	_ "neosim_go/internal/modules/kepegawaian/kontak"
 	_ "neosim_go/internal/modules/kepegawaian/kualifikasi"
@@ -61,11 +62,18 @@ func main() {
 		"Auth",
 		"RBAC",
 		"Users",
+
 		"Master: Alamat",
 		"Master: Departemen",
 		"Master: Master",
+
 		"Kepegawaian: Identifier",
 		"Kepegawaian: Pegawai",
+		"Kepegawaian: Kontak",
+		"Kepegawaian: Pendidikan",
+		"Kepegawaian: Kualifikasi",
+		"Kepegawaian: Alamat",
+
 		"Artikel: Artikel",
 		"Artikel: Kategori",
 	}

@@ -30,6 +30,7 @@ func (s *service) CreateJenjang(ctx context.Context, req *dto.CreateJenjangReque
 	m := &models.Jenjang{
 		Code:       req.Code,
 		Label:      req.Label,
+		FHIRCode:   req.FHIRCode,
 		FHIRSystem: req.FHIRSystem,
 		Point:      req.Point,
 		CreatedBy:  &actor.UserID,
@@ -167,6 +168,9 @@ func (s *service) UpdateJenjang(ctx context.Context, id int64, req *dto.UpdateJe
 	}
 	if req.FHIRSystem != nil {
 		m.FHIRSystem = req.FHIRSystem
+	}
+	if req.FHIRCode != nil {
+		m.FHIRCode = req.FHIRCode
 	}
 	if req.Point != nil {
 		m.Point = req.Point

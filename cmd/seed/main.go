@@ -20,6 +20,7 @@ import (
 	masterMaster "neosim_go/internal/modules/master/master/tests/seeders"
 
 	// Kepegawaian----------------------------------------------------------
+	masterKepegawaianAlamat "neosim_go/internal/modules/kepegawaian/alamat/tests/seeders"
 	masterKepegawaianIdentifier "neosim_go/internal/modules/kepegawaian/identifier/tests/seeders"
 	masterKepegawaianKontak "neosim_go/internal/modules/kepegawaian/kontak/tests/seeders"
 	masterKepegawaianKualifikasi "neosim_go/internal/modules/kepegawaian/kualifikasi/tests/seeders"
@@ -232,6 +233,30 @@ func main() {
 			log.Fatal("Gagal seed  kualifikasi:", err)
 		}
 	} //------Kepegawaian Kualifikasi ---------------------------------------
+
+	//------Kepegawaian alamat Tipe-------------------------------------
+	masterKepegawaianAlamatTipeSeeder := masterKepegawaianAlamat.NewTipeSeeder(db)
+	if *fresh {
+		if err := masterKepegawaianAlamatTipeSeeder.Fresh(); err != nil {
+			log.Fatal("Gagal fresh seed  tipe alamat:", err)
+		}
+	} else {
+		if err := masterKepegawaianAlamatTipeSeeder.Run(); err != nil {
+			log.Fatal("Gagal seed   tipe alamat:", err)
+		}
+	} //------Kepegawaian alamat Tipe-----------------------------------
+
+	//------Kepegawaian alamat -----------------------------------------
+	masterKepegawaianAlamatSeeder := masterKepegawaianAlamat.NewKepegawaianAlamatSeeder(db)
+	if *fresh {
+		if err := masterKepegawaianAlamatSeeder.Fresh(); err != nil {
+			log.Fatal("Gagal fresh seed   alamat:", err)
+		}
+	} else {
+		if err := masterKepegawaianAlamatSeeder.Run(); err != nil {
+			log.Fatal("Gagal seed  alamat:", err)
+		}
+	} //------Kepegawaian alamat ---------------------------------------
 
 	//Kepegawaian------------------------------------------------------------
 

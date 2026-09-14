@@ -13,8 +13,8 @@ import (
 )
 
 // ── Create ────────────────────────────────────────────────────────────────────
-func (s *service) CreateAlamat(ctx context.Context,req *dto.CreateKepegawaianAlamatRequest, actor he.AuthContext) (*dto.KepegawaianAlamatResponse, error) {
-	can, err := s.canCreateKepegawaianAlamat(ctx,actor)
+func (s *service) CreateAlamat(ctx context.Context, req *dto.CreateKepegawaianAlamatRequest, actor he.AuthContext) (*dto.KepegawaianAlamatResponse, error) {
+	can, err := s.canCreateKepegawaianAlamat(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -24,28 +24,40 @@ func (s *service) CreateAlamat(ctx context.Context,req *dto.CreateKepegawaianAla
 	}
 
 	m := &models.KepegawaianAlamat{
-		Name:        req.Name,
+		PegawaiID: req.PegawaiID,
+		TipeID:    req.TipeID,
+		Jalan:     req.Jalan,
+		RT:        req.RT,
+		RW:        req.RW,
+		KodePos:   req.KodePos,
+
+		NegaraID:        req.NegaraID,
+		ProvinsiID:      req.ProvinsiID,
+		KotaKabupatenID: req.KotaKabupatenID,
+		KecamatanID:     req.KecamatanID,
+		KelurahanDesaID: req.KelurahanDesaID,
+
+		IsPrimary:   req.IsPrimary,
 		Description: req.Description,
 		CreatedBy:   &actor.UserID,
 		UpdatedBy:   &actor.UserID,
 	}
-	if err := s.repo.CreateAlamat(ctx,m); err != nil {
+	if err := s.repo.CreateAlamat(ctx, m); err != nil {
 		return nil, err
 	}
-	
-	creator := s.buildCreator(ctx,m.CreatedBy)
+
+	creator := s.buildCreator(ctx, m.CreatedBy)
 
 	return dto.ToKepegawaianAlamatResponse(dto.KepegawaianAlamatResponseParams{
 		KepegawaianAlamat: m,
-		Creator:    creator,
-		Updater:    creator,
+		Creator:           creator,
+		Updater:           creator,
 	}), nil
 }
 
-
 // ── GetByID ───────────────────────────────────────────────────────────────────
-func (s *service) GetAlamatByID(ctx context.Context,id int64, actor he.AuthContext) (*dto.KepegawaianAlamatResponse, error) {
-	can, err := s.canReadKepegawaianAlamat(ctx,actor)
+func (s *service) GetAlamatByID(ctx context.Context, id int64, actor he.AuthContext) (*dto.KepegawaianAlamatResponse, error) {
+	can, err := s.canReadKepegawaianAlamat(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -54,28 +66,27 @@ func (s *service) GetAlamatByID(ctx context.Context,id int64, actor he.AuthConte
 			"Akses ditolak. Anda tidak memiliki hak akses untuk Melihat KepegawaianAlamat.", nil)
 	}
 
-	m, err := s.repo.GetAlamatByID(ctx,id)
+	m, err := s.repo.GetAlamatByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 	if m == nil {
 		return nil, errors.New("KepegawaianAlamat tidak ditemukan")
 	}
-	
-	creator := s.buildCreator(ctx,m.CreatedBy)
-	updater := s.buildCreator(ctx,m.UpdatedBy)
+
+	creator := s.buildCreator(ctx, m.CreatedBy)
+	updater := s.buildCreator(ctx, m.UpdatedBy)
 
 	return dto.ToKepegawaianAlamatResponse(dto.KepegawaianAlamatResponseParams{
 		KepegawaianAlamat: m,
-		Creator:    creator,
-		Updater:    updater,
+		Creator:           creator,
+		Updater:           updater,
 	}), nil
 }
 
-
 // ── List ──────────────────────────────────────────────────────────────────────
-func (s *service) ListAlamat(ctx context.Context,page, pageSize int, filter *dto.FilterKepegawaianAlamatRequest, actor he.AuthContext) ([]dto.KepegawaianAlamatResponse, int64, error) {
-	can, err := s.canReadKepegawaianAlamat(ctx,actor)
+func (s *service) ListAlamat(ctx context.Context, page, pageSize int, filter *dto.FilterKepegawaianAlamatRequest, actor he.AuthContext) ([]dto.KepegawaianAlamatResponse, int64, error) {
+	can, err := s.canReadKepegawaianAlamat(ctx, actor)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal cek akses")
 	}
@@ -90,7 +101,7 @@ func (s *service) ListAlamat(ctx context.Context,page, pageSize int, filter *dto
 	if pageSize < 1 || pageSize > s.cfg.DefaultPageSizeMax {
 		pageSize = s.cfg.DefaultPageSizeMax
 	}
-	items, total, err := s.repo.ListAlamat(ctx,page, pageSize, filter)
+	items, total, err := s.repo.ListAlamat(ctx, page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -99,10 +110,9 @@ func (s *service) ListAlamat(ctx context.Context,page, pageSize int, filter *dto
 	return dto.ToKepegawaianAlamatListResponse(items, creatorsMap, updatersMap), total, nil
 }
 
-
 // ── Update ────────────────────────────────────────────────────────────────────
-func (s *service) UpdateAlamat(ctx context.Context,id int64, req *dto.UpdateKepegawaianAlamatRequest, actor he.AuthContext) (*dto.KepegawaianAlamatResponse, error) {
-	can, err := s.canUpdateKepegawaianAlamat(ctx,actor)
+func (s *service) UpdateAlamat(ctx context.Context, id int64, req *dto.UpdateKepegawaianAlamatRequest, actor he.AuthContext) (*dto.KepegawaianAlamatResponse, error) {
+	can, err := s.canUpdateKepegawaianAlamat(ctx, actor)
 	if err != nil {
 		return nil, appErrors.Internal("gagal cek akses")
 	}
@@ -111,39 +121,70 @@ func (s *service) UpdateAlamat(ctx context.Context,id int64, req *dto.UpdateKepe
 			"Akses ditolak. Anda tidak memiliki hak akses untuk mengubah KepegawaianAlamat.", nil)
 	}
 
-	m, err := s.repo.GetAlamatByID(ctx,id)
+	m, err := s.repo.GetAlamatByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 	if m == nil {
 		return nil, errors.New("KepegawaianAlamat tidak ditemukan")
 	}
-	if req.Name != nil {
-		m.Name = *req.Name
+
+	if req.TipeID != nil {
+		m.TipeID = *req.TipeID
 	}
+
+	if req.Jalan != nil {
+		m.Jalan = *req.Jalan
+	}
+	if req.RT != nil {
+		m.RT = req.RT
+	}
+	if req.RW != nil {
+		m.RW = req.RW
+	}
+	if req.KodePos != nil {
+		m.KodePos = req.KodePos
+	}
+
+	if req.NegaraID != nil {
+		m.NegaraID = req.NegaraID
+	}
+	if req.ProvinsiID != nil {
+		m.ProvinsiID = req.ProvinsiID
+	}
+	if req.KotaKabupatenID != nil {
+		m.KotaKabupatenID = req.KotaKabupatenID
+	}
+	if req.KecamatanID != nil {
+		m.KecamatanID = req.KecamatanID
+	}
+	if req.KelurahanDesaID != nil {
+		m.KelurahanDesaID = req.KelurahanDesaID
+	}
+
 	if req.Description != nil {
 		m.Description = req.Description
 	}
 	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()
 
-	if err := s.repo.UpdateAlamat(ctx,m); err != nil {
+	if err := s.repo.UpdateAlamat(ctx, m); err != nil {
 		return nil, err
 	}
-	
-	creator := s.buildCreator(ctx,m.CreatedBy)
-	updater := s.buildCreator(ctx,m.UpdatedBy)
+
+	creator := s.buildCreator(ctx, m.CreatedBy)
+	updater := s.buildCreator(ctx, m.UpdatedBy)
 
 	return dto.ToKepegawaianAlamatResponse(dto.KepegawaianAlamatResponseParams{
 		KepegawaianAlamat: m,
-		Creator:    creator,
-		Updater:    updater,
+		Creator:           creator,
+		Updater:           updater,
 	}), nil
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
-func (s *service) DeleteAlamat(ctx context.Context,id int64, actor he.AuthContext) error {
-	can, err := s.canDeleteKepegawaianAlamat(ctx,actor)
+func (s *service) DeleteAlamat(ctx context.Context, id int64, actor he.AuthContext) error {
+	can, err := s.canDeleteKepegawaianAlamat(ctx, actor)
 	if err != nil {
 		return appErrors.Internal("gagal cek akses")
 	}
@@ -152,12 +193,12 @@ func (s *service) DeleteAlamat(ctx context.Context,id int64, actor he.AuthContex
 			"Akses ditolak. Anda tidak memiliki hak akses untuk menghapus KepegawaianAlamat.", nil)
 	}
 
-	m, err := s.repo.GetAlamatByID(ctx,id)
+	m, err := s.repo.GetAlamatByID(ctx, id)
 	if err != nil {
 		return err
 	}
 	if m == nil {
 		return errors.New("KepegawaianAlamat tidak ditemukan")
 	}
-	return s.repo.DeleteAlamat(ctx,id, actor.UserID)
+	return s.repo.DeleteAlamat(ctx, id, actor.UserID)
 }

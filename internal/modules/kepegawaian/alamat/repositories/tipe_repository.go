@@ -21,12 +21,12 @@ func NewTipeRepository(db *gorm.DB) contracts.TipeRepository {
 }
 
 // ── Create ────────────────────────────────────────────────────────────────────
-func (r *repository) CreateTipe(ctx context.Context,m *models.Tipe) error {
+func (r *repository) CreateTipe(ctx context.Context, m *models.Tipe) error {
 	return r.db.WithContext(ctx).Create(m).Error
 }
 
 // ── GetByID ───────────────────────────────────────────────────────────────────
-func (r *repository) GetTipeByID(ctx context.Context,id int64) (*models.Tipe, error) {
+func (r *repository) GetTipeByID(ctx context.Context, id int64) (*models.Tipe, error) {
 	var m models.Tipe
 	result := r.db.WithContext(ctx).Where("id = ? AND deleted_at IS NULL", id).First(&m)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -35,14 +35,56 @@ func (r *repository) GetTipeByID(ctx context.Context,id int64) (*models.Tipe, er
 	return &m, result.Error
 }
 
+// ── GetByCode ─────────────────────────────────────────────────────────────────
+func (r *repository) GetTipeByCode(ctx context.Context, code string) (*models.Tipe, error) {
+	var m models.Tipe
+	result := r.db.WithContext(ctx).Where("code = ? AND deleted_at IS NULL", code).First(&m)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return &m, result.Error
+}
+
+// ── GetByLabel ────────────────────────────────────────────────────────────────
+func (r *repository) GetTipeByLabel(ctx context.Context, label string) (*models.Tipe, error) {
+	var m models.Tipe
+	result := r.db.WithContext(ctx).Where("label = ? AND deleted_at IS NULL", label).First(&m)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return &m, result.Error
+}
+
+// ── ListSelect ────────────────────────────────────────────────────────────────
+func (r *repository) ListSelectTipe(ctx context.Context, search string) ([]models.Tipe, error) {
+	var items []models.Tipe
+
+	query := r.db.WithContext(ctx).Model(&models.Tipe{}).
+		Select("id, code, label").
+		Where("kepegawaian_alamat_tipes.deleted_at IS NULL")
+
+	if search != "" {
+		query = query.Where("label ILIKE ? OR code ILIKE ?", "%"+search+"%", "%"+search+"%")
+	}
+
+	if err := query.Order("label ASC").Find(&items).Error; err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
 // ── List ──────────────────────────────────────────────────────────────────────
-func (r *repository) ListTipe(ctx context.Context,page, pageSize int, filter *dto.FilterTipeRequest) ([]models.Tipe, int64, error) {
+func (r *repository) ListTipe(ctx context.Context, page, pageSize int, filter *dto.FilterTipeRequest) ([]models.Tipe, int64, error) {
 	var items []models.Tipe
 	var total int64
 
 	query := r.db.WithContext(ctx).Model(&models.Tipe{}).Where("deleted_at IS NULL")
-	if filter.Name != "" {
-		query = query.Where("name ILIKE ?", "%"+filter.Name+"%")
+	if filter.Code != "" {
+		query = query.Where("code ILIKE ?", "%"+filter.Code+"%")
+	}
+	if filter.Label != "" {
+		query = query.Where("label ILIKE ?", "%"+filter.Label+"%")
 	}
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
@@ -55,17 +97,17 @@ func (r *repository) ListTipe(ctx context.Context,page, pageSize int, filter *dt
 }
 
 // ── Update ────────────────────────────────────────────────────────────────────
-func (r *repository) UpdateTipe(ctx context.Context,m *models.Tipe) error {
+func (r *repository) UpdateTipe(ctx context.Context, m *models.Tipe) error {
 	return r.db.WithContext(ctx).Save(m).Error
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
-func (r *repository) DeleteTipe(ctx context.Context,id int64, deletedBy int64) error {
+func (r *repository) DeleteTipe(ctx context.Context, id int64, deletedBy int64) error {
 	return r.db.WithContext(ctx).
 		Model(&models.Tipe{}).
 		Where("id = ? AND deleted_at IS NULL", id).
 		Updates(map[string]any{
 			"deleted_at": time.Now(),
 			"updated_by": deletedBy,
-	}).Error
+		}).Error
 }

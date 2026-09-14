@@ -12,6 +12,7 @@ type Tipe struct {
 	Code        string         `gorm:"column:code;type:varchar(100);not null;unique" json:"code"`
 	Label       string         `gorm:"column:label;type:varchar(255);not null" json:"label"`
 	Penerbit    *string        `gorm:"column:penerbit;type:varchar(255)" json:"penerbit"`
+	FHIRCode    *string        `gorm:"column:fhir_code;type:text" json:"fhir_code"`
 	FHIRSystem  *string        `gorm:"column:fhir_system;type:varchar(255)" json:"fhir_system"`
 	HasExpiry   bool           `gorm:"column:has_expiry;type:boolean;not null;default:false" json:"has_expiry"`
 	IsNakes     bool           `gorm:"column:is_nakes;type:boolean;not null;default:false" json:"is_nakes"`

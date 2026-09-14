@@ -49,6 +49,7 @@ func (s *service) CreateTipe(ctx context.Context, req *dto.CreateTipeRequest, ac
 		Code:        req.Code,
 		Label:       req.Label,
 		Penerbit:    req.Penerbit,
+		FHIRCode:    req.FHIRCode,
 		FHIRSystem:  req.FHIRSystem,
 		HasExpiry:   req.HasExpiry,
 		IsNakes:     req.IsNakes,
@@ -266,6 +267,9 @@ func (s *service) UpdateTipe(ctx context.Context, id int64, req *dto.UpdateTipeR
 	}
 	if req.Penerbit != nil {
 		m.Penerbit = req.Penerbit
+	}
+	if req.FHIRCode != nil {
+		m.FHIRCode = req.FHIRCode
 	}
 	if req.FHIRSystem != nil {
 		m.FHIRSystem = req.FHIRSystem

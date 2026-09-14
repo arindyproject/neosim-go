@@ -33,10 +33,31 @@ func (r *repository) ListAlamat(ctx context.Context, page, pageSize int, filter 
 
 	query := r.db.WithContext(ctx).Model(&models.KepegawaianAlamat{}).Where("deleted_at IS NULL")
 
-	if filter.Name != "" {
-		query = query.Where("name ILIKE ?", "%"+filter.Name+"%")
+	if filter.Jalan != nil {
+		// Ubah "name ILIKE ?" menjadi "jalan ILIKE ?"
+		query = query.Where("jalan ILIKE ?", "%"+*filter.Jalan+"%")
 	}
 
+	// Ubah operator '==' menjadi '='
+	if filter.NegaraID != nil {
+		query = query.Where("negara_id = ?", filter.NegaraID)
+	}
+
+	if filter.ProvinsiID != nil {
+		query = query.Where("provinsi_id = ?", filter.ProvinsiID)
+	}
+
+	if filter.KotaKabupatenID != nil {
+		query = query.Where("kota_kabupaten_id = ?", filter.KotaKabupatenID)
+	}
+
+	if filter.KecamatanID != nil {
+		query = query.Where("kecamatan_id = ?", filter.KecamatanID)
+	}
+
+	if filter.KelurahanDesaID != nil {
+		query = query.Where("kelurahan_desa_id = ?", filter.KelurahanDesaID)
+	}
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
@@ -48,7 +69,6 @@ func (r *repository) ListAlamat(ctx context.Context, page, pageSize int, filter 
 
 	return items, total, nil
 }
-
 
 // ── Update ────────────────────────────────────────────────────────────────────
 func (r *repository) UpdateAlamat(ctx context.Context, m *models.KepegawaianAlamat) error {

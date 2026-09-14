@@ -5,6 +5,7 @@ type CreateTipeRequest struct {
 	Code        string   `json:"code" validate:"required,min=1,max=100"`
 	Label       string   `json:"label" validate:"required,min=1,max=255"`
 	Penerbit    *string  `json:"penerbit" validate:"omitempty,max=255"`
+	FHIRCode    *string  `json:"fhir_code" validate:"omitempty,max=500"`
 	FHIRSystem  *string  `json:"fhir_system" validate:"omitempty,max=255"`
 	HasExpiry   bool     `json:"has_expiry"`
 	IsNakes     bool     `json:"is_nakes"`
@@ -18,6 +19,7 @@ type UpdateTipeRequest struct {
 	Code        *string  `json:"code" validate:"omitempty,min=1,max=100"`
 	Label       *string  `json:"label" validate:"omitempty,min=1,max=255"`
 	Penerbit    *string  `json:"penerbit" validate:"omitempty,max=255"`
+	FHIRCode    *string  `json:"fhir_code" validate:"omitempty,max=500"`
 	FHIRSystem  *string  `json:"fhir_system" validate:"omitempty,max=255"`
 	HasExpiry   *bool    `json:"has_expiry"`
 	IsNakes     *bool    `json:"is_nakes"`

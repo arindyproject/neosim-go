@@ -11,6 +11,7 @@ type JenjangResponse struct {
 	ID         int64            `json:"id"`
 	Code       string           `json:"code"`
 	Label      string           `json:"label"`
+	FHIRCode   *string          `json:"fhir_code"`
 	FHIRSystem *string          `json:"fhir_system"`
 	Point      *float64         `json:"point"`
 	CreatedBy  *he.UserData     `json:"created_by"`
@@ -23,6 +24,7 @@ type JenjangSimpelResponse struct {
 	ID         int64    `json:"id"`
 	Code       string   `json:"code"`
 	Label      string   `json:"label"`
+	FHIRCode   *string  `json:"fhir_code"`
 	FHIRSystem *string  `json:"fhir_system"`
 	Point      *float64 `json:"point"`
 }
@@ -57,6 +59,7 @@ func ToJenjangResponse(params JenjangResponseParams) *JenjangResponse {
 		ID:         params.Jenjang.ID,
 		Code:       params.Jenjang.Code,
 		Label:      params.Jenjang.Label,
+		FHIRCode:   params.Jenjang.FHIRCode,
 		FHIRSystem: params.Jenjang.FHIRSystem,
 		Point:      params.Jenjang.Point,
 		CreatedBy:  params.Creator,

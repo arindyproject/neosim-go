@@ -1070,8 +1070,44 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Filter by name (partial match)",
-                        "name": "name",
+                        "description": "Filter by jalan (partial match)",
+                        "name": "jalan",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by tipe_id",
+                        "name": "tipe_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by negara_id",
+                        "name": "negara_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by provinsi_id",
+                        "name": "provinsi_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by kota_kabupaten_id",
+                        "name": "kota_kabupaten_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by kecamatan_id",
+                        "name": "kecamatan_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by kelurahan_desa_id",
+                        "name": "kelurahan_desa_id",
                         "in": "query"
                     },
                     {
@@ -1176,7 +1212,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "kepegawaian/alamat"
+                    "kepegawaian/alamat/tipe"
                 ],
                 "summary": "Get list of Tipe",
                 "parameters": [
@@ -1237,7 +1273,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "kepegawaian/alamat"
+                    "kepegawaian/alamat/tipe"
                 ],
                 "summary": "Create Tipe",
                 "parameters": [
@@ -1273,6 +1309,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/kepegawaian/alamat/tipes/select": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get list of Tipe for select with optional search",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/alamat/tipe"
+                ],
+                "summary": "Get list of Tipe for select",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search by label or code",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_alamat_dto.TipeSimpelResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/kepegawaian/alamat/tipes/{id}": {
             "get": {
                 "security": [
@@ -1288,7 +1375,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "kepegawaian/alamat"
+                    "kepegawaian/alamat/tipe"
                 ],
                 "summary": "Get Tipe",
                 "parameters": [
@@ -1335,7 +1422,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "kepegawaian/alamat"
+                    "kepegawaian/alamat/tipe"
                 ],
                 "summary": "Update Tipe",
                 "parameters": [
@@ -1391,7 +1478,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "kepegawaian/alamat"
+                    "kepegawaian/alamat/tipe"
                 ],
                 "summary": "Delete Tipe",
                 "parameters": [
@@ -10488,6 +10575,10 @@ const docTemplate = `{
                     "maxLength": 100,
                     "minLength": 1
                 },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 500
+                },
                 "fhir_system": {
                     "type": "string",
                     "maxLength": 500
@@ -10566,17 +10657,58 @@ const docTemplate = `{
         "dto.CreateKepegawaianAlamatRequest": {
             "type": "object",
             "required": [
-                "name"
+                "jalan",
+                "pegawai_id",
+                "tipe_id"
             ],
             "properties": {
                 "description": {
                     "type": "string",
                     "maxLength": 500
                 },
-                "name": {
+                "is_primary": {
+                    "type": "boolean"
+                },
+                "jalan": {
                     "type": "string",
-                    "maxLength": 255,
+                    "maxLength": 500,
                     "minLength": 1
+                },
+                "kecamatan_id": {
+                    "type": "integer"
+                },
+                "kelurahan_desa_id": {
+                    "type": "integer"
+                },
+                "kode_pos": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 1
+                },
+                "kota_kabupaten_id": {
+                    "type": "integer"
+                },
+                "negara_id": {
+                    "type": "integer"
+                },
+                "pegawai_id": {
+                    "type": "integer"
+                },
+                "provinsi_id": {
+                    "type": "integer"
+                },
+                "rt": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 1
+                },
+                "rw": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 1
+                },
+                "tipe_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -11209,6 +11341,9 @@ const docTemplate = `{
                 "created_by": {
                     "$ref": "#/definitions/httputil.UserData"
                 },
+                "fhir_code": {
+                    "type": "string"
+                },
                 "fhir_system": {
                     "type": "string"
                 },
@@ -11247,6 +11382,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "code": {
+                    "type": "string"
+                },
+                "fhir_code": {
                     "type": "string"
                 },
                 "fhir_system": {
@@ -11464,8 +11602,46 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "name": {
+                "is_primary": {
+                    "type": "boolean"
+                },
+                "jalan": {
                     "type": "string"
+                },
+                "kecamatan_id": {
+                    "type": "integer"
+                },
+                "kelurahan_desa_id": {
+                    "type": "integer"
+                },
+                "kode_pos": {
+                    "type": "string"
+                },
+                "kota_kabupaten_id": {
+                    "type": "integer"
+                },
+                "negara_id": {
+                    "type": "integer"
+                },
+                "pegawai_id": {
+                    "type": "integer"
+                },
+                "provinsi_id": {
+                    "type": "integer"
+                },
+                "rt": {
+                    "type": "string"
+                },
+                "rw": {
+                    "type": "string"
+                },
+                "tipe": {
+                    "description": "TipeID      int64            ` + "`" + `json:\"tipe_id\"` + "`" + `",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_alamat_dto.TipeSimpelResponse"
+                        }
+                    ]
                 },
                 "updated_at": {
                     "type": "string"
@@ -12579,6 +12755,10 @@ const docTemplate = `{
                     "maxLength": 100,
                     "minLength": 1
                 },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 500
+                },
                 "fhir_system": {
                     "type": "string",
                     "maxLength": 500
@@ -12646,15 +12826,55 @@ const docTemplate = `{
         },
         "dto.UpdateKepegawaianAlamatRequest": {
             "type": "object",
+            "required": [
+                "jalan",
+                "tipe_id"
+            ],
             "properties": {
                 "description": {
                     "type": "string",
                     "maxLength": 500
                 },
-                "name": {
+                "is_primary": {
+                    "type": "boolean"
+                },
+                "jalan": {
                     "type": "string",
-                    "maxLength": 255,
+                    "maxLength": 500,
                     "minLength": 1
+                },
+                "kecamatan_id": {
+                    "type": "integer"
+                },
+                "kelurahan_desa_id": {
+                    "type": "integer"
+                },
+                "kode_pos": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 1
+                },
+                "kota_kabupaten_id": {
+                    "type": "integer"
+                },
+                "negara_id": {
+                    "type": "integer"
+                },
+                "provinsi_id": {
+                    "type": "integer"
+                },
+                "rt": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 1
+                },
+                "rw": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 1
+                },
+                "tipe_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -13321,14 +13541,20 @@ const docTemplate = `{
         "neosim_go_internal_modules_kepegawaian_alamat_dto.CreateTipeRequest": {
             "type": "object",
             "required": [
-                "name"
+                "code",
+                "label"
             ],
             "properties": {
-                "description": {
+                "code": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "fhir_code": {
                     "type": "string",
                     "maxLength": 500
                 },
-                "name": {
+                "label": {
                     "type": "string",
                     "maxLength": 255,
                     "minLength": 1
@@ -13338,19 +13564,22 @@ const docTemplate = `{
         "neosim_go_internal_modules_kepegawaian_alamat_dto.TipeResponse": {
             "type": "object",
             "properties": {
+                "code": {
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "string"
                 },
                 "created_by": {
                     "$ref": "#/definitions/httputil.UserData"
                 },
-                "description": {
+                "fhir_code": {
                     "type": "string"
                 },
                 "id": {
                     "type": "integer"
                 },
-                "name": {
+                "label": {
                     "type": "string"
                 },
                 "updated_at": {
@@ -13361,14 +13590,33 @@ const docTemplate = `{
                 }
             }
         },
+        "neosim_go_internal_modules_kepegawaian_alamat_dto.TipeSimpelResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "label": {
+                    "type": "string"
+                }
+            }
+        },
         "neosim_go_internal_modules_kepegawaian_alamat_dto.UpdateTipeRequest": {
             "type": "object",
             "properties": {
-                "description": {
+                "code": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "fhir_code": {
                     "type": "string",
                     "maxLength": 500
                 },
-                "name": {
+                "label": {
                     "type": "string",
                     "maxLength": 255,
                     "minLength": 1
@@ -13388,6 +13636,10 @@ const docTemplate = `{
                     "minLength": 1
                 },
                 "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "fhir_code": {
                     "type": "string",
                     "maxLength": 500
                 },
@@ -13434,6 +13686,9 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
+                "fhir_code": {
+                    "type": "string"
+                },
                 "fhir_system": {
                     "type": "string"
                 },
@@ -13475,6 +13730,9 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
+                "fhir_code": {
+                    "type": "string"
+                },
                 "fhir_system": {
                     "type": "string"
                 },
@@ -13510,6 +13768,10 @@ const docTemplate = `{
                     "minLength": 1
                 },
                 "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "fhir_code": {
                     "type": "string",
                     "maxLength": 500
                 },
@@ -13553,6 +13815,10 @@ const docTemplate = `{
                     "maxLength": 255,
                     "minLength": 1
                 },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 500
+                },
                 "label": {
                     "type": "string",
                     "maxLength": 255,
@@ -13571,6 +13837,9 @@ const docTemplate = `{
                 },
                 "created_by": {
                     "$ref": "#/definitions/httputil.UserData"
+                },
+                "fhir_code": {
+                    "type": "string"
                 },
                 "id": {
                     "type": "integer"
@@ -13607,6 +13876,10 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 255,
                     "minLength": 1
+                },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 500
                 },
                 "label": {
                     "type": "string",

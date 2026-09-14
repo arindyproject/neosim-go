@@ -24,16 +24,19 @@ func (f *TipeFactory) With(field string, value interface{}) *TipeFactory {
 
 func (f *TipeFactory) Make() *models.Tipe {
 	idx := rng.Intn(999999)
-	name := fmt.Sprintf("Tipe %d", idx)
-	desc := fmt.Sprintf("Deskripsi Tipe %d", idx)
+	code := fmt.Sprintf("Tipe %d", idx)
+	label := fmt.Sprintf("Label Tipe %d", idx)
 
-	if v, ok := f.overrides["name"]; ok {
-		name = v.(string)
+	if v, ok := f.overrides["code"]; ok {
+		code = v.(string)
+	}
+	if v, ok := f.overrides["label"]; ok {
+		label = v.(string)
 	}
 
 	return &models.Tipe{
-		Name:        name,
-		Description: &desc,
+		Code:  code,
+		Label: label,
 	}
 }
 

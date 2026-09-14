@@ -108,6 +108,9 @@ definitions:
         maxLength: 100
         minLength: 1
         type: string
+      fhir_code:
+        maxLength: 500
+        type: string
       fhir_system:
         maxLength: 500
         type: string
@@ -172,12 +175,42 @@ definitions:
       description:
         maxLength: 500
         type: string
-      name:
-        maxLength: 255
+      is_primary:
+        type: boolean
+      jalan:
+        maxLength: 500
         minLength: 1
         type: string
+      kecamatan_id:
+        type: integer
+      kelurahan_desa_id:
+        type: integer
+      kode_pos:
+        maxLength: 20
+        minLength: 1
+        type: string
+      kota_kabupaten_id:
+        type: integer
+      negara_id:
+        type: integer
+      pegawai_id:
+        type: integer
+      provinsi_id:
+        type: integer
+      rt:
+        maxLength: 20
+        minLength: 1
+        type: string
+      rw:
+        maxLength: 20
+        minLength: 1
+        type: string
+      tipe_id:
+        type: integer
     required:
-    - name
+    - jalan
+    - pegawai_id
+    - tipe_id
     type: object
   dto.CreateKepegawaianIdentifierRequest:
     properties:
@@ -637,6 +670,8 @@ definitions:
         type: string
       created_by:
         $ref: '#/definitions/httputil.UserData'
+      fhir_code:
+        type: string
       fhir_system:
         type: string
       id:
@@ -662,6 +697,8 @@ definitions:
   dto.JenjangSimpelResponse:
     properties:
       code:
+        type: string
+      fhir_code:
         type: string
       fhir_system:
         type: string
@@ -804,8 +841,32 @@ definitions:
         type: string
       id:
         type: integer
-      name:
+      is_primary:
+        type: boolean
+      jalan:
         type: string
+      kecamatan_id:
+        type: integer
+      kelurahan_desa_id:
+        type: integer
+      kode_pos:
+        type: string
+      kota_kabupaten_id:
+        type: integer
+      negara_id:
+        type: integer
+      pegawai_id:
+        type: integer
+      provinsi_id:
+        type: integer
+      rt:
+        type: string
+      rw:
+        type: string
+      tipe:
+        allOf:
+        - $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_alamat_dto.TipeSimpelResponse'
+        description: TipeID      int64            `json:"tipe_id"`
       updated_at:
         type: string
       updated_by:
@@ -1534,6 +1595,9 @@ definitions:
         maxLength: 100
         minLength: 1
         type: string
+      fhir_code:
+        maxLength: 500
+        type: string
       fhir_system:
         maxLength: 500
         type: string
@@ -1587,10 +1651,39 @@ definitions:
       description:
         maxLength: 500
         type: string
-      name:
-        maxLength: 255
+      is_primary:
+        type: boolean
+      jalan:
+        maxLength: 500
         minLength: 1
         type: string
+      kecamatan_id:
+        type: integer
+      kelurahan_desa_id:
+        type: integer
+      kode_pos:
+        maxLength: 20
+        minLength: 1
+        type: string
+      kota_kabupaten_id:
+        type: integer
+      negara_id:
+        type: integer
+      provinsi_id:
+        type: integer
+      rt:
+        maxLength: 20
+        minLength: 1
+        type: string
+      rw:
+        maxLength: 20
+        minLength: 1
+        type: string
+      tipe_id:
+        type: integer
+    required:
+    - jalan
+    - tipe_id
     type: object
   dto.UpdateKepegawaianIdentifierRequest:
     properties:
@@ -2061,39 +2154,59 @@ definitions:
     type: object
   neosim_go_internal_modules_kepegawaian_alamat_dto.CreateTipeRequest:
     properties:
-      description:
+      code:
+        maxLength: 255
+        minLength: 1
+        type: string
+      fhir_code:
         maxLength: 500
         type: string
-      name:
+      label:
         maxLength: 255
         minLength: 1
         type: string
     required:
-    - name
+    - code
+    - label
     type: object
   neosim_go_internal_modules_kepegawaian_alamat_dto.TipeResponse:
     properties:
+      code:
+        type: string
       created_at:
         type: string
       created_by:
         $ref: '#/definitions/httputil.UserData'
-      description:
+      fhir_code:
         type: string
       id:
         type: integer
-      name:
+      label:
         type: string
       updated_at:
         type: string
       updated_by:
         $ref: '#/definitions/httputil.UserData'
     type: object
+  neosim_go_internal_modules_kepegawaian_alamat_dto.TipeSimpelResponse:
+    properties:
+      code:
+        type: string
+      id:
+        type: integer
+      label:
+        type: string
+    type: object
   neosim_go_internal_modules_kepegawaian_alamat_dto.UpdateTipeRequest:
     properties:
-      description:
+      code:
+        maxLength: 255
+        minLength: 1
+        type: string
+      fhir_code:
         maxLength: 500
         type: string
-      name:
+      label:
         maxLength: 255
         minLength: 1
         type: string
@@ -2105,6 +2218,9 @@ definitions:
         minLength: 1
         type: string
       description:
+        maxLength: 500
+        type: string
+      fhir_code:
         maxLength: 500
         type: string
       fhir_system:
@@ -2140,6 +2256,8 @@ definitions:
         $ref: '#/definitions/httputil.UserData'
       description:
         type: string
+      fhir_code:
+        type: string
       fhir_system:
         type: string
       has_expiry:
@@ -2167,6 +2285,8 @@ definitions:
         type: string
       description:
         type: string
+      fhir_code:
+        type: string
       fhir_system:
         type: string
       has_expiry:
@@ -2191,6 +2311,9 @@ definitions:
         minLength: 1
         type: string
       description:
+        maxLength: 500
+        type: string
+      fhir_code:
         maxLength: 500
         type: string
       fhir_system:
@@ -2219,6 +2342,9 @@ definitions:
         maxLength: 255
         minLength: 1
         type: string
+      fhir_code:
+        maxLength: 500
+        type: string
       label:
         maxLength: 255
         minLength: 1
@@ -2235,6 +2361,8 @@ definitions:
         type: string
       created_by:
         $ref: '#/definitions/httputil.UserData'
+      fhir_code:
+        type: string
       id:
         type: integer
       label:
@@ -2258,6 +2386,9 @@ definitions:
       code:
         maxLength: 255
         minLength: 1
+        type: string
+      fhir_code:
+        maxLength: 500
         type: string
       label:
         maxLength: 255
@@ -2959,10 +3090,34 @@ paths:
       - application/json
       description: Get paginated list of KepegawaianAlamat
       parameters:
-      - description: Filter by name (partial match)
+      - description: Filter by jalan (partial match)
         in: query
-        name: name
+        name: jalan
         type: string
+      - description: Filter by tipe_id
+        in: query
+        name: tipe_id
+        type: string
+      - description: Filter by negara_id
+        in: query
+        name: negara_id
+        type: integer
+      - description: Filter by provinsi_id
+        in: query
+        name: provinsi_id
+        type: integer
+      - description: Filter by kota_kabupaten_id
+        in: query
+        name: kota_kabupaten_id
+        type: integer
+      - description: Filter by kecamatan_id
+        in: query
+        name: kecamatan_id
+        type: integer
+      - description: Filter by kelurahan_desa_id
+        in: query
+        name: kelurahan_desa_id
+        type: integer
       - description: Page number
         in: query
         name: page
@@ -3137,7 +3292,7 @@ paths:
       - BearerAuth: []
       summary: Get list of Tipe
       tags:
-      - kepegawaian/alamat
+      - kepegawaian/alamat/tipe
     post:
       consumes:
       - application/json
@@ -3165,7 +3320,7 @@ paths:
       - BearerAuth: []
       summary: Create Tipe
       tags:
-      - kepegawaian/alamat
+      - kepegawaian/alamat/tipe
   /kepegawaian/alamat/tipes/{id}:
     delete:
       consumes:
@@ -3188,7 +3343,7 @@ paths:
       - BearerAuth: []
       summary: Delete Tipe
       tags:
-      - kepegawaian/alamat
+      - kepegawaian/alamat/tipe
     get:
       consumes:
       - application/json
@@ -3215,7 +3370,7 @@ paths:
       - BearerAuth: []
       summary: Get Tipe
       tags:
-      - kepegawaian/alamat
+      - kepegawaian/alamat/tipe
     put:
       consumes:
       - application/json
@@ -3248,7 +3403,36 @@ paths:
       - BearerAuth: []
       summary: Update Tipe
       tags:
-      - kepegawaian/alamat
+      - kepegawaian/alamat/tipe
+  /kepegawaian/alamat/tipes/select:
+    get:
+      consumes:
+      - application/json
+      description: Get list of Tipe for select with optional search
+      parameters:
+      - description: Search by label or code
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_alamat_dto.TipeSimpelResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Tipe for select
+      tags:
+      - kepegawaian/alamat/tipe
   /kepegawaian/identifier:
     get:
       consumes:

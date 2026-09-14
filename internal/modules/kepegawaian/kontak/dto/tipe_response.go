@@ -11,6 +11,7 @@ type TipeResponse struct {
 	ID        int64            `json:"id"`
 	Code      string           `json:"code"`
 	Label     string           `json:"label"`
+	FHIRCode  *string          `json:"fhir_code"`
 	CreatedBy *he.UserData     `json:"created_by"`
 	UpdatedBy *he.UserData     `json:"updated_by"`
 	CreatedAt types.CustomTime `json:"created_at"`
@@ -47,6 +48,7 @@ func ToTipeResponse(params TipeResponseParams) *TipeResponse {
 		ID:        params.Tipe.ID,
 		Code:      params.Tipe.Code,
 		Label:     params.Tipe.Label,
+		FHIRCode:  params.Tipe.FHIRCode,
 		CreatedBy: params.Creator,
 		UpdatedBy: params.Updater,
 		CreatedAt: types.CustomTime(params.Tipe.CreatedAt),
