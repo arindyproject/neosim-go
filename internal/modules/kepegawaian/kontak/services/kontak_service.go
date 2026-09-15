@@ -24,6 +24,15 @@ func (s *service) CreateKontak(ctx context.Context, req *dto.CreateKepegawaianKo
 			"Akses ditolak. Anda tidak memiliki hak akses untuk membuat KepegawaianKontak baru.", nil)
 	}
 
+	// validasi keberadaan Pegawai
+	pegawaiMaster, err := s.pegawaiRepo.GetPegawaiByID(ctx, req.PegawaiID)
+	if err != nil {
+		return nil, appErrors.Internal("gagal mengambil data pegawai")
+	}
+	if pegawaiMaster == nil {
+		return nil, appErrors.Wrap(http.StatusUnprocessableEntity, "ID Pegawai tidak ditemukan.", nil)
+	}
+
 	// validasi keberadaan master Tipe
 	tipeMaster, err := s.repo.GetTipeByID(ctx, req.TipeID)
 	if err != nil {

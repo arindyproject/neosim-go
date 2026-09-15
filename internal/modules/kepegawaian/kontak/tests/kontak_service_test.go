@@ -19,6 +19,7 @@ import (
 	"neosim_go/internal/modules/kepegawaian/kontak/tests/mocks"
 
 	kontakContracts "neosim_go/internal/modules/kepegawaian/kontak/contracts"
+	pegawaiModels "neosim_go/internal/modules/kepegawaian/pegawai/models"
 	rbacModels "neosim_go/internal/modules/rbac/models"
 	"neosim_go/internal/shared/cache"
 	appErrors "neosim_go/internal/shared/errors"
@@ -46,12 +47,13 @@ func TestMain(m *testing.M) {
 // struct service/repository, satu suite ini sudah cukup untuk semuanya.
 type KepegawaianKontakServiceTestSuite struct {
 	suite.Suite
-	repo     *mocks.KepegawaianKontakRepositoryMock
-	rbacRepo *mocks.RBACRepositoryMock
-	authRepo *mocks.AuthRepositoryMock
-	userRepo *mocks.UserRepositoryMock
-	svc      kontakContracts.Service
-	cfg      *config.Config
+	repo        *mocks.KepegawaianKontakRepositoryMock
+	rbacRepo    *mocks.RBACRepositoryMock
+	authRepo    *mocks.AuthRepositoryMock
+	userRepo    *mocks.UserRepositoryMock
+	pegawaiRepo *mocks.KepegawaianPegawaiRepositoryMock
+	svc         kontakContracts.Service
+	cfg         *config.Config
 }
 
 func (s *KepegawaianKontakServiceTestSuite) SetupTest() {
@@ -59,12 +61,13 @@ func (s *KepegawaianKontakServiceTestSuite) SetupTest() {
 	s.rbacRepo = new(mocks.RBACRepositoryMock)
 	s.authRepo = new(mocks.AuthRepositoryMock)
 	s.userRepo = new(mocks.UserRepositoryMock)
+	s.pegawaiRepo = new(mocks.KepegawaianPegawaiRepositoryMock)
 	s.cfg = &config.Config{
 		DefaultPageSize:    10,
 		DefaultPageSizeMax: 10,
 	}
 	cacheManager := cache.NewManager(nil, false, 0)
-	s.svc = services.NewKepegawaianKontakService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.cfg, cacheManager)
+	s.svc = services.NewKepegawaianKontakService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.pegawaiRepo, s.cfg, cacheManager)
 
 	// Stub default agar buildCreator/buildAuditMaps tidak panic saat memanggil userRepo.
 	// Boleh dipanggil 0 kali atau lebih (.Maybe()) tergantung skenario test.
@@ -74,6 +77,9 @@ func (s *KepegawaianKontakServiceTestSuite) SetupTest() {
 	s.repo.On("GetKontakByPegawaiID", mock.Anything, mock.Anything, mock.Anything).Return(nil, int64(0), nil).Maybe()
 	s.repo.On("ExistsByNilaiAndTipe", mock.Anything, mock.Anything, mock.Anything).Return(false, nil).Maybe()
 	s.repo.On("UnsetPrimaryByPegawaiIDAndTipe", mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
+
+	s.pegawaiRepo.On("GetPegawaiByID", mock.Anything, mock.Anything).
+		Return(&pegawaiModels.KepegawaianPegawai{ID: 10}, nil).Maybe()
 }
 
 func TestKepegawaianKontakService(t *testing.T) {

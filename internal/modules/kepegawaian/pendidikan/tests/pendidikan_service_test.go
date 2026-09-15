@@ -18,6 +18,7 @@ import (
 	"neosim_go/internal/modules/kepegawaian/pendidikan/tests/factories"
 	"neosim_go/internal/modules/kepegawaian/pendidikan/tests/mocks"
 
+	pegawaiModels "neosim_go/internal/modules/kepegawaian/pegawai/models"
 	pendidikanContracts "neosim_go/internal/modules/kepegawaian/pendidikan/contracts"
 	rbacModels "neosim_go/internal/modules/rbac/models"
 	"neosim_go/internal/shared/cache"
@@ -46,12 +47,13 @@ func TestMain(m *testing.M) {
 // struct service/repository, satu suite ini sudah cukup untuk semuanya.
 type KepegawaianPendidikanServiceTestSuite struct {
 	suite.Suite
-	repo     *mocks.KepegawaianPendidikanRepositoryMock
-	rbacRepo *mocks.RBACRepositoryMock
-	authRepo *mocks.AuthRepositoryMock
-	userRepo *mocks.UserRepositoryMock
-	svc      pendidikanContracts.Service
-	cfg      *config.Config
+	repo        *mocks.KepegawaianPendidikanRepositoryMock
+	rbacRepo    *mocks.RBACRepositoryMock
+	authRepo    *mocks.AuthRepositoryMock
+	userRepo    *mocks.UserRepositoryMock
+	pegawaiRepo *mocks.KepegawaianPegawaiRepositoryMock
+	svc         pendidikanContracts.Service
+	cfg         *config.Config
 }
 
 func (s *KepegawaianPendidikanServiceTestSuite) SetupTest() {
@@ -59,16 +61,20 @@ func (s *KepegawaianPendidikanServiceTestSuite) SetupTest() {
 	s.rbacRepo = new(mocks.RBACRepositoryMock)
 	s.authRepo = new(mocks.AuthRepositoryMock)
 	s.userRepo = new(mocks.UserRepositoryMock)
+	s.pegawaiRepo = new(mocks.KepegawaianPegawaiRepositoryMock)
 	s.cfg = &config.Config{
 		DefaultPageSize:    10,
 		DefaultPageSizeMax: 10,
 	}
 	cacheManager := cache.NewManager(nil, false, 0)
-	s.svc = services.NewKepegawaianPendidikanService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.cfg, cacheManager)
+	s.svc = services.NewKepegawaianPendidikanService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.pegawaiRepo, s.cfg, cacheManager)
 
 	// Stub default agar buildCreator/buildAuditMaps tidak panic saat memanggil userRepo.
 	s.userRepo.On("GetByID", mock.Anything).Return(nil, nil).Maybe()
 	s.userRepo.On("GetByIDs", mock.Anything).Return(nil, nil).Maybe()
+
+	s.pegawaiRepo.On("GetPegawaiByID", mock.Anything, mock.Anything).
+		Return(&pegawaiModels.KepegawaianPegawai{ID: 10}, nil).Maybe()
 
 	// Stub default agar CreatePendidikan/UpdatePendidikan tidak panic saat
 	// memvalidasi master Jenjang dan duplikasi Nomor Ijazah. Test yang butuh

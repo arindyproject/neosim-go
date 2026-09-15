@@ -19,6 +19,7 @@ import (
 	"neosim_go/internal/modules/kepegawaian/alamat/tests/mocks"
 
 	alamatContracts "neosim_go/internal/modules/kepegawaian/alamat/contracts"
+	pegawaiModels "neosim_go/internal/modules/kepegawaian/pegawai/models"
 	rbacModels "neosim_go/internal/modules/rbac/models"
 	"neosim_go/internal/shared/cache"
 	appErrors "neosim_go/internal/shared/errors"
@@ -46,12 +47,13 @@ func TestMain(m *testing.M) {
 // struct service/repository, satu suite ini sudah cukup untuk semuanya.
 type KepegawaianAlamatServiceTestSuite struct {
 	suite.Suite
-	repo     *mocks.KepegawaianAlamatRepositoryMock
-	rbacRepo *mocks.RBACRepositoryMock
-	authRepo *mocks.AuthRepositoryMock
-	userRepo *mocks.UserRepositoryMock
-	svc      alamatContracts.Service
-	cfg      *config.Config
+	repo        *mocks.KepegawaianAlamatRepositoryMock
+	rbacRepo    *mocks.RBACRepositoryMock
+	authRepo    *mocks.AuthRepositoryMock
+	userRepo    *mocks.UserRepositoryMock
+	pegawaiRepo *mocks.KepegawaianPegawaiRepositoryMock
+	svc         alamatContracts.Service
+	cfg         *config.Config
 }
 
 func (s *KepegawaianAlamatServiceTestSuite) SetupTest() {
@@ -59,6 +61,7 @@ func (s *KepegawaianAlamatServiceTestSuite) SetupTest() {
 	s.rbacRepo = new(mocks.RBACRepositoryMock)
 	s.authRepo = new(mocks.AuthRepositoryMock)
 	s.userRepo = new(mocks.UserRepositoryMock)
+	s.pegawaiRepo = new(mocks.KepegawaianPegawaiRepositoryMock)
 	s.cfg = &config.Config{
 		DefaultPageSize:    10,
 		DefaultPageSizeMax: 10,
@@ -72,6 +75,9 @@ func (s *KepegawaianAlamatServiceTestSuite) SetupTest() {
 	s.userRepo.On("GetByIDs", mock.Anything).Return(nil, nil).Maybe()
 	s.repo.On("GetTipeByCode", mock.Anything).Return(nil, nil).Maybe()
 	s.repo.On("GetTipeByLabel", mock.Anything).Return(nil, nil).Maybe()
+
+	s.pegawaiRepo.On("GetPegawaiByID", mock.Anything, mock.Anything).
+		Return(&pegawaiModels.KepegawaianPegawai{ID: 10}, nil).Maybe()
 }
 
 func TestKepegawaianAlamatService(t *testing.T) {

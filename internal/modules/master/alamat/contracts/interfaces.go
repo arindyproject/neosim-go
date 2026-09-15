@@ -20,6 +20,7 @@ type Repository interface {
 	//--------------------------------------------------------------
 
 	// Provinsi-----------------------------------------------------
+	CheckProvinsi(ctx context.Context, negaraID int64, provinsiID int64) (bool, error)
 	CreateProvinsi(ctx context.Context, m *models.MasterAlamatProvinsi) error
 	GetByIDProvinsi(ctx context.Context, id int64) (*models.MasterAlamatProvinsi, error)
 	ListSelectProvinsi(ctx context.Context, negaraID int64, search string) ([]models.MasterAlamatProvinsi, error)
@@ -34,6 +35,7 @@ type Repository interface {
 	//--------------------------------------------------------------
 
 	// Kota/Kabupaten-----------------------------------------------
+	CheckKotaKabupaten(ctx context.Context, provinsiID int64, kotaKabupatenID int64) (bool, error)
 	CreateKotaKabupaten(ctx context.Context, m *models.MasterAlamatKotaKabupaten) error
 	GetByIDKotaKabupaten(ctx context.Context, id int64) (*models.MasterAlamatKotaKabupaten, error)
 	ListSelectKotaKabupaten(ctx context.Context, provinsiID int64, search string) ([]models.MasterAlamatKotaKabupaten, error)
@@ -47,6 +49,7 @@ type Repository interface {
 	//--------------------------------------------------------------
 
 	// Kecamatan----------------------------------------------------
+	CheckKecamatan(ctx context.Context, kotaKabupatenID int64, kecamamatanID int64) (bool, error)
 	CreateKecamatan(ctx context.Context, m *models.MasterAlamatKecamatan) error
 	GetByIDKecamatan(ctx context.Context, id int64) (*models.MasterAlamatKecamatan, error)
 	ListSelectKecamatan(ctx context.Context, kotaKabupatenID int64, search string) ([]models.MasterAlamatKecamatan, error)
@@ -59,6 +62,7 @@ type Repository interface {
 	//--------------------------------------------------------------
 
 	// Kelurahan/Desa-----------------------------------------------
+	CheckKelurahanDesa(ctx context.Context, kecamamatanID, kelurahanDesaID int64) (bool, error)
 	CreateKelurahanDesa(ctx context.Context, m *models.MasterAlamatKelurahanDesa) error
 	GetByIDKelurahanDesa(ctx context.Context, id int64) (*models.MasterAlamatKelurahanDesa, error)
 	ListSelectKelurahanDesa(ctx context.Context, kecamatanID int64, search string) ([]models.MasterAlamatKelurahanDesa, error)

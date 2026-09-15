@@ -109,6 +109,40 @@ func (h *KepegawaianAlamatHandler) GetAlamatByID(c *echo.Context) error {
 	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", item, nil)
 }
 
+// ─── ListByPegawai ────────────────────────────────────────────────────────────
+//
+//	@Summary        Daftar alamat milik satu pegawai
+//	@Description    Menampilkan semua alamat yang dimiliki oleh pegawai tertentu
+//	@Tags           kepegawaian/alamat
+//	@Accept         json
+//	@Produce        json
+//	@Security       BearerAuth
+//	@Param          pegawai_id  path        int true    "ID pegawai"
+//	@Param          page        query       int     false   "Page number"
+//	@Param          page_size   query       int     false   "Page size"
+//	@Success        200         {object}    response.MyGoResponse{data=[]dto.KepegawaianAlamatResponse}
+//	@Router         /kepegawaian/alamat/{pegawai_id}/pegawai [get]
+func (h *KepegawaianAlamatHandler) ListAlamatByPegawai(c *echo.Context) error {
+	page, pageSize := he.ParsePagination(c, h.cfg)
+	actor := he.BuildAuthContext(c)
+
+	pegawaiID, err := parsePegawaiID(c)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
+	}
+
+	items, total, err := h.service.GetAlamatByPegawaiID(c.Request().Context(), pegawaiID, page, pageSize, actor)
+	if err != nil {
+		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
+	}
+
+	if len(items) == 0 {
+		return response.Response(c, http.StatusNotFound, false, "Data tidak ditemukan", nil, nil)
+	}
+
+	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data", items, total, page, pageSize)
+}
+
 // ─── CreateAlamat ────────────────────────────────────────────────────
 //
 //	@Summary		Create KepegawaianAlamat
@@ -207,4 +241,10 @@ func (h *KepegawaianAlamatHandler) DeleteAlamat(c *echo.Context) error {
 		return response.Response(c, status, false, err.Error(), nil, nil)
 	}
 	return response.Response(c, http.StatusOK, true, "Data berhasil dihapus", nil, nil)
+}
+
+// ─── Helper privat ──────────────────────────────────────────────────────────
+
+func parsePegawaiID(c *echo.Context) (int64, error) {
+	return strconv.ParseInt(c.Param("pegawai_id"), 10, 64)
 }

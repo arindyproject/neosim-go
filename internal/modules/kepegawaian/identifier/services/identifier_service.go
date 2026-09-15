@@ -27,6 +27,15 @@ func (s *service) CreateIdentifier(
 			"Akses ditolak. Anda tidak memiliki hak akses untuk membuat KepegawaianIdentifier baru.", nil)
 	}
 
+	// validasi keberadaan Pegawai
+	pegawaiMaster, err := s.pegawaiRepo.GetPegawaiByID(ctx, req.PegawaiID)
+	if err != nil {
+		return nil, appErrors.Internal("gagal mengambil data pegawai")
+	}
+	if pegawaiMaster == nil {
+		return nil, appErrors.Wrap(http.StatusUnprocessableEntity, "ID Pegawai tidak ditemukan.", nil)
+	}
+
 	// validasi keberadaan master Tipe
 	tipeMaster, err := s.repo.GetTipeByID(ctx, req.TipeID)
 	if err != nil {

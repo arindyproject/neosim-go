@@ -10,6 +10,8 @@ import (
 	"neosim_go/internal/shared/utils"
 
 	authContracts "neosim_go/internal/modules/auth/contracts"
+	pegawaiContracts "neosim_go/internal/modules/kepegawaian/pegawai/contracts"
+	masterAlamatContracts "neosim_go/internal/modules/master/alamat/contracts"
 	rbacContracts "neosim_go/internal/modules/rbac/contracts"
 	userContracts "neosim_go/internal/modules/users/contracts"
 
@@ -31,11 +33,13 @@ func NewModule(
 	rbacRepo rbacContracts.RBACRepository,
 	authRepo authContracts.AuthRepository,
 	userRepo userContracts.Repository,
+	pegawaiRepo pegawaiContracts.Repository,
+	masterAlamatRepo masterAlamatContracts.Repository,
 	cfg *config.Config,
 	cacheManager *cache.Manager, // <--- Cache Manager
 ) *Module {
 	repo := repositories.NewKepegawaianAlamatRepository(db)
-	svc := services.NewKepegawaianAlamatService(repo, rbacRepo, authRepo, userRepo, cfg, cacheManager)
+	svc := services.NewKepegawaianAlamatService(repo, rbacRepo, authRepo, userRepo, pegawaiRepo, masterAlamatRepo, cfg, cacheManager)
 	handler := handlers.NewKepegawaianAlamatHandler(svc, cfg)
 
 	return &Module{

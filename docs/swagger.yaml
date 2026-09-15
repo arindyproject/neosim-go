@@ -3256,6 +3256,44 @@ paths:
       summary: Update KepegawaianAlamat
       tags:
       - kepegawaian/alamat
+  /kepegawaian/alamat/{pegawai_id}/pegawai:
+    get:
+      consumes:
+      - application/json
+      description: Menampilkan semua alamat yang dimiliki oleh pegawai tertentu
+      parameters:
+      - description: ID pegawai
+        in: path
+        name: pegawai_id
+        required: true
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.KepegawaianAlamatResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Daftar alamat milik satu pegawai
+      tags:
+      - kepegawaian/alamat
   /kepegawaian/alamat/tipes:
     get:
       consumes:

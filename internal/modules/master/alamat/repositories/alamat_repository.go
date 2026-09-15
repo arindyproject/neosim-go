@@ -18,6 +18,22 @@ func (r *repository) CreateKelurahanDesa(ctx context.Context, m *models.MasterAl
 	return r.db.WithContext(ctx).Create(m).Error
 }
 
+func (r *repository) CheckKelurahanDesa(ctx context.Context, kecamamatanID, kelurahanDesaID int64) (bool, error) {
+	var exists bool
+	err := r.db.WithContext(ctx).
+		Model(&models.MasterAlamatKelurahanDesa{}).
+		Select("1").
+		Where("id = ? AND kecamatan_id = ?", kelurahanDesaID, kecamamatanID).
+		Limit(1).
+		Scan(&exists).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return exists, nil
+}
+
 func (r *repository) GetByIDKelurahanDesa(ctx context.Context, id int64) (*models.MasterAlamatKelurahanDesa, error) {
 	var m models.MasterAlamatKelurahanDesa
 	result := r.db.WithContext(ctx).Preload("Kecamatan").Where("id = ?", id).

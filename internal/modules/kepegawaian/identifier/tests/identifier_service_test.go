@@ -19,6 +19,7 @@ import (
 	"neosim_go/internal/modules/kepegawaian/identifier/tests/mocks"
 
 	identifierContracts "neosim_go/internal/modules/kepegawaian/identifier/contracts"
+	pegawaiModels "neosim_go/internal/modules/kepegawaian/pegawai/models"
 	rbacModels "neosim_go/internal/modules/rbac/models"
 	userModels "neosim_go/internal/modules/users/models"
 	"neosim_go/internal/shared/cache"
@@ -44,13 +45,14 @@ func TestMain(m *testing.M) {
 
 type KepegawaianIdentifierServiceTestSuite struct {
 	suite.Suite
-	repo     *mocks.KepegawaianIdentifierRepositoryMock
-	rbacRepo *mocks.RBACRepositoryMock
-	authRepo *mocks.AuthRepositoryMock
-	userRepo *mocks.UserRepositoryMock
-	svc      identifierContracts.Service
-	cfg      *config.Config
-	ctx      context.Context
+	repo        *mocks.KepegawaianIdentifierRepositoryMock
+	rbacRepo    *mocks.RBACRepositoryMock
+	authRepo    *mocks.AuthRepositoryMock
+	userRepo    *mocks.UserRepositoryMock
+	pegawaiRepo *mocks.KepegawaianPegawaiRepositoryMock
+	svc         identifierContracts.Service
+	cfg         *config.Config
+	ctx         context.Context
 }
 
 func (s *KepegawaianIdentifierServiceTestSuite) SetupTest() {
@@ -58,14 +60,18 @@ func (s *KepegawaianIdentifierServiceTestSuite) SetupTest() {
 	s.rbacRepo = new(mocks.RBACRepositoryMock)
 	s.authRepo = new(mocks.AuthRepositoryMock)
 	s.userRepo = new(mocks.UserRepositoryMock)
+	s.pegawaiRepo = new(mocks.KepegawaianPegawaiRepositoryMock)
 	s.cfg = &config.Config{DefaultPageSize: 10, DefaultPageSizeMax: 100}
 	cacheManager := cache.NewManager(nil, false, 0)
-	s.svc = services.NewKepegawaianIdentifierService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.cfg, cacheManager)
+	s.svc = services.NewKepegawaianIdentifierService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.pegawaiRepo, s.cfg, cacheManager)
 	s.ctx = context.Background()
+
 	s.userRepo.On("GetByIDs", mock.Anything).Return([]userModels.User{}, nil).Maybe()
 
 	// Stub default agar buildCreator/buildAuditMaps tidak panic saat memanggil userRepo.
 	s.userRepo.On("GetByID", mock.Anything).Return(nil, nil).Maybe()
+	s.pegawaiRepo.On("GetPegawaiByID", mock.Anything, mock.Anything).
+		Return(&pegawaiModels.KepegawaianPegawai{ID: 10}, nil).Maybe()
 }
 
 func TestKepegawaianIdentifierService(t *testing.T) {

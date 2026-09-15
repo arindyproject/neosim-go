@@ -13,6 +13,8 @@ import (
 
 	authContracts "neosim_go/internal/modules/auth/contracts"
 	authRepositories "neosim_go/internal/modules/auth/repositories"
+	pegawaiRepositories "neosim_go/internal/modules/kepegawaian/pegawai/repositories"
+	masterAlamatRepositories "neosim_go/internal/modules/master/alamat/repositories"
 	rbacContracts "neosim_go/internal/modules/rbac/contracts"
 	rbacRepositories "neosim_go/internal/modules/rbac/repositories"
 	userRepositories "neosim_go/internal/modules/users/repositories"
@@ -65,7 +67,9 @@ func (r *registryModule) InitRoutes(e *echo.Echo) {
 		r.cfg.JWTRefreshTokenExpDays,
 	)
 	userRepo := userRepositories.NewRepository(r.db)
-	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo, userRepo, r.cfg, r.cacheManager).InitRoutes(e)
+	pegawaiRepo := pegawaiRepositories.NewKepegawaianPegawaiRepository(r.db)
+	masterAlamatRepo := masterAlamatRepositories.NewMasterAlamatRepository(r.db)
+	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo, userRepo, pegawaiRepo, masterAlamatRepo, r.cfg, r.cacheManager).InitRoutes(e)
 }
 
 func (r *registryModule) Models() []interface{} {

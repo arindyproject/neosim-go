@@ -26,6 +26,30 @@ func (r *repository) GetAlamatByID(ctx context.Context, id int64) (*models.Kepeg
 	return &m, result.Error
 }
 
+// ── GetByPegawaiID ────────────────────────────────────────────────────────────
+func (r *repository) GetAlamatByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int) ([]models.KepegawaianAlamat, int64, error) {
+	var items []models.KepegawaianAlamat
+	var total int64
+
+	query := r.db.WithContext(ctx).
+		Model(&models.KepegawaianAlamat{}).
+		Preload("Tipe").
+		Where("pegawai_id = ? AND deleted_at IS NULL", pegawaiID)
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * pageSize
+	err := query.
+		Order("tipe_id ASC, is_primary DESC, created_at DESC").
+		Offset(offset).
+		Limit(pageSize).
+		Find(&items).Error
+
+	return items, total, err
+}
+
 // ── List ──────────────────────────────────────────────────────────────────────
 func (r *repository) ListAlamat(ctx context.Context, page, pageSize int, filter *dto.FilterKepegawaianAlamatRequest) ([]models.KepegawaianAlamat, int64, error) {
 	var items []models.KepegawaianAlamat

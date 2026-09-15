@@ -18,6 +18,22 @@ func (r *repository) CreateKecamatan(ctx context.Context, m *models.MasterAlamat
 	return r.db.WithContext(ctx).Create(m).Error
 }
 
+func (r *repository) CheckKecamatan(ctx context.Context, kotaKabupatenID, kecamamatanID int64) (bool, error) {
+	var exists bool
+	err := r.db.WithContext(ctx).
+		Model(&models.MasterAlamatKecamatan{}).
+		Select("1").
+		Where("id = ? AND kota_kabupaten_id = ?", kecamamatanID, kotaKabupatenID).
+		Limit(1).
+		Scan(&exists).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return exists, nil
+}
+
 func (r *repository) GetByIDKecamatan(ctx context.Context, id int64) (*models.MasterAlamatKecamatan, error) {
 	var m models.MasterAlamatKecamatan
 	result := r.db.WithContext(ctx).Preload("KotaKabupaten").Where("id = ?", id).

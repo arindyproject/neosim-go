@@ -14,6 +14,7 @@ func RegisterRoutes(e *echo.Echo, h *handlers.KepegawaianAlamatHandler, jwtManag
 	g := e.Group("/api/v1/kepegawaian/alamat", jwt)
 	g.GET("", h.ListAlamat)
 	g.GET("/:id", h.GetAlamatByID)
+	g.GET("/:pegawai_id/pegawai", h.ListAlamatByPegawai)
 	g.POST("", h.CreateAlamat)
 	g.PUT("/:id", h.UpdateAlamat)
 	g.DELETE("/:id", h.DeleteAlamat)

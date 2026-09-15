@@ -27,6 +27,22 @@ func (r *repository) GetByIDProvinsi(ctx context.Context, id int64) (*models.Mas
 	return &m, result.Error
 }
 
+func (r *repository) CheckProvinsi(ctx context.Context, negaraID int64, provinsiID int64) (bool, error) {
+	var exists bool
+	err := r.db.WithContext(ctx).
+		Model(&models.MasterAlamatProvinsi{}).
+		Select("1").
+		Where("id = ? AND negara_id = ?", provinsiID, negaraID).
+		Limit(1).
+		Scan(&exists).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return exists, nil
+}
+
 func (r *repository) ListSelectProvinsi(ctx context.Context, negaraID int64, search string) ([]models.MasterAlamatProvinsi, error) {
 	var items []models.MasterAlamatProvinsi
 

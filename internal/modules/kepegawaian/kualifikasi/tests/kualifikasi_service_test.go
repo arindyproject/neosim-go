@@ -19,6 +19,7 @@ import (
 	"neosim_go/internal/modules/kepegawaian/kualifikasi/tests/mocks"
 
 	kualifikasiContracts "neosim_go/internal/modules/kepegawaian/kualifikasi/contracts"
+	pegawaiModels "neosim_go/internal/modules/kepegawaian/pegawai/models"
 	rbacModels "neosim_go/internal/modules/rbac/models"
 	"neosim_go/internal/shared/cache"
 	appErrors "neosim_go/internal/shared/errors"
@@ -46,12 +47,13 @@ func TestMain(m *testing.M) {
 // ini sudah cukup untuk semuanya.
 type KepegawaianKualifikasiServiceTestSuite struct {
 	suite.Suite
-	repo     *mocks.KepegawaianKualifikasiRepositoryMock
-	rbacRepo *mocks.RBACRepositoryMock
-	authRepo *mocks.AuthRepositoryMock
-	userRepo *mocks.UserRepositoryMock
-	svc      kualifikasiContracts.Service
-	cfg      *config.Config
+	repo        *mocks.KepegawaianKualifikasiRepositoryMock
+	rbacRepo    *mocks.RBACRepositoryMock
+	authRepo    *mocks.AuthRepositoryMock
+	userRepo    *mocks.UserRepositoryMock
+	pegawaiRepo *mocks.KepegawaianPegawaiRepositoryMock
+	svc         kualifikasiContracts.Service
+	cfg         *config.Config
 }
 
 func (s *KepegawaianKualifikasiServiceTestSuite) SetupTest() {
@@ -59,16 +61,20 @@ func (s *KepegawaianKualifikasiServiceTestSuite) SetupTest() {
 	s.rbacRepo = new(mocks.RBACRepositoryMock)
 	s.authRepo = new(mocks.AuthRepositoryMock)
 	s.userRepo = new(mocks.UserRepositoryMock)
+	s.pegawaiRepo = new(mocks.KepegawaianPegawaiRepositoryMock)
 	s.cfg = &config.Config{
 		DefaultPageSize:    10,
 		DefaultPageSizeMax: 10,
 	}
 	cacheManager := cache.NewManager(nil, false, 0)
-	s.svc = services.NewKepegawaianKualifikasiService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.cfg, cacheManager)
+	s.svc = services.NewKepegawaianKualifikasiService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.pegawaiRepo, s.cfg, cacheManager)
 
 	// Stub default agar buildCreator/buildAuditMaps tidak panic saat memanggil userRepo.
 	s.userRepo.On("GetByID", mock.Anything).Return(nil, nil).Maybe()
 	s.userRepo.On("GetByIDs", mock.Anything).Return(nil, nil).Maybe()
+
+	s.pegawaiRepo.On("GetPegawaiByID", mock.Anything, mock.Anything).
+		Return(&pegawaiModels.KepegawaianPegawai{ID: 10}, nil).Maybe()
 }
 
 func TestKepegawaianKualifikasiService(t *testing.T) {
