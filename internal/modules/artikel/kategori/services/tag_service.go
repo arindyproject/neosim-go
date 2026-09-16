@@ -20,7 +20,7 @@ import (
 func (s *service) CreateTag(ctx context.Context,req *dto.CreateTagRequest, actor he.AuthContext) (*dto.TagResponse, error) {
 	can, err := s.canCreateTag(ctx,actor)
 	if err != nil {
-		return nil, appErrors.Internal("gagal cek akses")
+		return nil, appErrors.Internal("gagal cek akses: " + err.Error())
 	}
 	if !can {
 		return nil, appErrors.Wrap(http.StatusForbidden,
@@ -51,7 +51,7 @@ func (s *service) CreateTag(ctx context.Context,req *dto.CreateTagRequest, actor
 func (s *service) GetTagByID(ctx context.Context,id int64, actor he.AuthContext) (*dto.TagResponse, error) {
 	can, err := s.canReadTag(ctx,actor)
 	if err != nil {
-		return nil, appErrors.Internal("gagal cek akses")
+		return nil, appErrors.Internal("gagal cek akses: " + err.Error())
 	}
 	if !can {
 		return nil, appErrors.Wrap(http.StatusForbidden,

@@ -11672,26 +11672,26 @@ const docTemplate = `{
                 "jalan": {
                     "type": "string"
                 },
-                "kecamatan_id": {
-                    "type": "integer"
+                "kecamatan": {
+                    "$ref": "#/definitions/dto.WilayahSimpelResponse"
                 },
-                "kelurahan_desa_id": {
-                    "type": "integer"
+                "kelurahan_desa": {
+                    "$ref": "#/definitions/dto.WilayahSimpelResponse"
                 },
                 "kode_pos": {
                     "type": "string"
                 },
-                "kota_kabupaten_id": {
-                    "type": "integer"
+                "kota_kabupaten": {
+                    "$ref": "#/definitions/dto.WilayahSimpelResponse"
                 },
-                "negara_id": {
-                    "type": "integer"
+                "negara": {
+                    "$ref": "#/definitions/dto.WilayahSimpelResponse"
                 },
                 "pegawai_id": {
                     "type": "integer"
                 },
-                "provinsi_id": {
-                    "type": "integer"
+                "provinsi": {
+                    "$ref": "#/definitions/dto.WilayahSimpelResponse"
                 },
                 "rt": {
                     "type": "string"
@@ -11700,12 +11700,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "tipe": {
-                    "description": "TipeID      int64            ` + "`" + `json:\"tipe_id\"` + "`" + `",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_alamat_dto.TipeSimpelResponse"
-                        }
-                    ]
+                    "$ref": "#/definitions/neosim_go_internal_modules_kepegawaian_alamat_dto.TipeSimpelResponse"
                 },
                 "updated_at": {
                     "type": "string"
@@ -13525,6 +13520,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.WilayahSimpelResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
                     "type": "string"
                 }
             }

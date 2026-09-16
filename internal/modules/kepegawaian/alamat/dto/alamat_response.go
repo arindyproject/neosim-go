@@ -6,23 +6,44 @@ import (
 	"neosim_go/internal/shared/types"
 )
 
+// Helper functions untuk aman dari nil pointer dereference
+func stringVal(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}
+
+func int64Val(i *int64) int64 {
+	if i == nil {
+		return 0
+	}
+	return *i
+}
+
 // KepegawaianAlamatResponse response untuk single KepegawaianAlamat
 type KepegawaianAlamatResponse struct {
-	ID        int64 `json:"id"`
-	PegawaiID int64 `json:"pegawai_id"`
-	//TipeID      int64            `json:"tipe_id"`
-	Tipe *TipeSimpelResponse `json:"tipe,omitempty"`
+	ID        int64               `json:"id"`
+	PegawaiID int64               `json:"pegawai_id"`
+	Tipe      *TipeSimpelResponse `json:"tipe,omitempty"`
 
 	Jalan   string `json:"jalan"`
 	RT      string `json:"rt"`
 	RW      string `json:"rw"`
 	KodePos string `json:"kode_pos"`
 
-	NegaraID        int64 `json:"negara_id"`
-	ProvinsiID      int64 `json:"provinsi_id"`
-	KotaKabupatenID int64 `json:"kota_kabupaten_id"`
-	KecamatanID     int64 `json:"kecamatan_id"`
-	KelurahanDesaID int64 `json:"kelurahan_desa_id"`
+	// Diubah ke pointer atau tetap int64 (jika int64, nil akan jadi 0)
+	//NegaraID        *int64 `json:"negara_id,omitempty"`
+	//ProvinsiID      *int64 `json:"provinsi_id,omitempty"`
+	//KotaKabupatenID *int64 `json:"kota_kabupaten_id,omitempty"`
+	//KecamatanID     *int64 `json:"kecamatan_id,omitempty"`
+	//KelurahanDesaID *int64 `json:"kelurahan_desa_id,omitempty"`
+
+	Negara        *WilayahSimpelResponse `json:"negara,omitempty"`
+	Provinsi      *WilayahSimpelResponse `json:"provinsi,omitempty"`
+	KotaKabupaten *WilayahSimpelResponse `json:"kota_kabupaten,omitempty"`
+	Kecamatan     *WilayahSimpelResponse `json:"kecamatan,omitempty"`
+	KelurahanDesa *WilayahSimpelResponse `json:"kelurahan_desa,omitempty"`
 
 	IsPrimary bool `json:"is_primary"`
 
@@ -37,6 +58,12 @@ type KepegawaianAlamatResponseParams struct {
 	KepegawaianAlamat *models.KepegawaianAlamat
 	Creator           *he.UserData
 	Updater           *he.UserData
+
+	Negara        *WilayahSimpelResponse
+	Provinsi      *WilayahSimpelResponse
+	KotaKabupaten *WilayahSimpelResponse
+	Kecamatan     *WilayahSimpelResponse
+	KelurahanDesa *WilayahSimpelResponse
 }
 
 // ToKepegawaianAlamatResponse mengubah model menjadi response
@@ -48,7 +75,6 @@ func ToKepegawaianAlamatResponse(params KepegawaianAlamatResponseParams) *Kepega
 	m := params.KepegawaianAlamat
 
 	var tipeResponse *TipeSimpelResponse
-
 	if m.Tipe != nil {
 		tipeResponse = &TipeSimpelResponse{
 			ID:    m.Tipe.ID,
@@ -60,26 +86,32 @@ func ToKepegawaianAlamatResponse(params KepegawaianAlamatResponseParams) *Kepega
 	return &KepegawaianAlamatResponse{
 		ID:        m.ID,
 		PegawaiID: m.PegawaiID,
-		//TipeID:      params.KepegawaianKontak.TipeID,
-		Tipe: tipeResponse,
+		Tipe:      tipeResponse,
 
 		Jalan:   m.Jalan,
-		RT:      *m.RT,
-		RW:      *m.RW,
-		KodePos: *m.KodePos,
+		RT:      stringVal(m.RT),
+		RW:      stringVal(m.RW),
+		KodePos: stringVal(m.KodePos),
 
-		NegaraID:        *m.NegaraID,
-		ProvinsiID:      *m.ProvinsiID,
-		KotaKabupatenID: *m.KotaKabupatenID,
-		KecamatanID:     *m.KecamatanID,
-		KelurahanDesaID: *m.KelurahanDesaID,
+		// Tetapkan langsung pointer ID wilayah (tanpa dereference *)
+		// Agar jika nil di DB, JSON yang keluar bernilai null
+		//NegaraID:        m.NegaraID,
+		//ProvinsiID:      m.ProvinsiID,
+		//KotaKabupatenID: m.KotaKabupatenID,
+		//KecamatanID:     m.KecamatanID,
+		//KelurahanDesaID: m.KelurahanDesaID,
+		Negara:        params.Negara,
+		Provinsi:      params.Provinsi,
+		KotaKabupaten: params.KotaKabupaten,
+		Kecamatan:     params.Kecamatan,
+		KelurahanDesa: params.KelurahanDesa,
 
 		IsPrimary:   m.IsPrimary,
-		Description: params.KepegawaianAlamat.Description,
+		Description: m.Description,
 		CreatedBy:   params.Creator,
 		UpdatedBy:   params.Updater,
-		CreatedAt:   types.CustomTime(params.KepegawaianAlamat.CreatedAt),
-		UpdatedAt:   types.CustomTime(params.KepegawaianAlamat.UpdatedAt),
+		CreatedAt:   types.CustomTime(m.CreatedAt),
+		UpdatedAt:   types.CustomTime(m.UpdatedAt),
 	}
 }
 
@@ -88,12 +120,12 @@ func ToKepegawaianAlamatListResponse(
 	items []models.KepegawaianAlamat,
 	creatorsMap map[int64]*he.UserData,
 	updatersMap map[int64]*he.UserData,
+	negaraMap, provinsiMap, kotaMap, kecamatanMap, kelurahanMap map[int64]*WilayahSimpelResponse,
 ) []KepegawaianAlamatResponse {
 	responses := make([]KepegawaianAlamatResponse, 0, len(items))
 
 	for _, m := range items {
 		var creator, updater *he.UserData
-
 		if creatorsMap != nil && m.CreatedBy != nil {
 			creator = creatorsMap[*m.CreatedBy]
 		}
@@ -101,12 +133,44 @@ func ToKepegawaianAlamatListResponse(
 			updater = updatersMap[*m.UpdatedBy]
 		}
 
-		responses = append(responses, *ToKepegawaianAlamatResponse(KepegawaianAlamatResponseParams{
+		var negara, provinsi, kota, kecamatan, kelurahan *WilayahSimpelResponse
+		if m.NegaraID != nil {
+			negara = negaraMap[*m.NegaraID]
+		}
+		if m.ProvinsiID != nil {
+			provinsi = provinsiMap[*m.ProvinsiID]
+		}
+		if m.KotaKabupatenID != nil {
+			kota = kotaMap[*m.KotaKabupatenID]
+		}
+		if m.KecamatanID != nil {
+			kecamatan = kecamatanMap[*m.KecamatanID]
+		}
+		if m.KelurahanDesaID != nil {
+			kelurahan = kelurahanMap[*m.KelurahanDesaID]
+		}
+
+		res := ToKepegawaianAlamatResponse(KepegawaianAlamatResponseParams{
 			KepegawaianAlamat: &m,
 			Creator:           creator,
 			Updater:           updater,
-		}))
+			Negara:            negara,
+			Provinsi:          provinsi,
+			KotaKabupaten:     kota,
+			Kecamatan:         kecamatan,
+			KelurahanDesa:     kelurahan,
+		})
+		if res != nil {
+			responses = append(responses, *res)
+		}
 	}
 
 	return responses
+}
+
+// WilayahSimpelResponse representasi ringkas satu level wilayah
+// (Negara, Provinsi, Kota/Kabupaten, Kecamatan, Kelurahan/Desa).
+type WilayahSimpelResponse struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
 }

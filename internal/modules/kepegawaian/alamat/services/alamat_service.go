@@ -16,17 +16,24 @@ import (
 func (s *service) CreateAlamat(ctx context.Context, req *dto.CreateKepegawaianAlamatRequest, actor he.AuthContext) (*dto.KepegawaianAlamatResponse, error) {
 	can, err := s.canCreateKepegawaianAlamat(ctx, actor)
 	if err != nil {
-		return nil, appErrors.Internal("gagal cek akses")
+		return nil, appErrors.Internal("gagal cek akses : " + err.Error())
 	}
 	if !can {
 		return nil, appErrors.Wrap(http.StatusForbidden,
 			"Akses ditolak. Anda tidak memiliki hak akses untuk membuat KepegawaianAlamat baru.", nil)
 	}
 
+	// ── NORMALISASI: anggap 0 sebagai kosong/null ────────────────────────────
+	normalizeZeroID(&req.NegaraID)
+	normalizeZeroID(&req.ProvinsiID)
+	normalizeZeroID(&req.KotaKabupatenID)
+	normalizeZeroID(&req.KecamatanID)
+	normalizeZeroID(&req.KelurahanDesaID)
+
 	// validasi keberadaan Pegawai
 	pegawaiMaster, err := s.pegawaiRepo.GetPegawaiByID(ctx, req.PegawaiID)
 	if err != nil {
-		return nil, appErrors.Internal("gagal mengambil data pegawai")
+		return nil, appErrors.Internal("gagal mengambil data pegawai : " + err.Error())
 	}
 	if pegawaiMaster == nil {
 		return nil, appErrors.Wrap(http.StatusUnprocessableEntity, "ID Pegawai tidak ditemukan.", nil)
@@ -35,71 +42,76 @@ func (s *service) CreateAlamat(ctx context.Context, req *dto.CreateKepegawaianAl
 	// validasi keberadaan master Tipe
 	tipeMaster, err := s.repo.GetTipeByID(ctx, req.TipeID)
 	if err != nil {
-		return nil, appErrors.Internal("gagal mengambil Tipe Alamat")
+		return nil, appErrors.Internal("gagal mengambil Tipe Alamat : " + err.Error())
 	}
 	if tipeMaster == nil {
 		return nil, appErrors.Wrap(http.StatusUnprocessableEntity, "Tipe Alamat tidak ditemukan.", nil)
 	}
 
-	// ── VALIDASI HIRARKI ALAMAT (OPSIONAL) ───────────────────────────────────
-
-	// 1. Validasi Negara (jika diisi)
-	if req.NegaraID != nil {
+	// ── VALIDASI HIRARKI ALAMAT (OPSIONAL, BERJENJANG) ──────────────────────
+	if req.NegaraID == nil {
+		if req.ProvinsiID != nil || req.KotaKabupatenID != nil || req.KecamatanID != nil || req.KelurahanDesaID != nil {
+			return nil, appErrors.Wrap(http.StatusBadRequest, "ID Negara wajib diisi jika ingin memilih Wilayah/Provinsi.", nil)
+		}
+	} else {
 		negaraMaster, err := s.masterAlamatRepo.GetByIDNegara(ctx, *req.NegaraID)
 		if err != nil {
-			return nil, appErrors.Internal("gagal mengambil Data Negara")
+			return nil, appErrors.Internal("gagal mengambil Data Negara : " + err.Error())
 		}
 		if negaraMaster == nil {
 			return nil, appErrors.Wrap(http.StatusUnprocessableEntity, "ID Negara tidak ditemukan.", nil)
 		}
 
-		// 2. Validasi Provinsi (hanya jika Negara dan Provinsi diisi)
-		if req.ProvinsiID != nil {
-			provinsiMaster, err := s.masterAlamatRepo.CheckProvinsi(ctx, *req.NegaraID, *req.ProvinsiID)
-			if err != nil {
-				return nil, appErrors.Internal("gagal mengambil Data Provinsi")
+		if req.ProvinsiID == nil {
+			if req.KotaKabupatenID != nil || req.KecamatanID != nil || req.KelurahanDesaID != nil {
+				return nil, appErrors.Wrap(http.StatusBadRequest, "ID Provinsi wajib diisi jika ingin memilih Kota/Kabupaten.", nil)
 			}
-			if !provinsiMaster {
+		} else {
+			ok, err := s.masterAlamatRepo.CheckProvinsi(ctx, *req.NegaraID, *req.ProvinsiID)
+			if err != nil {
+				return nil, appErrors.Internal("gagal mengambil Data Provinsi : " + err.Error())
+			}
+			if !ok {
 				return nil, appErrors.Wrap(http.StatusUnprocessableEntity, "ID Provinsi tidak ditemukan atau tidak cocok dengan Negara yang dipilih.", nil)
 			}
 
-			// 3. Validasi Kota/Kabupaten (hanya jika Provinsi dan KotaKabupaten diisi)
-			if req.KotaKabupatenID != nil {
-				kotaKabupatenMaster, err := s.masterAlamatRepo.CheckKotaKabupaten(ctx, *req.ProvinsiID, *req.KotaKabupatenID)
-				if err != nil {
-					return nil, appErrors.Internal("gagal mengambil Data Kota/Kabupaten")
+			if req.KotaKabupatenID == nil {
+				if req.KecamatanID != nil || req.KelurahanDesaID != nil {
+					return nil, appErrors.Wrap(http.StatusBadRequest, "ID Kota/Kabupaten wajib diisi jika ingin memilih Kecamatan.", nil)
 				}
-				if !kotaKabupatenMaster {
+			} else {
+				ok, err := s.masterAlamatRepo.CheckKotaKabupaten(ctx, *req.ProvinsiID, *req.KotaKabupatenID)
+				if err != nil {
+					return nil, appErrors.Internal("gagal mengambil Data Kota/Kabupaten : " + err.Error())
+				}
+				if !ok {
 					return nil, appErrors.Wrap(http.StatusUnprocessableEntity, "ID Kota/Kabupaten tidak ditemukan atau tidak cocok dengan Provinsi yang dipilih.", nil)
 				}
 
-				// 4. Validasi Kecamatan (hanya jika KotaKabupaten dan Kecamatan diisi)
-				if req.KecamatanID != nil {
-					kecamatanMaster, err := s.masterAlamatRepo.CheckKecamatan(ctx, *req.KotaKabupatenID, *req.KecamatanID)
-					if err != nil {
-						return nil, appErrors.Internal("gagal mengambil Data Kecamatan")
+				if req.KecamatanID == nil {
+					if req.KelurahanDesaID != nil {
+						return nil, appErrors.Wrap(http.StatusBadRequest, "ID Kecamatan wajib diisi jika ingin memilih Kelurahan/Desa.", nil)
 					}
-					if !kecamatanMaster {
+				} else {
+					ok, err := s.masterAlamatRepo.CheckKecamatan(ctx, *req.KotaKabupatenID, *req.KecamatanID)
+					if err != nil {
+						return nil, appErrors.Internal("gagal mengambil Data Kecamatan : " + err.Error())
+					}
+					if !ok {
 						return nil, appErrors.Wrap(http.StatusUnprocessableEntity, "ID Kecamatan tidak ditemukan atau tidak cocok dengan Kota/Kabupaten yang dipilih.", nil)
 					}
 
-					// 5. Validasi Kelurahan/Desa (hanya jika Kecamatan dan KelurahanDesa diisi)
 					if req.KelurahanDesaID != nil {
-						kelurahanDesaMaster, err := s.masterAlamatRepo.CheckKelurahanDesa(ctx, *req.KecamatanID, *req.KelurahanDesaID)
+						ok, err := s.masterAlamatRepo.CheckKelurahanDesa(ctx, *req.KecamatanID, *req.KelurahanDesaID)
 						if err != nil {
-							return nil, appErrors.Internal("gagal mengambil Data Kelurahan/Desa")
+							return nil, appErrors.Internal("gagal mengambil Data Kelurahan/Desa : " + err.Error())
 						}
-						if !kelurahanDesaMaster {
+						if !ok {
 							return nil, appErrors.Wrap(http.StatusUnprocessableEntity, "ID Kelurahan/Desa tidak ditemukan atau tidak cocok dengan Kecamatan yang dipilih.", nil)
 						}
 					}
 				}
 			}
-		}
-	} else {
-		// Guard optional: Jika Negara nil, tapi user nekad kirim ID Provinsi/Kabupaten/dll.
-		if req.ProvinsiID != nil || req.KotaKabupatenID != nil || req.KecamatanID != nil || req.KelurahanDesaID != nil {
-			return nil, appErrors.Wrap(http.StatusBadRequest, "ID Negara wajib diisi jika ingin memilih Wilayah/Provinsi.", nil)
 		}
 	}
 
@@ -122,16 +134,39 @@ func (s *service) CreateAlamat(ctx context.Context, req *dto.CreateKepegawaianAl
 		CreatedBy:   &actor.UserID,
 		UpdatedBy:   &actor.UserID,
 	}
+
+	// ── CEK DUPLIKASI ALAMAT (per pegawai, aman untuk pegawai lain) ─────────
+	isDup, err := s.repo.CheckDuplicateAlamat(ctx, m, nil)
+	if err != nil {
+		return nil, appErrors.Internal("gagal cek duplikasi alamat : " + err.Error())
+	}
+	if isDup {
+		return nil, appErrors.Wrap(http.StatusConflict, "Pegawai ini sudah memiliki alamat yang sama.", nil)
+	}
+
+	// ── SET PRIMARY: jika is_primary = true, unset primary lama milik pegawai ini ──
+	if req.IsPrimary {
+		if err := s.repo.UnsetPrimaryAlamatByPegawaiID(ctx, req.PegawaiID, actor.UserID); err != nil {
+			return nil, appErrors.Internal("gagal mereset alamat primary sebelumnya : " + err.Error())
+		}
+	}
+
 	if err := s.repo.CreateAlamat(ctx, m); err != nil {
 		return nil, err
 	}
 
 	creator := s.buildCreator(ctx, m.CreatedBy)
 
+	negara, provinsi, kota, kecamatan, kelurahan := s.buildWilayahSingle(ctx, m)
 	return dto.ToKepegawaianAlamatResponse(dto.KepegawaianAlamatResponseParams{
 		KepegawaianAlamat: m,
 		Creator:           creator,
 		Updater:           creator,
+		Negara:            negara,
+		Provinsi:          provinsi,
+		KotaKabupaten:     kota,
+		Kecamatan:         kecamatan,
+		KelurahanDesa:     kelurahan,
 	}), nil
 }
 
@@ -139,7 +174,7 @@ func (s *service) CreateAlamat(ctx context.Context, req *dto.CreateKepegawaianAl
 func (s *service) GetAlamatByID(ctx context.Context, id int64, actor he.AuthContext) (*dto.KepegawaianAlamatResponse, error) {
 	can, err := s.canReadKepegawaianAlamat(ctx, actor)
 	if err != nil {
-		return nil, appErrors.Internal("gagal cek akses")
+		return nil, appErrors.Internal("gagal cek akses : " + err.Error())
 	}
 	if !can {
 		return nil, appErrors.Wrap(http.StatusForbidden,
@@ -156,11 +191,16 @@ func (s *service) GetAlamatByID(ctx context.Context, id int64, actor he.AuthCont
 
 	creator := s.buildCreator(ctx, m.CreatedBy)
 	updater := s.buildCreator(ctx, m.UpdatedBy)
-
+	negara, provinsi, kota, kecamatan, kelurahan := s.buildWilayahSingle(ctx, m)
 	return dto.ToKepegawaianAlamatResponse(dto.KepegawaianAlamatResponseParams{
 		KepegawaianAlamat: m,
 		Creator:           creator,
 		Updater:           updater,
+		Negara:            negara,
+		Provinsi:          provinsi,
+		KotaKabupaten:     kota,
+		Kecamatan:         kecamatan,
+		KelurahanDesa:     kelurahan,
 	}), nil
 }
 
@@ -168,7 +208,7 @@ func (s *service) GetAlamatByID(ctx context.Context, id int64, actor he.AuthCont
 func (s *service) GetAlamatByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int, actor he.AuthContext) ([]dto.KepegawaianAlamatResponse, int64, error) {
 	can, err := s.canReadKepegawaianAlamat(ctx, actor)
 	if err != nil {
-		return nil, 0, appErrors.Internal("gagal cek akses")
+		return nil, 0, appErrors.Internal("gagal cek akses : " + err.Error())
 	}
 	if !can {
 		return nil, 0, appErrors.Wrap(http.StatusForbidden,
@@ -184,14 +224,17 @@ func (s *service) GetAlamatByPegawaiID(ctx context.Context, pegawaiID int64, pag
 	}
 
 	creatorsMap, updatersMap := s.buildAuditMaps(ctx, items)
-	return dto.ToKepegawaianAlamatListResponse(items, creatorsMap, updatersMap), total, nil
+	negaraMap, provinsiMap, kotaMap, kecamatanMap, kelurahanMap := s.buildWilayahMaps(ctx, items)
+	return dto.ToKepegawaianAlamatListResponse(items, creatorsMap, updatersMap,
+		negaraMap, provinsiMap, kotaMap, kecamatanMap, kelurahanMap), total, nil
 }
 
 // ── List ──────────────────────────────────────────────────────────────────────
 func (s *service) ListAlamat(ctx context.Context, page, pageSize int, filter *dto.FilterKepegawaianAlamatRequest, actor he.AuthContext) ([]dto.KepegawaianAlamatResponse, int64, error) {
 	can, err := s.canReadKepegawaianAlamat(ctx, actor)
+
 	if err != nil {
-		return nil, 0, appErrors.Internal("gagal cek akses")
+		return nil, 0, appErrors.Internal("gagal cek akses : " + err.Error())
 	}
 	if !can {
 		return nil, 0, appErrors.Wrap(http.StatusForbidden,
@@ -204,13 +247,16 @@ func (s *service) ListAlamat(ctx context.Context, page, pageSize int, filter *dt
 	if pageSize < 1 || pageSize > s.cfg.DefaultPageSizeMax {
 		pageSize = s.cfg.DefaultPageSizeMax
 	}
+
 	items, total, err := s.repo.ListAlamat(ctx, page, pageSize, filter)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, appErrors.Internal("gagal saat mengambil data dari Repo : " + err.Error())
 	}
 
 	creatorsMap, updatersMap := s.buildAuditMaps(ctx, items)
-	return dto.ToKepegawaianAlamatListResponse(items, creatorsMap, updatersMap), total, nil
+	negaraMap, provinsiMap, kotaMap, kecamatanMap, kelurahanMap := s.buildWilayahMaps(ctx, items)
+	return dto.ToKepegawaianAlamatListResponse(items, creatorsMap, updatersMap,
+		negaraMap, provinsiMap, kotaMap, kecamatanMap, kelurahanMap), total, nil
 }
 
 // ── Update ────────────────────────────────────────────────────────────────────
@@ -221,12 +267,19 @@ func (s *service) UpdateAlamat(ctx context.Context, id int64, req *dto.UpdateKep
 
 	can, err := s.canUpdateKepegawaianAlamat(ctx, actor)
 	if err != nil {
-		return nil, appErrors.Internal("gagal cek akses")
+		return nil, appErrors.Internal("gagal cek akses : " + err.Error())
 	}
 	if !can {
 		return nil, appErrors.Wrap(http.StatusForbidden,
 			"Akses ditolak. Anda tidak memiliki hak akses untuk mengubah KepegawaianAlamat.", nil)
 	}
+
+	// ── NORMALISASI: anggap 0 sebagai kosong/null ────────────────────────────
+	normalizeZeroID(&req.NegaraID)
+	normalizeZeroID(&req.ProvinsiID)
+	normalizeZeroID(&req.KotaKabupatenID)
+	normalizeZeroID(&req.KecamatanID)
+	normalizeZeroID(&req.KelurahanDesaID)
 
 	m, err := s.repo.GetAlamatByID(ctx, id)
 	if err != nil {
@@ -240,7 +293,7 @@ func (s *service) UpdateAlamat(ctx context.Context, id int64, req *dto.UpdateKep
 	if req.TipeID != nil {
 		tipeMaster, err := s.repo.GetTipeByID(ctx, *req.TipeID)
 		if err != nil {
-			return nil, appErrors.Internal("gagal mengambil Tipe Alamat")
+			return nil, appErrors.Internal("gagal mengambil Tipe Alamat : " + err.Error())
 		}
 		if tipeMaster == nil {
 			return nil, appErrors.Wrap(http.StatusUnprocessableEntity, "Tipe Alamat tidak ditemukan.", nil)
@@ -274,62 +327,84 @@ func (s *service) UpdateAlamat(ctx context.Context, id int64, req *dto.UpdateKep
 		effectiveKelurahanDesaID = req.KelurahanDesaID
 	}
 
-	// 3. Validasi Hirarki Alamat berdasarkan nilai efektif
-	if effectiveNegaraID != nil {
+	// 3. Validasi Hirarki Alamat berdasarkan nilai efektif (berjenjang, tanpa "lompat" level)
+	if effectiveNegaraID == nil {
+		if effectiveProvinsiID != nil || effectiveKotaKabupatenID != nil || effectiveKecamatanID != nil || effectiveKelurahanDesaID != nil {
+			return nil, appErrors.Wrap(http.StatusBadRequest, "ID Negara wajib diisi jika ingin memilih Wilayah/Provinsi.", nil)
+		}
+	} else {
 		negaraMaster, err := s.masterAlamatRepo.GetByIDNegara(ctx, *effectiveNegaraID)
 		if err != nil {
-			return nil, appErrors.Internal("gagal mengambil Data Negara")
+			return nil, appErrors.Internal("gagal mengambil Data Negara : " + err.Error())
 		}
 		if negaraMaster == nil {
 			return nil, appErrors.Wrap(http.StatusUnprocessableEntity, "ID Negara tidak ditemukan.", nil)
 		}
 
-		if effectiveProvinsiID != nil {
-			provinsiMaster, err := s.masterAlamatRepo.CheckProvinsi(ctx, *effectiveNegaraID, *effectiveProvinsiID)
-			if err != nil {
-				return nil, appErrors.Internal("gagal mengambil Data Provinsi")
+		if effectiveProvinsiID == nil {
+			if effectiveKotaKabupatenID != nil || effectiveKecamatanID != nil || effectiveKelurahanDesaID != nil {
+				return nil, appErrors.Wrap(http.StatusBadRequest, "ID Provinsi wajib diisi jika ingin memilih Kota/Kabupaten.", nil)
 			}
-			if !provinsiMaster {
+		} else {
+			ok, err := s.masterAlamatRepo.CheckProvinsi(ctx, *effectiveNegaraID, *effectiveProvinsiID)
+			if err != nil {
+				return nil, appErrors.Internal("gagal mengambil Data Provinsi : " + err.Error())
+			}
+			if !ok {
 				return nil, appErrors.Wrap(http.StatusUnprocessableEntity, "ID Provinsi tidak ditemukan atau tidak cocok dengan Negara yang dipilih.", nil)
 			}
 
-			if effectiveKotaKabupatenID != nil {
-				kotaKabupatenMaster, err := s.masterAlamatRepo.CheckKotaKabupaten(ctx, *effectiveProvinsiID, *effectiveKotaKabupatenID)
-				if err != nil {
-					return nil, appErrors.Internal("gagal mengambil Data Kota/Kabupaten")
+			if effectiveKotaKabupatenID == nil {
+				if effectiveKecamatanID != nil || effectiveKelurahanDesaID != nil {
+					return nil, appErrors.Wrap(http.StatusBadRequest, "ID Kota/Kabupaten wajib diisi jika ingin memilih Kecamatan.", nil)
 				}
-				if !kotaKabupatenMaster {
+			} else {
+				ok, err := s.masterAlamatRepo.CheckKotaKabupaten(ctx, *effectiveProvinsiID, *effectiveKotaKabupatenID)
+				if err != nil {
+					return nil, appErrors.Internal("gagal mengambil Data Kota/Kabupaten : " + err.Error())
+				}
+				if !ok {
 					return nil, appErrors.Wrap(http.StatusUnprocessableEntity, "ID Kota/Kabupaten tidak ditemukan atau tidak cocok dengan Provinsi yang dipilih.", nil)
 				}
 
-				if effectiveKecamatanID != nil {
-					kecamatanMaster, err := s.masterAlamatRepo.CheckKecamatan(ctx, *effectiveKotaKabupatenID, *effectiveKecamatanID)
-					if err != nil {
-						return nil, appErrors.Internal("gagal mengambil Data Kecamatan")
+				if effectiveKecamatanID == nil {
+					if effectiveKelurahanDesaID != nil {
+						return nil, appErrors.Wrap(http.StatusBadRequest, "ID Kecamatan wajib diisi jika ingin memilih Kelurahan/Desa.", nil)
 					}
-					if !kecamatanMaster {
+				} else {
+					ok, err := s.masterAlamatRepo.CheckKecamatan(ctx, *effectiveKotaKabupatenID, *effectiveKecamatanID)
+					if err != nil {
+						return nil, appErrors.Internal("gagal mengambil Data Kecamatan : " + err.Error())
+					}
+					if !ok {
 						return nil, appErrors.Wrap(http.StatusUnprocessableEntity, "ID Kecamatan tidak ditemukan atau tidak cocok dengan Kota/Kabupaten yang dipilih.", nil)
 					}
 
 					if effectiveKelurahanDesaID != nil {
-						kelurahanDesaMaster, err := s.masterAlamatRepo.CheckKelurahanDesa(ctx, *effectiveKecamatanID, *effectiveKelurahanDesaID)
+						ok, err := s.masterAlamatRepo.CheckKelurahanDesa(ctx, *effectiveKecamatanID, *effectiveKelurahanDesaID)
 						if err != nil {
-							return nil, appErrors.Internal("gagal mengambil Data Kelurahan/Desa")
+							return nil, appErrors.Internal("gagal mengambil Data Kelurahan/Desa : " + err.Error())
 						}
-						if !kelurahanDesaMaster {
+						if !ok {
 							return nil, appErrors.Wrap(http.StatusUnprocessableEntity, "ID Kelurahan/Desa tidak ditemukan atau tidak cocok dengan Kecamatan yang dipilih.", nil)
 						}
 					}
 				}
 			}
 		}
-	} else {
-		if effectiveProvinsiID != nil || effectiveKotaKabupatenID != nil || effectiveKecamatanID != nil || effectiveKelurahanDesaID != nil {
-			return nil, appErrors.Wrap(http.StatusBadRequest, "ID Negara wajib diisi jika ingin memilih Wilayah/Provinsi.", nil)
-		}
 	}
 
 	// 4. Update data entity
+	// ── SET PRIMARY: jika diubah jadi true, unset primary lama milik pegawai ini ──
+	if req.IsPrimary != nil {
+		if *req.IsPrimary {
+			if err := s.repo.UnsetPrimaryAlamatByPegawaiID(ctx, m.PegawaiID, actor.UserID); err != nil {
+				return nil, appErrors.Internal("gagal mereset alamat primary sebelumnya : " + err.Error())
+			}
+		}
+		m.IsPrimary = *req.IsPrimary
+	}
+
 	if req.Jalan != nil {
 		m.Jalan = *req.Jalan
 	}
@@ -355,6 +430,15 @@ func (s *service) UpdateAlamat(ctx context.Context, id int64, req *dto.UpdateKep
 	m.UpdatedBy = &actor.UserID
 	m.UpdatedAt = time.Now()
 
+	// ── CEK DUPLIKASI ALAMAT (per pegawai, kecualikan record ini sendiri) ───
+	isDup, err := s.repo.CheckDuplicateAlamat(ctx, m, &id)
+	if err != nil {
+		return nil, appErrors.Internal("gagal cek duplikasi alamat : " + err.Error())
+	}
+	if isDup {
+		return nil, appErrors.Wrap(http.StatusConflict, "Pegawai ini sudah memiliki alamat yang sama.", nil)
+	}
+
 	if err := s.repo.UpdateAlamat(ctx, m); err != nil {
 		return nil, err
 	}
@@ -362,10 +446,16 @@ func (s *service) UpdateAlamat(ctx context.Context, id int64, req *dto.UpdateKep
 	creator := s.buildCreator(ctx, m.CreatedBy)
 	updater := s.buildCreator(ctx, m.UpdatedBy)
 
+	negara, provinsi, kota, kecamatan, kelurahan := s.buildWilayahSingle(ctx, m)
 	return dto.ToKepegawaianAlamatResponse(dto.KepegawaianAlamatResponseParams{
 		KepegawaianAlamat: m,
 		Creator:           creator,
 		Updater:           updater,
+		Negara:            negara,
+		Provinsi:          provinsi,
+		KotaKabupaten:     kota,
+		Kecamatan:         kecamatan,
+		KelurahanDesa:     kelurahan,
 	}), nil
 }
 
@@ -373,7 +463,7 @@ func (s *service) UpdateAlamat(ctx context.Context, id int64, req *dto.UpdateKep
 func (s *service) DeleteAlamat(ctx context.Context, id int64, actor he.AuthContext) error {
 	can, err := s.canDeleteKepegawaianAlamat(ctx, actor)
 	if err != nil {
-		return appErrors.Internal("gagal cek akses")
+		return appErrors.Internal("gagal cek akses : " + err.Error())
 	}
 	if !can {
 		return appErrors.Wrap(http.StatusForbidden,
@@ -387,5 +477,33 @@ func (s *service) DeleteAlamat(ctx context.Context, id int64, actor he.AuthConte
 	if m == nil {
 		return errors.New("KepegawaianAlamat tidak ditemukan")
 	}
+
+	// alamat primary tidak boleh dihapus langsung —
+	// harus ada alamat lain milik pegawai yang sama sebagai primary dulu
+	if m.IsPrimary {
+		others, err := s.repo.FindAlamatByPegawaiID(ctx, m.PegawaiID)
+		if err != nil {
+			return appErrors.Internal("gagal cek alamat lain : " + err.Error())
+		}
+		othersCount := 0
+		for _, o := range others {
+			if o.ID != id {
+				othersCount++
+			}
+		}
+		if othersCount > 0 {
+			return appErrors.Wrap(http.StatusUnprocessableEntity,
+				"Alamat ini adalah primary. Tetapkan alamat lain sebagai primary terlebih dahulu sebelum menghapus.", nil)
+		}
+	}
+
 	return s.repo.DeleteAlamat(ctx, id, actor.UserID)
+}
+
+// normalizeZeroID menganggap 0 sebagai "tidak diisi" (nil), karena client
+// terkadang mengirim 0 alih-alih null / tidak mengirim field sama sekali.
+func normalizeZeroID(id **int64) {
+	if *id != nil && **id == 0 {
+		*id = nil
+	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"neosim_go/config"
 	alamatContracts "neosim_go/internal/modules/kepegawaian/alamat/contracts"
+	"neosim_go/internal/modules/kepegawaian/alamat/dto"
 
 	authContracts "neosim_go/internal/modules/auth/contracts"
 	"neosim_go/internal/modules/kepegawaian/alamat/models"
@@ -98,4 +99,89 @@ func (s *service) buildAuditMaps(ctx context.Context, items []models.Kepegawaian
 	}
 	// creator dan updater sekarang share map yang sama — reuse otomatis, kode lebih pendek juga
 	return userMap, userMap
+}
+
+// buildWilayahSingle mengambil detail Negara/Provinsi/Kota/Kecamatan/Kelurahan
+// untuk SATU record alamat (dipakai di Create, Update, GetByID).
+func (s *service) buildWilayahSingle(ctx context.Context, m *models.KepegawaianAlamat) (
+	negara, provinsi, kota, kecamatan, kelurahan *dto.WilayahSimpelResponse,
+) {
+	if m.NegaraID != nil {
+		if x, err := s.masterAlamatRepo.GetSimpelByIDNegara(ctx, *m.NegaraID); err == nil && x != nil {
+			negara = &dto.WilayahSimpelResponse{ID: x.ID, Name: x.Name}
+		}
+	}
+	if m.ProvinsiID != nil {
+		if x, err := s.masterAlamatRepo.GetSimpelByIDProvinsi(ctx, *m.ProvinsiID); err == nil && x != nil {
+			provinsi = &dto.WilayahSimpelResponse{ID: x.ID, Name: x.Name}
+		}
+	}
+	if m.KotaKabupatenID != nil {
+		if x, err := s.masterAlamatRepo.GetSimpelByIDKotaKabupaten(ctx, *m.KotaKabupatenID); err == nil && x != nil {
+			kota = &dto.WilayahSimpelResponse{ID: x.ID, Name: x.Name}
+		}
+	}
+	if m.KecamatanID != nil {
+		if x, err := s.masterAlamatRepo.GetSimpelByIDKecamatan(ctx, *m.KecamatanID); err == nil && x != nil {
+			kecamatan = &dto.WilayahSimpelResponse{ID: x.ID, Name: x.Name}
+		}
+	}
+	if m.KelurahanDesaID != nil {
+		if x, err := s.masterAlamatRepo.GetSimpelByIDKelurahanDesa(ctx, *m.KelurahanDesaID); err == nil && x != nil {
+			kelurahan = &dto.WilayahSimpelResponse{ID: x.ID, Name: x.Name}
+		}
+	}
+	return
+}
+
+// buildWilayahMaps mengambil detail wilayah untuk BANYAK record sekaligus
+// (dipakai di ListAlamat / GetAlamatByPegawaiID) supaya tidak query berulang
+// untuk ID yang sama.
+func (s *service) buildWilayahMaps(ctx context.Context, items []models.KepegawaianAlamat) (
+	negaraMap, provinsiMap, kotaMap, kecamatanMap, kelurahanMap map[int64]*dto.WilayahSimpelResponse,
+) {
+	negaraMap = map[int64]*dto.WilayahSimpelResponse{}
+	provinsiMap = map[int64]*dto.WilayahSimpelResponse{}
+	kotaMap = map[int64]*dto.WilayahSimpelResponse{}
+	kecamatanMap = map[int64]*dto.WilayahSimpelResponse{}
+	kelurahanMap = map[int64]*dto.WilayahSimpelResponse{}
+
+	for _, m := range items {
+		if m.NegaraID != nil {
+			if _, ok := negaraMap[*m.NegaraID]; !ok {
+				if x, err := s.masterAlamatRepo.GetSimpelByIDNegara(ctx, *m.NegaraID); err == nil && x != nil {
+					negaraMap[*m.NegaraID] = &dto.WilayahSimpelResponse{ID: x.ID, Name: x.Name}
+				}
+			}
+		}
+		if m.ProvinsiID != nil {
+			if _, ok := provinsiMap[*m.ProvinsiID]; !ok {
+				if x, err := s.masterAlamatRepo.GetSimpelByIDProvinsi(ctx, *m.ProvinsiID); err == nil && x != nil {
+					provinsiMap[*m.ProvinsiID] = &dto.WilayahSimpelResponse{ID: x.ID, Name: x.Name}
+				}
+			}
+		}
+		if m.KotaKabupatenID != nil {
+			if _, ok := kotaMap[*m.KotaKabupatenID]; !ok {
+				if x, err := s.masterAlamatRepo.GetSimpelByIDKotaKabupaten(ctx, *m.KotaKabupatenID); err == nil && x != nil {
+					kotaMap[*m.KotaKabupatenID] = &dto.WilayahSimpelResponse{ID: x.ID, Name: x.Name}
+				}
+			}
+		}
+		if m.KecamatanID != nil {
+			if _, ok := kecamatanMap[*m.KecamatanID]; !ok {
+				if x, err := s.masterAlamatRepo.GetSimpelByIDKecamatan(ctx, *m.KecamatanID); err == nil && x != nil {
+					kecamatanMap[*m.KecamatanID] = &dto.WilayahSimpelResponse{ID: x.ID, Name: x.Name}
+				}
+			}
+		}
+		if m.KelurahanDesaID != nil {
+			if _, ok := kelurahanMap[*m.KelurahanDesaID]; !ok {
+				if x, err := s.masterAlamatRepo.GetSimpelByIDKelurahanDesa(ctx, *m.KelurahanDesaID); err == nil && x != nil {
+					kelurahanMap[*m.KelurahanDesaID] = &dto.WilayahSimpelResponse{ID: x.ID, Name: x.Name}
+				}
+			}
+		}
+	}
+	return
 }

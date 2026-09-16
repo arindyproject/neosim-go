@@ -12,11 +12,14 @@ import (
 // & repositories/alamat_repository.go).
 type KepegawaianAlamatRepository interface {
 	CreateAlamat(ctx context.Context, m *models.KepegawaianAlamat) error
+	FindAlamatByPegawaiID(ctx context.Context, pegawaiID int64) ([]models.KepegawaianAlamat, error)
 	GetAlamatByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int) ([]models.KepegawaianAlamat, int64, error)
 	GetAlamatByID(ctx context.Context, id int64) (*models.KepegawaianAlamat, error)
 	ListAlamat(ctx context.Context, page, pageSize int, filter *dto.FilterKepegawaianAlamatRequest) ([]models.KepegawaianAlamat, int64, error)
 	UpdateAlamat(ctx context.Context, m *models.KepegawaianAlamat) error
 	DeleteAlamat(ctx context.Context, id int64, deletedBy int64) error
+	CheckDuplicateAlamat(ctx context.Context, m *models.KepegawaianAlamat, excludeID *int64) (bool, error)
+	UnsetPrimaryAlamatByPegawaiID(ctx context.Context, pegawaiID int64, updatedBy int64) error
 }
 
 // KepegawaianAlamatService defines business logic operations for KepegawaianAlamat.

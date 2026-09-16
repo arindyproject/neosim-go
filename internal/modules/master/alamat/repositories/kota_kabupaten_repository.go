@@ -44,6 +44,16 @@ func (r *repository) GetByIDKotaKabupaten(ctx context.Context, id int64) (*model
 	return &m, result.Error
 }
 
+func (r *repository) GetSimpelByIDKotaKabupaten(ctx context.Context, id int64) (*models.MasterAlamatKotaKabupaten, error) {
+	var m models.MasterAlamatKotaKabupaten
+	result := r.db.WithContext(ctx).Select("id, code, name").Where("id = ?", id).
+		Where("master_alamat_kota_kabupaten.deleted_at IS NULL").First(&m)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return &m, result.Error
+}
+
 func (r *repository) ListSelectKotaKabupaten(ctx context.Context, provinsiID int64, search string) ([]models.MasterAlamatKotaKabupaten, error) {
 	var items []models.MasterAlamatKotaKabupaten
 

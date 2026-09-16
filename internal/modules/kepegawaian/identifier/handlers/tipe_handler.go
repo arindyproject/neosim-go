@@ -58,7 +58,7 @@ func (h *KepegawaianIdentifierHandler) ListTipe(c *echo.Context) error {
 	actor := he.BuildAuthContext(c)
 	items, total, err := h.service.ListTipe(c.Request().Context(), page, pageSize, &filter, actor)
 	if err != nil {
-		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
+		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data : "+err.Error(), nil, nil)
 	}
 	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data", items, total, page, pageSize)
 }
@@ -80,7 +80,7 @@ func (h *KepegawaianIdentifierHandler) ListSelectTipe(c *echo.Context) error {
 	actor := he.BuildAuthContext(c)
 	items, err := h.service.ListSelectTipe(c.Request().Context(), search, actor)
 	if err != nil {
-		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
+		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data : "+err.Error(), nil, nil)
 	}
 	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", items, nil)
 }

@@ -16,7 +16,7 @@ import (
 func (s *service) CreateKategori(ctx context.Context,req *dto.CreateArtikelKategoriRequest, actor he.AuthContext) (*dto.ArtikelKategoriResponse, error) {
 	can, err := s.canCreateArtikelKategori(ctx,actor)
 	if err != nil {
-		return nil, appErrors.Internal("gagal cek akses")
+		return nil, appErrors.Internal("gagal cek akses: " + err.Error())
 	}
 	if !can {
 		return nil, appErrors.Wrap(http.StatusForbidden,
@@ -47,7 +47,7 @@ func (s *service) CreateKategori(ctx context.Context,req *dto.CreateArtikelKateg
 func (s *service) GetKategoriByID(ctx context.Context,id int64, actor he.AuthContext) (*dto.ArtikelKategoriResponse, error) {
 	can, err := s.canReadArtikelKategori(ctx,actor)
 	if err != nil {
-		return nil, appErrors.Internal("gagal cek akses")
+		return nil, appErrors.Internal("gagal cek akses: " + err.Error())
 	}
 	if !can {
 		return nil, appErrors.Wrap(http.StatusForbidden,
@@ -104,7 +104,7 @@ func (s *service) ListKategori(ctx context.Context,page, pageSize int, filter *d
 func (s *service) UpdateKategori(ctx context.Context,id int64, req *dto.UpdateArtikelKategoriRequest, actor he.AuthContext) (*dto.ArtikelKategoriResponse, error) {
 	can, err := s.canUpdateArtikelKategori(ctx,actor)
 	if err != nil {
-		return nil, appErrors.Internal("gagal cek akses")
+		return nil, appErrors.Internal("gagal cek akses: " + err.Error())
 	}
 	if !can {
 		return nil, appErrors.Wrap(http.StatusForbidden,

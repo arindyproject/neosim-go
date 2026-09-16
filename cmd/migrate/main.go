@@ -74,6 +74,8 @@ func main() {
 		"Kepegawaian: Kualifikasi",
 		"Kepegawaian: Alamat",
 
+		"Fajar: Fajar",
+
 		"Artikel: Artikel",
 		"Artikel: Kategori",
 	}

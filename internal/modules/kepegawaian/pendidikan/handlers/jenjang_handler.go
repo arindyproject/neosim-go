@@ -35,7 +35,7 @@ func (h *KepegawaianPendidikanHandler) ListSelectJenjang(c *echo.Context) error 
 	actor := he.BuildAuthContext(c)
 	items, err := h.service.ListSelectJenjang(c.Request().Context(), search, actor)
 	if err != nil {
-		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
+		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data : "+err.Error(), nil, nil)
 	}
 	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", items, nil)
 }
@@ -60,7 +60,7 @@ func (h *KepegawaianPendidikanHandler) ListJenjang(c *echo.Context) error {
 	actor := he.BuildAuthContext(c)
 	items, total, err := h.service.ListJenjang(c.Request().Context(), page, pageSize, &filter, actor)
 	if err != nil {
-		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
+		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data : "+err.Error(), nil, nil)
 	}
 	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data", items, total, page, pageSize)
 }

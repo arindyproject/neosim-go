@@ -44,6 +44,18 @@ func (r *repository) GetByIDKelurahanDesa(ctx context.Context, id int64) (*model
 	return &m, result.Error
 }
 
+func (r *repository) GetSimpelByIDKelurahanDesa(ctx context.Context, id int64) (*models.MasterAlamatKelurahanDesa, error) {
+	var m models.MasterAlamatKelurahanDesa
+	result := r.db.WithContext(ctx).
+		Select("id, code, name").
+		Where("id = ?", id).
+		Where("master_alamat_kelurahan_desa.deleted_at IS NULL").First(&m)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return &m, result.Error
+}
+
 func (r *repository) ListSelectKelurahanDesa(ctx context.Context, kecamatanID int64, search string) ([]models.MasterAlamatKelurahanDesa, error) {
 	var items []models.MasterAlamatKelurahanDesa
 

@@ -28,6 +28,16 @@ func (r *repository) GetByIDNegara(ctx context.Context, id int64) (*models.Maste
 	return &m, result.Error
 }
 
+func (r *repository) GetSimpelByIDNegara(ctx context.Context, id int64) (*models.MasterAlamatNegara, error) {
+	var m models.MasterAlamatNegara
+	result := r.db.WithContext(ctx).Select("id,code,name").Where("id = ?", id).
+		Where("master_alamat_negara.deleted_at IS NULL").First(&m)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return &m, result.Error
+}
+
 func (r *repository) ListSelectNegara(ctx context.Context, search string) ([]models.MasterAlamatNegara, error) {
 	var items []models.MasterAlamatNegara
 

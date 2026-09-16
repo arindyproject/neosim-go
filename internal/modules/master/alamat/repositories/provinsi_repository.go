@@ -27,6 +27,15 @@ func (r *repository) GetByIDProvinsi(ctx context.Context, id int64) (*models.Mas
 	return &m, result.Error
 }
 
+func (r *repository) GetSimpelByIDProvinsi(ctx context.Context, id int64) (*models.MasterAlamatProvinsi, error) {
+	var m models.MasterAlamatProvinsi
+	result := r.db.WithContext(ctx).Select("id, code, name").Where("id = ?", id).Where("master_alamat_provinsi.deleted_at IS NULL").First(&m)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return &m, result.Error
+}
+
 func (r *repository) CheckProvinsi(ctx context.Context, negaraID int64, provinsiID int64) (bool, error) {
 	var exists bool
 	err := r.db.WithContext(ctx).

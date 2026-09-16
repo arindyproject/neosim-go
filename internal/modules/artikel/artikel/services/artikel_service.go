@@ -16,7 +16,7 @@ import (
 func (s *service) CreateArtikel(ctx context.Context,req *dto.CreateArtikelRequest, actor he.AuthContext) (*dto.ArtikelResponse, error) {
 	can, err := s.canCreateArtikel(ctx,actor)
 	if err != nil {
-		return nil, appErrors.Internal("gagal cek akses")
+		return nil, appErrors.Internal("gagal cek akses: " + err.Error())
 	}
 	if !can {
 		return nil, appErrors.Wrap(http.StatusForbidden,
@@ -47,7 +47,7 @@ func (s *service) CreateArtikel(ctx context.Context,req *dto.CreateArtikelReques
 func (s *service) GetArtikelByID(ctx context.Context,id int64, actor he.AuthContext) (*dto.ArtikelResponse, error) {
 	can, err := s.canReadArtikel(ctx,actor)
 	if err != nil {
-		return nil, appErrors.Internal("gagal cek akses")
+		return nil, appErrors.Internal("gagal cek akses: " + err.Error())
 	}
 	if !can {
 		return nil, appErrors.Wrap(http.StatusForbidden,
@@ -104,7 +104,7 @@ func (s *service) ListArtikel(ctx context.Context,page, pageSize int, filter *dt
 func (s *service) UpdateArtikel(ctx context.Context,id int64, req *dto.UpdateArtikelRequest, actor he.AuthContext) (*dto.ArtikelResponse, error) {
 	can, err := s.canUpdateArtikel(ctx,actor)
 	if err != nil {
-		return nil, appErrors.Internal("gagal cek akses")
+		return nil, appErrors.Internal("gagal cek akses: " + err.Error())
 	}
 	if !can {
 		return nil, appErrors.Wrap(http.StatusForbidden,

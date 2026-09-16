@@ -930,7 +930,7 @@ import (
 func (s *service) Create{{.MethodSuffix}}(ctx context.Context,req *dto.Create{{.ModuleTitle}}Request, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
 	can, err := s.canCreate{{.ModuleTitle}}(ctx,actor)
 	if err != nil {
-		return nil, appErrors.Internal("gagal cek akses")
+		return nil, appErrors.Internal("gagal cek akses: " + err.Error())
 	}
 	if !can {
 		return nil, appErrors.Wrap(http.StatusForbidden,
@@ -961,7 +961,7 @@ func (s *service) Create{{.MethodSuffix}}(ctx context.Context,req *dto.Create{{.
 func (s *service) Get{{.MethodSuffix}}ByID(ctx context.Context,id int64, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
 	can, err := s.canRead{{.ModuleTitle}}(ctx,actor)
 	if err != nil {
-		return nil, appErrors.Internal("gagal cek akses")
+		return nil, appErrors.Internal("gagal cek akses: " + err.Error())
 	}
 	if !can {
 		return nil, appErrors.Wrap(http.StatusForbidden,
@@ -1018,7 +1018,7 @@ func (s *service) List{{.MethodSuffix}}(ctx context.Context,page, pageSize int, 
 func (s *service) Update{{.MethodSuffix}}(ctx context.Context,id int64, req *dto.Update{{.ModuleTitle}}Request, actor he.AuthContext) (*dto.{{.ModuleTitle}}Response, error) {
 	can, err := s.canUpdate{{.ModuleTitle}}(ctx,actor)
 	if err != nil {
-		return nil, appErrors.Internal("gagal cek akses")
+		return nil, appErrors.Internal("gagal cek akses: " + err.Error())
 	}
 	if !can {
 		return nil, appErrors.Wrap(http.StatusForbidden,
@@ -1138,7 +1138,7 @@ func (h *{{.ModuleTitle}}Handler) List{{.MethodSuffix}}(c *echo.Context) error {
 	actor := he.BuildAuthContext(c)
 	items, total, err := h.service.List{{.MethodSuffix}}(c.Request().Context(),page, pageSize, &filter, actor)
 	if err != nil {
-		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
+		return response.Response(c, http.StatusInternalServerError, false, err.Error(), nil, nil)
 	}
 	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data", items, total, page, pageSize)
 }
@@ -2714,7 +2714,7 @@ import (
 func (s *service) Create{{.ItemTitle}}(ctx context.Context,req *dto.Create{{.ItemTitle}}Request, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error) {
 	can, err := s.canCreate{{.ItemTitle}}(ctx,actor)
 	if err != nil {
-		return nil, appErrors.Internal("gagal cek akses")
+		return nil, appErrors.Internal("gagal cek akses: " + err.Error())
 	}
 	if !can {
 		return nil, appErrors.Wrap(http.StatusForbidden,
@@ -2745,7 +2745,7 @@ func (s *service) Create{{.ItemTitle}}(ctx context.Context,req *dto.Create{{.Ite
 func (s *service) Get{{.ItemTitle}}ByID(ctx context.Context,id int64, actor he.AuthContext) (*dto.{{.ItemTitle}}Response, error) {
 	can, err := s.canRead{{.ItemTitle}}(ctx,actor)
 	if err != nil {
-		return nil, appErrors.Internal("gagal cek akses")
+		return nil, appErrors.Internal("gagal cek akses: " + err.Error())
 	}
 	if !can {
 		return nil, appErrors.Wrap(http.StatusForbidden,
@@ -3003,7 +3003,7 @@ func (h *{{.SubModuleTitle}}Handler) List{{.ItemTitle}}(c *echo.Context) error {
 	actor := he.BuildAuthContext(c)
 	items, total, err := h.service.List{{.ItemTitle}}(c.Request().Context(),page, pageSize, &filter, actor)
 	if err != nil {
-		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
+		return response.Response(c, http.StatusInternalServerError, false, err.Error(), nil, nil)
 	}
 	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data", items, total, page, pageSize)
 }

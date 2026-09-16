@@ -34,6 +34,7 @@ import (
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.KepegawaianAlamatResponse}
 //	@Router			/kepegawaian/alamat [get]
 func (h *KepegawaianAlamatHandler) ListAlamat(c *echo.Context) error {
+
 	jalan := c.QueryParam("jalan")
 	filter := dto.FilterKepegawaianAlamatRequest{
 		Jalan: &jalan,
@@ -80,7 +81,7 @@ func (h *KepegawaianAlamatHandler) ListAlamat(c *echo.Context) error {
 	actor := he.BuildAuthContext(c)
 	items, total, err := h.service.ListAlamat(c.Request().Context(), page, pageSize, &filter, actor)
 	if err != nil {
-		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
+		return response.Response(c, http.StatusInternalServerError, false, err.Error(), nil, nil)
 	}
 	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data", items, total, page, pageSize)
 }
@@ -99,7 +100,7 @@ func (h *KepegawaianAlamatHandler) ListAlamat(c *echo.Context) error {
 func (h *KepegawaianAlamatHandler) GetAlamatByID(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
-		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
+		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid : "+err.Error(), nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
 	item, err := h.service.GetAlamatByID(c.Request().Context(), id, actor)

@@ -59,7 +59,7 @@ func (h *KepegawaianPendidikanHandler) ListPendidikan(c *echo.Context) error {
 		return response.Response(c, http.StatusInternalServerError, false, "Data tidak ditemukan", nil, nil)
 	}
 	if err != nil {
-		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data", nil, nil)
+		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data : "+err.Error(), nil, nil)
 	}
 	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data", items, total, page, pageSize)
 }

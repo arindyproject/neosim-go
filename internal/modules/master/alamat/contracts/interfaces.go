@@ -12,6 +12,7 @@ type Repository interface {
 	// Negara-------------------------------------------------------
 	CreateNegara(ctx context.Context, m *models.MasterAlamatNegara) error
 	GetByIDNegara(ctx context.Context, id int64) (*models.MasterAlamatNegara, error)
+	GetSimpelByIDNegara(ctx context.Context, id int64) (*models.MasterAlamatNegara, error)
 	ListSelectNegara(ctx context.Context, search string) ([]models.MasterAlamatNegara, error)
 	ListNegara(ctx context.Context, page, pageSize int, filter *dto.FilterNegaraRequest) ([]models.MasterAlamatNegara, int64, error)
 	UpdateNegara(ctx context.Context, m *models.MasterAlamatNegara) error
@@ -23,6 +24,7 @@ type Repository interface {
 	CheckProvinsi(ctx context.Context, negaraID int64, provinsiID int64) (bool, error)
 	CreateProvinsi(ctx context.Context, m *models.MasterAlamatProvinsi) error
 	GetByIDProvinsi(ctx context.Context, id int64) (*models.MasterAlamatProvinsi, error)
+	GetSimpelByIDProvinsi(ctx context.Context, id int64) (*models.MasterAlamatProvinsi, error)
 	ListSelectProvinsi(ctx context.Context, negaraID int64, search string) ([]models.MasterAlamatProvinsi, error)
 	ListProvinsi(ctx context.Context, page, pageSize int, negaraID *int64, filter *dto.FilterProvinsiRequest) ([]models.MasterAlamatProvinsi, int64, error)
 	UpdateProvinsi(ctx context.Context, m *models.MasterAlamatProvinsi) error
@@ -38,6 +40,7 @@ type Repository interface {
 	CheckKotaKabupaten(ctx context.Context, provinsiID int64, kotaKabupatenID int64) (bool, error)
 	CreateKotaKabupaten(ctx context.Context, m *models.MasterAlamatKotaKabupaten) error
 	GetByIDKotaKabupaten(ctx context.Context, id int64) (*models.MasterAlamatKotaKabupaten, error)
+	GetSimpelByIDKotaKabupaten(ctx context.Context, id int64) (*models.MasterAlamatKotaKabupaten, error)
 	ListSelectKotaKabupaten(ctx context.Context, provinsiID int64, search string) ([]models.MasterAlamatKotaKabupaten, error)
 	ListKotaKabupaten(ctx context.Context, page, pageSize int, provinsiID *int64, filter *dto.FilterKotaKabupatenRequest) ([]models.MasterAlamatKotaKabupaten, int64, error)
 	UpdateKotaKabupaten(ctx context.Context, m *models.MasterAlamatKotaKabupaten) error
@@ -52,6 +55,7 @@ type Repository interface {
 	CheckKecamatan(ctx context.Context, kotaKabupatenID int64, kecamamatanID int64) (bool, error)
 	CreateKecamatan(ctx context.Context, m *models.MasterAlamatKecamatan) error
 	GetByIDKecamatan(ctx context.Context, id int64) (*models.MasterAlamatKecamatan, error)
+	GetSimpelByIDKecamatan(ctx context.Context, id int64) (*models.MasterAlamatKecamatan, error)
 	ListSelectKecamatan(ctx context.Context, kotaKabupatenID int64, search string) ([]models.MasterAlamatKecamatan, error)
 	ListKecamatan(ctx context.Context, page, pageSize int, kotaKabupatenID *int64, filter *dto.FilterKecamatanRequest) ([]models.MasterAlamatKecamatan, int64, error)
 	UpdateKecamatan(ctx context.Context, m *models.MasterAlamatKecamatan) error
@@ -65,6 +69,7 @@ type Repository interface {
 	CheckKelurahanDesa(ctx context.Context, kecamamatanID, kelurahanDesaID int64) (bool, error)
 	CreateKelurahanDesa(ctx context.Context, m *models.MasterAlamatKelurahanDesa) error
 	GetByIDKelurahanDesa(ctx context.Context, id int64) (*models.MasterAlamatKelurahanDesa, error)
+	GetSimpelByIDKelurahanDesa(ctx context.Context, id int64) (*models.MasterAlamatKelurahanDesa, error)
 	ListSelectKelurahanDesa(ctx context.Context, kecamatanID int64, search string) ([]models.MasterAlamatKelurahanDesa, error)
 	ListKelurahanDesa(ctx context.Context, page, pageSize int, kecamatanID *int64, filter *dto.FilterKelurahanDesaRequest) ([]models.MasterAlamatKelurahanDesa, int64, error)
 	UpdateKelurahanDesa(ctx context.Context, m *models.MasterAlamatKelurahanDesa) error
