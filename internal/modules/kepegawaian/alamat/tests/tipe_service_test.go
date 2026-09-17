@@ -24,6 +24,8 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_CreateTipe_Superadmin_Success()
 	req := &dto.CreateTipeRequest{Code: "TEST001", Label: "Test Tipe"}
 	actor := superadminActor()
 
+	s.repo.On("GetTipeByCode", req.Code).Return(nil, nil)
+	s.repo.On("GetTipeByLabel", req.Label).Return(nil, nil)
 	s.repo.On("CreateTipe", mock.AnythingOfType("*models.Tipe")).Return(nil)
 
 	result, err := s.svc.CreateTipe(context.Background(), req, actor)
@@ -48,10 +50,49 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_CreateTipe_Forbidden() {
 	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
+func (s *KepegawaianAlamatServiceTestSuite) Test_CreateTipe_DuplicateCode() {
+	req := &dto.CreateTipeRequest{Code: "TEST001", Label: "Test Tipe"}
+	actor := superadminActor()
+	existing := factories.NewTipeFactory().Make()
+	existing.Code = req.Code
+
+	s.repo.On("GetTipeByCode", req.Code).Return(existing, nil)
+
+	result, err := s.svc.CreateTipe(context.Background(), req, actor)
+
+	s.Nil(result)
+	s.Error(err)
+	var appErr *appErrors.AppError
+	s.ErrorAs(err, &appErr)
+	s.Equal(http.StatusConflict, appErr.Code)
+	s.repo.AssertNotCalled(s.T(), "CreateTipe", mock.Anything)
+}
+
+func (s *KepegawaianAlamatServiceTestSuite) Test_CreateTipe_DuplicateLabel() {
+	req := &dto.CreateTipeRequest{Code: "TEST001", Label: "Test Tipe"}
+	actor := superadminActor()
+	existing := factories.NewTipeFactory().Make()
+	existing.Label = req.Label
+
+	s.repo.On("GetTipeByCode", req.Code).Return(nil, nil)
+	s.repo.On("GetTipeByLabel", req.Label).Return(existing, nil)
+
+	result, err := s.svc.CreateTipe(context.Background(), req, actor)
+
+	s.Nil(result)
+	s.Error(err)
+	var appErr *appErrors.AppError
+	s.ErrorAs(err, &appErr)
+	s.Equal(http.StatusConflict, appErr.Code)
+	s.repo.AssertNotCalled(s.T(), "CreateTipe", mock.Anything)
+}
+
 func (s *KepegawaianAlamatServiceTestSuite) Test_CreateTipe_RepoError() {
 	req := &dto.CreateTipeRequest{Code: "TEST001", Label: "Test Tipe"}
 	actor := superadminActor()
 
+	s.repo.On("GetTipeByCode", req.Code).Return(nil, nil)
+	s.repo.On("GetTipeByLabel", req.Label).Return(nil, nil)
 	s.repo.On("CreateTipe", mock.AnythingOfType("*models.Tipe")).Return(fmt.Errorf("db error"))
 
 	result, err := s.svc.CreateTipe(context.Background(), req, actor)
@@ -132,11 +173,15 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_UpdateTipe_Success() {
 	actor := superadminActor()
 	existing := factories.NewTipeFactory().Make()
 	existing.ID = 1
+	existing.Code = "OLD001"
+	existing.Label = "Old Label"
 	newCode := "UPDATED001"
 	newLabel := "Updated Label"
 	req := &dto.UpdateTipeRequest{Code: &newCode, Label: &newLabel}
 
 	s.repo.On("GetTipeByID", int64(1)).Return(existing, nil)
+	s.repo.On("GetTipeByCode", newCode).Return(nil, nil)
+	s.repo.On("GetTipeByLabel", newLabel).Return(nil, nil)
 	s.repo.On("UpdateTipe", mock.AnythingOfType("*models.Tipe")).Return(nil)
 
 	result, err := s.svc.UpdateTipe(context.Background(), 1, req, actor)
@@ -144,6 +189,74 @@ func (s *KepegawaianAlamatServiceTestSuite) Test_UpdateTipe_Success() {
 	s.NoError(err)
 	s.Equal(newCode, result.Code)
 	s.Equal(newLabel, result.Label)
+}
+
+func (s *KepegawaianAlamatServiceTestSuite) Test_UpdateTipe_SameCodeLabel_NoDuplicateCheck() {
+	actor := superadminActor()
+	existing := factories.NewTipeFactory().Make()
+	existing.ID = 1
+	existing.Code = "SAME001"
+	existing.Label = "Same Label"
+	sameCode := existing.Code
+	sameLabel := existing.Label
+	req := &dto.UpdateTipeRequest{Code: &sameCode, Label: &sameLabel}
+
+	s.repo.On("GetTipeByID", int64(1)).Return(existing, nil)
+	s.repo.On("UpdateTipe", mock.AnythingOfType("*models.Tipe")).Return(nil)
+
+	result, err := s.svc.UpdateTipe(context.Background(), 1, req, actor)
+
+	s.NoError(err)
+	s.NotNil(result)
+	// Karena code & label tidak berubah, GetTipeByCode/GetTipeByLabel TIDAK dipanggil
+	s.repo.AssertNotCalled(s.T(), "GetTipeByCode", mock.Anything)
+	s.repo.AssertNotCalled(s.T(), "GetTipeByLabel", mock.Anything)
+}
+
+func (s *KepegawaianAlamatServiceTestSuite) Test_UpdateTipe_DuplicateCode() {
+	actor := superadminActor()
+	existing := factories.NewTipeFactory().Make()
+	existing.ID = 1
+	existing.Code = "OLD001"
+	newCode := "TAKEN001"
+	other := factories.NewTipeFactory().Make()
+	other.Code = newCode
+	req := &dto.UpdateTipeRequest{Code: &newCode}
+
+	s.repo.On("GetTipeByID", int64(1)).Return(existing, nil)
+	s.repo.On("GetTipeByCode", newCode).Return(other, nil)
+
+	result, err := s.svc.UpdateTipe(context.Background(), 1, req, actor)
+
+	s.Nil(result)
+	s.Error(err)
+	var appErr *appErrors.AppError
+	s.ErrorAs(err, &appErr)
+	s.Equal(http.StatusConflict, appErr.Code)
+	s.repo.AssertNotCalled(s.T(), "UpdateTipe", mock.Anything)
+}
+
+func (s *KepegawaianAlamatServiceTestSuite) Test_UpdateTipe_DuplicateLabel() {
+	actor := superadminActor()
+	existing := factories.NewTipeFactory().Make()
+	existing.ID = 1
+	existing.Label = "Old Label"
+	newLabel := "Taken Label"
+	other := factories.NewTipeFactory().Make()
+	other.Label = newLabel
+	req := &dto.UpdateTipeRequest{Label: &newLabel}
+
+	s.repo.On("GetTipeByID", int64(1)).Return(existing, nil)
+	s.repo.On("GetTipeByLabel", newLabel).Return(other, nil)
+
+	result, err := s.svc.UpdateTipe(context.Background(), 1, req, actor)
+
+	s.Nil(result)
+	s.Error(err)
+	var appErr *appErrors.AppError
+	s.ErrorAs(err, &appErr)
+	s.Equal(http.StatusConflict, appErr.Code)
+	s.repo.AssertNotCalled(s.T(), "UpdateTipe", mock.Anything)
 }
 
 func (s *KepegawaianAlamatServiceTestSuite) Test_UpdateTipe_NotFound() {

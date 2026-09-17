@@ -28,6 +28,14 @@ func (m *MasterAlamatRepositoryMock) GetByIDNegara(ctx context.Context, id int64
 	return args.Get(0).(*models.MasterAlamatNegara), args.Error(1)
 }
 
+func (m *MasterAlamatRepositoryMock) GetSimpelByIDNegara(ctx context.Context, id int64) (*models.MasterAlamatNegara, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.MasterAlamatNegara), args.Error(1)
+}
+
 func (m *MasterAlamatRepositoryMock) ListSelectNegara(ctx context.Context, search string) ([]models.MasterAlamatNegara, error) {
 	args := m.Called(search)
 	return args.Get(0).([]models.MasterAlamatNegara), args.Error(1)
@@ -54,6 +62,10 @@ func (m *MasterAlamatRepositoryMock) ExistsNegaraByCode(ctx context.Context, cod
 }
 
 // Provinsi ==========================================================================
+func (m *MasterAlamatRepositoryMock) CheckProvinsi(ctx context.Context, negaraID int64, provinsiID int64) (bool, error) {
+	args := m.Called(negaraID, provinsiID)
+	return args.Bool(0), args.Error(1)
+}
 
 func (m *MasterAlamatRepositoryMock) CreateProvinsi(ctx context.Context, item *models.MasterAlamatProvinsi) error {
 	args := m.Called(item)
@@ -61,6 +73,14 @@ func (m *MasterAlamatRepositoryMock) CreateProvinsi(ctx context.Context, item *m
 }
 
 func (m *MasterAlamatRepositoryMock) GetByIDProvinsi(ctx context.Context, id int64) (*models.MasterAlamatProvinsi, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.MasterAlamatProvinsi), args.Error(1)
+}
+
+func (m *MasterAlamatRepositoryMock) GetSimpelByIDProvinsi(ctx context.Context, id int64) (*models.MasterAlamatProvinsi, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -109,6 +129,10 @@ func (m *MasterAlamatRepositoryMock) ExistsProvinsiByCode(ctx context.Context, c
 }
 
 // Kota/Kabupaten =====================================================================
+func (m *MasterAlamatRepositoryMock) CheckKotaKabupaten(ctx context.Context, provinsiID int64, kotaKabupatenID int64) (bool, error) {
+	args := m.Called(provinsiID, kotaKabupatenID)
+	return args.Bool(0), args.Error(1)
+}
 
 func (m *MasterAlamatRepositoryMock) CreateKotaKabupaten(ctx context.Context, item *models.MasterAlamatKotaKabupaten) error {
 	args := m.Called(item)
@@ -116,6 +140,14 @@ func (m *MasterAlamatRepositoryMock) CreateKotaKabupaten(ctx context.Context, it
 }
 
 func (m *MasterAlamatRepositoryMock) GetByIDKotaKabupaten(ctx context.Context, id int64) (*models.MasterAlamatKotaKabupaten, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.MasterAlamatKotaKabupaten), args.Error(1)
+}
+
+func (m *MasterAlamatRepositoryMock) GetSimpelByIDKotaKabupaten(ctx context.Context, id int64) (*models.MasterAlamatKotaKabupaten, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -159,6 +191,10 @@ func (m *MasterAlamatRepositoryMock) ExistsKotaKabupatenByCode(ctx context.Conte
 }
 
 // Kecamatan ===========================================================================
+func (m *MasterAlamatRepositoryMock) CheckKecamatan(ctx context.Context, kotaKabupatenID int64, kecamamatanID int64) (bool, error) {
+	args := m.Called(kotaKabupatenID, kecamamatanID)
+	return args.Bool(0), args.Error(1)
+}
 
 func (m *MasterAlamatRepositoryMock) CreateKecamatan(ctx context.Context, item *models.MasterAlamatKecamatan) error {
 	args := m.Called(item)
@@ -166,6 +202,14 @@ func (m *MasterAlamatRepositoryMock) CreateKecamatan(ctx context.Context, item *
 }
 
 func (m *MasterAlamatRepositoryMock) GetByIDKecamatan(ctx context.Context, id int64) (*models.MasterAlamatKecamatan, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.MasterAlamatKecamatan), args.Error(1)
+}
+
+func (m *MasterAlamatRepositoryMock) GetSimpelByIDKecamatan(ctx context.Context, id int64) (*models.MasterAlamatKecamatan, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -204,6 +248,13 @@ func (m *MasterAlamatRepositoryMock) ExistsKecamatanByCode(ctx context.Context, 
 }
 
 // Kelurahan/Desa ========================================================================
+func (m *MasterAlamatRepositoryMock) CheckKelurahanDesa(ctx context.Context, kecamamatanID, kelurahanDesaID int64) (bool, error) {
+	args := m.Called(kecamamatanID, kelurahanDesaID)
+	if args.Get(0) == nil {
+		return false, args.Error(1)
+	}
+	return args.Bool(0), args.Error(1)
+}
 
 func (m *MasterAlamatRepositoryMock) CreateKelurahanDesa(ctx context.Context, item *models.MasterAlamatKelurahanDesa) error {
 	args := m.Called(item)
@@ -211,6 +262,14 @@ func (m *MasterAlamatRepositoryMock) CreateKelurahanDesa(ctx context.Context, it
 }
 
 func (m *MasterAlamatRepositoryMock) GetByIDKelurahanDesa(ctx context.Context, id int64) (*models.MasterAlamatKelurahanDesa, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.MasterAlamatKelurahanDesa), args.Error(1)
+}
+
+func (m *MasterAlamatRepositoryMock) GetSimpelByIDKelurahanDesa(ctx context.Context, id int64) (*models.MasterAlamatKelurahanDesa, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
