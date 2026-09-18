@@ -22,6 +22,7 @@ import (
 	// Kepegawaian----------------------------------------------------------
 	masterKepegawaianAlamat "neosim_go/internal/modules/kepegawaian/alamat/tests/seeders"
 	masterKepegawaianIdentifier "neosim_go/internal/modules/kepegawaian/identifier/tests/seeders"
+	masterKepegawaianJabatan "neosim_go/internal/modules/kepegawaian/jabatan/tests/seeders"
 	masterKepegawaianKontak "neosim_go/internal/modules/kepegawaian/kontak/tests/seeders"
 	masterKepegawaianKualifikasi "neosim_go/internal/modules/kepegawaian/kualifikasi/tests/seeders"
 	masterKepegawaianPegawai "neosim_go/internal/modules/kepegawaian/pegawai/tests/seeders"
@@ -125,7 +126,7 @@ func main() {
 		}
 	} //------Departemen----------------------------------------------------
 
-	//Kepegawaian-----------------------------------------------------------
+	//Kepegawaian===========================================================
 	//------Kepegawaian-----------------------------------------------------
 	masterKepegawaianPegawaiSeeder := masterKepegawaianPegawai.NewKepegawaianPegawaiSeeder(db)
 	if *fresh {
@@ -138,6 +139,7 @@ func main() {
 		}
 	} //------Kepegawaian----------------------------------------------------
 
+	// Kepegawaian Identifier
 	//------Kepegawaian Identifier Type--------------------------------------
 	masterKepegawaianIdentifierTypeSeeder := masterKepegawaianIdentifier.NewTipeSeeder(db)
 	if *fresh {
@@ -162,6 +164,7 @@ func main() {
 		}
 	} //------Kepegawaian Identifier-----------------------------------------
 
+	// Kepegawaian Kontak
 	//------Kepegawaian Kontak Tipe------------------------------------------
 	masterKepegawaianKontakTipeSeeder := masterKepegawaianKontak.NewTipeSeeder(db)
 	if *fresh {
@@ -186,6 +189,7 @@ func main() {
 		}
 	} //------Kepegawaian Kontak---------------------------------------------
 
+	// Kepegawaian Pendidikan
 	//------Kepegawaian Pendidikan Jenjang-----------------------------------
 	masterKepegawaianPendidikanJenjangSeeder := masterKepegawaianPendidikan.NewJenjangSeeder(db)
 	if *fresh {
@@ -210,6 +214,7 @@ func main() {
 		}
 	} //------Kepegawaian Pendidikan-----------------------------------------
 
+	// Kepegawaian Kualifikasi
 	//------Kepegawaian Kualifikasi Tipe-------------------------------------
 	masterKepegawaianKualifikasiTipeSeeder := masterKepegawaianKualifikasi.NewTipeSeeder(db)
 	if *fresh {
@@ -234,6 +239,7 @@ func main() {
 		}
 	} //------Kepegawaian Kualifikasi ---------------------------------------
 
+	// Kepegawaian Alamat
 	//------Kepegawaian alamat Tipe-------------------------------------
 	masterKepegawaianAlamatTipeSeeder := masterKepegawaianAlamat.NewTipeSeeder(db)
 	if *fresh {
@@ -258,7 +264,56 @@ func main() {
 		}
 	} //------Kepegawaian alamat ---------------------------------------
 
-	//Kepegawaian------------------------------------------------------------
+	// Kepegawaian Jabatan
+	//------Kepegawaian jabatan posisi----------------------------------
+	masterKepegawaianJabatanPosisiSeeder := masterKepegawaianJabatan.NewPositionSeeder(db)
+	if *fresh {
+		if err := masterKepegawaianJabatanPosisiSeeder.Fresh(); err != nil {
+			log.Fatal("Gagal fresh seed   jabatan - posisi:", err)
+		}
+	} else {
+		if err := masterKepegawaianJabatanPosisiSeeder.Run(); err != nil {
+			log.Fatal("Gagal seed  jabatan - posisi:", err)
+		}
+	} //------Kepegawaian jabatan posisi--------------------------------
+
+	//------Kepegawaian jabatan job_title-------------------------------
+	masterKepegawaianJabatanJobTitleSeeder := masterKepegawaianJabatan.NewJobTitleSeeder(db)
+	if *fresh {
+		if err := masterKepegawaianJabatanJobTitleSeeder.Fresh(); err != nil {
+			log.Fatal("Gagal fresh seed   jabatan - job title:", err)
+		}
+	} else {
+		if err := masterKepegawaianJabatanJobTitleSeeder.Run(); err != nil {
+			log.Fatal("Gagal seed  jabatan - job title:", err)
+		}
+	} //------Kepegawaian jabatan job_title-----------------------------
+
+	//------Kepegawaian jabatan spesislisasi----------------------------
+	masterKepegawaianJabatanSpesialisasiSeeder := masterKepegawaianJabatan.NewSpecializationSeeder(db)
+	if *fresh {
+		if err := masterKepegawaianJabatanSpesialisasiSeeder.Fresh(); err != nil {
+			log.Fatal("Gagal fresh seed   jabatan - spesislisasi:", err)
+		}
+	} else {
+		if err := masterKepegawaianJabatanSpesialisasiSeeder.Run(); err != nil {
+			log.Fatal("Gagal seed  jabatan - spesislisasi:", err)
+		}
+	} //------Kepegawaian jabatan spesislisasi--------------------------
+
+	//------Kepegawaian jabatan ----------------------------------------
+	masterKepegawaianJabatanSeeder := masterKepegawaianJabatan.NewKepegawaianJabatanSeeder(db)
+	if *fresh {
+		if err := masterKepegawaianJabatanSeeder.Fresh(); err != nil {
+			log.Fatal("Gagal fresh seed   jabatan:", err)
+		}
+	} else {
+		if err := masterKepegawaianJabatanSeeder.Run(); err != nil {
+			log.Fatal("Gagal seed  jabatan:", err)
+		}
+	} //------Kepegawaian jabatan ----------------------------------------
+
+	//Kepegawaian===========================================================
 
 	// =====================================================================
 

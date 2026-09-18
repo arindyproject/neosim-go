@@ -23,6 +23,7 @@ import (
 	// Kepegawaian
 	_ "neosim_go/internal/modules/kepegawaian/alamat"
 	_ "neosim_go/internal/modules/kepegawaian/identifier"
+	_ "neosim_go/internal/modules/kepegawaian/jabatan"
 	_ "neosim_go/internal/modules/kepegawaian/kontak"
 	_ "neosim_go/internal/modules/kepegawaian/kualifikasi"
 	_ "neosim_go/internal/modules/kepegawaian/pegawai"
@@ -73,6 +74,7 @@ func main() {
 		"Kepegawaian: Pendidikan",
 		"Kepegawaian: Kualifikasi",
 		"Kepegawaian: Alamat",
+		"Kepegawaian: Jabatan",
 
 		"Fajar: Fajar",
 

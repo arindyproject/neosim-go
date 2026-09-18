@@ -125,6 +125,18 @@ definitions:
     - code
     - label
     type: object
+  dto.CreateJobTitleRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
   dto.CreateKecamatanRequest:
     properties:
       code:
@@ -238,6 +250,18 @@ definitions:
     - nilai
     - pegawai_id
     - tipe_id
+    type: object
+  dto.CreateKepegawaianJabatanRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - name
     type: object
   dto.CreateKepegawaianKontakRequest:
     properties:
@@ -569,6 +593,18 @@ definitions:
     - name
     - resource
     type: object
+  dto.CreatePositionRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
   dto.CreateProvinsiRequest:
     properties:
       code:
@@ -605,6 +641,18 @@ definitions:
         type: string
     required:
     - display_name
+    - name
+    type: object
+  dto.CreateSpecializationRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
     - name
     type: object
   dto.CreateTagRequest:
@@ -708,6 +756,23 @@ definitions:
         type: string
       point:
         type: number
+    type: object
+  dto.JobTitleResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        $ref: '#/definitions/httputil.UserData'
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        $ref: '#/definitions/httputil.UserData'
     type: object
   dto.KecamatanDetailResponse:
     properties:
@@ -902,6 +967,23 @@ definitions:
         allOf:
         - $ref: '#/definitions/neosim_go_internal_modules_kepegawaian_identifier_dto.TipeSimpelResponse'
         description: TipeID         int64            `json:"tipe_id"`
+      updated_at:
+        type: string
+      updated_by:
+        $ref: '#/definitions/httputil.UserData'
+    type: object
+  dto.KepegawaianJabatanResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        $ref: '#/definitions/httputil.UserData'
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
       updated_at:
         type: string
       updated_by:
@@ -1388,6 +1470,23 @@ definitions:
       resource:
         type: string
     type: object
+  dto.PositionResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        $ref: '#/definitions/httputil.UserData'
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        $ref: '#/definitions/httputil.UserData'
+    type: object
   dto.ProvinsiDetailResponse:
     properties:
       code:
@@ -1526,6 +1625,23 @@ definitions:
       name:
         type: string
     type: object
+  dto.SpecializationResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        $ref: '#/definitions/httputil.UserData'
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        $ref: '#/definitions/httputil.UserData'
+    type: object
   dto.TagResponse:
     properties:
       created_at:
@@ -1606,6 +1722,16 @@ definitions:
       point:
         minimum: 0
         type: number
+    type: object
+  dto.UpdateJobTitleRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
     type: object
   dto.UpdateKecamatanRequest:
     properties:
@@ -1703,6 +1829,16 @@ definitions:
         type: string
       tipe_id:
         type: integer
+    type: object
+  dto.UpdateKepegawaianJabatanRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
     type: object
   dto.UpdateKepegawaianKontakRequest:
     properties:
@@ -1973,6 +2109,16 @@ definitions:
         minLength: 3
         type: string
     type: object
+  dto.UpdatePositionRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    type: object
   dto.UpdateProvinsiRequest:
     properties:
       code:
@@ -1998,6 +2144,16 @@ definitions:
         type: array
     required:
     - settings
+    type: object
+  dto.UpdateSpecializationRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
     type: object
   dto.UpdateTagRequest:
     properties:
@@ -3930,6 +4086,598 @@ paths:
       summary: Get list of Tipe for select
       tags:
       - kepegawaian/identifier/tipe
+  /kepegawaian/jabatan:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of KepegawaianJabatan
+      parameters:
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.KepegawaianJabatanResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of KepegawaianJabatan
+      tags:
+      - kepegawaian/jabatan
+    post:
+      consumes:
+      - application/json
+      description: Create New KepegawaianJabatan
+      parameters:
+      - description: Create Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateKepegawaianJabatanRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KepegawaianJabatanResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create KepegawaianJabatan
+      tags:
+      - kepegawaian/jabatan
+  /kepegawaian/jabatan/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete KepegawaianJabatan by :id
+      parameters:
+      - description: KepegawaianJabatan ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete KepegawaianJabatan
+      tags:
+      - kepegawaian/jabatan
+    get:
+      consumes:
+      - application/json
+      description: Get KepegawaianJabatan by :id
+      parameters:
+      - description: KepegawaianJabatan ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KepegawaianJabatanResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get KepegawaianJabatan
+      tags:
+      - kepegawaian/jabatan
+    put:
+      consumes:
+      - application/json
+      description: Update KepegawaianJabatan by :id
+      parameters:
+      - description: KepegawaianJabatan ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateKepegawaianJabatanRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KepegawaianJabatanResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update KepegawaianJabatan
+      tags:
+      - kepegawaian/jabatan
+  /kepegawaian/jabatan/job_titles:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of JobTitle
+      parameters:
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.JobTitleResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of JobTitle
+      tags:
+      - kepegawaian/jabatan/job_titles
+    post:
+      consumes:
+      - application/json
+      description: Create New JobTitle
+      parameters:
+      - description: Create Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateJobTitleRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.JobTitleResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create JobTitle
+      tags:
+      - kepegawaian/jabatan/job_titles
+  /kepegawaian/jabatan/job_titles/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete JobTitle by :id
+      parameters:
+      - description: JobTitle ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete JobTitle
+      tags:
+      - kepegawaian/jabatan/job_titles
+    get:
+      consumes:
+      - application/json
+      description: Get JobTitle by :id
+      parameters:
+      - description: JobTitle ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.JobTitleResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get JobTitle
+      tags:
+      - kepegawaian/jabatan/job_titles
+    put:
+      consumes:
+      - application/json
+      description: Update JobTitle by :id
+      parameters:
+      - description: JobTitle ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateJobTitleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.JobTitleResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update JobTitle
+      tags:
+      - kepegawaian/jabatan/job_titles
+  /kepegawaian/jabatan/positions:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of Position
+      parameters:
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.PositionResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Position
+      tags:
+      - kepegawaian/jabatan/positions
+    post:
+      consumes:
+      - application/json
+      description: Create New Position
+      parameters:
+      - description: Create Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreatePositionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.PositionResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create Position
+      tags:
+      - kepegawaian/jabatan/positions
+  /kepegawaian/jabatan/positions/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Position by :id
+      parameters:
+      - description: Position ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete Position
+      tags:
+      - kepegawaian/jabatan/positions
+    get:
+      consumes:
+      - application/json
+      description: Get Position by :id
+      parameters:
+      - description: Position ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.PositionResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get Position
+      tags:
+      - kepegawaian/jabatan/positions
+    put:
+      consumes:
+      - application/json
+      description: Update Position by :id
+      parameters:
+      - description: Position ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdatePositionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.PositionResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update Position
+      tags:
+      - kepegawaian/jabatan/positions
+  /kepegawaian/jabatan/specializations:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of Specialization
+      parameters:
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.SpecializationResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Specialization
+      tags:
+      - kepegawaian/jabatan/specializations
+    post:
+      consumes:
+      - application/json
+      description: Create New Specialization
+      parameters:
+      - description: Create Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateSpecializationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.SpecializationResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create Specialization
+      tags:
+      - kepegawaian/jabatan/specializations
+  /kepegawaian/jabatan/specializations/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Specialization by :id
+      parameters:
+      - description: Specialization ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete Specialization
+      tags:
+      - kepegawaian/jabatan/specializations
+    get:
+      consumes:
+      - application/json
+      description: Get Specialization by :id
+      parameters:
+      - description: Specialization ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.SpecializationResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get Specialization
+      tags:
+      - kepegawaian/jabatan/specializations
+    put:
+      consumes:
+      - application/json
+      description: Update Specialization by :id
+      parameters:
+      - description: Specialization ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateSpecializationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.SpecializationResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update Specialization
+      tags:
+      - kepegawaian/jabatan/specializations
   /kepegawaian/kontak:
     get:
       consumes:
