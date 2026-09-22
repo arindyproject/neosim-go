@@ -11,6 +11,7 @@ import (
 // Diimplementasikan oleh struct 'repository' (lihat repositories/repository.go
 // & repositories/departemen_repository.go).
 type MasterDepartemenRepository interface {
+	CheckDepartemen(ctx context.Context, id int64) (bool, error)
 	CreateDepartemen(ctx context.Context, m *models.MasterDepartemen) error
 	GetDepartemenByID(ctx context.Context, id int64) (*models.MasterDepartemen, error)
 	ListSelectDepartemen(ctx context.Context, search string) ([]models.MasterDepartemen, error)

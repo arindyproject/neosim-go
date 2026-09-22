@@ -2829,6 +2829,309 @@
                 }
             }
         },
+        "/kepegawaian/jabatan/position_kategoris": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get paginated list of PositionKategori",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/jabatan/position/kategoris"
+                ],
+                "summary": "Get list of PositionKategori",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by name (partial match)",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.PositionKategoriResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create New PositionKategori",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/jabatan/position/kategoris"
+                ],
+                "summary": "Create PositionKategori",
+                "parameters": [
+                    {
+                        "description": "Create Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreatePositionKategoriRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.PositionKategoriResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/jabatan/position_kategoris/select": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get list of Tipe for select with optional search",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/jabatan/position/kategoris"
+                ],
+                "summary": "Get list of Tipe for select",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search by label or code",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.PositionKategoriSelectResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/jabatan/position_kategoris/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get PositionKategori by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/jabatan/position/kategoris"
+                ],
+                "summary": "Get PositionKategori",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "PositionKategori ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.PositionKategoriResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update PositionKategori by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/jabatan/position/kategoris"
+                ],
+                "summary": "Update PositionKategori",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "PositionKategori ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdatePositionKategoriRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.PositionKategoriResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete PositionKategori by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/jabatan/position/kategoris"
+                ],
+                "summary": "Delete PositionKategori",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "PositionKategori ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.MyGoResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/kepegawaian/jabatan/positions": {
             "get": {
                 "security": [
@@ -2852,6 +3155,36 @@
                         "type": "string",
                         "description": "Filter by name (partial match)",
                         "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by kategori jabatan",
+                        "name": "position_kategori_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by parent position ID",
+                        "name": "parent_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by department ID",
+                        "name": "department_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by status aktif",
+                        "name": "is_aktif",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "true = hanya posisi puncak hierarki (parent_id NULL)",
+                        "name": "is_root",
                         "in": "query"
                     },
                     {
@@ -2932,6 +3265,57 @@
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/dto.PositionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/jabatan/positions/tree": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menampilkan seluruh bagan organisasi Position sebagai tree bersarang, dibangun dari data yang ada di DB (bukan hardcode)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/jabatan/positions"
+                ],
+                "summary": "Get Position hierarchy tree",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "true = hanya posisi aktif (default: true)",
+                        "name": "only_aktif",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.PositionTreeNode"
+                                            }
                                         }
                                     }
                                 }
@@ -12300,20 +12684,69 @@
                 }
             }
         },
+        "dto.CreatePositionKategoriRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "label"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
+                },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "label": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "point": {
+                    "type": "number",
+                    "minimum": 0
+                }
+            }
+        },
         "dto.CreatePositionRequest": {
             "type": "object",
             "required": [
-                "name"
+                "level_hierarki",
+                "name",
+                "position_kategori_id"
             ],
             "properties": {
+                "department_id": {
+                    "description": "DepartmentID kosong = jabatan tidak terikat 1 unit (mis. Direktur, Wakil Direktur).",
+                    "type": "integer"
+                },
                 "description": {
                     "type": "string",
                     "maxLength": 500
+                },
+                "is_aktif": {
+                    "type": "boolean"
+                },
+                "kuota": {
+                    "type": "integer"
+                },
+                "level_hierarki": {
+                    "type": "integer"
                 },
                 "name": {
                     "type": "string",
                     "maxLength": 255,
                     "minLength": 1
+                },
+                "parent_id": {
+                    "description": "ParentID kosong = puncak hierarki (mis. Direktur).",
+                    "type": "integer"
+                },
+                "position_kategori_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -12448,6 +12881,17 @@
                 "reason": {
                     "type": "string",
                     "maxLength": 500
+                }
+            }
+        },
+        "dto.DepartemenSimpelResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },
@@ -13630,14 +14074,94 @@
                 }
             }
         },
-        "dto.PositionResponse": {
+        "dto.PositionKategoriResponse": {
             "type": "object",
             "properties": {
+                "code": {
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "string"
                 },
                 "created_by": {
                     "$ref": "#/definitions/httputil.UserData"
+                },
+                "fhir_code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "point": {
+                    "type": "number"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "$ref": "#/definitions/httputil.UserData"
+                }
+            }
+        },
+        "dto.PositionKategoriSelectResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "label": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.PositionKategoriSimpelResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "fhir_code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "point": {
+                    "type": "number"
+                }
+            }
+        },
+        "dto.PositionResponse": {
+            "type": "object",
+            "properties": {
+                "children": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PositionSimpelResponse"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "$ref": "#/definitions/httputil.UserData"
+                },
+                "department": {
+                    "description": "DepartmentID int64                      `json:\"department_id\"`",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.DepartemenSimpelResponse"
+                        }
+                    ]
                 },
                 "description": {
                     "type": "string"
@@ -13645,14 +14169,88 @@
                 "id": {
                     "type": "integer"
                 },
+                "is_aktif": {
+                    "type": "boolean"
+                },
+                "kuota": {
+                    "type": "integer"
+                },
+                "level_hierarki": {
+                    "type": "integer"
+                },
                 "name": {
                     "type": "string"
+                },
+                "parent": {
+                    "$ref": "#/definitions/dto.PositionSimpelResponse"
+                },
+                "parent_id": {
+                    "type": "integer"
+                },
+                "position_kategori": {
+                    "description": "PositionKategoriID int64                           `json:\"position_kategori_id\"`",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.PositionKategoriSimpelResponse"
+                        }
+                    ]
                 },
                 "updated_at": {
                     "type": "string"
                 },
                 "updated_by": {
                     "$ref": "#/definitions/httputil.UserData"
+                }
+            }
+        },
+        "dto.PositionSimpelResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.PositionTreeNode": {
+            "type": "object",
+            "properties": {
+                "children": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PositionTreeNode"
+                    }
+                },
+                "department": {
+                    "description": "DepartmentID int64                     `json:\"department_id\"`",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.DepartemenSimpelResponse"
+                        }
+                    ]
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_aktif": {
+                    "type": "boolean"
+                },
+                "kuota": {
+                    "type": "integer"
+                },
+                "level_hierarki": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "position_kategori": {
+                    "$ref": "#/definitions/dto.PositionKategoriSimpelResponse"
                 }
             }
         },
@@ -14537,17 +15135,62 @@
                 }
             }
         },
+        "dto.UpdatePositionKategoriRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "label"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
+                },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "label": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "point": {
+                    "type": "number",
+                    "minimum": 0
+                }
+            }
+        },
         "dto.UpdatePositionRequest": {
             "type": "object",
             "properties": {
+                "department_id": {
+                    "type": "integer"
+                },
                 "description": {
                     "type": "string",
                     "maxLength": 500
+                },
+                "is_aktif": {
+                    "type": "boolean"
+                },
+                "kuota": {
+                    "type": "integer"
+                },
+                "level_hierarki": {
+                    "type": "integer"
                 },
                 "name": {
                     "type": "string",
                     "maxLength": 255,
                     "minLength": 1
+                },
+                "parent_id": {
+                    "type": "integer"
+                },
+                "position_kategori_id": {
+                    "type": "integer"
                 }
             }
         },

@@ -265,6 +265,18 @@ func main() {
 	} //------Kepegawaian alamat ---------------------------------------
 
 	// Kepegawaian Jabatan
+	//------Kepegawaian jabatan posisi kategori-------------------------
+	masterKepegawaianJabatanPosisiKategoriSeeder := masterKepegawaianJabatan.NewPositionKategoriSeeder(db)
+	if *fresh {
+		if err := masterKepegawaianJabatanPosisiKategoriSeeder.Fresh(); err != nil {
+			log.Fatal("Gagal fresh seed   jabatan - posisi kategori:", err)
+		}
+	} else {
+		if err := masterKepegawaianJabatanPosisiKategoriSeeder.Run(); err != nil {
+			log.Fatal("Gagal seed  jabatan - posisi kategori:", err)
+		}
+	} //------Kepegawaian jabatan posisi kategori-----------------------
+
 	//------Kepegawaian jabatan posisi----------------------------------
 	masterKepegawaianJabatanPosisiSeeder := masterKepegawaianJabatan.NewPositionSeeder(db)
 	if *fresh {

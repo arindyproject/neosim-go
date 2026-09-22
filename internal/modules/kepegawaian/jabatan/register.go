@@ -13,6 +13,7 @@ import (
 
 	authContracts "neosim_go/internal/modules/auth/contracts"
 	authRepositories "neosim_go/internal/modules/auth/repositories"
+	masterDepartemenRepositories "neosim_go/internal/modules/master/departemen/repositories"
 	rbacContracts "neosim_go/internal/modules/rbac/contracts"
 	rbacRepositories "neosim_go/internal/modules/rbac/repositories"
 	userRepositories "neosim_go/internal/modules/users/repositories"
@@ -65,7 +66,8 @@ func (r *registryModule) InitRoutes(e *echo.Echo) {
 		r.cfg.JWTRefreshTokenExpDays,
 	)
 	userRepo := userRepositories.NewRepository(r.db)
-	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo, userRepo, r.cfg, r.cacheManager).InitRoutes(e)
+	departemenRepo := masterDepartemenRepositories.NewMasterDepartemenRepository(r.db)
+	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo, userRepo, departemenRepo, r.cfg, r.cacheManager).InitRoutes(e)
 }
 
 func (r *registryModule) Models() []interface{} {
@@ -74,6 +76,7 @@ func (r *registryModule) Models() []interface{} {
 		&models.JobTitle{},
 		&models.Specialization{},
 		&models.KepegawaianJabatan{},
+		&models.PositionKategori{},
 		// GEN:ITEM_MODELS
 	}
 }
@@ -93,6 +96,9 @@ func (r *registryModule) MigrateSQL(sqlDB *sql.DB) error {
 		return err
 	}
 	if err := migrations.MigrateSpecializationWithSQL(sqlDB); err != nil {
+		return err
+	}
+	if err := migrations.MigratePositionKategoriWithSQL(sqlDB); err != nil {
 		return err
 	}
 	// GEN:ITEM_MIGRATIONS

@@ -11,6 +11,22 @@ import (
 	"gorm.io/gorm"
 )
 
+func (r *repository) CheckDepartemen(ctx context.Context, id int64) (bool, error) {
+	var exists bool
+	err := r.db.WithContext(ctx).
+		Model(&models.MasterDepartemen{}).
+		Select("1").
+		Where("id = ?", id).
+		Limit(1).
+		Scan(&exists).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return exists, nil
+}
+
 // ── Create ────────────────────────────────────────────────────────────────────
 func (r *repository) CreateDepartemen(ctx context.Context, m *models.MasterDepartemen) error {
 	return r.db.WithContext(ctx).Create(m).Error

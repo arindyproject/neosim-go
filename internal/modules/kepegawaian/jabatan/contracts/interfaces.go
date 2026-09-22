@@ -8,6 +8,7 @@ type Repository interface {
 	PositionRepository
 	JobTitleRepository
 	SpecializationRepository
+	PositionKategoriRepository
 	// GEN:ITEM_REPOSITORY_INTERFACE
 }
 
@@ -19,5 +20,6 @@ type Service interface {
 	PositionService
 	JobTitleService
 	SpecializationService
+	PositionKategoriService
 	// GEN:ITEM_SERVICE_INTERFACE
 }

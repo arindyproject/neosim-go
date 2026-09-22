@@ -3,6 +3,7 @@ package handlers
 import (
 	"io"
 	"net/http"
+	"strconv"
 
 	"neosim_go/internal/modules/kepegawaian/jabatan/dto"
 	"neosim_go/internal/shared/binding"
@@ -26,13 +27,47 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			name		query		string	false	"Filter by name (partial match)"
-//	@Param			page		query		int		false	"Page number"
-//	@Param			page_size	query		int		false	"Page size"
-//	@Success		200			{object}	response.MyGoResponse{data=[]dto.PositionResponse}
+//	@Param			name					query		string	false	"Filter by name (partial match)"
+//	@Param			position_kategori_id	query		int		false	"Filter by kategori jabatan"
+//	@Param			parent_id				query		int		false	"Filter by parent position ID"
+//	@Param			department_id			query		int		false	"Filter by department ID"
+//	@Param			is_aktif				query		bool	false	"Filter by status aktif"
+//	@Param			is_root					query		bool	false	"true = hanya posisi puncak hierarki (parent_id NULL)"
+//	@Param			page					query		int		false	"Page number"
+//	@Param			page_size				query		int		false	"Page size"
+//	@Success		200						{object}	response.MyGoResponse{data=[]dto.PositionResponse}
 //	@Router			/kepegawaian/jabatan/positions [get]
 func (h *KepegawaianJabatanHandler) ListPosition(c *echo.Context) error {
-	filter := dto.FilterPositionRequest{Name: c.QueryParam("name")}
+	filter := dto.FilterPositionRequest{
+		Name: c.QueryParam("name"),
+	}
+
+	if v := c.QueryParam("position_kategori_id"); v != "" {
+		if id, err := strconv.ParseInt(v, 10, 64); err == nil {
+			filter.PositionKategoriID = &id
+		}
+	}
+	if v := c.QueryParam("parent_id"); v != "" {
+		if id, err := strconv.ParseInt(v, 10, 64); err == nil {
+			filter.ParentID = &id
+		}
+	}
+	if v := c.QueryParam("department_id"); v != "" {
+		if id, err := strconv.ParseInt(v, 10, 64); err == nil {
+			filter.DepartmentID = &id
+		}
+	}
+	if v := c.QueryParam("is_aktif"); v != "" {
+		if b, err := strconv.ParseBool(v); err == nil {
+			filter.IsAktif = &b
+		}
+	}
+	if v := c.QueryParam("is_root"); v != "" {
+		if b, err := strconv.ParseBool(v); err == nil {
+			filter.IsRoot = &b
+		}
+	}
+
 	page, pageSize := he.ParsePagination(c, h.cfg)
 
 	actor := he.BuildAuthContext(c)
@@ -166,4 +201,31 @@ func (h *KepegawaianJabatanHandler) DeletePosition(c *echo.Context) error {
 		return response.Response(c, status, false, err.Error(), nil, nil)
 	}
 	return response.Response(c, http.StatusOK, true, "Data berhasil dihapus", nil, nil)
+}
+
+// ─── GetPositionTree ───────────────────────────────────────────────────
+//
+//	@Summary		Get Position hierarchy tree
+//	@Description	Menampilkan seluruh bagan organisasi Position sebagai tree bersarang, dibangun dari data yang ada di DB (bukan hardcode)
+//	@Tags			kepegawaian/jabatan/positions
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			only_aktif	query		bool	false	"true = hanya posisi aktif (default: true)"
+//	@Success		200			{object}	response.MyGoResponse{data=[]dto.PositionTreeNode}
+//	@Router			/kepegawaian/jabatan/positions/tree [get]
+func (h *KepegawaianJabatanHandler) GetPositionTree(c *echo.Context) error {
+	onlyAktif := true
+	if v := c.QueryParam("only_aktif"); v != "" {
+		if b, err := strconv.ParseBool(v); err == nil {
+			onlyAktif = b
+		}
+	}
+
+	actor := he.BuildAuthContext(c)
+	tree, err := h.service.GetPositionTree(c.Request().Context(), onlyAktif, actor)
+	if err != nil {
+		return response.Response(c, http.StatusInternalServerError, false, err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", tree, nil)
 }

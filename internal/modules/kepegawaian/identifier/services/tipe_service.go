@@ -96,12 +96,11 @@ func (s *service) GetTipeByID(ctx context.Context, id int64, actor he.AuthContex
 	}
 
 	creator := s.buildCreator(ctx, m.CreatedBy)
-	updater := s.buildCreator(ctx, m.UpdatedBy)
 
 	return dto.ToTipeResponse(dto.TipeResponseParams{
 		Tipe:    m,
 		Creator: creator,
-		Updater: updater,
+		Updater: creator,
 	}), nil
 }
 

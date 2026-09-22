@@ -16,6 +16,10 @@ type MasterDepartemenRepositoryMock struct {
 	mock.Mock
 }
 
+func (m *MasterDepartemenRepositoryMock) CheckDepartemen(ctx context.Context, id int64) (bool, error) {
+	args := m.Called(id)
+	return args.Bool(0), args.Error(1)
+}
 func (m *MasterDepartemenRepositoryMock) CreateDepartemen(ctx context.Context, item *models.MasterDepartemen) error {
 	args := m.Called(item)
 	return args.Error(0)

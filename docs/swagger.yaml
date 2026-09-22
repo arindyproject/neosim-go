@@ -593,17 +593,54 @@ definitions:
     - name
     - resource
     type: object
+  dto.CreatePositionKategoriRequest:
+    properties:
+      code:
+        maxLength: 100
+        minLength: 1
+        type: string
+      fhir_code:
+        maxLength: 500
+        type: string
+      label:
+        maxLength: 255
+        minLength: 1
+        type: string
+      point:
+        minimum: 0
+        type: number
+    required:
+    - code
+    - label
+    type: object
   dto.CreatePositionRequest:
     properties:
+      department_id:
+        description: DepartmentID kosong = jabatan tidak terikat 1 unit (mis. Direktur,
+          Wakil Direktur).
+        type: integer
       description:
         maxLength: 500
         type: string
+      is_aktif:
+        type: boolean
+      kuota:
+        type: integer
+      level_hierarki:
+        type: integer
       name:
         maxLength: 255
         minLength: 1
         type: string
+      parent_id:
+        description: ParentID kosong = puncak hierarki (mis. Direktur).
+        type: integer
+      position_kategori_id:
+        type: integer
     required:
+    - level_hierarki
     - name
+    - position_kategori_id
     type: object
   dto.CreateProvinsiRequest:
     properties:
@@ -701,6 +738,13 @@ definitions:
         type: string
     required:
     - reason
+    type: object
+  dto.DepartemenSimpelResponse:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
     type: object
   dto.ForgotPasswordRequest:
     properties:
@@ -1470,22 +1514,119 @@ definitions:
       resource:
         type: string
     type: object
-  dto.PositionResponse:
+  dto.PositionKategoriResponse:
     properties:
+      code:
+        type: string
       created_at:
         type: string
       created_by:
         $ref: '#/definitions/httputil.UserData'
-      description:
+      fhir_code:
         type: string
       id:
         type: integer
-      name:
+      label:
         type: string
+      point:
+        type: number
       updated_at:
         type: string
       updated_by:
         $ref: '#/definitions/httputil.UserData'
+    type: object
+  dto.PositionKategoriSelectResponse:
+    properties:
+      code:
+        type: string
+      id:
+        type: integer
+      label:
+        type: string
+    type: object
+  dto.PositionKategoriSimpelResponse:
+    properties:
+      code:
+        type: string
+      fhir_code:
+        type: string
+      id:
+        type: integer
+      label:
+        type: string
+      point:
+        type: number
+    type: object
+  dto.PositionResponse:
+    properties:
+      children:
+        items:
+          $ref: '#/definitions/dto.PositionSimpelResponse'
+        type: array
+      created_at:
+        type: string
+      created_by:
+        $ref: '#/definitions/httputil.UserData'
+      department:
+        allOf:
+        - $ref: '#/definitions/dto.DepartemenSimpelResponse'
+        description: DepartmentID int64                      `json:"department_id"`
+      description:
+        type: string
+      id:
+        type: integer
+      is_aktif:
+        type: boolean
+      kuota:
+        type: integer
+      level_hierarki:
+        type: integer
+      name:
+        type: string
+      parent:
+        $ref: '#/definitions/dto.PositionSimpelResponse'
+      parent_id:
+        type: integer
+      position_kategori:
+        allOf:
+        - $ref: '#/definitions/dto.PositionKategoriSimpelResponse'
+        description: PositionKategoriID int64                           `json:"position_kategori_id"`
+      updated_at:
+        type: string
+      updated_by:
+        $ref: '#/definitions/httputil.UserData'
+    type: object
+  dto.PositionSimpelResponse:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  dto.PositionTreeNode:
+    properties:
+      children:
+        items:
+          $ref: '#/definitions/dto.PositionTreeNode'
+        type: array
+      department:
+        allOf:
+        - $ref: '#/definitions/dto.DepartemenSimpelResponse'
+        description: DepartmentID int64                     `json:"department_id"`
+      description:
+        type: string
+      id:
+        type: integer
+      is_aktif:
+        type: boolean
+      kuota:
+        type: integer
+      level_hierarki:
+        type: integer
+      name:
+        type: string
+      position_kategori:
+        $ref: '#/definitions/dto.PositionKategoriSimpelResponse'
     type: object
   dto.ProvinsiDetailResponse:
     properties:
@@ -2109,15 +2250,47 @@ definitions:
         minLength: 3
         type: string
     type: object
+  dto.UpdatePositionKategoriRequest:
+    properties:
+      code:
+        maxLength: 100
+        minLength: 1
+        type: string
+      fhir_code:
+        maxLength: 500
+        type: string
+      label:
+        maxLength: 255
+        minLength: 1
+        type: string
+      point:
+        minimum: 0
+        type: number
+    required:
+    - code
+    - label
+    type: object
   dto.UpdatePositionRequest:
     properties:
+      department_id:
+        type: integer
       description:
         maxLength: 500
         type: string
+      is_aktif:
+        type: boolean
+      kuota:
+        type: integer
+      level_hierarki:
+        type: integer
       name:
         maxLength: 255
         minLength: 1
         type: string
+      parent_id:
+        type: integer
+      position_kategori_id:
+        type: integer
     type: object
   dto.UpdateProvinsiRequest:
     properties:
@@ -4382,6 +4555,183 @@ paths:
       summary: Update JobTitle
       tags:
       - kepegawaian/jabatan/job_titles
+  /kepegawaian/jabatan/position_kategoris:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of PositionKategori
+      parameters:
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.PositionKategoriResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of PositionKategori
+      tags:
+      - kepegawaian/jabatan/position/kategoris
+    post:
+      consumes:
+      - application/json
+      description: Create New PositionKategori
+      parameters:
+      - description: Create Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreatePositionKategoriRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.PositionKategoriResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create PositionKategori
+      tags:
+      - kepegawaian/jabatan/position/kategoris
+  /kepegawaian/jabatan/position_kategoris/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete PositionKategori by :id
+      parameters:
+      - description: PositionKategori ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete PositionKategori
+      tags:
+      - kepegawaian/jabatan/position/kategoris
+    get:
+      consumes:
+      - application/json
+      description: Get PositionKategori by :id
+      parameters:
+      - description: PositionKategori ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.PositionKategoriResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get PositionKategori
+      tags:
+      - kepegawaian/jabatan/position/kategoris
+    put:
+      consumes:
+      - application/json
+      description: Update PositionKategori by :id
+      parameters:
+      - description: PositionKategori ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdatePositionKategoriRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.PositionKategoriResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update PositionKategori
+      tags:
+      - kepegawaian/jabatan/position/kategoris
+  /kepegawaian/jabatan/position_kategoris/select:
+    get:
+      consumes:
+      - application/json
+      description: Get list of Tipe for select with optional search
+      parameters:
+      - description: Search by label or code
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.PositionKategoriSelectResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Tipe for select
+      tags:
+      - kepegawaian/jabatan/position/kategoris
   /kepegawaian/jabatan/positions:
     get:
       consumes:
@@ -4392,6 +4742,26 @@ paths:
         in: query
         name: name
         type: string
+      - description: Filter by kategori jabatan
+        in: query
+        name: position_kategori_id
+        type: integer
+      - description: Filter by parent position ID
+        in: query
+        name: parent_id
+        type: integer
+      - description: Filter by department ID
+        in: query
+        name: department_id
+        type: integer
+      - description: Filter by status aktif
+        in: query
+        name: is_aktif
+        type: boolean
+      - description: true = hanya posisi puncak hierarki (parent_id NULL)
+        in: query
+        name: is_root
+        type: boolean
       - description: Page number
         in: query
         name: page
@@ -4528,6 +4898,36 @@ paths:
       security:
       - BearerAuth: []
       summary: Update Position
+      tags:
+      - kepegawaian/jabatan/positions
+  /kepegawaian/jabatan/positions/tree:
+    get:
+      consumes:
+      - application/json
+      description: Menampilkan seluruh bagan organisasi Position sebagai tree bersarang,
+        dibangun dari data yang ada di DB (bukan hardcode)
+      parameters:
+      - description: 'true = hanya posisi aktif (default: true)'
+        in: query
+        name: only_aktif
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.PositionTreeNode'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get Position hierarchy tree
       tags:
       - kepegawaian/jabatan/positions
   /kepegawaian/jabatan/specializations:
