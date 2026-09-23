@@ -307,7 +307,13 @@ func (s *service) DeleteTipe(ctx context.Context, id int64, actor he.AuthContext
 	if m == nil {
 		return errors.New("Tipe tidak ditemukan")
 	}
-	return s.repo.DeleteTipe(ctx, id, actor.UserID)
+	err = s.repo.DeleteTipe(ctx, id, actor.UserID)
+	if err == nil {
+		// Invalidate Cache
+		ctxs := context.Background()
+		s.cache.InvalidateList(ctxs, cachePrefixTipeSelectList)
+	}
+	return err
 }
 
 // ── helper khusus Tipe (nama fungsi unik agar tidak bentrok) ───────

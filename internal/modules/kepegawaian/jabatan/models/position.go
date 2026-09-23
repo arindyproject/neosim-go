@@ -37,7 +37,8 @@ type Position struct {
 
 	// Jumlah slot yang tersedia untuk jabatan ini (mis. Kepala Ruangan = 1 per unit).
 	// NULL berarti tidak dibatasi.
-	Kuota *int16 `gorm:"column:kuota" json:"kuota"`
+	Kuota *int16   `gorm:"column:kuota" json:"kuota"`
+	Point *float64 `gorm:"column:point;type:decimal(10,2);default:0.00" json:"point"`
 
 	IsAktif bool `gorm:"column:is_aktif;not null;default:true" json:"is_aktif"`
 

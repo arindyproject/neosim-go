@@ -2583,6 +2583,618 @@ const docTemplate = `{
                 }
             }
         },
+        "/kepegawaian/jabatan/job_title_kategoris": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get paginated list of JobTitleKategori",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/jabatan/jabatan/job_title_kategori"
+                ],
+                "summary": "Get list of JobTitleKategori",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by code (partial match)",
+                        "name": "code",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by label (partial match)",
+                        "name": "label",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.JobTitleKategoriResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create New JobTitleKategori",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/jabatan/jabatan/job_title_kategori"
+                ],
+                "summary": "Create JobTitleKategori",
+                "parameters": [
+                    {
+                        "description": "Create Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateJobTitleKategoriRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.JobTitleKategoriResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/jabatan/job_title_kategoris/select": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get list of JobTitleKategori for select with optional search",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/jabatan/jabatan/job_title_kategori"
+                ],
+                "summary": "Get list of JobTitleKategori for select",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search by label or code",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.JobTitleKategoriSimpelResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/jabatan/job_title_kategoris/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get JobTitleKategori by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/jabatan/jabatan/job_title_kategori"
+                ],
+                "summary": "Get JobTitleKategori",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "JobTitleKategori ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.JobTitleKategoriResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update JobTitleKategori by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/jabatan/jabatan/job_title_kategori"
+                ],
+                "summary": "Update JobTitleKategori",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "JobTitleKategori ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateJobTitleKategoriRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.JobTitleKategoriResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete JobTitleKategori by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/jabatan/jabatan/job_title_kategori"
+                ],
+                "summary": "Delete JobTitleKategori",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "JobTitleKategori ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.MyGoResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/jabatan/job_title_rumpun_profesis": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get paginated list of JobTitleRumpunProfesi",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/jabatan/jabatan/job_title_rumpun_profesi"
+                ],
+                "summary": "Get list of JobTitleRumpunProfesi",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by name (partial match)",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.JobTitleRumpunProfesiResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create New JobTitleRumpunProfesi",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/jabatan/jabatan/job_title_rumpun_profesi"
+                ],
+                "summary": "Create JobTitleRumpunProfesi",
+                "parameters": [
+                    {
+                        "description": "Create Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateJobTitleRumpunProfesiRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.JobTitleRumpunProfesiResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/jabatan/job_title_rumpun_profesis/select": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get list of JobTitleRumpunProfesi for select with optional search",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/jabatan/jabatan/job_title_rumpun_profesi"
+                ],
+                "summary": "Get list of JobTitleRumpunProfesi for select",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search by label or code",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.JobTitleRumpunProfesiSimpelResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/jabatan/job_title_rumpun_profesis/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get JobTitleRumpunProfesi by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/jabatan/jabatan/job_title_rumpun_profesi"
+                ],
+                "summary": "Get JobTitleRumpunProfesi",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "JobTitleRumpunProfesi ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.JobTitleRumpunProfesiResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update JobTitleRumpunProfesi by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/jabatan/jabatan/job_title_rumpun_profesi"
+                ],
+                "summary": "Update JobTitleRumpunProfesi",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "JobTitleRumpunProfesi ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateJobTitleRumpunProfesiRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.JobTitleRumpunProfesiResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete JobTitleRumpunProfesi by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/jabatan/jabatan/job_title_rumpun_profesi"
+                ],
+                "summary": "Delete JobTitleRumpunProfesi",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "JobTitleRumpunProfesi ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.MyGoResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/kepegawaian/jabatan/job_titles": {
             "get": {
                 "security": [
@@ -2604,8 +3216,44 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Filter by name (partial match)",
-                        "name": "name",
+                        "description": "Filter by label (partial match)",
+                        "name": "label",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by code (partial match)",
+                        "name": "code",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by kategori ID",
+                        "name": "kategori_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by rumpun profesi ID",
+                        "name": "rumpun_profesi_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by wajib STR",
+                        "name": "memerlukan_str",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by wajib SIP",
+                        "name": "memerlukan_sip",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by status aktif",
+                        "name": "is_aktif",
                         "in": "query"
                     },
                     {
@@ -2686,6 +3334,57 @@ const docTemplate = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/dto.JobTitleResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/jabatan/job_titles/select": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get list of JobTitle for select with optional search",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/jabatan/job_titles"
+                ],
+                "summary": "Get list of JobTitle for select",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search by label or code",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.JobTitleSimpelResponse"
+                                            }
                                         }
                                     }
                                 }
@@ -12050,17 +12749,102 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.CreateJobTitleKategoriRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "label"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "label": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                }
+            }
+        },
         "dto.CreateJobTitleRequest": {
             "type": "object",
             "required": [
-                "name"
+                "code",
+                "kategori_id",
+                "label"
             ],
             "properties": {
+                "code": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 1
+                },
                 "description": {
                     "type": "string",
                     "maxLength": 500
                 },
-                "name": {
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "fhir_system": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "is_aktif": {
+                    "type": "boolean"
+                },
+                "jenjang_min": {
+                    "type": "string",
+                    "maxLength": 20
+                },
+                "kategori_id": {
+                    "type": "integer"
+                },
+                "label": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "memerlukan_sip": {
+                    "type": "boolean"
+                },
+                "memerlukan_str": {
+                    "type": "boolean"
+                },
+                "point": {
+                    "description": "Point jabatan (mis. untuk perhitungan remunerasi/tunjangan). Nullable —\nDB default 0.00 kalau tidak diisi.",
+                    "type": "number",
+                    "minimum": 0
+                },
+                "rumpun_profesi_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.CreateJobTitleRumpunProfesiRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "label"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "label": {
                     "type": "string",
                     "maxLength": 255,
                     "minLength": 1
@@ -12751,6 +13535,10 @@ const docTemplate = `{
                     "description": "ParentID kosong = puncak hierarki (mis. Direktur).",
                     "type": "integer"
                 },
+                "point": {
+                    "type": "number",
+                    "minimum": 0
+                },
                 "position_kategori_id": {
                     "type": "integer"
                 }
@@ -12985,9 +13773,55 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.JobTitleKategoriResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "$ref": "#/definitions/httputil.UserData"
+                },
+                "fhir_code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "$ref": "#/definitions/httputil.UserData"
+                }
+            }
+        },
+        "dto.JobTitleKategoriSimpelResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "label": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.JobTitleResponse": {
             "type": "object",
             "properties": {
+                "code": {
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -12997,10 +13831,76 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
+                "fhir_code": {
+                    "type": "string"
+                },
+                "fhir_system": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
-                "name": {
+                "is_aktif": {
+                    "type": "boolean"
+                },
+                "jenjang_min": {
+                    "type": "string"
+                },
+                "kategori": {
+                    "description": "KategoriID int64                           ` + "`" + `json:\"kategori_id\"` + "`" + `",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.JobTitleKategoriSimpelResponse"
+                        }
+                    ]
+                },
+                "label": {
+                    "type": "string"
+                },
+                "memerlukan_sip": {
+                    "type": "boolean"
+                },
+                "memerlukan_str": {
+                    "type": "boolean"
+                },
+                "point": {
+                    "type": "number"
+                },
+                "rumpun_profesi": {
+                    "description": "RumpunProfesiID *int64                               ` + "`" + `json:\"rumpun_profesi_id\"` + "`" + `",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.JobTitleRumpunProfesiSimpelResponse"
+                        }
+                    ]
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "$ref": "#/definitions/httputil.UserData"
+                }
+            }
+        },
+        "dto.JobTitleRumpunProfesiResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "$ref": "#/definitions/httputil.UserData"
+                },
+                "fhir_code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "label": {
                     "type": "string"
                 },
                 "updated_at": {
@@ -13008,6 +13908,34 @@ const docTemplate = `{
                 },
                 "updated_by": {
                     "$ref": "#/definitions/httputil.UserData"
+                }
+            }
+        },
+        "dto.JobTitleRumpunProfesiSimpelResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "label": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.JobTitleSimpelResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "label": {
+                    "type": "string"
                 }
             }
         },
@@ -14193,6 +15121,9 @@ const docTemplate = `{
                 "parent_id": {
                     "type": "integer"
                 },
+                "point": {
+                    "type": "number"
+                },
                 "position_kategori": {
                     "description": "PositionKategoriID int64                           ` + "`" + `json:\"position_kategori_id\"` + "`" + `",
                     "allOf": [
@@ -14611,14 +15542,96 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.UpdateJobTitleKategoriRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "label"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "label": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                }
+            }
+        },
         "dto.UpdateJobTitleRequest": {
             "type": "object",
             "properties": {
+                "code": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 1
+                },
                 "description": {
                     "type": "string",
                     "maxLength": 500
                 },
-                "name": {
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "fhir_system": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "is_aktif": {
+                    "type": "boolean"
+                },
+                "jenjang_min": {
+                    "type": "string",
+                    "maxLength": 20
+                },
+                "kategori_id": {
+                    "type": "integer"
+                },
+                "label": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "memerlukan_sip": {
+                    "type": "boolean"
+                },
+                "memerlukan_str": {
+                    "type": "boolean"
+                },
+                "point": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "rumpun_profesi_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.UpdateJobTitleRumpunProfesiRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "label"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "label": {
                     "type": "string",
                     "maxLength": 255,
                     "minLength": 1
@@ -15194,6 +16207,10 @@ const docTemplate = `{
                 },
                 "parent_id": {
                     "type": "integer"
+                },
+                "point": {
+                    "type": "number",
+                    "minimum": 0
                 },
                 "position_kategori_id": {
                     "type": "integer"

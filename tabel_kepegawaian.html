@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Tabel Kepegawaian SIMRS</title>
   <style>
     * {
@@ -19,11 +19,24 @@
       padding: 20px;
     }
 
+    .group-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #888780;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin: 14px 0 6px;
+    }
+
+    .group-label:first-child {
+      margin-top: 0;
+    }
+
     .nav {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-bottom: 20px;
+      margin-bottom: 8px;
     }
 
     .btn {
@@ -53,6 +66,7 @@
       border: 1px solid #d3d1c7;
       border-radius: 12px;
       padding: 20px;
+      margin-top: 20px;
     }
 
     .header {
@@ -168,33 +182,36 @@
       font-size: 12px;
     }
 
-    .ask-btn {
-      margin-top: 16px;
-      width: 100%;
-      padding: 10px 14px;
-      border-radius: 8px;
-      border: 1px solid #c2c0b6;
-      background: #f8f7f4;
-      color: #73726c;
+    .seed {
       font-size: 13px;
-      cursor: pointer;
-      text-align: left;
+      color: #73726c;
+      line-height: 1.9;
     }
 
-    .ask-btn:hover {
-      background: #f1efe8;
+    .seed span {
+      display: inline-block;
+      background: #f8f7f4;
+      border: 1px solid #e5e4de;
+      border-radius: 6px;
+      padding: 2px 8px;
+      margin: 2px 4px 2px 0;
+      font-family: monospace;
+      font-size: 12px;
       color: #3d3d3a;
     }
   </style>
 </head>
 
 <body>
-  <div class="nav" id="nav"></div>
+  <div class="group-label">Kepegawaian</div>
+  <div class="nav" id="nav-kepegawaian"></div>
+  <div class="group-label">Master Jabatan &amp; Profesi</div>
+  <div class="nav" id="nav-master"></div>
   <div class="card" id="card"></div>
   <script>
     const tables = [
       {
-        id: 'kepegawaian', icon: '👤', iconBg: '#eeedfe',
+        id: 'kepegawaian', group: 'kepegawaian', icon: '👤', iconBg: '#eeedfe',
         fhir: 'FHIR R4: Practitioner',
         desc: 'Tabel inti yang menyimpan biodata lengkap setiap pegawai rumah sakit. Satu baris = satu pegawai. Semua tabel lain berelasi ke tabel ini via kepegawaian_id. Pegawai tidak harus punya akun login — user_id nullable.',
         fields: [
@@ -215,7 +232,7 @@
         ],
       },
       {
-        id: 'identifiers', icon: '🪪', iconBg: '#e6f1fb',
+        id: 'identifiers', group: 'kepegawaian', icon: '🪪', iconBg: '#e6f1fb',
         fhir: 'FHIR R4: Practitioner.identifier[]',
         desc: 'Menyimpan semua nomor identifikasi resmi pegawai (NIK, STR, SIP, NPWP, dll) dalam satu tabel dengan pola type+nilai. Mendukung tracking tanggal expired untuk STR dan SIP yang wajib diperpanjang tiap 5 tahun.',
         fields: [
@@ -235,7 +252,7 @@
         ],
       },
       {
-        id: 'pendidikan', icon: '🎓', iconBg: '#e1f5ee',
+        id: 'pendidikan', group: 'kepegawaian', icon: '🎓', iconBg: '#e1f5ee',
         fhir: 'FHIR R4: Practitioner.qualification[] (jenis akademik)',
         desc: 'Menyimpan riwayat pendidikan formal pegawai — mulai jenjang SD sampai S3/Sp2. Satu baris = satu jenjang pendidikan yang pernah/sedang ditempuh, lengkap dengan periode masuk-keluar, alamat sekolah/kampus, hasil akhir, dan bukti ijazah. Dipisah dari kualifikasi non-formal karena strukturnya berbeda (ada tanggal masuk, bukan cuma tanggal terbit).',
         fields: [
@@ -262,7 +279,7 @@
         ],
       },
       {
-        id: 'kualifikasi', icon: '📜', iconBg: '#faeeda',
+        id: 'kualifikasi', group: 'kepegawaian', icon: '📜', iconBg: '#faeeda',
         fhir: 'FHIR R4: Practitioner.qualification[] (non-akademik)',
         desc: 'Menyimpan sertifikasi, pelatihan, dan kompetensi non-formal pegawai di luar jenjang pendidikan resmi — misalnya pelatihan BLS/ACLS, sertifikasi kompetensi profesi, workshop. Berbeda dari pendidikan: tidak ada tanggal masuk/keluar sekolah, yang ada hanya tanggal terbit dan masa berlaku (banyak sertifikat wajib diperpanjang berkala).',
         fields: [
@@ -284,7 +301,7 @@
         ],
       },
       {
-        id: 'kontak', icon: '📱', iconBg: '#faeeda',
+        id: 'kontak', group: 'kepegawaian', icon: '📱', iconBg: '#faeeda',
         fhir: 'FHIR R4: Practitioner.telecom[]',
         desc: 'Menyimpan semua kontak pegawai — nomor HP, telepon, email, WhatsApp — dalam satu tabel fleksibel. Satu pegawai bisa punya banyak kontak berbeda tipe. is_primary menandai kontak utama untuk notifikasi sistem.',
         fields: [
@@ -303,7 +320,7 @@
         ],
       },
       {
-        id: 'kontak_darurat', icon: '🚨', iconBg: '#faece7',
+        id: 'kontak_darurat', group: 'kepegawaian', icon: '🚨', iconBg: '#faece7',
         fhir: 'Non-FHIR (administratif HR)',
         desc: 'Menyimpan kontak keluarga atau wali yang bisa dihubungi dalam keadaan darurat. Dipisah dari kepegawaian_kontak karena butuh nama kontak, hubungan keluarga, dan alamat.',
         fields: [
@@ -322,7 +339,7 @@
         ],
       },
       {
-        id: 'alamat', icon: '🏠', iconBg: '#eaf3de',
+        id: 'alamat', group: 'kepegawaian', icon: '🏠', iconBg: '#eaf3de',
         fhir: 'FHIR R4: Practitioner.address[]',
         desc: 'Menyimpan alamat pegawai — KTP, domisili, atau sementara. Berelasi ke tabel master alamat 5 level (provinsi → kota → kecamatan → kelurahan). Menyimpan field FHIR terpisah untuk kebutuhan sync ke SATUSEHAT.',
         fields: [
@@ -346,9 +363,9 @@
         ],
       },
       {
-        id: 'jabatan', icon: '🏥', iconBg: '#eeedfe',
+        id: 'jabatan', group: 'kepegawaian', icon: '🏥', iconBg: '#eeedfe',
         fhir: 'FHIR R4: PractitionerRole',
-        desc: 'Menyimpan riwayat penugasan pegawai di suatu unit dan jabatan. Tabel historis — saat pegawai mutasi, baris lama di-close dan baris baru dibuat. Satu pegawai bisa punya beberapa jabatan aktif di unit berbeda.',
+        desc: 'Menyimpan riwayat penugasan pegawai di suatu unit dan jabatan. Tabel historis — saat pegawai mutasi, baris lama di-close dan baris baru dibuat. Satu pegawai bisa punya beberapa jabatan aktif di unit berbeda. FK-nya (department_id, position_id, job_title_id, specialization_id) menunjuk ke tabel master di tab sebelah kanan.',
         fields: [
           { n: 'id', t: 'int8', note: 'pk' }, { n: 'kepegawaian_id', t: 'int8', note: 'fk' },
           { n: 'department_id', t: 'int8', note: 'fk' }, { n: 'position_id', t: 'int8', note: 'fk' },
@@ -365,12 +382,12 @@
           'FK ke <span>departments</span> — unit tempat bertugas',
           'FK ke <span>positions</span> — jabatan struktural (Kepala Instalasi, Koordinator)',
           'FK ke <span>job_titles</span> — jabatan fungsional (Dokter Umum, Perawat)',
-          'FK ke <span>specializations</span> — spesialisasi klinis (nullable, hanya dokter)',
+          'FK ke <span>specializations</span> — spesialisasi klinis (nullable, hanya dokter/profesi tertentu)',
           '<span>tanggal_selesai NULL</span> = masih aktif di jabatan tersebut',
         ],
       },
       {
-        id: 'lampiran', icon: '📎', iconBg: '#f1efe8',
+        id: 'lampiran', group: 'kepegawaian', icon: '📎', iconBg: '#f1efe8',
         fhir: 'Non-FHIR (administratif HR)',
         desc: 'Menyimpan metadata dokumen scan milik pegawai — ijazah, STR, SIP, foto, kontrak kerja. File fisik disimpan di object storage (S3/MinIO/GCS), tabel ini hanya menyimpan URL dan metadata.',
         fields: [
@@ -389,20 +406,106 @@
           'Berpasangan dengan <span>kepegawaian_identifiers</span> dan <span>kepegawaian_pendidikan</span>/<span>kepegawaian_kualifikasi</span>: kolom lain menyimpan datanya, lampiran menyimpan scan fisiknya',
         ],
       },
+      {
+        id: 'positions', group: 'master', icon: '🏛️', iconBg: '#fdeaea',
+        fhir: 'Non-FHIR (struktur organisasi) — dekat dengan FHIR R4: OrganizationAffiliation.code',
+        desc: 'Master jabatan struktural rumah sakit — posisi dalam bagan organisasi (Direktur, Wakil Direktur, Kepala Bidang, Kepala Instalasi, Koordinator Ruangan, dst). Berbeda dari job_titles: position adalah "kedudukan dalam struktur", job_title adalah "profesi/keahlian". Satu pegawai bisa punya job_title "Dokter Spesialis Anak" sekaligus position "Kepala Instalasi Rawat Inap Anak". Tabel ini self-referencing untuk membentuk hierarki organisasi.',
+        fields: [
+          { n: 'id', t: 'int8', note: 'pk' }, { n: 'kode', t: 'varchar(20)', note: 'req' },
+          { n: 'nama', t: 'varchar(150)', note: 'req' }, { n: 'parent_id', t: 'int8', note: 'fk' },
+          { n: 'department_id', t: 'int8', note: 'fk' }, { n: 'level_hierarki', t: 'int2', note: 'req' },
+          { n: 'kategori', t: 'varchar(20)', note: 'req' }, { n: 'kuota', t: 'int2', note: 'opt' },
+          { n: 'deskripsi', t: 'text', note: 'opt' }, { n: 'is_aktif', t: 'bool', note: 'req' },
+          { n: 'created_by', t: 'int8', note: 'opt' }, { n: 'updated_by', t: 'int8', note: 'opt' },
+          { n: 'created_at', t: 'timestamptz', note: 'req' }, { n: 'updated_at', t: 'timestamptz', note: 'req' },
+          { n: 'deleted_at', t: 'timestamptz', note: 'opt' },
+        ],
+        rels: [
+          'Self-referencing via <span>parent_id</span> — membentuk bagan organisasi berjenjang',
+          'FK opsional ke <span>departments</span> — sebagian jabatan struktural melekat ke unit tertentu (Kepala Ruangan ICU), sebagian tidak (Direktur)',
+          '<span>kategori</span>: <span>direksi</span> | <span>manajerial</span> | <span>koordinator</span> | <span>pelaksana</span>',
+          '<span>level_hierarki</span>: 1 = tertinggi (Direktur), makin besar makin rendah — dipakai untuk sorting bagan dan alur approval berjenjang',
+          '<span>kuota</span>: jumlah slot yang tersedia untuk jabatan ini, mis. Kepala Ruangan kuota 1 per unit',
+          'Dirujuk oleh <span>kepegawaian_jabatan.position_id</span>',
+        ],
+        seed: [
+          'DIR — Direktur (level 1)', 'WADIR-YANMED — Wakil Direktur Pelayanan Medis (level 2)',
+          'WADIR-UMUM — Wakil Direktur Umum & Keuangan (level 2)', 'KABID-KEP — Kepala Bidang Keperawatan (level 3)',
+          'KABID-YANMED — Kepala Bidang Pelayanan Medis (level 3)', 'KAINSTAL — Kepala Instalasi (level 4)',
+          'KARU — Kepala Ruangan (level 5)', 'KOORD — Koordinator Shift (level 6)',
+        ],
+      },
+      {
+        id: 'job_titles', group: 'master', icon: '🩺', iconBg: '#eaf6fb',
+        fhir: 'FHIR R4: PractitionerRole.code — merujuk Terminologi Jenis SDM Kesehatan SATUSEHAT',
+        desc: 'Master jabatan fungsional / profesi pegawai — menjawab "profesinya apa", bukan "kedudukannya di struktur mana". Dipakai lintas semua pegawai: tenaga medis, keperawatan, penunjang, sampai non-kesehatan (admin, IT, keuangan). Flag memerlukan_str dan memerlukan_sip dipakai untuk validasi otomatis saat entri kepegawaian_identifiers.',
+        fields: [
+          { n: 'id', t: 'int8', note: 'pk' }, { n: 'kode', t: 'varchar(20)', note: 'req' },
+          { n: 'nama', t: 'varchar(150)', note: 'req' }, { n: 'kategori', t: 'varchar(30)', note: 'req' },
+          { n: 'rumpun_profesi', t: 'varchar(50)', note: 'opt' }, { n: 'memerlukan_str', t: 'bool', note: 'req' },
+          { n: 'memerlukan_sip', t: 'bool', note: 'req' }, { n: 'jenjang_min', t: 'varchar(20)', note: 'opt' },
+          { n: 'fhir_code', t: 'varchar(50)', note: 'opt' }, { n: 'fhir_system', t: 'varchar(200)', note: 'opt' },
+          { n: 'is_aktif', t: 'bool', note: 'req' }, { n: 'created_by', t: 'int8', note: 'opt' },
+          { n: 'updated_by', t: 'int8', note: 'opt' }, { n: 'created_at', t: 'timestamptz', note: 'req' },
+          { n: 'updated_at', t: 'timestamptz', note: 'req' }, { n: 'deleted_at', t: 'timestamptz', note: 'opt' },
+        ],
+        rels: [
+          '<span>kategori</span>: <span>medis</span> | <span>paramedis</span> | <span>penunjang_medis</span> | <span>non_medis</span>',
+          '<span>rumpun_profesi</span>: pengelompokan lebih spesifik — <span>dokter</span> | <span>perawat</span> | <span>bidan</span> | <span>apoteker</span> | <span>tenaga_kesehatan_lain</span> | <span>non_kesehatan</span> (selaras rumpun SDM Kesehatan Kemenkes)',
+          '<span>memerlukan_str</span> / <span>memerlukan_sip</span>: dipakai sistem untuk memvalidasi kelengkapan <span>kepegawaian_identifiers</span> sebelum pegawai bisa ditugaskan ke jabatan klinis',
+          '<span>jenjang_min</span>: syarat pendidikan minimum, dicek terhadap <span>kepegawaian_pendidikan</span>',
+          'Dirujuk oleh <span>kepegawaian_jabatan.job_title_id</span>',
+          '<span>fhir_code</span>/<span>fhir_system</span> dipetakan ke kode Jenis SDM Kesehatan SATUSEHAT saat sync <span>PractitionerRole</span>',
+        ],
+        seed: [
+          'DR-UMUM — Dokter Umum', 'DR-SPESIALIS — Dokter Spesialis', 'DR-GIGI — Dokter Gigi',
+          'PERAWAT — Perawat', 'BIDAN — Bidan', 'APOTEKER — Apoteker', 'ASS-APOTEKER — Asisten Apoteker',
+          'RADIOGRAFER — Radiografer', 'ANALIS-LAB — Analis Laboratorium', 'FISIOTERAPIS — Fisioterapis',
+          'REKAM-MEDIS — Perekam Medis', 'GIZI — Ahli Gizi', 'ADMIN — Staf Administrasi', 'IT — Staf IT',
+        ],
+      },
+      {
+        id: 'specializations', group: 'master', icon: '⚕️', iconBg: '#f3e8fd',
+        fhir: 'FHIR R4: PractitionerRole.specialty — kode KFA/SNOMED CT sesuai Terminologi SATUSEHAT',
+        desc: 'Master spesialisasi klinis — hanya relevan untuk profesi yang punya jenjang spesialis (umumnya dokter, sebagian apoteker/perawat spesialis). Dipisah dari job_titles karena satu job_title "Dokter Spesialis" bisa punya puluhan variasi spesialisasi berbeda, dan spesialisasi punya gelar akademik serta kode terminologi sendiri untuk keperluan sinkronisasi SATUSEHAT.',
+        fields: [
+          { n: 'id', t: 'int8', note: 'pk' }, { n: 'kode', t: 'varchar(20)', note: 'req' },
+          { n: 'nama', t: 'varchar(150)', note: 'req' }, { n: 'job_title_id', t: 'int8', note: 'fk' },
+          { n: 'kategori', t: 'varchar(20)', note: 'opt' }, { n: 'gelar', t: 'varchar(20)', note: 'opt' },
+          { n: 'lama_pendidikan_tahun', t: 'int2', note: 'opt' }, { n: 'fhir_code', t: 'varchar(50)', note: 'opt' },
+          { n: 'fhir_system', t: 'varchar(200)', note: 'opt' }, { n: 'is_aktif', t: 'bool', note: 'req' },
+          { n: 'created_by', t: 'int8', note: 'opt' }, { n: 'updated_by', t: 'int8', note: 'opt' },
+          { n: 'created_at', t: 'timestamptz', note: 'req' }, { n: 'updated_at', t: 'timestamptz', note: 'req' },
+          { n: 'deleted_at', t: 'timestamptz', note: 'opt' },
+        ],
+        rels: [
+          'FK ke <span>job_titles</span> — spesialisasi selalu turunan dari satu profesi induk (mis. induknya DR-SPESIALIS)',
+          '<span>kategori</span>: <span>bedah</span> | <span>non_bedah</span> | <span>penunjang</span>',
+          '<span>gelar</span>: gelar akademik yang menyertai, mis. "Sp.A", "Sp.B", "Sp.OG", "Sp.PD"',
+          'Dirujuk oleh <span>kepegawaian_jabatan.specialization_id</span> (nullable — hanya diisi untuk pegawai bergelar spesialis)',
+          '<span>fhir_code</span>/<span>fhir_system</span> dipetakan ke kode spesialisasi KFA/SNOMED CT saat sync <span>PractitionerRole.specialty</span> ke SATUSEHAT',
+        ],
+        seed: [
+          'SP-ANAK — Spesialis Anak (Sp.A)', 'SP-BEDAH — Spesialis Bedah Umum (Sp.B)',
+          'SP-OBGYN — Spesialis Obstetri & Ginekologi (Sp.OG)', 'SP-PENYAKIT-DALAM — Spesialis Penyakit Dalam (Sp.PD)',
+          'SP-SARAF — Spesialis Saraf (Sp.S)', 'SP-JANTUNG — Spesialis Jantung & Pembuluh Darah (Sp.JP)',
+          'SP-MATA — Spesialis Mata (Sp.M)', 'SP-KULIT — Spesialis Kulit & Kelamin (Sp.KK)',
+          'SP-ANESTESI — Spesialis Anestesiologi (Sp.An)', 'SP-RADIOLOGI — Spesialis Radiologi (Sp.Rad)',
+        ],
+      },
     ];
 
     const noteClass = { pk: 'pk', fk: 'fk', req: 'req', opt: 'opt' };
     const noteLabel = { pk: 'PK', fk: 'FK', req: 'Wajib', opt: 'Opsional' };
 
     function render(i) {
-      document.querySelectorAll('.btn').forEach((b, j) => b.classList.toggle('active', j === i));
+      document.querySelectorAll('.btn').forEach(b => b.classList.toggle('active', Number(b.dataset.idx) === i));
       const t = tables[i];
-      const label = i === 0 ? t.id : 'kepegawaian_' + t.id;
       document.getElementById('card').innerHTML = `
     <div class="header">
       <div class="icon" style="background:${t.iconBg}">${t.icon}</div>
       <div>
-        <p class="tbl-name">${label}</p>
+        <p class="tbl-name">${t.id}</p>
         <p class="fhir">${t.fhir}</p>
       </div>
     </div>
@@ -416,16 +519,19 @@
     </div>
     <p class="section">Relasi</p>
     <div class="rels">${t.rels.map(r => `<div>→ ${r}</div>`).join('')}</div>
+    ${t.seed ? `<p class="section" style="margin-top:16px">Contoh seed data</p><div class="seed">${t.seed.map(s => `<span>${s}</span>`).join('')}</div>` : ''}
   `;
     }
 
-    const nav = document.getElementById('nav');
+    const navKep = document.getElementById('nav-kepegawaian');
+    const navMaster = document.getElementById('nav-master');
     tables.forEach((t, i) => {
       const b = document.createElement('button');
       b.className = 'btn';
+      b.dataset.idx = i;
       b.textContent = t.icon + ' ' + t.id;
       b.onclick = () => render(i);
-      nav.appendChild(b);
+      (t.group === 'kepegawaian' ? navKep : navMaster).appendChild(b);
     });
     render(0);
   </script>

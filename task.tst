@@ -5,4 +5,4 @@
  go run /xdummy -total 100000 -batch 2000
 
 make gen-module name=artikel;make gen-module name=artikel add=kategori;make gen-module name=artikel sub=kategori add=tag
-make gen-module name=kepegawaian add=alamat;make gen-module name=kepegawaian sub=jabatan add=position_kategori
+make gen-module name=kepegawaian add=alamat;make gen-module name=kepegawaian sub=jabatan add=job_title_kategori

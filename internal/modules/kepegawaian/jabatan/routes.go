@@ -17,7 +17,7 @@ func RegisterRoutes(e *echo.Echo, h *handlers.KepegawaianJabatanHandler, jwtMana
 	g.POST("", h.CreateJabatan)
 	g.PUT("/:id", h.UpdateJabatan)
 	g.DELETE("/:id", h.DeleteJabatan)
-	//--------------------------------------------------------------------
+	//======================================================================
 	gPosition := e.Group("/api/v1/kepegawaian/jabatan/positions", jwt)
 	gPosition.GET("", h.ListPosition)
 	gPosition.GET("/:id", h.GetPositionByID)
@@ -33,21 +33,40 @@ func RegisterRoutes(e *echo.Echo, h *handlers.KepegawaianJabatanHandler, jwtMana
 	gPositionKategori.POST("", h.CreatePositionKategori)
 	gPositionKategori.PUT("/:id", h.UpdatePositionKategori)
 	gPositionKategori.DELETE("/:id", h.DeletePositionKategori)
-	//--------------------------------------------------------------------
+	//======================================================================
 	gJobTitle := e.Group("/api/v1/kepegawaian/jabatan/job_titles", jwt)
 	gJobTitle.GET("", h.ListJobTitle)
+	gJobTitle.GET("/select", h.ListSelectJobTitle)
 	gJobTitle.GET("/:id", h.GetJobTitleByID)
 	gJobTitle.POST("", h.CreateJobTitle)
 	gJobTitle.PUT("/:id", h.UpdateJobTitle)
 	gJobTitle.DELETE("/:id", h.DeleteJobTitle)
-	//--------------------------------------------------------------------
+	//--------------------------------------
+	gJobTitleRumpunProfesi := e.Group("/api/v1/kepegawaian/jabatan/job_title_rumpun_profesis", jwt)
+	gJobTitleRumpunProfesi.GET("", h.ListJobTitleRumpunProfesi)
+	gJobTitleRumpunProfesi.GET("/select", h.ListSelectListJobTitleRumpunProfesi)
+	gJobTitleRumpunProfesi.GET("/:id", h.GetJobTitleRumpunProfesiByID)
+	gJobTitleRumpunProfesi.POST("", h.CreateJobTitleRumpunProfesi)
+	gJobTitleRumpunProfesi.PUT("/:id", h.UpdateJobTitleRumpunProfesi)
+	gJobTitleRumpunProfesi.DELETE("/:id", h.DeleteJobTitleRumpunProfesi)
+	//--------------------------------------
+	gJobTitleKategori := e.Group("/api/v1/kepegawaian/jabatan/job_title_kategoris", jwt)
+	gJobTitleKategori.GET("", h.ListJobTitleKategori)
+	gJobTitleKategori.GET("/select", h.ListSelectListJobTitleKategori)
+	gJobTitleKategori.GET("/:id", h.GetJobTitleKategoriByID)
+	gJobTitleKategori.POST("", h.CreateJobTitleKategori)
+	gJobTitleKategori.PUT("/:id", h.UpdateJobTitleKategori)
+	gJobTitleKategori.DELETE("/:id", h.DeleteJobTitleKategori)
+	//======================================================================
 	gSpecialization := e.Group("/api/v1/kepegawaian/jabatan/specializations", jwt)
 	gSpecialization.GET("", h.ListSpecialization)
 	gSpecialization.GET("/:id", h.GetSpecializationByID)
 	gSpecialization.POST("", h.CreateSpecialization)
 	gSpecialization.PUT("/:id", h.UpdateSpecialization)
 	gSpecialization.DELETE("/:id", h.DeleteSpecialization)
-	//--------------------------------------------------------------------
+	//======================================================================
+
+	//======================================================================
 
 	// GEN:ITEM_ROUTES
 }

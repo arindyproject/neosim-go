@@ -125,17 +125,82 @@ definitions:
     - code
     - label
     type: object
-  dto.CreateJobTitleRequest:
+  dto.CreateJobTitleKategoriRequest:
     properties:
-      description:
+      code:
+        maxLength: 255
+        minLength: 1
+        type: string
+      fhir_code:
         maxLength: 500
         type: string
-      name:
+      label:
         maxLength: 255
         minLength: 1
         type: string
     required:
-    - name
+    - code
+    - label
+    type: object
+  dto.CreateJobTitleRequest:
+    properties:
+      code:
+        maxLength: 20
+        minLength: 1
+        type: string
+      description:
+        maxLength: 500
+        type: string
+      fhir_code:
+        maxLength: 50
+        type: string
+      fhir_system:
+        maxLength: 200
+        type: string
+      is_aktif:
+        type: boolean
+      jenjang_min:
+        maxLength: 20
+        type: string
+      kategori_id:
+        type: integer
+      label:
+        maxLength: 255
+        minLength: 1
+        type: string
+      memerlukan_sip:
+        type: boolean
+      memerlukan_str:
+        type: boolean
+      point:
+        description: |-
+          Point jabatan (mis. untuk perhitungan remunerasi/tunjangan). Nullable —
+          DB default 0.00 kalau tidak diisi.
+        minimum: 0
+        type: number
+      rumpun_profesi_id:
+        type: integer
+    required:
+    - code
+    - kategori_id
+    - label
+    type: object
+  dto.CreateJobTitleRumpunProfesiRequest:
+    properties:
+      code:
+        maxLength: 255
+        minLength: 1
+        type: string
+      fhir_code:
+        maxLength: 500
+        type: string
+      label:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - code
+    - label
     type: object
   dto.CreateKecamatanRequest:
     properties:
@@ -635,6 +700,9 @@ definitions:
       parent_id:
         description: ParentID kosong = puncak hierarki (mis. Direktur).
         type: integer
+      point:
+        minimum: 0
+        type: number
       position_kategori_id:
         type: integer
     required:
@@ -801,22 +869,111 @@ definitions:
       point:
         type: number
     type: object
+  dto.JobTitleKategoriResponse:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        $ref: '#/definitions/httputil.UserData'
+      fhir_code:
+        type: string
+      id:
+        type: integer
+      label:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        $ref: '#/definitions/httputil.UserData'
+    type: object
+  dto.JobTitleKategoriSimpelResponse:
+    properties:
+      code:
+        type: string
+      id:
+        type: integer
+      label:
+        type: string
+    type: object
   dto.JobTitleResponse:
     properties:
+      code:
+        type: string
       created_at:
         type: string
       created_by:
         $ref: '#/definitions/httputil.UserData'
       description:
         type: string
+      fhir_code:
+        type: string
+      fhir_system:
+        type: string
       id:
         type: integer
-      name:
+      is_aktif:
+        type: boolean
+      jenjang_min:
+        type: string
+      kategori:
+        allOf:
+        - $ref: '#/definitions/dto.JobTitleKategoriSimpelResponse'
+        description: KategoriID int64                           `json:"kategori_id"`
+      label:
+        type: string
+      memerlukan_sip:
+        type: boolean
+      memerlukan_str:
+        type: boolean
+      point:
+        type: number
+      rumpun_profesi:
+        allOf:
+        - $ref: '#/definitions/dto.JobTitleRumpunProfesiSimpelResponse'
+        description: RumpunProfesiID *int64                               `json:"rumpun_profesi_id"`
+      updated_at:
+        type: string
+      updated_by:
+        $ref: '#/definitions/httputil.UserData'
+    type: object
+  dto.JobTitleRumpunProfesiResponse:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        $ref: '#/definitions/httputil.UserData'
+      fhir_code:
+        type: string
+      id:
+        type: integer
+      label:
         type: string
       updated_at:
         type: string
       updated_by:
         $ref: '#/definitions/httputil.UserData'
+    type: object
+  dto.JobTitleRumpunProfesiSimpelResponse:
+    properties:
+      code:
+        type: string
+      id:
+        type: integer
+      label:
+        type: string
+    type: object
+  dto.JobTitleSimpelResponse:
+    properties:
+      code:
+        type: string
+      id:
+        type: integer
+      label:
+        type: string
     type: object
   dto.KecamatanDetailResponse:
     properties:
@@ -1587,6 +1744,8 @@ definitions:
         $ref: '#/definitions/dto.PositionSimpelResponse'
       parent_id:
         type: integer
+      point:
+        type: number
       position_kategori:
         allOf:
         - $ref: '#/definitions/dto.PositionKategoriSimpelResponse'
@@ -1864,15 +2023,75 @@ definitions:
         minimum: 0
         type: number
     type: object
-  dto.UpdateJobTitleRequest:
+  dto.UpdateJobTitleKategoriRequest:
     properties:
-      description:
-        maxLength: 500
-        type: string
-      name:
+      code:
         maxLength: 255
         minLength: 1
         type: string
+      fhir_code:
+        maxLength: 500
+        type: string
+      label:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - code
+    - label
+    type: object
+  dto.UpdateJobTitleRequest:
+    properties:
+      code:
+        maxLength: 20
+        minLength: 1
+        type: string
+      description:
+        maxLength: 500
+        type: string
+      fhir_code:
+        maxLength: 50
+        type: string
+      fhir_system:
+        maxLength: 200
+        type: string
+      is_aktif:
+        type: boolean
+      jenjang_min:
+        maxLength: 20
+        type: string
+      kategori_id:
+        type: integer
+      label:
+        maxLength: 255
+        minLength: 1
+        type: string
+      memerlukan_sip:
+        type: boolean
+      memerlukan_str:
+        type: boolean
+      point:
+        minimum: 0
+        type: number
+      rumpun_profesi_id:
+        type: integer
+    type: object
+  dto.UpdateJobTitleRumpunProfesiRequest:
+    properties:
+      code:
+        maxLength: 255
+        minLength: 1
+        type: string
+      fhir_code:
+        maxLength: 500
+        type: string
+      label:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - code
+    - label
     type: object
   dto.UpdateKecamatanRequest:
     properties:
@@ -2289,6 +2508,9 @@ definitions:
         type: string
       parent_id:
         type: integer
+      point:
+        minimum: 0
+        type: number
       position_kategori_id:
         type: integer
     type: object
@@ -4407,16 +4629,398 @@ paths:
       summary: Update KepegawaianJabatan
       tags:
       - kepegawaian/jabatan
+  /kepegawaian/jabatan/job_title_kategoris:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of JobTitleKategori
+      parameters:
+      - description: Filter by code (partial match)
+        in: query
+        name: code
+        type: string
+      - description: Filter by label (partial match)
+        in: query
+        name: label
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.JobTitleKategoriResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of JobTitleKategori
+      tags:
+      - kepegawaian/jabatan/jabatan/job_title_kategori
+    post:
+      consumes:
+      - application/json
+      description: Create New JobTitleKategori
+      parameters:
+      - description: Create Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateJobTitleKategoriRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.JobTitleKategoriResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create JobTitleKategori
+      tags:
+      - kepegawaian/jabatan/jabatan/job_title_kategori
+  /kepegawaian/jabatan/job_title_kategoris/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete JobTitleKategori by :id
+      parameters:
+      - description: JobTitleKategori ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete JobTitleKategori
+      tags:
+      - kepegawaian/jabatan/jabatan/job_title_kategori
+    get:
+      consumes:
+      - application/json
+      description: Get JobTitleKategori by :id
+      parameters:
+      - description: JobTitleKategori ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.JobTitleKategoriResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get JobTitleKategori
+      tags:
+      - kepegawaian/jabatan/jabatan/job_title_kategori
+    put:
+      consumes:
+      - application/json
+      description: Update JobTitleKategori by :id
+      parameters:
+      - description: JobTitleKategori ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateJobTitleKategoriRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.JobTitleKategoriResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update JobTitleKategori
+      tags:
+      - kepegawaian/jabatan/jabatan/job_title_kategori
+  /kepegawaian/jabatan/job_title_kategoris/select:
+    get:
+      consumes:
+      - application/json
+      description: Get list of JobTitleKategori for select with optional search
+      parameters:
+      - description: Search by label or code
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.JobTitleKategoriSimpelResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of JobTitleKategori for select
+      tags:
+      - kepegawaian/jabatan/jabatan/job_title_kategori
+  /kepegawaian/jabatan/job_title_rumpun_profesis:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of JobTitleRumpunProfesi
+      parameters:
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.JobTitleRumpunProfesiResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of JobTitleRumpunProfesi
+      tags:
+      - kepegawaian/jabatan/jabatan/job_title_rumpun_profesi
+    post:
+      consumes:
+      - application/json
+      description: Create New JobTitleRumpunProfesi
+      parameters:
+      - description: Create Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateJobTitleRumpunProfesiRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.JobTitleRumpunProfesiResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create JobTitleRumpunProfesi
+      tags:
+      - kepegawaian/jabatan/jabatan/job_title_rumpun_profesi
+  /kepegawaian/jabatan/job_title_rumpun_profesis/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete JobTitleRumpunProfesi by :id
+      parameters:
+      - description: JobTitleRumpunProfesi ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete JobTitleRumpunProfesi
+      tags:
+      - kepegawaian/jabatan/jabatan/job_title_rumpun_profesi
+    get:
+      consumes:
+      - application/json
+      description: Get JobTitleRumpunProfesi by :id
+      parameters:
+      - description: JobTitleRumpunProfesi ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.JobTitleRumpunProfesiResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get JobTitleRumpunProfesi
+      tags:
+      - kepegawaian/jabatan/jabatan/job_title_rumpun_profesi
+    put:
+      consumes:
+      - application/json
+      description: Update JobTitleRumpunProfesi by :id
+      parameters:
+      - description: JobTitleRumpunProfesi ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateJobTitleRumpunProfesiRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.JobTitleRumpunProfesiResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update JobTitleRumpunProfesi
+      tags:
+      - kepegawaian/jabatan/jabatan/job_title_rumpun_profesi
+  /kepegawaian/jabatan/job_title_rumpun_profesis/select:
+    get:
+      consumes:
+      - application/json
+      description: Get list of JobTitleRumpunProfesi for select with optional search
+      parameters:
+      - description: Search by label or code
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.JobTitleRumpunProfesiSimpelResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of JobTitleRumpunProfesi for select
+      tags:
+      - kepegawaian/jabatan/jabatan/job_title_rumpun_profesi
   /kepegawaian/jabatan/job_titles:
     get:
       consumes:
       - application/json
       description: Get paginated list of JobTitle
       parameters:
-      - description: Filter by name (partial match)
+      - description: Filter by label (partial match)
         in: query
-        name: name
+        name: label
         type: string
+      - description: Filter by code (partial match)
+        in: query
+        name: code
+        type: string
+      - description: Filter by kategori ID
+        in: query
+        name: kategori_id
+        type: integer
+      - description: Filter by rumpun profesi ID
+        in: query
+        name: rumpun_profesi_id
+        type: integer
+      - description: Filter by wajib STR
+        in: query
+        name: memerlukan_str
+        type: boolean
+      - description: Filter by wajib SIP
+        in: query
+        name: memerlukan_sip
+        type: boolean
+      - description: Filter by status aktif
+        in: query
+        name: is_aktif
+        type: boolean
       - description: Page number
         in: query
         name: page
@@ -4553,6 +5157,35 @@ paths:
       security:
       - BearerAuth: []
       summary: Update JobTitle
+      tags:
+      - kepegawaian/jabatan/job_titles
+  /kepegawaian/jabatan/job_titles/select:
+    get:
+      consumes:
+      - application/json
+      description: Get list of JobTitle for select with optional search
+      parameters:
+      - description: Search by label or code
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.JobTitleSimpelResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of JobTitle for select
       tags:
       - kepegawaian/jabatan/job_titles
   /kepegawaian/jabatan/position_kategoris:

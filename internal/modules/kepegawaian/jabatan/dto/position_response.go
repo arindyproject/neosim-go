@@ -43,9 +43,10 @@ type PositionResponse struct {
 	//DepartmentID int64                      `json:"department_id"`
 	Department *DepartemenSimpelResponse `json:"department,omitempty"`
 
-	LevelHierarki int16  `json:"level_hierarki"`
-	Kuota         *int16 `json:"kuota"`
-	IsAktif       bool   `json:"is_aktif"`
+	LevelHierarki int16    `json:"level_hierarki"`
+	Kuota         *int16   `json:"kuota"`
+	Point         *float64 `json:"point"`
+	IsAktif       bool     `json:"is_aktif"`
 
 	CreatedBy *he.UserData     `json:"created_by"`
 	UpdatedBy *he.UserData     `json:"updated_by"`
@@ -110,6 +111,7 @@ func ToPositionResponse(params PositionResponseParams) *PositionResponse {
 		Department:       params.Department,
 		LevelHierarki:    m.LevelHierarki,
 		Kuota:            m.Kuota,
+		Point:            m.Point,
 		IsAktif:          m.IsAktif,
 		CreatedBy:        params.Creator,
 		UpdatedBy:        params.Updater,

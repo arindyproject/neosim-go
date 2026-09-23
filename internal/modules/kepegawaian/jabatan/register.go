@@ -72,11 +72,17 @@ func (r *registryModule) InitRoutes(e *echo.Echo) {
 
 func (r *registryModule) Models() []interface{} {
 	return []interface{}{
-		&models.Position{},
-		&models.JobTitle{},
-		&models.Specialization{},
-		&models.KepegawaianJabatan{},
 		&models.PositionKategori{},
+		&models.Position{},
+
+		&models.JobTitleKategori{},
+		&models.JobTitleRumpunProfesi{},
+		&models.JobTitle{},
+
+		&models.Specialization{},
+
+		&models.KepegawaianJabatan{},
+
 		// GEN:ITEM_MODELS
 	}
 }
@@ -99,6 +105,12 @@ func (r *registryModule) MigrateSQL(sqlDB *sql.DB) error {
 		return err
 	}
 	if err := migrations.MigratePositionKategoriWithSQL(sqlDB); err != nil {
+		return err
+	}
+	if err := migrations.MigrateJobTitleKategoriWithSQL(sqlDB); err != nil {
+		return err
+	}
+	if err := migrations.MigrateJobTitleRumpunProfesiWithSQL(sqlDB); err != nil {
 		return err
 	}
 	// GEN:ITEM_MIGRATIONS

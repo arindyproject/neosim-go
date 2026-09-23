@@ -3,6 +3,7 @@ package handlers
 import (
 	"io"
 	"net/http"
+	"strconv"
 
 	"neosim_go/internal/modules/kepegawaian/jabatan/dto"
 	"neosim_go/internal/shared/binding"
@@ -18,6 +19,28 @@ import (
 // diberi suffix JobTitle agar tidak bentrok dengan method entitas utama
 // pada struct handler yang sama.
 
+// ─── ListSelectJobTitle ───────────────────────────────────────────────
+//
+//	@Summary		Get list of JobTitle for select
+//	@Description	Get list of JobTitle for select with optional search
+//	@Tags			kepegawaian/jabatan/job_titles
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			search	query	string	false	"Search by label or code"
+//	@Success		200		{object}	response.MyGoResponse{data=[]dto.JobTitleSimpelResponse}
+//	@Router			/kepegawaian/jabatan/job_titles/select [get]
+func (h *KepegawaianJabatanHandler) ListSelectJobTitle(c *echo.Context) error {
+	search := c.QueryParam("search")
+
+	actor := he.BuildAuthContext(c)
+	items, err := h.service.ListSelectJobTitle(c.Request().Context(), search, actor)
+	if err != nil {
+		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data : "+err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", items, nil)
+}
+
 // ─── ListJobTitle ──────────────────────────────────────────────────────
 //
 //	@Summary		Get list of JobTitle
@@ -26,13 +49,49 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			name		query		string	false	"Filter by name (partial match)"
-//	@Param			page		query		int		false	"Page number"
-//	@Param			page_size	query		int		false	"Page size"
-//	@Success		200			{object}	response.MyGoResponse{data=[]dto.JobTitleResponse}
+//	@Param			label				query		string	false	"Filter by label (partial match)"
+//	@Param			code				query		string	false	"Filter by code (partial match)"
+//	@Param			kategori_id			query		int		false	"Filter by kategori ID"
+//	@Param			rumpun_profesi_id	query		int		false	"Filter by rumpun profesi ID"
+//	@Param			memerlukan_str		query		bool	false	"Filter by wajib STR"
+//	@Param			memerlukan_sip		query		bool	false	"Filter by wajib SIP"
+//	@Param			is_aktif			query		bool	false	"Filter by status aktif"
+//	@Param			page				query		int		false	"Page number"
+//	@Param			page_size			query		int		false	"Page size"
+//	@Success		200					{object}	response.MyGoResponse{data=[]dto.JobTitleResponse}
 //	@Router			/kepegawaian/jabatan/job_titles [get]
 func (h *KepegawaianJabatanHandler) ListJobTitle(c *echo.Context) error {
-	filter := dto.FilterJobTitleRequest{Name: c.QueryParam("name")}
+	filter := dto.FilterJobTitleRequest{
+		Label: c.QueryParam("label"),
+		Code:  c.QueryParam("code"),
+	}
+
+	if v := c.QueryParam("kategori_id"); v != "" {
+		if id, err := strconv.ParseInt(v, 10, 64); err == nil {
+			filter.KategoriID = &id
+		}
+	}
+	if v := c.QueryParam("rumpun_profesi_id"); v != "" {
+		if id, err := strconv.ParseInt(v, 10, 64); err == nil {
+			filter.RumpunProfesiID = &id
+		}
+	}
+	if v := c.QueryParam("memerlukan_str"); v != "" {
+		if b, err := strconv.ParseBool(v); err == nil {
+			filter.MemerlukanSTR = &b
+		}
+	}
+	if v := c.QueryParam("memerlukan_sip"); v != "" {
+		if b, err := strconv.ParseBool(v); err == nil {
+			filter.MemerlukanSIP = &b
+		}
+	}
+	if v := c.QueryParam("is_aktif"); v != "" {
+		if b, err := strconv.ParseBool(v); err == nil {
+			filter.IsAktif = &b
+		}
+	}
+
 	page, pageSize := he.ParsePagination(c, h.cfg)
 
 	actor := he.BuildAuthContext(c)

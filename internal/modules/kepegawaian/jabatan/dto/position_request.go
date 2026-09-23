@@ -13,9 +13,10 @@ type CreatePositionRequest struct {
 	// DepartmentID kosong = jabatan tidak terikat 1 unit (mis. Direktur, Wakil Direktur).
 	DepartmentID *int64 `json:"department_id" validate:"omitempty,gt=0"`
 
-	LevelHierarki int16  `json:"level_hierarki" validate:"required,gt=0"`
-	Kuota         *int16 `json:"kuota" validate:"omitempty,gt=0"`
-	IsAktif       bool   `json:"is_aktif"`
+	LevelHierarki int16    `json:"level_hierarki" validate:"required,gt=0"`
+	Kuota         *int16   `json:"kuota" validate:"omitempty,gt=0"`
+	Point         *float64 `json:"point" validate:"omitempty,gte=0"`
+	IsAktif       bool     `json:"is_aktif"`
 }
 
 // UpdatePositionRequest request body untuk update Position
@@ -27,9 +28,10 @@ type UpdatePositionRequest struct {
 	ParentID           *int64 `json:"parent_id" validate:"omitempty,gt=0"`
 	DepartmentID       *int64 `json:"department_id" validate:"omitempty,gt=0"`
 
-	LevelHierarki *int16 `json:"level_hierarki" validate:"omitempty,gt=0"`
-	Kuota         *int16 `json:"kuota" validate:"omitempty,gt=0"`
-	IsAktif       *bool  `json:"is_aktif"`
+	LevelHierarki *int16   `json:"level_hierarki" validate:"omitempty,gt=0"`
+	Kuota         *int16   `json:"kuota" validate:"omitempty,gt=0"`
+	Point         *float64 `json:"point" validate:"omitempty,gte=0"`
+	IsAktif       *bool    `json:"is_aktif"`
 }
 
 // FilterPositionRequest request query untuk filter Position
