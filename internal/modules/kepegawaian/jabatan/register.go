@@ -83,6 +83,7 @@ func (r *registryModule) Models() []interface{} {
 
 		&models.KepegawaianJabatan{},
 
+		&models.SpecializationKategori{},
 		// GEN:ITEM_MODELS
 	}
 }
@@ -111,6 +112,9 @@ func (r *registryModule) MigrateSQL(sqlDB *sql.DB) error {
 		return err
 	}
 	if err := migrations.MigrateJobTitleRumpunProfesiWithSQL(sqlDB); err != nil {
+		return err
+	}
+	if err := migrations.MigrateSpecializationKategoriWithSQL(sqlDB); err != nil {
 		return err
 	}
 	// GEN:ITEM_MIGRATIONS

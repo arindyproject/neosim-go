@@ -68,5 +68,11 @@ func RegisterRoutes(e *echo.Echo, h *handlers.KepegawaianJabatanHandler, jwtMana
 
 	//======================================================================
 
+	gSpecializationKategori := e.Group("/api/v1/kepegawaian/jabatan/specialization_kategoris", jwt)
+	gSpecializationKategori.GET("", h.ListSpecializationKategori)
+	gSpecializationKategori.GET("/:id", h.GetSpecializationKategoriByID)
+	gSpecializationKategori.POST("", h.CreateSpecializationKategori)
+	gSpecializationKategori.PUT("/:id", h.UpdateSpecializationKategori)
+	gSpecializationKategori.DELETE("/:id", h.DeleteSpecializationKategori)
 	// GEN:ITEM_ROUTES
 }

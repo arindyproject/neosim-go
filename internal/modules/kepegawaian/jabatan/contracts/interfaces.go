@@ -11,6 +11,7 @@ type Repository interface {
 	PositionKategoriRepository
 	JobTitleKategoriRepository
 	JobTitleRumpunProfesiRepository
+	SpecializationKategoriRepository
 	// GEN:ITEM_REPOSITORY_INTERFACE
 }
 
@@ -25,5 +26,6 @@ type Service interface {
 	PositionKategoriService
 	JobTitleKategoriService
 	JobTitleRumpunProfesiService
+	SpecializationKategoriService
 	// GEN:ITEM_SERVICE_INTERFACE
 }
