@@ -18,7 +18,7 @@ type JobTitleKategoriRepository interface {
 	GetJobTitleKategoriByID(ctx context.Context, id int64) (*models.JobTitleKategori, error)
 	GetJobTitleKategoriByCode(ctx context.Context, code string) (*models.JobTitleKategori, error)
 	GetJobTitleKategoriByLabel(ctx context.Context, label string) (*models.JobTitleKategori, error)
-	ListSelectTipe(ctx context.Context, search string) ([]models.JobTitleKategori, error)
+	ListSelectJobTitleKategori(ctx context.Context, search string) ([]models.JobTitleKategori, error)
 	ListJobTitleKategori(ctx context.Context, page, pageSize int, filter *dto.FilterJobTitleKategoriRequest) ([]models.JobTitleKategori, int64, error)
 	UpdateJobTitleKategori(ctx context.Context, m *models.JobTitleKategori) error
 	DeleteJobTitleKategori(ctx context.Context, id int64, deletedBy int64) error

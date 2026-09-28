@@ -21,39 +21,47 @@ import (
 // untuk seluruh sub-module jabatan).
 
 func (s *KepegawaianJabatanServiceTestSuite) Test_CreateJobTitleRumpunProfesi_Superadmin_Success() {
-	req := &dto.CreateJobTitleRumpunProfesiRequest{Name: "Test JobTitleRumpunProfesi"}
+	fhir := "dokter"
+	req := &dto.CreateJobTitleRumpunProfesiRequest{
+		Code:     "DOKTER",
+		Label:    "Dokter",
+		FHIRCode: &fhir,
+	}
 	actor := superadminActor()
 
 	s.repo.On("CreateJobTitleRumpunProfesi", mock.AnythingOfType("*models.JobTitleRumpunProfesi")).Return(nil)
 
-	result, err := s.svc.CreateJobTitleRumpunProfesi(context.Background(),req, actor)
+	result, err := s.svc.CreateJobTitleRumpunProfesi(context.Background(), req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
-	s.Equal(req.Name, result.Name)
+	s.Equal(req.Code, result.Code)
+	s.Equal(req.Label, result.Label)
+	s.Equal(req.FHIRCode, result.FHIRCode)
 }
 
 func (s *KepegawaianJabatanServiceTestSuite) Test_CreateJobTitleRumpunProfesi_Forbidden() {
-	req := &dto.CreateJobTitleRumpunProfesiRequest{Name: "Test"}
+	req := &dto.CreateJobTitleRumpunProfesiRequest{Code: "DOKTER", Label: "Dokter"}
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.CreateJobTitleRumpunProfesi(context.Background(),req, actor)
+	result, err := s.svc.CreateJobTitleRumpunProfesi(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
 	var appErr *appErrors.AppError
 	s.ErrorAs(err, &appErr)
 	s.Equal(http.StatusForbidden, appErr.Code)
+	s.repo.AssertNotCalled(s.T(), "CreateJobTitleRumpunProfesi", mock.Anything)
 }
 
 func (s *KepegawaianJabatanServiceTestSuite) Test_CreateJobTitleRumpunProfesi_RepoError() {
-	req := &dto.CreateJobTitleRumpunProfesiRequest{Name: "Test"}
+	req := &dto.CreateJobTitleRumpunProfesiRequest{Code: "DOKTER", Label: "Dokter"}
 	actor := superadminActor()
 
 	s.repo.On("CreateJobTitleRumpunProfesi", mock.AnythingOfType("*models.JobTitleRumpunProfesi")).Return(fmt.Errorf("db error"))
 
-	result, err := s.svc.CreateJobTitleRumpunProfesi(context.Background(),req, actor)
+	result, err := s.svc.CreateJobTitleRumpunProfesi(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -66,11 +74,13 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_GetJobTitleRumpunProfesiByID_S
 
 	s.repo.On("GetJobTitleRumpunProfesiByID", int64(1)).Return(item, nil)
 
-	result, err := s.svc.GetJobTitleRumpunProfesiByID(context.Background(),1, actor)
+	result, err := s.svc.GetJobTitleRumpunProfesiByID(context.Background(), 1, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
 	s.Equal(item.ID, result.ID)
+	s.Equal(item.Code, result.Code)
+	s.Equal(item.Label, result.Label)
 }
 
 func (s *KepegawaianJabatanServiceTestSuite) Test_GetJobTitleRumpunProfesiByID_NotFound() {
@@ -78,7 +88,7 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_GetJobTitleRumpunProfesiByID_N
 
 	s.repo.On("GetJobTitleRumpunProfesiByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.GetJobTitleRumpunProfesiByID(context.Background(),999, actor)
+	result, err := s.svc.GetJobTitleRumpunProfesiByID(context.Background(), 999, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -89,10 +99,13 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_GetJobTitleRumpunProfesiByID_F
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.GetJobTitleRumpunProfesiByID(context.Background(),1, actor)
+	result, err := s.svc.GetJobTitleRumpunProfesiByID(context.Background(), 1, actor)
 
 	s.Nil(result)
 	s.Error(err)
+	var appErr *appErrors.AppError
+	s.ErrorAs(err, &appErr)
+	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
 func (s *KepegawaianJabatanServiceTestSuite) Test_ListJobTitleRumpunProfesi_Success() {
@@ -105,7 +118,7 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_ListJobTitleRumpunProfesi_Succ
 
 	s.repo.On("ListJobTitleRumpunProfesi", 1, 10, filter).Return(items, int64(2), nil)
 
-	result, total, err := s.svc.ListJobTitleRumpunProfesi(context.Background(),1, 10, filter, actor)
+	result, total, err := s.svc.ListJobTitleRumpunProfesi(context.Background(), 1, 10, filter, actor)
 
 	s.NoError(err)
 	s.Equal(int64(2), total)
@@ -117,7 +130,7 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_ListJobTitleRumpunProfesi_Forb
 	filter := &dto.FilterJobTitleRumpunProfesiRequest{}
 	s.mockNoPermissions()
 
-	result, total, err := s.svc.ListJobTitleRumpunProfesi(context.Background(),1, 10, filter, actor)
+	result, total, err := s.svc.ListJobTitleRumpunProfesi(context.Background(), 1, 10, filter, actor)
 
 	s.Nil(result)
 	s.Equal(int64(0), total)
@@ -131,16 +144,36 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_UpdateJobTitleRumpunProfesi_Su
 	actor := superadminActor()
 	existing := factories.NewJobTitleRumpunProfesiFactory().Make()
 	existing.ID = 1
-	newName := "Updated Name"
-	req := &dto.UpdateJobTitleRumpunProfesiRequest{Name: &newName}
+	newLabel := "Updated Label"
+	req := &dto.UpdateJobTitleRumpunProfesiRequest{Label: &newLabel}
 
 	s.repo.On("GetJobTitleRumpunProfesiByID", int64(1)).Return(existing, nil)
 	s.repo.On("UpdateJobTitleRumpunProfesi", mock.AnythingOfType("*models.JobTitleRumpunProfesi")).Return(nil)
 
-	result, err := s.svc.UpdateJobTitleRumpunProfesi(context.Background(),1, req, actor)
+	result, err := s.svc.UpdateJobTitleRumpunProfesi(context.Background(), 1, req, actor)
 
 	s.NoError(err)
-	s.Equal(newName, result.Name)
+	s.Equal(newLabel, result.Label)
+}
+
+func (s *KepegawaianJabatanServiceTestSuite) Test_UpdateJobTitleRumpunProfesi_PartialFields() {
+	actor := superadminActor()
+	existing := factories.NewJobTitleRumpunProfesiFactory().Make()
+	existing.ID = 1
+	originalCode := existing.Code
+	newLabel := "Label Baru"
+	req := &dto.UpdateJobTitleRumpunProfesiRequest{Label: &newLabel}
+
+	s.repo.On("GetJobTitleRumpunProfesiByID", int64(1)).Return(existing, nil)
+	s.repo.On("UpdateJobTitleRumpunProfesi", mock.MatchedBy(func(m *models.JobTitleRumpunProfesi) bool {
+		return m.Code == originalCode && m.Label == newLabel
+	})).Return(nil)
+
+	result, err := s.svc.UpdateJobTitleRumpunProfesi(context.Background(), 1, req, actor)
+
+	s.NoError(err)
+	s.Equal(originalCode, result.Code)
+	s.Equal(newLabel, result.Label)
 }
 
 func (s *KepegawaianJabatanServiceTestSuite) Test_UpdateJobTitleRumpunProfesi_NotFound() {
@@ -149,7 +182,7 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_UpdateJobTitleRumpunProfesi_No
 
 	s.repo.On("GetJobTitleRumpunProfesiByID", int64(999)).Return(nil, nil)
 
-	result, err := s.svc.UpdateJobTitleRumpunProfesi(context.Background(),999, req, actor)
+	result, err := s.svc.UpdateJobTitleRumpunProfesi(context.Background(), 999, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -161,10 +194,13 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_UpdateJobTitleRumpunProfesi_Fo
 	req := &dto.UpdateJobTitleRumpunProfesiRequest{}
 	s.mockNoPermissions()
 
-	result, err := s.svc.UpdateJobTitleRumpunProfesi(context.Background(),1, req, actor)
+	result, err := s.svc.UpdateJobTitleRumpunProfesi(context.Background(), 1, req, actor)
 
 	s.Nil(result)
 	s.Error(err)
+	var appErr *appErrors.AppError
+	s.ErrorAs(err, &appErr)
+	s.Equal(http.StatusForbidden, appErr.Code)
 }
 
 func (s *KepegawaianJabatanServiceTestSuite) Test_DeleteJobTitleRumpunProfesi_Success() {
@@ -175,7 +211,7 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_DeleteJobTitleRumpunProfesi_Su
 	s.repo.On("GetJobTitleRumpunProfesiByID", int64(1)).Return(existing, nil)
 	s.repo.On("DeleteJobTitleRumpunProfesi", int64(1), actor.UserID).Return(nil)
 
-	err := s.svc.DeleteJobTitleRumpunProfesi(context.Background(),1, actor)
+	err := s.svc.DeleteJobTitleRumpunProfesi(context.Background(), 1, actor)
 
 	s.NoError(err)
 }
@@ -185,7 +221,7 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_DeleteJobTitleRumpunProfesi_No
 
 	s.repo.On("GetJobTitleRumpunProfesiByID", int64(999)).Return(nil, nil)
 
-	err := s.svc.DeleteJobTitleRumpunProfesi(context.Background(),999, actor)
+	err := s.svc.DeleteJobTitleRumpunProfesi(context.Background(), 999, actor)
 
 	s.Error(err)
 	s.Contains(err.Error(), "tidak ditemukan")
@@ -195,7 +231,7 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_DeleteJobTitleRumpunProfesi_Fo
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	err := s.svc.DeleteJobTitleRumpunProfesi(context.Background(),1, actor)
+	err := s.svc.DeleteJobTitleRumpunProfesi(context.Background(), 1, actor)
 
 	s.Error(err)
 	var appErr *appErrors.AppError

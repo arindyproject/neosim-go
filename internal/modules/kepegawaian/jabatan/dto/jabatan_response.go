@@ -1,39 +1,116 @@
 package dto
 
 import (
+	"time"
 
 	"neosim_go/internal/modules/kepegawaian/jabatan/models"
-	"neosim_go/internal/shared/types"
 	he "neosim_go/internal/shared/httputil"
+	"neosim_go/internal/shared/types"
 )
+
+const dateLayout = "2006-01-02"
 
 // KepegawaianJabatanResponse response untuk single KepegawaianJabatan
 type KepegawaianJabatanResponse struct {
-	ID          int64     `json:"id"`
-	Name        string    `json:"name"`
-	Description *string   `json:"description"`
-	CreatedBy   *he.UserData `json:"created_by"`
-	UpdatedBy   *he.UserData `json:"updated_by"`
-	CreatedAt   types.CustomTime `json:"created_at"`
-	UpdatedAt   types.CustomTime `json:"updated_at"`
+	ID int64 `json:"id"`
+
+	PegawaiID    int64 `json:"pegawai_id"`
+	DepartmentID int64 `json:"department_id"`
+
+	PositionID       int64                         `json:"position_id"`
+	Position         *PositionSimpelResponse       `json:"position"`
+	JobTitleID       int64                         `json:"job_title_id"`
+	JobTitle         *JobTitleSimpelResponse       `json:"job_title"`
+	SpecializationID *int64                        `json:"specialization_id"`
+	Specialization   *SpecializationSimpelResponse `json:"specialization"`
+
+	IsPrimary bool `json:"is_primary"`
+
+	TanggalMulai   string  `json:"tanggal_mulai"`
+	TanggalSelesai *string `json:"tanggal_selesai"`
+
+	NomorSK   *string `json:"nomor_sk"`
+	TanggalSK *string `json:"tanggal_sk"`
+
+	IsAktif bool `json:"is_aktif"`
+
+	CreatedBy *he.UserData     `json:"created_by"`
+	UpdatedBy *he.UserData     `json:"updated_by"`
+	CreatedAt types.CustomTime `json:"created_at"`
+	UpdatedAt types.CustomTime `json:"updated_at"`
 }
 
 type KepegawaianJabatanResponseParams struct {
 	KepegawaianJabatan *models.KepegawaianJabatan
-	Creator         *he.UserData
-	Updater         *he.UserData
+	Creator            *he.UserData
+	Updater            *he.UserData
+}
+
+func formatDate(t time.Time) string {
+	return t.Format(dateLayout)
+}
+
+func formatDatePtr(t *time.Time) *string {
+	if t == nil {
+		return nil
+	}
+	s := t.Format(dateLayout)
+	return &s
 }
 
 // ToKepegawaianJabatanResponse mengubah model menjadi response
 func ToKepegawaianJabatanResponse(params KepegawaianJabatanResponseParams) *KepegawaianJabatanResponse {
+	m := params.KepegawaianJabatan
+
+	var position *PositionSimpelResponse
+	if m.Position != nil {
+		position = &PositionSimpelResponse{
+			ID:   m.Position.ID,
+			Name: m.Position.Name,
+		}
+	}
+
+	var jobTitle *JobTitleSimpelResponse
+	if m.JobTitle != nil {
+		jobTitle = &JobTitleSimpelResponse{
+			ID:    m.JobTitle.ID,
+			Code:  m.JobTitle.Code,
+			Label: m.JobTitle.Label,
+		}
+	}
+
+	var specialization *SpecializationSimpelResponse
+	if m.Specialization != nil {
+		specialization = &SpecializationSimpelResponse{
+			ID:         m.Specialization.ID,
+			Code:       m.Specialization.Code,
+			Label:      m.Specialization.Label,
+			Gelar:      m.Specialization.Gelar,
+			FHIRCode:   m.Specialization.FHIRCode,
+			FHIRSystem: m.Specialization.FHIRSystem,
+		}
+	}
+
 	return &KepegawaianJabatanResponse{
-		ID:          params.KepegawaianJabatan.ID,
-		Name:        params.KepegawaianJabatan.Name,
-		Description: params.KepegawaianJabatan.Description,
-		CreatedBy:   params.Creator,
-		UpdatedBy:   params.Updater,
-		CreatedAt:   types.CustomTime(params.KepegawaianJabatan.CreatedAt),
-		UpdatedAt:   types.CustomTime(params.KepegawaianJabatan.UpdatedAt),
+		ID:               m.ID,
+		PegawaiID:        m.PegawaiID,
+		DepartmentID:     m.DepartmentID,
+		PositionID:       m.PositionID,
+		Position:         position,
+		JobTitleID:       m.JobTitleID,
+		JobTitle:         jobTitle,
+		SpecializationID: m.SpecializationID,
+		Specialization:   specialization,
+		IsPrimary:        m.IsPrimary,
+		TanggalMulai:     formatDate(m.TanggalMulai),
+		TanggalSelesai:   formatDatePtr(m.TanggalSelesai),
+		NomorSK:          m.NomorSK,
+		TanggalSK:        formatDatePtr(m.TanggalSK),
+		IsAktif:          m.IsAktif,
+		CreatedBy:        params.Creator,
+		UpdatedBy:        params.Updater,
+		CreatedAt:        types.CustomTime(m.CreatedAt),
+		UpdatedAt:        types.CustomTime(m.UpdatedAt),
 	}
 }
 
@@ -45,20 +122,20 @@ func ToKepegawaianJabatanListResponse(
 ) []KepegawaianJabatanResponse {
 	responses := make([]KepegawaianJabatanResponse, 0, len(items))
 
-	for _, m := range items {
+	for i := range items {
 		var creator, updater *he.UserData
 
-		if creatorsMap != nil && m.CreatedBy != nil {
-			creator = creatorsMap[*m.CreatedBy]
+		if creatorsMap != nil && items[i].CreatedBy != nil {
+			creator = creatorsMap[*items[i].CreatedBy]
 		}
-		if updatersMap != nil && m.UpdatedBy != nil {
-			updater = updatersMap[*m.UpdatedBy]
+		if updatersMap != nil && items[i].UpdatedBy != nil {
+			updater = updatersMap[*items[i].UpdatedBy]
 		}
 
 		responses = append(responses, *ToKepegawaianJabatanResponse(KepegawaianJabatanResponseParams{
-			KepegawaianJabatan: &m,
-			Creator:    creator,
-			Updater:    updater,
+			KepegawaianJabatan: &items[i],
+			Creator:            creator,
+			Updater:            updater,
 		}))
 	}
 

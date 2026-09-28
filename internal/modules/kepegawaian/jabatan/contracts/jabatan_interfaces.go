@@ -11,20 +11,23 @@ import (
 // Diimplementasikan oleh struct 'repository' (lihat repositories/repository.go
 // & repositories/jabatan_repository.go).
 type KepegawaianJabatanRepository interface {
-	CreateJabatan(ctx context.Context,m *models.KepegawaianJabatan) error
-	GetJabatanByID(ctx context.Context,id int64) (*models.KepegawaianJabatan, error)
-	ListJabatan(ctx context.Context,page, pageSize int, filter *dto.FilterKepegawaianJabatanRequest) ([]models.KepegawaianJabatan, int64, error)
-	UpdateJabatan(ctx context.Context,m *models.KepegawaianJabatan) error
-	DeleteJabatan(ctx context.Context,id int64, deletedBy int64) error
+	CreateJabatan(ctx context.Context, m *models.KepegawaianJabatan) error
+	GetJabatanByID(ctx context.Context, id int64) (*models.KepegawaianJabatan, error)
+	GetJabatanByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int) ([]models.KepegawaianJabatan, int64, error)
+	ExistsPrimaryAktifByPegawai(ctx context.Context, pegawaiID, excludeID int64) (bool, error)
+	ListJabatan(ctx context.Context, page, pageSize int, filter *dto.FilterKepegawaianJabatanRequest) ([]models.KepegawaianJabatan, int64, error)
+	UpdateJabatan(ctx context.Context, m *models.KepegawaianJabatan) error
+	DeleteJabatan(ctx context.Context, id int64, deletedBy int64) error
 }
 
 // KepegawaianJabatanService defines business logic operations for KepegawaianJabatan.
 // Diimplementasikan oleh struct 'service' (lihat services/service.go
 // & services/jabatan_service.go).
 type KepegawaianJabatanService interface {
-	CreateJabatan(ctx context.Context,req *dto.CreateKepegawaianJabatanRequest, actor he.AuthContext) (*dto.KepegawaianJabatanResponse, error)
-	GetJabatanByID(ctx context.Context,id int64, actor he.AuthContext) (*dto.KepegawaianJabatanResponse, error)
-	ListJabatan(ctx context.Context,page, pageSize int, filter *dto.FilterKepegawaianJabatanRequest, actor he.AuthContext) ([]dto.KepegawaianJabatanResponse, int64, error)
-	UpdateJabatan(ctx context.Context,id int64, req *dto.UpdateKepegawaianJabatanRequest, actor he.AuthContext) (*dto.KepegawaianJabatanResponse, error)
-	DeleteJabatan(ctx context.Context,id int64, actor he.AuthContext) error
+	CreateJabatan(ctx context.Context, req *dto.CreateKepegawaianJabatanRequest, actor he.AuthContext) (*dto.KepegawaianJabatanResponse, error)
+	GetJabatanByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int, actor he.AuthContext) ([]dto.KepegawaianJabatanResponse, int64, error)
+	GetJabatanByID(ctx context.Context, id int64, actor he.AuthContext) (*dto.KepegawaianJabatanResponse, error)
+	ListJabatan(ctx context.Context, page, pageSize int, filter *dto.FilterKepegawaianJabatanRequest, actor he.AuthContext) ([]dto.KepegawaianJabatanResponse, int64, error)
+	UpdateJabatan(ctx context.Context, id int64, req *dto.UpdateKepegawaianJabatanRequest, actor he.AuthContext) (*dto.KepegawaianJabatanResponse, error)
+	DeleteJabatan(ctx context.Context, id int64, actor he.AuthContext) error
 }

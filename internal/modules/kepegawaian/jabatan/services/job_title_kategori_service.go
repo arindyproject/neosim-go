@@ -117,7 +117,7 @@ func (s *service) ListSelectJobTitleKategori(ctx context.Context, search string,
 		return cachedRes, nil
 	}
 
-	items, err := s.repo.ListSelectTipe(ctx, search)
+	items, err := s.repo.ListSelectJobTitleKategori(ctx, search)
 	if err != nil {
 		return nil, err
 	}

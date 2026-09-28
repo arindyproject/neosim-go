@@ -11,8 +11,10 @@ import (
 
 func RegisterRoutes(e *echo.Echo, h *handlers.KepegawaianJabatanHandler, jwtManager *utils.JWTManager, db *gorm.DB) {
 	jwt := authMiddlewares.JWTMiddleware(jwtManager, db)
+
 	g := e.Group("/api/v1/kepegawaian/jabatan", jwt)
 	g.GET("", h.ListJabatan)
+	g.GET("/:pegawai_id/pegawai", h.GetJabatanByPegawaiID)
 	g.GET("/:id", h.GetJabatanByID)
 	g.POST("", h.CreateJabatan)
 	g.PUT("/:id", h.UpdateJabatan)

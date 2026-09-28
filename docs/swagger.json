@@ -2485,9 +2485,45 @@
                 "summary": "Get list of KepegawaianJabatan",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Filter by name (partial match)",
-                        "name": "name",
+                        "type": "integer",
+                        "description": "Filter by pegawai ID",
+                        "name": "pegawai_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by department ID",
+                        "name": "department_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by position ID",
+                        "name": "position_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by job title ID",
+                        "name": "job_title_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by specialization ID",
+                        "name": "specialization_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by jabatan primer",
+                        "name": "is_primary",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by status aktif",
+                        "name": "is_aktif",
                         "in": "query"
                     },
                     {
@@ -4941,6 +4977,70 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/response.MyGoResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/jabatan/{pegawai_id}/pegawai": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get paginated riwayat penugasan (aktif dan yang sudah ditutup) milik satu pegawai",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/jabatan"
+                ],
+                "summary": "Get riwayat jabatan pegawai",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Pegawai ID",
+                        "name": "pegawai_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.KepegawaianJabatanResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -13393,17 +13493,47 @@
         "dto.CreateKepegawaianJabatanRequest": {
             "type": "object",
             "required": [
-                "name"
+                "department_id",
+                "job_title_id",
+                "pegawai_id",
+                "position_id",
+                "tanggal_mulai"
             ],
             "properties": {
-                "description": {
-                    "type": "string",
-                    "maxLength": 500
+                "department_id": {
+                    "type": "integer"
                 },
-                "name": {
+                "is_aktif": {
+                    "type": "boolean"
+                },
+                "is_primary": {
+                    "type": "boolean"
+                },
+                "job_title_id": {
+                    "type": "integer"
+                },
+                "nomor_sk": {
                     "type": "string",
-                    "maxLength": 255,
-                    "minLength": 1
+                    "maxLength": 100
+                },
+                "pegawai_id": {
+                    "type": "integer"
+                },
+                "position_id": {
+                    "type": "integer"
+                },
+                "specialization_id": {
+                    "type": "integer"
+                },
+                "tanggal_mulai": {
+                    "description": "Format tanggal: YYYY-MM-DD",
+                    "type": "string"
+                },
+                "tanggal_selesai": {
+                    "type": "string"
+                },
+                "tanggal_sk": {
+                    "type": "string"
                 }
             }
         },
@@ -14689,13 +14819,49 @@
                 "created_by": {
                     "$ref": "#/definitions/httputil.UserData"
                 },
-                "description": {
-                    "type": "string"
+                "department_id": {
+                    "type": "integer"
                 },
                 "id": {
                     "type": "integer"
                 },
-                "name": {
+                "is_aktif": {
+                    "type": "boolean"
+                },
+                "is_primary": {
+                    "type": "boolean"
+                },
+                "job_title": {
+                    "$ref": "#/definitions/dto.JobTitleSimpelResponse"
+                },
+                "job_title_id": {
+                    "type": "integer"
+                },
+                "nomor_sk": {
+                    "type": "string"
+                },
+                "pegawai_id": {
+                    "type": "integer"
+                },
+                "position": {
+                    "$ref": "#/definitions/dto.PositionSimpelResponse"
+                },
+                "position_id": {
+                    "type": "integer"
+                },
+                "specialization": {
+                    "$ref": "#/definitions/dto.SpecializationSimpelResponse"
+                },
+                "specialization_id": {
+                    "type": "integer"
+                },
+                "tanggal_mulai": {
+                    "type": "string"
+                },
+                "tanggal_selesai": {
+                    "type": "string"
+                },
+                "tanggal_sk": {
                     "type": "string"
                 },
                 "updated_at": {
@@ -15961,6 +16127,29 @@
                 }
             }
         },
+        "dto.SpecializationSimpelResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "fhir_code": {
+                    "type": "string"
+                },
+                "fhir_system": {
+                    "type": "string"
+                },
+                "gelar": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "label": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.TagResponse": {
             "type": "object",
             "properties": {
@@ -16310,14 +16499,36 @@
         "dto.UpdateKepegawaianJabatanRequest": {
             "type": "object",
             "properties": {
-                "description": {
-                    "type": "string",
-                    "maxLength": 500
+                "department_id": {
+                    "type": "integer"
                 },
-                "name": {
+                "is_aktif": {
+                    "type": "boolean"
+                },
+                "is_primary": {
+                    "type": "boolean"
+                },
+                "job_title_id": {
+                    "type": "integer"
+                },
+                "nomor_sk": {
                     "type": "string",
-                    "maxLength": 255,
-                    "minLength": 1
+                    "maxLength": 100
+                },
+                "position_id": {
+                    "type": "integer"
+                },
+                "specialization_id": {
+                    "type": "integer"
+                },
+                "tanggal_mulai": {
+                    "type": "string"
+                },
+                "tanggal_selesai": {
+                    "type": "string"
+                },
+                "tanggal_sk": {
+                    "type": "string"
                 }
             }
         },

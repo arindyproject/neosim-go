@@ -73,7 +73,7 @@ func (r *repository) GetJobTitleKategoriByLabel(ctx context.Context, label strin
 }
 
 // ── ListSelect ────────────────────────────────────────────────────────────────
-func (r *repository) ListSelectTipe(ctx context.Context, search string) ([]models.JobTitleKategori, error) {
+func (r *repository) ListSelectJobTitleKategori(ctx context.Context, search string) ([]models.JobTitleKategori, error) {
 	var items []models.JobTitleKategori
 
 	query := r.db.WithContext(ctx).Model(&models.JobTitleKategori{}).

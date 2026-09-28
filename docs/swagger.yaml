@@ -318,15 +318,36 @@ definitions:
     type: object
   dto.CreateKepegawaianJabatanRequest:
     properties:
-      description:
-        maxLength: 500
+      department_id:
+        type: integer
+      is_aktif:
+        type: boolean
+      is_primary:
+        type: boolean
+      job_title_id:
+        type: integer
+      nomor_sk:
+        maxLength: 100
         type: string
-      name:
-        maxLength: 255
-        minLength: 1
+      pegawai_id:
+        type: integer
+      position_id:
+        type: integer
+      specialization_id:
+        type: integer
+      tanggal_mulai:
+        description: 'Format tanggal: YYYY-MM-DD'
+        type: string
+      tanggal_selesai:
+        type: string
+      tanggal_sk:
         type: string
     required:
-    - name
+    - department_id
+    - job_title_id
+    - pegawai_id
+    - position_id
+    - tanggal_mulai
     type: object
   dto.CreateKepegawaianKontakRequest:
     properties:
@@ -1219,11 +1240,35 @@ definitions:
         type: string
       created_by:
         $ref: '#/definitions/httputil.UserData'
-      description:
-        type: string
+      department_id:
+        type: integer
       id:
         type: integer
-      name:
+      is_aktif:
+        type: boolean
+      is_primary:
+        type: boolean
+      job_title:
+        $ref: '#/definitions/dto.JobTitleSimpelResponse'
+      job_title_id:
+        type: integer
+      nomor_sk:
+        type: string
+      pegawai_id:
+        type: integer
+      position:
+        $ref: '#/definitions/dto.PositionSimpelResponse'
+      position_id:
+        type: integer
+      specialization:
+        $ref: '#/definitions/dto.SpecializationSimpelResponse'
+      specialization_id:
+        type: integer
+      tanggal_mulai:
+        type: string
+      tanggal_selesai:
+        type: string
+      tanggal_sk:
         type: string
       updated_at:
         type: string
@@ -2046,6 +2091,21 @@ definitions:
       label:
         type: string
     type: object
+  dto.SpecializationSimpelResponse:
+    properties:
+      code:
+        type: string
+      fhir_code:
+        type: string
+      fhir_system:
+        type: string
+      gelar:
+        type: string
+      id:
+        type: integer
+      label:
+        type: string
+    type: object
   dto.TagResponse:
     properties:
       created_at:
@@ -2296,12 +2356,26 @@ definitions:
     type: object
   dto.UpdateKepegawaianJabatanRequest:
     properties:
-      description:
-        maxLength: 500
+      department_id:
+        type: integer
+      is_aktif:
+        type: boolean
+      is_primary:
+        type: boolean
+      job_title_id:
+        type: integer
+      nomor_sk:
+        maxLength: 100
         type: string
-      name:
-        maxLength: 255
-        minLength: 1
+      position_id:
+        type: integer
+      specialization_id:
+        type: integer
+      tanggal_mulai:
+        type: string
+      tanggal_selesai:
+        type: string
+      tanggal_sk:
         type: string
     type: object
   dto.UpdateKepegawaianKontakRequest:
@@ -4628,10 +4702,34 @@ paths:
       - application/json
       description: Get paginated list of KepegawaianJabatan
       parameters:
-      - description: Filter by name (partial match)
+      - description: Filter by pegawai ID
         in: query
-        name: name
-        type: string
+        name: pegawai_id
+        type: integer
+      - description: Filter by department ID
+        in: query
+        name: department_id
+        type: integer
+      - description: Filter by position ID
+        in: query
+        name: position_id
+        type: integer
+      - description: Filter by job title ID
+        in: query
+        name: job_title_id
+        type: integer
+      - description: Filter by specialization ID
+        in: query
+        name: specialization_id
+        type: integer
+      - description: Filter by jabatan primer
+        in: query
+        name: is_primary
+        type: boolean
+      - description: Filter by status aktif
+        in: query
+        name: is_aktif
+        type: boolean
       - description: Page number
         in: query
         name: page
@@ -4768,6 +4866,45 @@ paths:
       security:
       - BearerAuth: []
       summary: Update KepegawaianJabatan
+      tags:
+      - kepegawaian/jabatan
+  /kepegawaian/jabatan/{pegawai_id}/pegawai:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated riwayat penugasan (aktif dan yang sudah ditutup)
+        milik satu pegawai
+      parameters:
+      - description: Pegawai ID
+        in: path
+        name: pegawai_id
+        required: true
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.KepegawaianJabatanResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get riwayat jabatan pegawai
       tags:
       - kepegawaian/jabatan
   /kepegawaian/jabatan/job_title_kategoris:

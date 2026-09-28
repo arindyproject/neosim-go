@@ -253,6 +253,10 @@ test-kepegawaian-kualifikasi:
 test-kepegawaian-alamat: 
 	@go test -json ./internal/modules/kepegawaian/alamat/tests | gotestfmt
 
+test-kepegawaian-jabatan: 
+	@go test -json ./internal/modules/kepegawaian/jabatan/tests | gotestfmt
+
+
 
 #---------------------------------------------------------------------------------
 test-artikel-artikel: ## Run tests for master module
