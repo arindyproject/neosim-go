@@ -128,6 +128,7 @@ func main() {
 	runSeeder("jabatan - job title - kategori", masterKepegawaianJabatan.NewJobTitleKategoriSeeder(db), *fresh)
 	runSeeder("jabatan - job title - rumpun_profesi", masterKepegawaianJabatan.NewJobTitleRumpunProfesiSeeder(db), *fresh)
 	runSeeder("jabatan - job title", masterKepegawaianJabatan.NewJobTitleSeeder(db), *fresh)
+	runSeeder("jabatan - spesialisasi - ketegori", masterKepegawaianJabatan.NewSpecializationKategoriSeeder(db), *fresh)
 	runSeeder("jabatan - spesialisasi", masterKepegawaianJabatan.NewSpecializationSeeder(db), *fresh)
 	runSeeder("jabatan", masterKepegawaianJabatan.NewKepegawaianJabatanSeeder(db), *fresh)
 	// Kepegawaian==============================================================

@@ -16,6 +16,9 @@ func cacheKeyPositionsKategoriSelectList(search string) string {
 func cacheKeySpecializationsSelectList(search string) string {
 	return fmt.Sprintf("kepegawaian:jabatan:specializations:selectlist:search%s", search)
 }
+func cacheKeySpecializationsKategoriSelectList(search string) string {
+	return fmt.Sprintf("kepegawaian:jabatan:specializations:kategori:selectlist:search%s", search)
+}
 
 // ---------------------------------------------------------------------------
 func cacheKeyJobTitlesSelectList(search string) string {
@@ -34,7 +37,8 @@ const (
 	cachePrefixPositionsSelectList         = "kepegawaian:jabatan:positions:selectlist:"
 	cachePrefixPositionsKategoriSelectList = "kepegawaian:jabatan:positions:kategori:selectlist:"
 
-	cachePrefixSpecializationsSelectList = "kepegawaian:jabatan:specializations:selectlist:"
+	cachePrefixSpecializationsSelectList         = "kepegawaian:jabatan:specializations:selectlist:"
+	cachePrefixSpecializationsKategoriSelectList = "kepegawaian:jabatan:specializations:kategori:selectlist:"
 
 	cachePrefixJobTitlesSelectList             = "kepegawaian:jabatan:job_titles:selectlist:"
 	cachePrefixJobTitleKategoriSelectList      = "kepegawaian:jabatan:job_titles:kategori:selectlist:"

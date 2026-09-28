@@ -5,10 +5,10 @@ import (
 	"net/http"
 
 	"neosim_go/internal/modules/kepegawaian/jabatan/dto"
+	"neosim_go/internal/shared/binding"
 	he "neosim_go/internal/shared/httputil"
 	"neosim_go/internal/shared/response"
 	"neosim_go/internal/shared/validator"
-	"neosim_go/internal/shared/binding"
 
 	"github.com/labstack/echo/v5"
 )
@@ -22,32 +22,59 @@ import (
 //
 //	@Summary		Get list of SpecializationKategori
 //	@Description	Get paginated list of SpecializationKategori
-//	@Tags			kepegawaian/jabatan
+//	@Tags			kepegawaian/jabatan/specialization/kategoris
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			name		query		string	false	"Filter by name (partial match)"
+//	@Param			code		query		string	false	"Filter by code (partial match)"
+//	@Param			label		query		string	false	"Filter by label (partial match)"
 //	@Param			page		query		int		false	"Page number"
 //	@Param			page_size	query		int		false	"Page size"
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.SpecializationKategoriResponse}
 //	@Router			/kepegawaian/jabatan/specialization_kategoris [get]
 func (h *KepegawaianJabatanHandler) ListSpecializationKategori(c *echo.Context) error {
-	filter := dto.FilterSpecializationKategoriRequest{Name: c.QueryParam("name")}
+	filter := dto.FilterSpecializationKategoriRequest{
+		Search: c.QueryParam("search"),
+		Code:   c.QueryParam("code"),
+		Label:  c.QueryParam("label"),
+	}
 	page, pageSize := he.ParsePagination(c, h.cfg)
 
 	actor := he.BuildAuthContext(c)
-	items, total, err := h.service.ListSpecializationKategori(c.Request().Context(),page, pageSize, &filter, actor)
+	items, total, err := h.service.ListSpecializationKategori(c.Request().Context(), page, pageSize, &filter, actor)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, err.Error(), nil, nil)
 	}
 	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data", items, total, page, pageSize)
 }
 
+// ─── ListSelectPositionKategori ────────────────────────────────────
+//
+//	@Summary		Get list of Tipe for select
+//	@Description	Get list of Tipe for select with optional search
+//	@Tags			kepegawaian/jabatan/specialization/kategoris
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			search	query	string	false	"Search by label or code"
+//	@Success		200		{object}	response.MyGoResponse{data=[]dto.SpecializationKategoriSelectResponse}
+//	@Router			/kepegawaian/jabatan/specialization_kategoris/select [get]
+func (h *KepegawaianJabatanHandler) ListSelectSpecializationKategori(c *echo.Context) error {
+	search := c.QueryParam("search")
+
+	actor := he.BuildAuthContext(c)
+	items, err := h.service.ListSelectSpecializationKategori(c.Request().Context(), search, actor)
+	if err != nil {
+		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data : "+err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", items, nil)
+}
+
 // ─── GetSpecializationKategoriByID ───────────────────────────────────────────────────
 //
 //	@Summary		Get SpecializationKategori
 //	@Description	Get SpecializationKategori by :id
-//	@Tags			kepegawaian/jabatan
+//	@Tags			kepegawaian/jabatan/specialization/kategoris
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
@@ -60,7 +87,7 @@ func (h *KepegawaianJabatanHandler) GetSpecializationKategoriByID(c *echo.Contex
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.GetSpecializationKategoriByID(c.Request().Context(),id, actor)
+	item, err := h.service.GetSpecializationKategoriByID(c.Request().Context(), id, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
@@ -71,7 +98,7 @@ func (h *KepegawaianJabatanHandler) GetSpecializationKategoriByID(c *echo.Contex
 //
 //	@Summary		Create SpecializationKategori
 //	@Description	Create New SpecializationKategori
-//	@Tags			kepegawaian/jabatan
+//	@Tags			kepegawaian/jabatan/specialization/kategoris
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
@@ -92,7 +119,7 @@ func (h *KepegawaianJabatanHandler) CreateSpecializationKategori(c *echo.Context
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (validator)", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.CreateSpecializationKategori(c.Request().Context(),&req, actor)
+	item, err := h.service.CreateSpecializationKategori(c.Request().Context(), &req, actor)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
@@ -103,7 +130,7 @@ func (h *KepegawaianJabatanHandler) CreateSpecializationKategori(c *echo.Context
 //
 //	@Summary		Update SpecializationKategori
 //	@Description	Update SpecializationKategori by :id
-//	@Tags			kepegawaian/jabatan
+//	@Tags			kepegawaian/jabatan/specialization/kategoris
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
@@ -130,7 +157,7 @@ func (h *KepegawaianJabatanHandler) UpdateSpecializationKategori(c *echo.Context
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (validator)", nil, errs)
 	}
 	actor := he.BuildAuthContext(c)
-	item, err := h.service.UpdateSpecializationKategori(c.Request().Context(),id, &req, actor)
+	item, err := h.service.UpdateSpecializationKategori(c.Request().Context(), id, &req, actor)
 	if err != nil {
 		status := http.StatusBadRequest
 		if err.Error() == "SpecializationKategori tidak ditemukan" {
@@ -145,7 +172,7 @@ func (h *KepegawaianJabatanHandler) UpdateSpecializationKategori(c *echo.Context
 //
 //	@Summary		Delete SpecializationKategori
 //	@Description	Delete SpecializationKategori by :id
-//	@Tags			kepegawaian/jabatan
+//	@Tags			kepegawaian/jabatan/specialization/kategoris
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
@@ -158,7 +185,7 @@ func (h *KepegawaianJabatanHandler) DeleteSpecializationKategori(c *echo.Context
 		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
 	}
 	actor := he.BuildAuthContext(c)
-	if err := h.service.DeleteSpecializationKategori(c.Request().Context(),id, actor); err != nil {
+	if err := h.service.DeleteSpecializationKategori(c.Request().Context(), id, actor); err != nil {
 		status := http.StatusInternalServerError
 		if err.Error() == "SpecializationKategori tidak ditemukan" {
 			status = http.StatusNotFound

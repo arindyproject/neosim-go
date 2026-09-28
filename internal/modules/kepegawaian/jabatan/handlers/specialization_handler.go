@@ -3,6 +3,7 @@ package handlers
 import (
 	"io"
 	"net/http"
+	"strconv"
 
 	"neosim_go/internal/modules/kepegawaian/jabatan/dto"
 	"neosim_go/internal/shared/binding"
@@ -26,13 +27,43 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			name		query		string	false	"Filter by name (partial match)"
-//	@Param			page		query		int		false	"Page number"
-//	@Param			page_size	query		int		false	"Page size"
-//	@Success		200			{object}	response.MyGoResponse{data=[]dto.SpecializationResponse}
+//	@Param			code			query		string	false	"Filter by code (partial match)"
+//	@Param			label			query		string	false	"Filter by label (partial match)"
+//	@Param			job_title_id	query		int		false	"Filter by job title ID"
+//	@Param			kategori_id		query		int		false	"Filter by kategori ID"
+//	@Param			is_aktif		query		bool	false	"Filter by status aktif"
+//	@Param			page			query		int		false	"Page number"
+//	@Param			page_size		query		int		false	"Page size"
+//	@Success		200				{object}	response.MyGoResponse{data=[]dto.SpecializationResponse}
 //	@Router			/kepegawaian/jabatan/specializations [get]
 func (h *KepegawaianJabatanHandler) ListSpecialization(c *echo.Context) error {
-	filter := dto.FilterSpecializationRequest{Name: c.QueryParam("name")}
+	filter := dto.FilterSpecializationRequest{
+		Code:  c.QueryParam("code"),
+		Label: c.QueryParam("label"),
+	}
+
+	if v := c.QueryParam("job_title_id"); v != "" {
+		n, err := strconv.ParseInt(v, 10, 64)
+		if err != nil || n <= 0 {
+			return response.Response(c, http.StatusBadRequest, false, "job_title_id tidak valid", nil, nil)
+		}
+		filter.JobTitleID = &n
+	}
+	if v := c.QueryParam("kategori_id"); v != "" {
+		n, err := strconv.ParseInt(v, 10, 64)
+		if err != nil || n <= 0 {
+			return response.Response(c, http.StatusBadRequest, false, "kategori_id tidak valid", nil, nil)
+		}
+		filter.KategoriID = &n
+	}
+	if v := c.QueryParam("is_aktif"); v != "" {
+		b, err := strconv.ParseBool(v)
+		if err != nil {
+			return response.Response(c, http.StatusBadRequest, false, "is_aktif tidak valid", nil, nil)
+		}
+		filter.IsAktif = &b
+	}
+
 	page, pageSize := he.ParsePagination(c, h.cfg)
 
 	actor := he.BuildAuthContext(c)
@@ -41,6 +72,26 @@ func (h *KepegawaianJabatanHandler) ListSpecialization(c *echo.Context) error {
 		return response.Response(c, http.StatusInternalServerError, false, err.Error(), nil, nil)
 	}
 	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data", items, total, page, pageSize)
+}
+
+// ─── ListSelectSpecialization ────────────────────────────────────────────────
+//
+//	@Summary		Get select list of Specialization
+//	@Description	Get list Specialization aktif untuk dropdown/select (tanpa pagination)
+//	@Tags			kepegawaian/jabatan/specializations
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			search	query		string	false	"Search by label, code, atau gelar"
+//	@Success		200		{object}	response.MyGoResponse{data=[]dto.SpecializationSelectResponse}
+//	@Router			/kepegawaian/jabatan/specializations/select [get]
+func (h *KepegawaianJabatanHandler) ListSelectSpecialization(c *echo.Context) error {
+	actor := he.BuildAuthContext(c)
+	items, err := h.service.ListSelectSpecialization(c.Request().Context(), c.QueryParam("search"), actor)
+	if err != nil {
+		return response.Response(c, http.StatusInternalServerError, false, err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", items, nil)
 }
 
 // ─── GetSpecializationByID ───────────────────────────────────────────────────
@@ -107,7 +158,7 @@ func (h *KepegawaianJabatanHandler) CreateSpecialization(c *echo.Context) error 
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			id		path		int							true	"Specialization ID"
+//	@Param			id		path		int								true	"Specialization ID"
 //	@Param			body	body		dto.UpdateSpecializationRequest	true	"Update Request"
 //	@Success		200		{object}	response.MyGoResponse{data=dto.SpecializationResponse}
 //	@Router			/kepegawaian/jabatan/specializations/{id} [put]

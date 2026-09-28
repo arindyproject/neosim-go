@@ -98,7 +98,7 @@ func (s *service) GetJobTitleKategoriByID(ctx context.Context, id int64, actor h
 }
 
 // ── ListSelect ────────────────────────────────────────────────────────────────
-func (s *service) ListSelectJobTitleKategori(ctx context.Context, search string, actor he.AuthContext) ([]dto.JobTitleKategoriSimpelResponse, error) {
+func (s *service) ListSelectJobTitleKategori(ctx context.Context, search string, actor he.AuthContext) ([]dto.JobTitleKategoriSelectResponse, error) {
 	ctxs := context.Background()
 	cacheKey := cacheKeyJobTitleKategoriSelectList(search)
 
@@ -112,7 +112,7 @@ func (s *service) ListSelectJobTitleKategori(ctx context.Context, search string,
 	}
 
 	// 1. Cek Cache
-	var cachedRes []dto.JobTitleKategoriSimpelResponse
+	var cachedRes []dto.JobTitleKategoriSelectResponse
 	if s.cache.Get(ctxs, cacheKey, &cachedRes) {
 		return cachedRes, nil
 	}
@@ -126,7 +126,7 @@ func (s *service) ListSelectJobTitleKategori(ctx context.Context, search string,
 		return nil, appErrors.Wrap(http.StatusNotFound, "data JobTitleKategori tidak ditemukan", nil)
 	}
 
-	res := dto.ToJobTitleKategoriSimpelResponse(items)
+	res := dto.ToJobTitleKategoriSelectResponse(items)
 
 	s.cache.SetDefault(ctxs, cacheKey, res)
 	return res, nil

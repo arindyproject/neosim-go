@@ -13,19 +13,23 @@ import (
 // Method diberi suffix nama item agar tidak bentrok saat di-embed ke
 // contracts.Repository.
 type SpecializationKategoriRepository interface {
-	CreateSpecializationKategori(ctx context.Context,m *models.SpecializationKategori) error
-	GetSpecializationKategoriByID(ctx context.Context,id int64) (*models.SpecializationKategori, error)
-	ListSpecializationKategori(ctx context.Context,page, pageSize int, filter *dto.FilterSpecializationKategoriRequest) ([]models.SpecializationKategori, int64, error)
-	UpdateSpecializationKategori(ctx context.Context,m *models.SpecializationKategori) error
-	DeleteSpecializationKategori(ctx context.Context,id int64, deletedBy int64) error
+	CreateSpecializationKategori(ctx context.Context, m *models.SpecializationKategori) error
+	GetSpecializationKategoriByID(ctx context.Context, id int64) (*models.SpecializationKategori, error)
+	GetSpecializationKategoriByCode(ctx context.Context, code string) (*models.SpecializationKategori, error)
+	GetSpecializationKategoriByLabel(ctx context.Context, label string) (*models.SpecializationKategori, error)
+	ListSelectSpecializationKategori(ctx context.Context, search string) ([]models.SpecializationKategori, error)
+	ListSpecializationKategori(ctx context.Context, page, pageSize int, filter *dto.FilterSpecializationKategoriRequest) ([]models.SpecializationKategori, int64, error)
+	UpdateSpecializationKategori(ctx context.Context, m *models.SpecializationKategori) error
+	DeleteSpecializationKategori(ctx context.Context, id int64, deletedBy int64) error
 }
 
 // SpecializationKategoriService defines business logic operations for SpecializationKategori.
 // Diimplementasikan oleh struct 'service' yang sama dengan entitas utama.
 type SpecializationKategoriService interface {
-	CreateSpecializationKategori(ctx context.Context,req *dto.CreateSpecializationKategoriRequest, actor he.AuthContext) (*dto.SpecializationKategoriResponse, error)
-	GetSpecializationKategoriByID(ctx context.Context,id int64, actor he.AuthContext) (*dto.SpecializationKategoriResponse, error)
-	ListSpecializationKategori(ctx context.Context,page, pageSize int, filter *dto.FilterSpecializationKategoriRequest, actor he.AuthContext) ([]dto.SpecializationKategoriResponse, int64, error)
-	UpdateSpecializationKategori(ctx context.Context,id int64, req *dto.UpdateSpecializationKategoriRequest, actor he.AuthContext) (*dto.SpecializationKategoriResponse, error)
-	DeleteSpecializationKategori(ctx context.Context,id int64, actor he.AuthContext) error
+	CreateSpecializationKategori(ctx context.Context, req *dto.CreateSpecializationKategoriRequest, actor he.AuthContext) (*dto.SpecializationKategoriResponse, error)
+	GetSpecializationKategoriByID(ctx context.Context, id int64, actor he.AuthContext) (*dto.SpecializationKategoriResponse, error)
+	ListSelectSpecializationKategori(ctx context.Context, search string, actor he.AuthContext) ([]dto.SpecializationKategoriSelectResponse, error)
+	ListSpecializationKategori(ctx context.Context, page, pageSize int, filter *dto.FilterSpecializationKategoriRequest, actor he.AuthContext) ([]dto.SpecializationKategoriResponse, int64, error)
+	UpdateSpecializationKategori(ctx context.Context, id int64, req *dto.UpdateSpecializationKategoriRequest, actor he.AuthContext) (*dto.SpecializationKategoriResponse, error)
+	DeleteSpecializationKategori(ctx context.Context, id int64, actor he.AuthContext) error
 }

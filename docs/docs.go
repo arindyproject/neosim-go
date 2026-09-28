@@ -3555,8 +3555,14 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Filter by name (partial match)",
-                        "name": "name",
+                        "description": "Filter by code (partial match)",
+                        "name": "code",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by label (partial match)",
+                        "name": "label",
                         "in": "query"
                     },
                     {
@@ -4170,6 +4176,315 @@ const docTemplate = `{
                 }
             }
         },
+        "/kepegawaian/jabatan/specialization_kategoris": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get paginated list of SpecializationKategori",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/jabatan/specialization/kategoris"
+                ],
+                "summary": "Get list of SpecializationKategori",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by code (partial match)",
+                        "name": "code",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by label (partial match)",
+                        "name": "label",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.SpecializationKategoriResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create New SpecializationKategori",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/jabatan/specialization/kategoris"
+                ],
+                "summary": "Create SpecializationKategori",
+                "parameters": [
+                    {
+                        "description": "Create Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateSpecializationKategoriRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.SpecializationKategoriResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/jabatan/specialization_kategoris/select": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get list of Tipe for select with optional search",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/jabatan/specialization/kategoris"
+                ],
+                "summary": "Get list of Tipe for select",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search by label or code",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.SpecializationKategoriSelectResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/jabatan/specialization_kategoris/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get SpecializationKategori by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/jabatan/specialization/kategoris"
+                ],
+                "summary": "Get SpecializationKategori",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "SpecializationKategori ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.SpecializationKategoriResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update SpecializationKategori by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/jabatan/specialization/kategoris"
+                ],
+                "summary": "Update SpecializationKategori",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "SpecializationKategori ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateSpecializationKategoriRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.SpecializationKategoriResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete SpecializationKategori by :id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/jabatan/specialization/kategoris"
+                ],
+                "summary": "Delete SpecializationKategori",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "SpecializationKategori ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.MyGoResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/kepegawaian/jabatan/specializations": {
             "get": {
                 "security": [
@@ -4191,8 +4506,32 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Filter by name (partial match)",
-                        "name": "name",
+                        "description": "Filter by code (partial match)",
+                        "name": "code",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by label (partial match)",
+                        "name": "label",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by job title ID",
+                        "name": "job_title_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by kategori ID",
+                        "name": "kategori_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by status aktif",
+                        "name": "is_aktif",
                         "in": "query"
                     },
                     {
@@ -4273,6 +4612,57 @@ const docTemplate = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/dto.SpecializationResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/kepegawaian/jabatan/specializations/select": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get list Specialization aktif untuk dropdown/select (tanpa pagination)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kepegawaian/jabatan/specializations"
+                ],
+                "summary": "Get select list of Specialization",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search by label, code, atau gelar",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.SpecializationSelectResponse"
+                                            }
                                         }
                                     }
                                 }
@@ -13595,20 +13985,71 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CreateSpecializationRequest": {
+        "dto.CreateSpecializationKategoriRequest": {
             "type": "object",
             "required": [
-                "name"
+                "code",
+                "label"
             ],
             "properties": {
-                "description": {
-                    "type": "string",
-                    "maxLength": 500
-                },
-                "name": {
+                "code": {
                     "type": "string",
                     "maxLength": 255,
                     "minLength": 1
+                },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "label": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                }
+            }
+        },
+        "dto.CreateSpecializationRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "label"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 1
+                },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "fhir_system": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "gelar": {
+                    "type": "string",
+                    "maxLength": 20
+                },
+                "is_aktif": {
+                    "type": "boolean"
+                },
+                "job_title_id": {
+                    "type": "integer"
+                },
+                "kategori_id": {
+                    "type": "integer"
+                },
+                "label": {
+                    "type": "string",
+                    "maxLength": 150,
+                    "minLength": 1
+                },
+                "lama_pendidikan_tahun": {
+                    "type": "integer",
+                    "maximum": 20,
+                    "minimum": 0
                 }
             }
         },
@@ -13806,6 +14247,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "code": {
+                    "type": "string"
+                },
+                "fhir_code": {
                     "type": "string"
                 },
                 "id": {
@@ -15399,22 +15843,25 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.SpecializationResponse": {
+        "dto.SpecializationKategoriResponse": {
             "type": "object",
             "properties": {
+                "code": {
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "string"
                 },
                 "created_by": {
                     "$ref": "#/definitions/httputil.UserData"
                 },
-                "description": {
+                "fhir_code": {
                     "type": "string"
                 },
                 "id": {
                     "type": "integer"
                 },
-                "name": {
+                "label": {
                     "type": "string"
                 },
                 "updated_at": {
@@ -15422,6 +15869,101 @@ const docTemplate = `{
                 },
                 "updated_by": {
                     "$ref": "#/definitions/httputil.UserData"
+                }
+            }
+        },
+        "dto.SpecializationKategoriSelectResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "label": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.SpecializationKategoriSimpelResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "fhir_code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "label": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.SpecializationResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "$ref": "#/definitions/httputil.UserData"
+                },
+                "fhir_code": {
+                    "type": "string"
+                },
+                "fhir_system": {
+                    "type": "string"
+                },
+                "gelar": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_aktif": {
+                    "type": "boolean"
+                },
+                "job_title": {
+                    "$ref": "#/definitions/dto.JobTitleSimpelResponse"
+                },
+                "kategori": {
+                    "$ref": "#/definitions/dto.SpecializationKategoriSimpelResponse"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "lama_pendidikan_tahun": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "$ref": "#/definitions/httputil.UserData"
+                }
+            }
+        },
+        "dto.SpecializationSelectResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "gelar": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "label": {
+                    "type": "string"
                 }
             }
         },
@@ -16254,17 +16796,67 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UpdateSpecializationRequest": {
+        "dto.UpdateSpecializationKategoriRequest": {
             "type": "object",
+            "required": [
+                "code",
+                "label"
+            ],
             "properties": {
-                "description": {
-                    "type": "string",
-                    "maxLength": 500
-                },
-                "name": {
+                "code": {
                     "type": "string",
                     "maxLength": 255,
                     "minLength": 1
+                },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "label": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                }
+            }
+        },
+        "dto.UpdateSpecializationRequest": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 1
+                },
+                "fhir_code": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "fhir_system": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "gelar": {
+                    "type": "string",
+                    "maxLength": 20
+                },
+                "is_aktif": {
+                    "type": "boolean"
+                },
+                "job_title_id": {
+                    "type": "integer"
+                },
+                "kategori_id": {
+                    "type": "integer"
+                },
+                "label": {
+                    "type": "string",
+                    "maxLength": 150,
+                    "minLength": 1
+                },
+                "lama_pendidikan_tahun": {
+                    "type": "integer",
+                    "maximum": 20,
+                    "minimum": 0
                 }
             }
         },

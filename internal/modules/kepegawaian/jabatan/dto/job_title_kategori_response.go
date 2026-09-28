@@ -19,6 +19,13 @@ type JobTitleKategoriResponse struct {
 }
 
 type JobTitleKategoriSimpelResponse struct {
+	ID       int64   `json:"id"`
+	Code     string  `json:"code"`
+	Label    string  `json:"label"`
+	FHIRCode *string `json:"fhir_code"`
+}
+
+type JobTitleKategoriSelectResponse struct {
 	ID    int64  `json:"id"`
 	Code  string `json:"code"`
 	Label string `json:"label"`
@@ -30,10 +37,10 @@ type JobTitleKategoriResponseParams struct {
 	Updater          *he.UserData
 }
 
-func ToJobTitleKategoriSimpelResponse(items []models.JobTitleKategori) []JobTitleKategoriSimpelResponse {
-	responses := make([]JobTitleKategoriSimpelResponse, 0, len(items))
+func ToJobTitleKategoriSelectResponse(items []models.JobTitleKategori) []JobTitleKategoriSelectResponse {
+	responses := make([]JobTitleKategoriSelectResponse, 0, len(items))
 	for _, item := range items {
-		responses = append(responses, JobTitleKategoriSimpelResponse{
+		responses = append(responses, JobTitleKategoriSelectResponse{
 			ID:    item.ID,
 			Code:  item.Code,
 			Label: item.Label,

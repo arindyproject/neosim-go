@@ -24,16 +24,19 @@ func (f *SpecializationKategoriFactory) With(field string, value interface{}) *S
 
 func (f *SpecializationKategoriFactory) Make() *models.SpecializationKategori {
 	idx := rng.Intn(999999)
-	name := fmt.Sprintf("SpecializationKategori %d", idx)
-	desc := fmt.Sprintf("Deskripsi SpecializationKategori %d", idx)
+	code := fmt.Sprintf("Code %d", idx)
+	label := fmt.Sprintf("Label %d", idx)
 
-	if v, ok := f.overrides["name"]; ok {
-		name = v.(string)
+	if v, ok := f.overrides["code"]; ok {
+		code = v.(string)
+	}
+	if v, ok := f.overrides["label"]; ok {
+		label = v.(string)
 	}
 
 	return &models.SpecializationKategori{
-		Name:        name,
-		Description: &desc,
+		Code:  code,
+		Label: label,
 	}
 }
 

@@ -79,11 +79,11 @@ func (r *registryModule) Models() []interface{} {
 		&models.JobTitleRumpunProfesi{},
 		&models.JobTitle{},
 
+		&models.SpecializationKategori{},
 		&models.Specialization{},
 
 		&models.KepegawaianJabatan{},
 
-		&models.SpecializationKategori{},
 		// GEN:ITEM_MODELS
 	}
 }

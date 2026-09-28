@@ -8,31 +8,84 @@ import (
 
 // SpecializationResponse response untuk single Specialization
 type SpecializationResponse struct {
-	ID          int64            `json:"id"`
-	Name        string           `json:"name"`
-	Description *string          `json:"description"`
-	CreatedBy   *he.UserData     `json:"created_by"`
-	UpdatedBy   *he.UserData     `json:"updated_by"`
-	CreatedAt   types.CustomTime `json:"created_at"`
-	UpdatedAt   types.CustomTime `json:"updated_at"`
+	ID                  int64                                 `json:"id"`
+	Code                string                                `json:"code"`
+	Label               string                                `json:"label"`
+	JobTitle            *JobTitleSimpelResponse               `json:"job_title"`
+	Kategori            *SpecializationKategoriSimpelResponse `json:"kategori"`
+	Gelar               *string                               `json:"gelar"`
+	LamaPendidikanTahun *int16                                `json:"lama_pendidikan_tahun"`
+	FHIRCode            *string                               `json:"fhir_code"`
+	FHIRSystem          *string                               `json:"fhir_system"`
+	IsAktif             bool                                  `json:"is_aktif"`
+	CreatedBy           *he.UserData                          `json:"created_by"`
+	UpdatedBy           *he.UserData                          `json:"updated_by"`
+	CreatedAt           types.CustomTime                      `json:"created_at"`
+	UpdatedAt           types.CustomTime                      `json:"updated_at"`
+}
+
+// SpecializationSimpelResponse response ringkas, untuk dipakai sebagai relasi di DTO lain
+type SpecializationSimpelResponse struct {
+	ID         int64   `json:"id"`
+	Code       string  `json:"code"`
+	Label      string  `json:"label"`
+	Gelar      *string `json:"gelar"`
+	FHIRCode   *string `json:"fhir_code"`
+	FHIRSystem *string `json:"fhir_system"`
+}
+
+// SpecializationSelectResponse response untuk dropdown/select
+type SpecializationSelectResponse struct {
+	ID    int64   `json:"id"`
+	Code  string  `json:"code"`
+	Label string  `json:"label"`
+	Gelar *string `json:"gelar"`
 }
 
 type SpecializationResponseParams struct {
 	Specialization *models.Specialization
-	Creator       *he.UserData
-	Updater       *he.UserData
+	Creator        *he.UserData
+	Updater        *he.UserData
 }
 
 // ToSpecializationResponse mengubah model menjadi response
 func ToSpecializationResponse(params SpecializationResponseParams) *SpecializationResponse {
+	m := params.Specialization
+
+	var jobTitle *JobTitleSimpelResponse
+	if m.JobTitle != nil {
+		jobTitle = &JobTitleSimpelResponse{
+			ID:    m.JobTitle.ID,
+			Code:  m.JobTitle.Code,
+			Label: m.JobTitle.Label,
+		}
+	}
+
+	var kategori *SpecializationKategoriSimpelResponse
+	if m.Kategori != nil {
+		kategori = &SpecializationKategoriSimpelResponse{
+			ID:       m.Kategori.ID,
+			Code:     m.Kategori.Code,
+			Label:    m.Kategori.Label,
+			FHIRCode: m.Kategori.FHIRCode,
+		}
+	}
+
 	return &SpecializationResponse{
-		ID:          params.Specialization.ID,
-		Name:        params.Specialization.Name,
-		Description: params.Specialization.Description,
-		CreatedBy:   params.Creator,
-		UpdatedBy:   params.Updater,
-		CreatedAt:   types.CustomTime(params.Specialization.CreatedAt),
-		UpdatedAt:   types.CustomTime(params.Specialization.UpdatedAt),
+		ID:                  m.ID,
+		Code:                m.Code,
+		Label:               m.Label,
+		JobTitle:            jobTitle,
+		Kategori:            kategori,
+		Gelar:               m.Gelar,
+		LamaPendidikanTahun: m.LamaPendidikanTahun,
+		FHIRCode:            m.FHIRCode,
+		FHIRSystem:          m.FHIRSystem,
+		IsAktif:             m.IsAktif,
+		CreatedBy:           params.Creator,
+		UpdatedBy:           params.Updater,
+		CreatedAt:           types.CustomTime(m.CreatedAt),
+		UpdatedAt:           types.CustomTime(m.UpdatedAt),
 	}
 }
 
@@ -44,22 +97,36 @@ func ToSpecializationListResponse(
 ) []SpecializationResponse {
 	responses := make([]SpecializationResponse, 0, len(items))
 
-	for _, m := range items {
+	for i := range items {
 		var creator, updater *he.UserData
 
-		if creatorsMap != nil && m.CreatedBy != nil {
-			creator = creatorsMap[*m.CreatedBy]
+		if creatorsMap != nil && items[i].CreatedBy != nil {
+			creator = creatorsMap[*items[i].CreatedBy]
 		}
-		if updatersMap != nil && m.UpdatedBy != nil {
-			updater = updatersMap[*m.UpdatedBy]
+		if updatersMap != nil && items[i].UpdatedBy != nil {
+			updater = updatersMap[*items[i].UpdatedBy]
 		}
 
 		responses = append(responses, *ToSpecializationResponse(SpecializationResponseParams{
-			Specialization: &m,
-			Creator:         creator,
-			Updater:         updater,
+			Specialization: &items[i],
+			Creator:        creator,
+			Updater:        updater,
 		}))
 	}
 
+	return responses
+}
+
+// ToSpecializationSelectResponse mengubah slice model menjadi response untuk select
+func ToSpecializationSelectResponse(items []models.Specialization) []SpecializationSelectResponse {
+	responses := make([]SpecializationSelectResponse, 0, len(items))
+	for _, item := range items {
+		responses = append(responses, SpecializationSelectResponse{
+			ID:    item.ID,
+			Code:  item.Code,
+			Label: item.Label,
+			Gelar: item.Gelar,
+		})
+	}
 	return responses
 }

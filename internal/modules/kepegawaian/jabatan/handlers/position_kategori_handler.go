@@ -26,7 +26,8 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			name		query		string	false	"Filter by name (partial match)"
+//	@Param			code		query		string	false	"Filter by code (partial match)"
+//	@Param			label		query		string	false	"Filter by label (partial match)"
 //	@Param			page		query		int		false	"Page number"
 //	@Param			page_size	query		int		false	"Page size"
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.PositionKategoriResponse}

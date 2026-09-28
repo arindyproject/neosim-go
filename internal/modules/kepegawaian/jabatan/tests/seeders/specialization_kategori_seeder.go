@@ -22,16 +22,45 @@ func NewSpecializationKategoriSeeder(db *gorm.DB) *SpecializationKategoriSeeder 
 	return &SpecializationKategoriSeeder{db: db}
 }
 
+// GetDefaultData mengembalikan daftar master data preset
+func GetDefaultDataSpecializationKategori() []models.SpecializationKategori {
+	creatorID := int64(1)
+
+	return []models.SpecializationKategori{
+		{
+			Code:      "bedah",
+			Label:     "Bedah",
+			CreatedBy: &creatorID,
+			UpdatedBy: &creatorID,
+		},
+		{
+			Code:      "non_bedah",
+			Label:     "Non Bedah",
+			CreatedBy: &creatorID,
+			UpdatedBy: &creatorID,
+		},
+		{
+			Code:      "penunjang",
+			Label:     "Penunjang",
+			CreatedBy: &creatorID,
+			UpdatedBy: &creatorID,
+		},
+	}
+}
+
 func (s *SpecializationKategoriSeeder) Run() error {
 	log.Println("🌱 Seeding kepegawaian_jabatan_specialization_kategoris...")
 
-	items := factories.NewSpecializationKategoriFactory().MakeMany(10)
-	for _, item := range items {
-		if err := s.db.Create(item).Error; err != nil {
-			log.Printf("   ⚠️  Gagal membuat SpecializationKategori: %v", err)
+	defaults := GetDefaultDataSpecializationKategori()
+	for _, item := range defaults {
+		// Menggunakan FirstOrCreate berdasarkan `code` agar idempotent
+		var existing models.SpecializationKategori
+		err := s.db.Where("code = ?", item.Code).FirstOrCreate(&existing, item).Error
+		if err != nil {
+			log.Printf("   ⚠️ Gagal membuat/memeriksa GetDefaultDataSpecializationKategori [%s]: %v", item.Code, err)
 			continue
 		}
-		log.Printf("   ✅ SpecializationKategori '%s' dibuat.", item.Name)
+		log.Printf("   ✅ GetDefaultDataSpecializationKategori '%s' (%s) siap.", item.Label, item.Code)
 	}
 
 	log.Println("✅ kepegawaian_jabatan_specialization_kategoris seeding selesai!")

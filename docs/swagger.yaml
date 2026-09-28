@@ -748,17 +748,55 @@ definitions:
     - display_name
     - name
     type: object
-  dto.CreateSpecializationRequest:
+  dto.CreateSpecializationKategoriRequest:
     properties:
-      description:
+      code:
+        maxLength: 255
+        minLength: 1
+        type: string
+      fhir_code:
         maxLength: 500
         type: string
-      name:
+      label:
         maxLength: 255
         minLength: 1
         type: string
     required:
-    - name
+    - code
+    - label
+    type: object
+  dto.CreateSpecializationRequest:
+    properties:
+      code:
+        maxLength: 20
+        minLength: 1
+        type: string
+      fhir_code:
+        maxLength: 50
+        type: string
+      fhir_system:
+        maxLength: 200
+        type: string
+      gelar:
+        maxLength: 20
+        type: string
+      is_aktif:
+        type: boolean
+      job_title_id:
+        type: integer
+      kategori_id:
+        type: integer
+      label:
+        maxLength: 150
+        minLength: 1
+        type: string
+      lama_pendidikan_tahun:
+        maximum: 20
+        minimum: 0
+        type: integer
+    required:
+    - code
+    - label
     type: object
   dto.CreateTagRequest:
     properties:
@@ -891,6 +929,8 @@ definitions:
   dto.JobTitleKategoriSimpelResponse:
     properties:
       code:
+        type: string
+      fhir_code:
         type: string
       id:
         type: integer
@@ -1925,22 +1965,86 @@ definitions:
       name:
         type: string
     type: object
-  dto.SpecializationResponse:
+  dto.SpecializationKategoriResponse:
     properties:
+      code:
+        type: string
       created_at:
         type: string
       created_by:
         $ref: '#/definitions/httputil.UserData'
-      description:
+      fhir_code:
         type: string
       id:
         type: integer
-      name:
+      label:
         type: string
       updated_at:
         type: string
       updated_by:
         $ref: '#/definitions/httputil.UserData'
+    type: object
+  dto.SpecializationKategoriSelectResponse:
+    properties:
+      code:
+        type: string
+      id:
+        type: integer
+      label:
+        type: string
+    type: object
+  dto.SpecializationKategoriSimpelResponse:
+    properties:
+      code:
+        type: string
+      fhir_code:
+        type: string
+      id:
+        type: integer
+      label:
+        type: string
+    type: object
+  dto.SpecializationResponse:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        $ref: '#/definitions/httputil.UserData'
+      fhir_code:
+        type: string
+      fhir_system:
+        type: string
+      gelar:
+        type: string
+      id:
+        type: integer
+      is_aktif:
+        type: boolean
+      job_title:
+        $ref: '#/definitions/dto.JobTitleSimpelResponse'
+      kategori:
+        $ref: '#/definitions/dto.SpecializationKategoriSimpelResponse'
+      label:
+        type: string
+      lama_pendidikan_tahun:
+        type: integer
+      updated_at:
+        type: string
+      updated_by:
+        $ref: '#/definitions/httputil.UserData'
+    type: object
+  dto.SpecializationSelectResponse:
+    properties:
+      code:
+        type: string
+      gelar:
+        type: string
+      id:
+        type: integer
+      label:
+        type: string
     type: object
   dto.TagResponse:
     properties:
@@ -2540,15 +2644,52 @@ definitions:
     required:
     - settings
     type: object
-  dto.UpdateSpecializationRequest:
+  dto.UpdateSpecializationKategoriRequest:
     properties:
-      description:
-        maxLength: 500
-        type: string
-      name:
+      code:
         maxLength: 255
         minLength: 1
         type: string
+      fhir_code:
+        maxLength: 500
+        type: string
+      label:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - code
+    - label
+    type: object
+  dto.UpdateSpecializationRequest:
+    properties:
+      code:
+        maxLength: 20
+        minLength: 1
+        type: string
+      fhir_code:
+        maxLength: 50
+        type: string
+      fhir_system:
+        maxLength: 200
+        type: string
+      gelar:
+        maxLength: 20
+        type: string
+      is_aktif:
+        type: boolean
+      job_title_id:
+        type: integer
+      kategori_id:
+        type: integer
+      label:
+        maxLength: 150
+        minLength: 1
+        type: string
+      lama_pendidikan_tahun:
+        maximum: 20
+        minimum: 0
+        type: integer
     type: object
   dto.UpdateTagRequest:
     properties:
@@ -5194,9 +5335,13 @@ paths:
       - application/json
       description: Get paginated list of PositionKategori
       parameters:
-      - description: Filter by name (partial match)
+      - description: Filter by code (partial match)
         in: query
-        name: name
+        name: code
+        type: string
+      - description: Filter by label (partial match)
+        in: query
+        name: label
         type: string
       - description: Page number
         in: query
@@ -5563,16 +5708,213 @@ paths:
       summary: Get Position hierarchy tree
       tags:
       - kepegawaian/jabatan/positions
+  /kepegawaian/jabatan/specialization_kategoris:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of SpecializationKategori
+      parameters:
+      - description: Filter by code (partial match)
+        in: query
+        name: code
+        type: string
+      - description: Filter by label (partial match)
+        in: query
+        name: label
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.SpecializationKategoriResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of SpecializationKategori
+      tags:
+      - kepegawaian/jabatan/specialization/kategoris
+    post:
+      consumes:
+      - application/json
+      description: Create New SpecializationKategori
+      parameters:
+      - description: Create Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateSpecializationKategoriRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.SpecializationKategoriResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Create SpecializationKategori
+      tags:
+      - kepegawaian/jabatan/specialization/kategoris
+  /kepegawaian/jabatan/specialization_kategoris/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete SpecializationKategori by :id
+      parameters:
+      - description: SpecializationKategori ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete SpecializationKategori
+      tags:
+      - kepegawaian/jabatan/specialization/kategoris
+    get:
+      consumes:
+      - application/json
+      description: Get SpecializationKategori by :id
+      parameters:
+      - description: SpecializationKategori ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.SpecializationKategoriResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get SpecializationKategori
+      tags:
+      - kepegawaian/jabatan/specialization/kategoris
+    put:
+      consumes:
+      - application/json
+      description: Update SpecializationKategori by :id
+      parameters:
+      - description: SpecializationKategori ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateSpecializationKategoriRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.SpecializationKategoriResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Update SpecializationKategori
+      tags:
+      - kepegawaian/jabatan/specialization/kategoris
+  /kepegawaian/jabatan/specialization_kategoris/select:
+    get:
+      consumes:
+      - application/json
+      description: Get list of Tipe for select with optional search
+      parameters:
+      - description: Search by label or code
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.SpecializationKategoriSelectResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Tipe for select
+      tags:
+      - kepegawaian/jabatan/specialization/kategoris
   /kepegawaian/jabatan/specializations:
     get:
       consumes:
       - application/json
       description: Get paginated list of Specialization
       parameters:
-      - description: Filter by name (partial match)
+      - description: Filter by code (partial match)
         in: query
-        name: name
+        name: code
         type: string
+      - description: Filter by label (partial match)
+        in: query
+        name: label
+        type: string
+      - description: Filter by job title ID
+        in: query
+        name: job_title_id
+        type: integer
+      - description: Filter by kategori ID
+        in: query
+        name: kategori_id
+        type: integer
+      - description: Filter by status aktif
+        in: query
+        name: is_aktif
+        type: boolean
       - description: Page number
         in: query
         name: page
@@ -5709,6 +6051,35 @@ paths:
       security:
       - BearerAuth: []
       summary: Update Specialization
+      tags:
+      - kepegawaian/jabatan/specializations
+  /kepegawaian/jabatan/specializations/select:
+    get:
+      consumes:
+      - application/json
+      description: Get list Specialization aktif untuk dropdown/select (tanpa pagination)
+      parameters:
+      - description: Search by label, code, atau gelar
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.SpecializationSelectResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get select list of Specialization
       tags:
       - kepegawaian/jabatan/specializations
   /kepegawaian/kontak:

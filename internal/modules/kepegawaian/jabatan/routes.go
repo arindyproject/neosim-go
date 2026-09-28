@@ -58,9 +58,18 @@ func RegisterRoutes(e *echo.Echo, h *handlers.KepegawaianJabatanHandler, jwtMana
 	gJobTitleKategori.PUT("/:id", h.UpdateJobTitleKategori)
 	gJobTitleKategori.DELETE("/:id", h.DeleteJobTitleKategori)
 	//======================================================================
+	gSpecializationKategori := e.Group("/api/v1/kepegawaian/jabatan/specialization_kategoris", jwt)
+	gSpecializationKategori.GET("", h.ListSpecializationKategori)
+	gSpecializationKategori.GET("/:id", h.GetSpecializationKategoriByID)
+	gSpecializationKategori.GET("/select", h.ListSelectSpecializationKategori)
+	gSpecializationKategori.POST("", h.CreateSpecializationKategori)
+	gSpecializationKategori.PUT("/:id", h.UpdateSpecializationKategori)
+	gSpecializationKategori.DELETE("/:id", h.DeleteSpecializationKategori)
+	//--------------------------------------
 	gSpecialization := e.Group("/api/v1/kepegawaian/jabatan/specializations", jwt)
 	gSpecialization.GET("", h.ListSpecialization)
 	gSpecialization.GET("/:id", h.GetSpecializationByID)
+	gSpecialization.GET("/select", h.ListSelectSpecialization)
 	gSpecialization.POST("", h.CreateSpecialization)
 	gSpecialization.PUT("/:id", h.UpdateSpecialization)
 	gSpecialization.DELETE("/:id", h.DeleteSpecialization)
@@ -68,11 +77,5 @@ func RegisterRoutes(e *echo.Echo, h *handlers.KepegawaianJabatanHandler, jwtMana
 
 	//======================================================================
 
-	gSpecializationKategori := e.Group("/api/v1/kepegawaian/jabatan/specialization_kategoris", jwt)
-	gSpecializationKategori.GET("", h.ListSpecializationKategori)
-	gSpecializationKategori.GET("/:id", h.GetSpecializationKategoriByID)
-	gSpecializationKategori.POST("", h.CreateSpecializationKategori)
-	gSpecializationKategori.PUT("/:id", h.UpdateSpecializationKategori)
-	gSpecializationKategori.DELETE("/:id", h.DeleteSpecializationKategori)
 	// GEN:ITEM_ROUTES
 }

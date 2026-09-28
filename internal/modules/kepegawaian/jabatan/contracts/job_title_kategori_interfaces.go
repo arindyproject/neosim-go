@@ -27,7 +27,7 @@ type JobTitleKategoriRepository interface {
 // JobTitleKategoriService defines business logic operations for JobTitleKategori.
 // Diimplementasikan oleh struct 'service' yang sama dengan entitas utama.
 type JobTitleKategoriService interface {
-	ListSelectJobTitleKategori(ctx context.Context, search string, actor he.AuthContext) ([]dto.JobTitleKategoriSimpelResponse, error)
+	ListSelectJobTitleKategori(ctx context.Context, search string, actor he.AuthContext) ([]dto.JobTitleKategoriSelectResponse, error)
 	CreateJobTitleKategori(ctx context.Context, req *dto.CreateJobTitleKategoriRequest, actor he.AuthContext) (*dto.JobTitleKategoriResponse, error)
 	GetJobTitleKategoriByID(ctx context.Context, id int64, actor he.AuthContext) (*dto.JobTitleKategoriResponse, error)
 	ListJobTitleKategori(ctx context.Context, page, pageSize int, filter *dto.FilterJobTitleKategoriRequest, actor he.AuthContext) ([]dto.JobTitleKategoriResponse, int64, error)

@@ -66,7 +66,7 @@ func (s *JobTitleKategoriSeeder) Run() error {
 			log.Printf("   ⚠️ Gagal membuat/memeriksa JobTitleKategori [%s]: %v", item.Code, err)
 			continue
 		}
-		log.Printf("   ✅ Tipe '%s' (%s) siap.", item.Label, item.Code)
+		log.Printf("   ✅ JobTitleKategori '%s' (%s) siap.", item.Label, item.Code)
 	}
 
 	log.Println("✅ JobTitleKategori seeding selesai!")

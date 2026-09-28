@@ -19,6 +19,13 @@ type SpecializationKategoriResponse struct {
 }
 
 type SpecializationKategoriSimpelResponse struct {
+	ID       int64   `json:"id"`
+	Code     string  `json:"code"`
+	Label    string  `json:"label"`
+	FHIRCode *string `json:"fhir_code"`
+}
+
+type SpecializationKategoriSelectResponse struct {
 	ID    int64  `json:"id"`
 	Code  string `json:"code"`
 	Label string `json:"label"`
@@ -30,10 +37,10 @@ type SpecializationKategoriResponseParams struct {
 	Updater                *he.UserData
 }
 
-func ToSpecializationKategoriSimpelResponse(items []models.SpecializationKategori) []SpecializationKategoriSimpelResponse {
-	responses := make([]SpecializationKategoriSimpelResponse, 0, len(items))
+func ToSpecializationKategoriSelectResponse(items []models.SpecializationKategori) []SpecializationKategoriSelectResponse {
+	responses := make([]SpecializationKategoriSelectResponse, 0, len(items))
 	for _, item := range items {
-		responses = append(responses, SpecializationKategoriSimpelResponse{
+		responses = append(responses, SpecializationKategoriSelectResponse{
 			ID:    item.ID,
 			Code:  item.Code,
 			Label: item.Label,
