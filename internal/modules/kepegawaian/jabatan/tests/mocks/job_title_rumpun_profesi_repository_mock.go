@@ -22,11 +22,6 @@ func (m *KepegawaianJabatanRepositoryMock) GetJobTitleRumpunProfesiByID(ctx cont
 	return args.Get(0).(*models.JobTitleRumpunProfesi), args.Error(1)
 }
 
-func (m *KepegawaianJabatanRepositoryMock) CheckJobTitleRumpunProfesi(ctx context.Context, id int64) (bool, error) {
-	args := m.Called(id)
-	return args.Bool(0), args.Error(1)
-}
-
 func (m *KepegawaianJabatanRepositoryMock) ListSelectJobTitleRumpunProfesi(ctx context.Context, search string) ([]models.JobTitleRumpunProfesi, error) {
 	args := m.Called(search)
 	return args.Get(0).([]models.JobTitleRumpunProfesi), args.Error(1)
@@ -63,4 +58,10 @@ func (m *KepegawaianJabatanRepositoryMock) GetJobTitleRumpunProfesiByLabel(ctx c
 	}
 	return args.Get(0).(*models.JobTitleRumpunProfesi), args.Error(1)
 
+}
+
+// PERBAIKAN: Pastikan ctx DAN id dimasukkan ke dalam m.Called
+func (m *KepegawaianJabatanRepositoryMock) CheckJobTitleRumpunProfesi(ctx context.Context, id int64) (bool, error) {
+	args := m.Called(ctx, id) // <-- Tambahkan ctx di sini
+	return args.Bool(0), args.Error(1)
 }

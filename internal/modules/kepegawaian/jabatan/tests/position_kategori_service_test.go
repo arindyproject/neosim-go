@@ -28,6 +28,8 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_CreatePositionKategori_Superad
 	}
 	actor := superadminActor()
 
+	s.repo.On("GetPositionKategoriByLabel", "Manajerial").Return(nil, nil)
+	s.repo.On("GetPositionKategoriByCode", "MANAJERIAL").Return(nil, nil)
 	s.repo.On("CreatePositionKategori", mock.AnythingOfType("*models.PositionKategori")).Return(nil)
 
 	result, err := s.svc.CreatePositionKategori(context.Background(), req, actor)
@@ -58,6 +60,8 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_CreatePositionKategori_RepoErr
 	req := &dto.CreatePositionKategoriRequest{Code: "MANAJERIAL", Label: "Manajerial"}
 	actor := superadminActor()
 
+	s.repo.On("GetPositionKategoriByLabel", "Manajerial").Return(nil, nil)
+	s.repo.On("GetPositionKategoriByCode", "MANAJERIAL").Return(nil, nil)
 	s.repo.On("CreatePositionKategori", mock.AnythingOfType("*models.PositionKategori")).Return(fmt.Errorf("db error"))
 
 	result, err := s.svc.CreatePositionKategori(context.Background(), req, actor)
@@ -65,7 +69,6 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_CreatePositionKategori_RepoErr
 	s.Nil(result)
 	s.Error(err)
 }
-
 func (s *KepegawaianJabatanServiceTestSuite) Test_GetPositionKategoriByID_Success() {
 	actor := superadminActor()
 	item := factories.NewPositionKategoriFactory().Make()
@@ -147,6 +150,7 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_UpdatePositionKategori_Success
 	req := &dto.UpdatePositionKategoriRequest{Label: &newLabel}
 
 	s.repo.On("GetPositionKategoriByID", int64(1)).Return(existing, nil)
+	s.repo.On("GetPositionKategoriByLabel", newLabel).Return(nil, nil)
 	s.repo.On("UpdatePositionKategori", mock.AnythingOfType("*models.PositionKategori")).Return(nil)
 
 	result, err := s.svc.UpdatePositionKategori(context.Background(), 1, req, actor)
@@ -154,7 +158,6 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_UpdatePositionKategori_Success
 	s.NoError(err)
 	s.Equal(newLabel, result.Label)
 }
-
 func (s *KepegawaianJabatanServiceTestSuite) Test_UpdatePositionKategori_PartialFields() {
 	actor := superadminActor()
 	existing := factories.NewPositionKategoriFactory().Make()
@@ -164,6 +167,7 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_UpdatePositionKategori_Partial
 	req := &dto.UpdatePositionKategoriRequest{Label: &newLabel}
 
 	s.repo.On("GetPositionKategoriByID", int64(1)).Return(existing, nil)
+	s.repo.On("GetPositionKategoriByLabel", newLabel).Return(nil, nil)
 	s.repo.On("UpdatePositionKategori", mock.MatchedBy(func(m *models.PositionKategori) bool {
 		return m.Code == originalCode && m.Label == newLabel
 	})).Return(nil)

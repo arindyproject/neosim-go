@@ -19,26 +19,6 @@ import (
 // di jabatan_service_test.go. File ini HANYA menambah skenario test untuk
 // JobTitleKategori, memakai s.svc / s.repo yang SAMA.
 
-func (s *KepegawaianJabatanServiceTestSuite) Test_CreateJobTitleKategori_Superadmin_Success() {
-	fhir := "medis"
-	req := &dto.CreateJobTitleKategoriRequest{
-		Code:     "MEDIS",
-		Label:    "Medis",
-		FHIRCode: &fhir,
-	}
-	actor := superadminActor()
-
-	s.repo.On("CreateJobTitleKategori", mock.AnythingOfType("*models.JobTitleKategori")).Return(nil)
-
-	result, err := s.svc.CreateJobTitleKategori(context.Background(), req, actor)
-
-	s.NoError(err)
-	s.NotNil(result)
-	s.Equal(req.Code, result.Code)
-	s.Equal(req.Label, result.Label)
-	s.Equal(req.FHIRCode, result.FHIRCode)
-}
-
 func (s *KepegawaianJabatanServiceTestSuite) Test_CreateJobTitleKategori_Forbidden() {
 	req := &dto.CreateJobTitleKategoriRequest{Code: "MEDIS", Label: "Medis"}
 	actor := regularActor()
@@ -58,12 +38,36 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_CreateJobTitleKategori_RepoErr
 	req := &dto.CreateJobTitleKategoriRequest{Code: "MEDIS", Label: "Medis"}
 	actor := superadminActor()
 
+	s.repo.On("GetJobTitleKategoriByCode", "MEDIS").Return(nil, nil)
+	s.repo.On("GetJobTitleKategoriByLabel", "Medis").Return(nil, nil)
 	s.repo.On("CreateJobTitleKategori", mock.AnythingOfType("*models.JobTitleKategori")).Return(fmt.Errorf("db error"))
 
 	result, err := s.svc.CreateJobTitleKategori(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
+}
+
+func (s *KepegawaianJabatanServiceTestSuite) Test_CreateJobTitleKategori_Superadmin_Success() {
+	fhir := "medis"
+	req := &dto.CreateJobTitleKategoriRequest{
+		Code:     "MEDIS",
+		Label:    "Medis",
+		FHIRCode: &fhir,
+	}
+	actor := superadminActor()
+
+	s.repo.On("GetJobTitleKategoriByCode", "MEDIS").Return(nil, nil)
+	s.repo.On("GetJobTitleKategoriByLabel", "Medis").Return(nil, nil)
+	s.repo.On("CreateJobTitleKategori", mock.AnythingOfType("*models.JobTitleKategori")).Return(nil)
+
+	result, err := s.svc.CreateJobTitleKategori(context.Background(), req, actor)
+
+	s.NoError(err)
+	s.NotNil(result)
+	s.Equal(req.Code, result.Code)
+	s.Equal(req.Label, result.Label)
+	s.Equal(req.FHIRCode, result.FHIRCode)
 }
 
 func (s *KepegawaianJabatanServiceTestSuite) Test_GetJobTitleKategoriByID_Success() {

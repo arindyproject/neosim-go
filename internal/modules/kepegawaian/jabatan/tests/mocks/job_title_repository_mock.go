@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"context"
+
 	"neosim_go/internal/modules/kepegawaian/jabatan/dto"
 	"neosim_go/internal/modules/kepegawaian/jabatan/models"
 )
@@ -24,11 +25,17 @@ func (m *KepegawaianJabatanRepositoryMock) GetJobTitleByID(ctx context.Context, 
 
 func (m *KepegawaianJabatanRepositoryMock) ListSelectJobTitle(ctx context.Context, search string) ([]models.JobTitle, error) {
 	args := m.Called(search)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
 	return args.Get(0).([]models.JobTitle), args.Error(1)
 }
 
 func (m *KepegawaianJabatanRepositoryMock) ListJobTitle(ctx context.Context, page, pageSize int, filter *dto.FilterJobTitleRequest) ([]models.JobTitle, int64, error) {
 	args := m.Called(page, pageSize, filter)
+	if args.Get(0) == nil {
+		return nil, args.Get(1).(int64), args.Error(2)
+	}
 	return args.Get(0).([]models.JobTitle), args.Get(1).(int64), args.Error(2)
 }
 

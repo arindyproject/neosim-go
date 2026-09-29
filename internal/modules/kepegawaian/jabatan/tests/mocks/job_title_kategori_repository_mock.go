@@ -27,11 +27,6 @@ func (m *KepegawaianJabatanRepositoryMock) ListSelectJobTitleKategori(ctx contex
 	return args.Get(0).([]models.JobTitleKategori), args.Error(1)
 }
 
-func (m *KepegawaianJabatanRepositoryMock) CheckJobTitleKategori(ctx context.Context, id int64) (bool, error) {
-	args := m.Called(id)
-	return args.Bool(0), args.Error(1)
-}
-
 func (m *KepegawaianJabatanRepositoryMock) ListJobTitleKategori(ctx context.Context, page, pageSize int, filter *dto.FilterJobTitleKategoriRequest) ([]models.JobTitleKategori, int64, error) {
 	args := m.Called(page, pageSize, filter)
 	return args.Get(0).([]models.JobTitleKategori), args.Get(1).(int64), args.Error(2)
@@ -49,10 +44,22 @@ func (m *KepegawaianJabatanRepositoryMock) DeleteJobTitleKategori(ctx context.Co
 
 func (m *KepegawaianJabatanRepositoryMock) GetJobTitleKategoriByCode(ctx context.Context, code string) (*models.JobTitleKategori, error) {
 	args := m.Called(code)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
 	return args.Get(0).(*models.JobTitleKategori), args.Error(1)
 }
 
 func (m *KepegawaianJabatanRepositoryMock) GetJobTitleKategoriByLabel(ctx context.Context, label string) (*models.JobTitleKategori, error) {
 	args := m.Called(label)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
 	return args.Get(0).(*models.JobTitleKategori), args.Error(1)
+}
+
+// PERBAIKAN: Pastikan ctx DAN id dimasukkan ke dalam m.Called
+func (m *KepegawaianJabatanRepositoryMock) CheckJobTitleKategori(ctx context.Context, id int64) (bool, error) {
+	args := m.Called(ctx, id) // <-- Tambahkan ctx di sini
+	return args.Bool(0), args.Error(1)
 }

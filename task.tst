@@ -6,3 +6,5 @@
 
 make gen-module name=artikel;make gen-module name=artikel add=kategori;make gen-module name=artikel sub=kategori add=tag
 make gen-module name=kepegawaian add=alamat;make gen-module name=kepegawaian sub=jabatan add=job_title_kategori
+
+clear; make gen-module name=kepegawaian sub=pegawai add=status_pegawai

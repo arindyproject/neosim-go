@@ -48,7 +48,7 @@ func (r *registryModule) InitRoutes(e *echo.Echo) {
 		r.cfg.JWTRefreshTokenExpDays,
 	)
 	userRepo := userRepositories.NewRepository(r.db)
-	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo,userRepo, r.cfg).InitRoutes(e)
+	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo, userRepo, r.cfg).InitRoutes(e)
 }
 
 func (r *registryModule) Models() []interface{} {
@@ -66,6 +66,7 @@ func (r *registryModule) MigrateSQL(sqlDB *sql.DB) error {
 	if err := migrations.MigrateKepegawaianPegawaiWithSQL(sqlDB); err != nil {
 		return err
 	}
+
 	// GEN:ITEM_MIGRATIONS
 	return nil
 }

@@ -42,16 +42,16 @@ func (m *KepegawaianJabatanRepositoryMock) DeletePositionKategori(ctx context.Co
 	return args.Error(0)
 }
 
-func (m *KepegawaianJabatanRepositoryMock) GetPositionKategoriByCode(ctx context.Context, code string) (*models.PositionKategori, error) {
-	args := m.Called(code)
+func (m *KepegawaianJabatanRepositoryMock) GetPositionKategoriByLabel(ctx context.Context, label string) (*models.PositionKategori, error) {
+	args := m.Called(label)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*models.PositionKategori), args.Error(1)
 }
 
-func (m *KepegawaianJabatanRepositoryMock) GetPositionKategoriByLabel(ctx context.Context, label string) (*models.PositionKategori, error) {
-	args := m.Called(label)
+func (m *KepegawaianJabatanRepositoryMock) GetPositionKategoriByCode(ctx context.Context, code string) (*models.PositionKategori, error) {
+	args := m.Called(code)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

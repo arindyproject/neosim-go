@@ -72,14 +72,22 @@ func (s *KepegawaianJabatanServiceTestSuite) SetupTest() {
 
 	s.svc = services.NewKepegawaianJabatanService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.masterDepartemenRepo, s.cfg, cacheManager)
 
-	// Stub default agar buildCreator/buildAuditMaps tidak panic saat memanggil userRepo.
-	// Boleh dipanggil 0 kali atau lebih (.Maybe()) tergantung skenario test.
 	s.userRepo.On("GetByID", mock.Anything).Return(nil, nil).Maybe()
 	s.userRepo.On("GetByIDs", mock.Anything).Return(nil, nil).Maybe()
 
-	s.repo.On("CheckJobTitleKategori", mock.Anything, mock.Anything).Return(true, nil).Maybe()
-}
+	// PERBAIKAN: Tambahkan mock.Anything kedua untuk argumen ctx
+	s.repo.On("GetJobTitleKategoriByCode", mock.Anything, mock.Anything).Return(nil, nil).Maybe()
+	s.repo.On("GetJobTitleKategoriByLabel", mock.Anything, mock.Anything).Return(nil, nil).Maybe()
 
+	s.repo.On("GetPositionKategoriByCode", mock.Anything, mock.Anything).Return(nil, nil).Maybe()
+	s.repo.On("GetPositionKategoriByLabel", mock.Anything, mock.Anything).Return(nil, nil).Maybe()
+
+	s.repo.On("GetJobTitleRumpunProfesiByCode", mock.Anything, mock.Anything).Return(nil, nil).Maybe()
+	s.repo.On("GetJobTitleRumpunProfesiByLabel", mock.Anything, mock.Anything).Return(nil, nil).Maybe()
+
+	//s.repo.On("GetSpecializationByCode", mock.Anything, mock.Anything).Return(nil, nil).Maybe()
+	s.repo.On("GetSpecializationByLabel", mock.Anything, mock.Anything).Return(nil, nil).Maybe()
+}
 func TestKepegawaianJabatanService(t *testing.T) {
 	suite.Run(t, new(KepegawaianJabatanServiceTestSuite))
 }
@@ -102,6 +110,12 @@ func (s *KepegawaianJabatanServiceTestSuite) mockHasPermission(perm string, resu
 
 func (s *KepegawaianJabatanServiceTestSuite) mockNoPermissions() {
 	s.rbacRepo.On("HasPermission", regularActor().UserID, mock.Anything, mock.Anything).Return(false, nil)
+}
+
+// mockJobTitleCodeAvailable men-stub ExistsByCode agar kode dianggap belum
+// dipakai. excludeID 0 untuk create, ID yang diedit untuk update.
+func (s *KepegawaianJabatanServiceTestSuite) mockJobTitleCodeAvailable(code string, excludeID int64) {
+	s.repo.On("ExistsByCode", code, excludeID).Return(false, nil).Once()
 }
 
 // newCreateReq membuat request create yang valid tanpa spesialisasi
@@ -225,7 +239,10 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_CreateJabatan_DefaultIsAktifTr
 
 	s.repo.On("CreateJabatan", mock.MatchedBy(func(m *models.KepegawaianJabatan) bool {
 		return m.IsAktif && !m.IsPrimary && m.TanggalSelesai == nil
-	})).Return(nil)
+	})).Run(func(args mock.Arguments) {
+		args.Get(0).(*models.KepegawaianJabatan).ID = 1
+	}).Return(nil)
+	s.repo.On("GetJabatanByID", int64(1)).Return(nil, nil)
 
 	result, err := s.svc.CreateJabatan(context.Background(), req, actor)
 
@@ -239,6 +256,7 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_CreateJabatan_DefaultIsAktifFa
 	req.TanggalSelesai = ptrTo("2024-06-30")
 	actor := superadminActor()
 
+	s.mockCreateSetsID(1)
 	s.repo.On("CreateJabatan", mock.MatchedBy(func(m *models.KepegawaianJabatan) bool {
 		return !m.IsAktif && m.TanggalSelesai != nil
 	})).Return(nil)
@@ -258,7 +276,10 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_CreateJabatan_ExplicitIsAktifO
 
 	s.repo.On("CreateJabatan", mock.MatchedBy(func(m *models.KepegawaianJabatan) bool {
 		return !m.IsAktif
-	})).Return(nil)
+	})).Run(func(args mock.Arguments) {
+		args.Get(0).(*models.KepegawaianJabatan).ID = 1
+	}).Return(nil)
+	s.repo.On("GetJabatanByID", int64(1)).Return(nil, nil)
 
 	result, err := s.svc.CreateJabatan(context.Background(), req, actor)
 
@@ -395,7 +416,11 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_CreateJabatan_PrimaryInactive_
 	req.IsPrimary = ptrTo(true)
 	req.TanggalSelesai = ptrTo("2024-06-30") // otomatis is_aktif = false
 
-	s.repo.On("CreateJabatan", mock.AnythingOfType("*models.KepegawaianJabatan")).Return(nil)
+	s.repo.On("CreateJabatan", mock.AnythingOfType("*models.KepegawaianJabatan")).
+		Run(func(args mock.Arguments) {
+			args.Get(0).(*models.KepegawaianJabatan).ID = 1
+		}).Return(nil)
+	s.repo.On("GetJabatanByID", int64(1)).Return(nil, nil)
 
 	result, err := s.svc.CreateJabatan(context.Background(), req, superadminActor())
 

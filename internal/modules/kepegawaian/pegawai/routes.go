@@ -1,8 +1,8 @@
 package pegawai
 
 import (
-	"neosim_go/internal/modules/kepegawaian/pegawai/handlers"
 	authMiddlewares "neosim_go/internal/modules/auth/middlewares"
+	"neosim_go/internal/modules/kepegawaian/pegawai/handlers"
 	"neosim_go/internal/shared/utils"
 
 	"github.com/labstack/echo/v5"
@@ -17,5 +17,6 @@ func RegisterRoutes(e *echo.Echo, h *handlers.KepegawaianPegawaiHandler, jwtMana
 	g.POST("", h.CreatePegawai)
 	g.PUT("/:id", h.UpdatePegawai)
 	g.DELETE("/:id", h.DeletePegawai)
+
 	// GEN:ITEM_ROUTES
 }

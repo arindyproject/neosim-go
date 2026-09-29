@@ -29,11 +29,6 @@ func (m *KepegawaianJabatanRepositoryMock) GetJabatanByID(ctx context.Context, i
 	return args.Get(0).(*models.KepegawaianJabatan), args.Error(1)
 }
 
-func (m *KepegawaianJabatanRepositoryMock) GetJabatanByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int) ([]models.KepegawaianJabatan, int64, error) {
-	args := m.Called(pegawaiID, page, pageSize)
-	return args.Get(0).([]models.KepegawaianJabatan), args.Get(1).(int64), args.Error(2)
-}
-
 func (m *KepegawaianJabatanRepositoryMock) GetByIDs(ctx context.Context, ids []int64) ([]models.KepegawaianJabatan, error) {
 	args := m.Called(ids)
 	if args.Get(0) == nil {
@@ -44,6 +39,9 @@ func (m *KepegawaianJabatanRepositoryMock) GetByIDs(ctx context.Context, ids []i
 
 func (m *KepegawaianJabatanRepositoryMock) ListJabatan(ctx context.Context, page, pageSize int, filter *dto.FilterKepegawaianJabatanRequest) ([]models.KepegawaianJabatan, int64, error) {
 	args := m.Called(page, pageSize, filter)
+	if args.Get(0) == nil {
+		return nil, args.Get(1).(int64), args.Error(2)
+	}
 	return args.Get(0).([]models.KepegawaianJabatan), args.Get(1).(int64), args.Error(2)
 }
 
@@ -60,4 +58,12 @@ func (m *KepegawaianJabatanRepositoryMock) DeleteJabatan(ctx context.Context, id
 func (m *KepegawaianJabatanRepositoryMock) ExistsPrimaryAktifByPegawai(ctx context.Context, pegawaiID, excludeID int64) (bool, error) {
 	args := m.Called(pegawaiID, excludeID)
 	return args.Bool(0), args.Error(1)
+}
+
+func (m *KepegawaianJabatanRepositoryMock) GetJabatanByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int) ([]models.KepegawaianJabatan, int64, error) {
+	args := m.Called(pegawaiID, page, pageSize)
+	if args.Get(0) == nil {
+		return nil, args.Get(1).(int64), args.Error(2)
+	}
+	return args.Get(0).([]models.KepegawaianJabatan), args.Get(1).(int64), args.Error(2)
 }
