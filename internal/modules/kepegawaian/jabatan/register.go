@@ -13,6 +13,7 @@ import (
 
 	authContracts "neosim_go/internal/modules/auth/contracts"
 	authRepositories "neosim_go/internal/modules/auth/repositories"
+	pegawaiRepositories "neosim_go/internal/modules/kepegawaian/pegawai/repositories"
 	masterDepartemenRepositories "neosim_go/internal/modules/master/departemen/repositories"
 	rbacContracts "neosim_go/internal/modules/rbac/contracts"
 	rbacRepositories "neosim_go/internal/modules/rbac/repositories"
@@ -67,7 +68,8 @@ func (r *registryModule) InitRoutes(e *echo.Echo) {
 	)
 	userRepo := userRepositories.NewRepository(r.db)
 	departemenRepo := masterDepartemenRepositories.NewMasterDepartemenRepository(r.db)
-	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo, userRepo, departemenRepo, r.cfg, r.cacheManager).InitRoutes(e)
+	pegawaiRepo := pegawaiRepositories.NewKepegawaianPegawaiRepository(r.db)
+	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo, userRepo, departemenRepo, pegawaiRepo, r.cfg, r.cacheManager).InitRoutes(e)
 }
 
 func (r *registryModule) Models() []interface{} {

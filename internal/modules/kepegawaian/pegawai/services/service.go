@@ -7,8 +7,10 @@ import (
 
 	authContracts "neosim_go/internal/modules/auth/contracts"
 	"neosim_go/internal/modules/kepegawaian/pegawai/models"
+	masterContracts "neosim_go/internal/modules/master/master/contracts"
 	rbacContracts "neosim_go/internal/modules/rbac/contracts"
 	userContracts "neosim_go/internal/modules/users/contracts"
+	"neosim_go/internal/shared/cache"
 	he "neosim_go/internal/shared/httputil"
 )
 
@@ -19,11 +21,13 @@ import (
 // di bawah ini otomatis mencakup method item begitu contracts.Repository
 // di-embed dengan interface repository item (lihat contracts/interfaces.go).
 type service struct {
-	repo     pegawaiContracts.Repository
-	rbacRepo rbacContracts.RBACRepository
-	authRepo authContracts.AuthRepository
-	userRepo userContracts.Repository
-	cfg      *config.Config
+	repo       pegawaiContracts.Repository
+	rbacRepo   rbacContracts.RBACRepository
+	authRepo   authContracts.AuthRepository
+	userRepo   userContracts.Repository
+	masterRepo masterContracts.Repository
+	cfg        *config.Config
+	cache      *cache.Manager // <--- Gunakan Cache Manager
 }
 
 // NewKepegawaianPegawaiService membuat instance service baru
@@ -32,14 +36,18 @@ func NewKepegawaianPegawaiService(
 	rbacRepo rbacContracts.RBACRepository,
 	authRepo authContracts.AuthRepository,
 	userRepo userContracts.Repository,
+	masterRepo masterContracts.Repository,
 	cfg *config.Config,
+	cacheManager *cache.Manager, // <--- Terima Cache Manager
 ) pegawaiContracts.Service {
 	return &service{
-		repo:     repo,
-		rbacRepo: rbacRepo,
-		authRepo: authRepo,
-		userRepo: userRepo,
-		cfg:      cfg,
+		repo:       repo,
+		rbacRepo:   rbacRepo,
+		authRepo:   authRepo,
+		userRepo:   userRepo,
+		masterRepo: masterRepo,
+		cfg:        cfg,
+		cache:      cacheManager,
 	}
 }
 

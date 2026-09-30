@@ -1,0 +1,191 @@
+package handlers
+
+import (
+	"io"
+	"net/http"
+
+	"neosim_go/internal/modules/kepegawaian/pegawai/dto"
+	"neosim_go/internal/shared/binding"
+	he "neosim_go/internal/shared/httputil"
+	"neosim_go/internal/shared/response"
+	"neosim_go/internal/shared/validator"
+
+	"github.com/labstack/echo/v5"
+)
+
+// Method di bawah ini ditempelkan ke struct KepegawaianPegawaiHandler yang
+// sama dengan handler entitas utama (lihat handlers/handler.go). Nama method
+// diberi suffix Status agar tidak bentrok dengan method entitas utama
+// pada struct handler yang sama.
+
+// ─── ListSelectStatus ────────────────────────────────────────────────
+//
+//	@Summary		Get list of Status for select
+//	@Description	Get list of Status for select with optional search
+//	@Tags			kepegawaian/pegawai/statuss
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			search	query	string	false	"Search by label or code"
+//	@Success		200		{object}	response.MyGoResponse{data=[]dto.StatusResponse}
+//	@Router			/kepegawaian/pegawai/statuss/select [get]
+func (h *KepegawaianPegawaiHandler) ListSelectStatus(c *echo.Context) error {
+	search := c.QueryParam("search")
+
+	actor := he.BuildAuthContext(c)
+	items, err := h.service.ListSelectStatus(c.Request().Context(), search, actor)
+	if err != nil {
+		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data : "+err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", items, nil)
+}
+
+// ─── ListStatus ──────────────────────────────────────────────────────
+//
+//	@Summary		Get list of Status
+//	@Description	Get paginated list of Status
+//	@Tags			kepegawaian/pegawai/statuss
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			name		query		string	false	"Filter by name (partial match)"
+//	@Param			page		query		int		false	"Page number"
+//	@Param			page_size	query		int		false	"Page size"
+//	@Success		200			{object}	response.MyGoResponse{data=[]dto.StatusResponse}
+//	@Router			/kepegawaian/pegawai/statuss [get]
+func (h *KepegawaianPegawaiHandler) ListStatus(c *echo.Context) error {
+	filter := dto.FilterStatusRequest{Code: c.QueryParam("code"), Label: c.QueryParam("label")}
+	page, pageSize := he.ParsePagination(c, h.cfg)
+
+	actor := he.BuildAuthContext(c)
+	items, total, err := h.service.ListStatus(c.Request().Context(), page, pageSize, &filter, actor)
+	if err != nil {
+		return response.Response(c, http.StatusInternalServerError, false, err.Error(), nil, nil)
+	}
+	return response.Paginated(c, http.StatusOK, true, "Berhasil mengambil data", items, total, page, pageSize)
+}
+
+// ─── GetStatusByID ───────────────────────────────────────────────────
+//
+//	@Summary		Get Status
+//	@Description	Get Status by :id
+//	@Tags			kepegawaian/pegawai/statuss
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		int	true	"Status ID"
+//	@Success		200	{object}	response.MyGoResponse{data=dto.StatusResponse}
+//	@Router			/kepegawaian/pegawai/statuss/{id} [get]
+func (h *KepegawaianPegawaiHandler) GetStatusByID(c *echo.Context) error {
+	id, err := he.ParseID(c)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
+	}
+	actor := he.BuildAuthContext(c)
+	item, err := h.service.GetStatusByID(c.Request().Context(), id, actor)
+	if err != nil {
+		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", item, nil)
+}
+
+// ─── CreateStatus ────────────────────────────────────────────────────
+//
+//	@Summary		Create Status
+//	@Description	Create New Status
+//	@Tags			kepegawaian/pegawai/statuss
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		dto.CreateStatusRequest	true	"Create Request"
+//	@Success		201		{object}	response.MyGoResponse{data=dto.StatusResponse}
+//	@Router			/kepegawaian/pegawai/statuss [post]
+func (h *KepegawaianPegawaiHandler) CreateStatus(c *echo.Context) error {
+	var req dto.CreateStatusRequest
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Gagal membaca request body", nil, err.Error())
+	}
+
+	if errs := binding.BindErrors(body, &req); len(errs) > 0 {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (binding)", nil, errs)
+	}
+	if errs := validator.Validate(req); errs != nil {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (validator)", nil, errs)
+	}
+	actor := he.BuildAuthContext(c)
+	item, err := h.service.CreateStatus(c.Request().Context(), &req, actor)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusCreated, true, "Data berhasil dibuat", item, nil)
+}
+
+// ─── UpdateStatus ────────────────────────────────────────────────────
+//
+//	@Summary		Update Status
+//	@Description	Update Status by :id
+//	@Tags			kepegawaian/pegawai/statuss
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		int							true	"Status ID"
+//	@Param			body	body		dto.UpdateStatusRequest	true	"Update Request"
+//	@Success		200		{object}	response.MyGoResponse{data=dto.StatusResponse}
+//	@Router			/kepegawaian/pegawai/statuss/{id} [put]
+func (h *KepegawaianPegawaiHandler) UpdateStatus(c *echo.Context) error {
+	id, err := he.ParseID(c)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
+	}
+
+	var req dto.UpdateStatusRequest
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Gagal membaca request body", nil, err.Error())
+	}
+
+	if errs := binding.BindErrors(body, &req); len(errs) > 0 {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (binding)", nil, errs)
+	}
+	if errs := validator.Validate(req); errs != nil {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal (validator)", nil, errs)
+	}
+	actor := he.BuildAuthContext(c)
+	item, err := h.service.UpdateStatus(c.Request().Context(), id, &req, actor)
+	if err != nil {
+		status := http.StatusBadRequest
+		if err.Error() == "Status tidak ditemukan" {
+			status = http.StatusNotFound
+		}
+		return response.Response(c, status, false, err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Data berhasil diupdate", item, nil)
+}
+
+// ─── DeleteStatus ────────────────────────────────────────────────────
+//
+//	@Summary		Delete Status
+//	@Description	Delete Status by :id
+//	@Tags			kepegawaian/pegawai/statuss
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		int	true	"Status ID"
+//	@Success		200	{object}	response.MyGoResponse{}
+//	@Router			/kepegawaian/pegawai/statuss/{id} [delete]
+func (h *KepegawaianPegawaiHandler) DeleteStatus(c *echo.Context) error {
+	id, err := he.ParseID(c)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
+	}
+	actor := he.BuildAuthContext(c)
+	if err := h.service.DeleteStatus(c.Request().Context(), id, actor); err != nil {
+		status := http.StatusInternalServerError
+		if err.Error() == "Status tidak ditemukan" {
+			status = http.StatusNotFound
+		}
+		return response.Response(c, status, false, err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Data berhasil dihapus", nil, nil)
+}

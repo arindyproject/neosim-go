@@ -7,6 +7,7 @@ import (
 
 	authContracts "neosim_go/internal/modules/auth/contracts"
 	"neosim_go/internal/modules/kepegawaian/jabatan/models"
+	pegawaiContracts "neosim_go/internal/modules/kepegawaian/pegawai/contracts"
 	masterDepartemenContracts "neosim_go/internal/modules/master/departemen/contracts"
 	rbacContracts "neosim_go/internal/modules/rbac/contracts"
 	userContracts "neosim_go/internal/modules/users/contracts"
@@ -26,6 +27,7 @@ type service struct {
 	authRepo       authContracts.AuthRepository
 	userRepo       userContracts.Repository
 	departemenRepo masterDepartemenContracts.Repository
+	pegawaiRepo    pegawaiContracts.Repository
 	cfg            *config.Config
 	cache          *cache.Manager // <--- Gunakan Cache Manager
 }
@@ -37,6 +39,7 @@ func NewKepegawaianJabatanService(
 	authRepo authContracts.AuthRepository,
 	userRepo userContracts.Repository,
 	departemenRepo masterDepartemenContracts.Repository,
+	pegawaiRepo pegawaiContracts.Repository,
 	cfg *config.Config,
 	cacheManager *cache.Manager, // <--- Terima Cache Manager
 ) jabatanContracts.Service {
@@ -46,6 +49,7 @@ func NewKepegawaianJabatanService(
 		authRepo:       authRepo,
 		userRepo:       userRepo,
 		departemenRepo: departemenRepo,
+		pegawaiRepo:    pegawaiRepo,
 		cfg:            cfg,
 		cache:          cacheManager,
 	}

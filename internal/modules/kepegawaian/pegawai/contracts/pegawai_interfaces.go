@@ -13,6 +13,9 @@ import (
 type KepegawaianPegawaiRepository interface {
 	CreatePegawai(ctx context.Context, m *models.KepegawaianPegawai) error
 	GetPegawaiByID(ctx context.Context, id int64) (*models.KepegawaianPegawai, error)
+	GetPegawaiByNIK(ctx context.Context, nik string) (*models.KepegawaianPegawai, error)
+	GetPegawaiByNomorPegawai(ctx context.Context, nomor string) (*models.KepegawaianPegawai, error)
+	GetPegawaiByUserID(ctx context.Context, userID int64) (*models.KepegawaianPegawai, error)
 	ListPegawai(ctx context.Context, page, pageSize int, filter *dto.FilterKepegawaianPegawaiRequest) ([]models.KepegawaianPegawai, int64, error)
 	UpdatePegawai(ctx context.Context, m *models.KepegawaianPegawai) error
 	DeletePegawai(ctx context.Context, id int64, deletedBy int64) error

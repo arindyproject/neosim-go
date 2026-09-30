@@ -100,8 +100,6 @@ func main() {
 	runSeeder("departemen", masterDepartemen.NewMasterDepartemenSeeder(db), *fresh)
 
 	// Kepegawaian==============================================================
-	runSeeder("Pegawai", masterKepegawaianPegawai.NewKepegawaianPegawaiSeeder(db), *fresh)
-
 	// Kepegawaian - Identifier
 	runSeeder("Identifier Type", masterKepegawaianIdentifier.NewTipeSeeder(db), *fresh)
 	runSeeder("Identifier", masterKepegawaianIdentifier.NewKepegawaianIdentifierSeeder(db), *fresh)
@@ -123,7 +121,7 @@ func main() {
 	runSeeder("alamat", masterKepegawaianAlamat.NewKepegawaianAlamatSeeder(db), *fresh)
 
 	// Kepegawaian - Jabatan (urutan mengikuti dependensi FK)
-	runSeeder("jabatan - posisi kategori", masterKepegawaianJabatan.NewPositionKategoriSeeder(db), *fresh)
+	runSeeder("jabatan - posisi - kategori", masterKepegawaianJabatan.NewPositionKategoriSeeder(db), *fresh)
 	runSeeder("jabatan - posisi", masterKepegawaianJabatan.NewPositionSeeder(db), *fresh)
 	runSeeder("jabatan - job title - kategori", masterKepegawaianJabatan.NewJobTitleKategoriSeeder(db), *fresh)
 	runSeeder("jabatan - job title - rumpun_profesi", masterKepegawaianJabatan.NewJobTitleRumpunProfesiSeeder(db), *fresh)
@@ -131,6 +129,11 @@ func main() {
 	runSeeder("jabatan - spesialisasi - ketegori", masterKepegawaianJabatan.NewSpecializationKategoriSeeder(db), *fresh)
 	runSeeder("jabatan - spesialisasi", masterKepegawaianJabatan.NewSpecializationSeeder(db), *fresh)
 	runSeeder("jabatan", masterKepegawaianJabatan.NewKepegawaianJabatanSeeder(db), *fresh)
+
+	// Kepegawaian - Pegawai
+	runSeeder("Pegawai - jenis", masterKepegawaianPegawai.NewJenisSeeder(db), *fresh)
+	runSeeder("Pegawai - status", masterKepegawaianPegawai.NewStatusSeeder(db), *fresh)
+	runSeeder("Pegawai", masterKepegawaianPegawai.NewKepegawaianPegawaiSeeder(db), *fresh)
 	// Kepegawaian==============================================================
 
 	// Artikel------------------------------------------------------------------

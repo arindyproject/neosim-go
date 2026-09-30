@@ -20,6 +20,8 @@ import (
 	"neosim_go/internal/modules/kepegawaian/jabatan/tests/mocks"
 
 	jabatanContracts "neosim_go/internal/modules/kepegawaian/jabatan/contracts"
+	pegawaiModels "neosim_go/internal/modules/kepegawaian/pegawai/models"
+	pegawaiMock "neosim_go/internal/modules/kepegawaian/pegawai/tests/mocks"
 	rbacModels "neosim_go/internal/modules/rbac/models"
 	"neosim_go/internal/shared/cache"
 	appErrors "neosim_go/internal/shared/errors"
@@ -54,6 +56,7 @@ type KepegawaianJabatanServiceTestSuite struct {
 	authRepo             *mocks.AuthRepositoryMock
 	userRepo             *mocks.UserRepositoryMock
 	masterDepartemenRepo *masterMocks.MasterDepartemenRepositoryMock
+	pegawaiRepo          *pegawaiMock.KepegawaianPegawaiRepositoryMock
 	svc                  jabatanContracts.Service
 	cfg                  *config.Config
 }
@@ -64,13 +67,17 @@ func (s *KepegawaianJabatanServiceTestSuite) SetupTest() {
 	s.authRepo = new(mocks.AuthRepositoryMock)
 	s.userRepo = new(mocks.UserRepositoryMock)
 	s.masterDepartemenRepo = new(masterMocks.MasterDepartemenRepositoryMock)
+	s.pegawaiRepo = new(pegawaiMock.KepegawaianPegawaiRepositoryMock)
 	cacheManager := cache.NewManager(nil, false, 0)
 	s.cfg = &config.Config{
 		DefaultPageSize:    10,
 		DefaultPageSizeMax: 10,
 	}
 
-	s.svc = services.NewKepegawaianJabatanService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.masterDepartemenRepo, s.cfg, cacheManager)
+	s.svc = services.NewKepegawaianJabatanService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.masterDepartemenRepo, s.pegawaiRepo, s.cfg, cacheManager)
+
+	s.pegawaiRepo.On("GetPegawaiByID", mock.Anything, mock.Anything).
+		Return(&pegawaiModels.KepegawaianPegawai{ID: 10}, nil).Maybe()
 
 	s.userRepo.On("GetByID", mock.Anything).Return(nil, nil).Maybe()
 	s.userRepo.On("GetByIDs", mock.Anything).Return(nil, nil).Maybe()

@@ -20,6 +20,7 @@ import (
 
 	kualifikasiContracts "neosim_go/internal/modules/kepegawaian/kualifikasi/contracts"
 	pegawaiModels "neosim_go/internal/modules/kepegawaian/pegawai/models"
+	pegawaiMock "neosim_go/internal/modules/kepegawaian/pegawai/tests/mocks"
 	rbacModels "neosim_go/internal/modules/rbac/models"
 	"neosim_go/internal/shared/cache"
 	appErrors "neosim_go/internal/shared/errors"
@@ -51,7 +52,7 @@ type KepegawaianKualifikasiServiceTestSuite struct {
 	rbacRepo    *mocks.RBACRepositoryMock
 	authRepo    *mocks.AuthRepositoryMock
 	userRepo    *mocks.UserRepositoryMock
-	pegawaiRepo *mocks.KepegawaianPegawaiRepositoryMock
+	pegawaiRepo *pegawaiMock.KepegawaianPegawaiRepositoryMock
 	svc         kualifikasiContracts.Service
 	cfg         *config.Config
 }
@@ -61,7 +62,7 @@ func (s *KepegawaianKualifikasiServiceTestSuite) SetupTest() {
 	s.rbacRepo = new(mocks.RBACRepositoryMock)
 	s.authRepo = new(mocks.AuthRepositoryMock)
 	s.userRepo = new(mocks.UserRepositoryMock)
-	s.pegawaiRepo = new(mocks.KepegawaianPegawaiRepositoryMock)
+	s.pegawaiRepo = new(pegawaiMock.KepegawaianPegawaiRepositoryMock)
 	s.cfg = &config.Config{
 		DefaultPageSize:    10,
 		DefaultPageSizeMax: 10,

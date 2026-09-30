@@ -6,6 +6,8 @@ package contracts
 type Repository interface {
 	KepegawaianPegawaiRepository
 
+	StatusRepository
+	JenisRepository
 	// GEN:ITEM_REPOSITORY_INTERFACE
 }
 
@@ -15,5 +17,7 @@ type Repository interface {
 type Service interface {
 	KepegawaianPegawaiService
 
+	StatusService
+	JenisService
 	// GEN:ITEM_SERVICE_INTERFACE
 }

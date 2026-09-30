@@ -18,5 +18,20 @@ func RegisterRoutes(e *echo.Echo, h *handlers.KepegawaianPegawaiHandler, jwtMana
 	g.PUT("/:id", h.UpdatePegawai)
 	g.DELETE("/:id", h.DeletePegawai)
 
+	gStatus := e.Group("/api/v1/kepegawaian/pegawai/statuss", jwt)
+	gStatus.GET("", h.ListStatus)
+	gStatus.GET("/select", h.ListSelectStatus)
+	gStatus.GET("/:id", h.GetStatusByID)
+	gStatus.POST("", h.CreateStatus)
+	gStatus.PUT("/:id", h.UpdateStatus)
+	gStatus.DELETE("/:id", h.DeleteStatus)
+
+	gJenis := e.Group("/api/v1/kepegawaian/pegawai/jeniss", jwt)
+	gJenis.GET("", h.ListJenis)
+	gJenis.GET("/select", h.ListSelectJenis)
+	gJenis.GET("/:id", h.GetJenisByID)
+	gJenis.POST("", h.CreateJenis)
+	gJenis.PUT("/:id", h.UpdateJenis)
+	gJenis.DELETE("/:id", h.DeleteJenis)
 	// GEN:ITEM_ROUTES
 }

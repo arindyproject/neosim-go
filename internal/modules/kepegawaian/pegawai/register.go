@@ -7,10 +7,12 @@ import (
 	"neosim_go/internal/apps"
 	"neosim_go/internal/modules/kepegawaian/pegawai/migrations"
 	"neosim_go/internal/modules/kepegawaian/pegawai/models"
+	"neosim_go/internal/shared/cache"
 	"neosim_go/internal/shared/utils"
 
 	authContracts "neosim_go/internal/modules/auth/contracts"
 	authRepositories "neosim_go/internal/modules/auth/repositories"
+	masterRepositories "neosim_go/internal/modules/master/master/repositories"
 	rbacContracts "neosim_go/internal/modules/rbac/contracts"
 	rbacRepositories "neosim_go/internal/modules/rbac/repositories"
 	userRepositories "neosim_go/internal/modules/users/repositories"
@@ -20,10 +22,11 @@ import (
 )
 
 type registryModule struct {
-	db       *gorm.DB
-	cfg      *config.Config
-	rbacRepo rbacContracts.RBACRepository
-	authRepo authContracts.AuthRepository
+	db           *gorm.DB
+	cfg          *config.Config
+	rbacRepo     rbacContracts.RBACRepository
+	authRepo     authContracts.AuthRepository
+	cacheManager *cache.Manager //CACHE
 }
 
 func init() {
@@ -48,12 +51,16 @@ func (r *registryModule) InitRoutes(e *echo.Echo) {
 		r.cfg.JWTRefreshTokenExpDays,
 	)
 	userRepo := userRepositories.NewRepository(r.db)
-	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo, userRepo, r.cfg).InitRoutes(e)
+	masterRepo := masterRepositories.NewMasterRepository(r.db)
+	NewModule(r.db, jwtManager, r.rbacRepo, r.authRepo, userRepo, masterRepo, r.cfg, r.cacheManager).InitRoutes(e)
 }
 
 func (r *registryModule) Models() []interface{} {
 	return []interface{}{
+		&models.Status{},
+		&models.Jenis{},
 		&models.KepegawaianPegawai{},
+
 		// GEN:ITEM_MODELS
 	}
 }
@@ -67,6 +74,12 @@ func (r *registryModule) MigrateSQL(sqlDB *sql.DB) error {
 		return err
 	}
 
+	if err := migrations.MigrateStatusWithSQL(sqlDB); err != nil {
+		return err
+	}
+	if err := migrations.MigrateJenisWithSQL(sqlDB); err != nil {
+		return err
+	}
 	// GEN:ITEM_MIGRATIONS
 	return nil
 }

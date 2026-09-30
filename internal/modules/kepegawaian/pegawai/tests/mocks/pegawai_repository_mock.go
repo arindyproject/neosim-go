@@ -29,6 +29,30 @@ func (m *KepegawaianPegawaiRepositoryMock) GetPegawaiByID(ctx context.Context, i
 	return args.Get(0).(*models.KepegawaianPegawai), args.Error(1)
 }
 
+func (m *KepegawaianPegawaiRepositoryMock) GetPegawaiByNIK(ctx context.Context, nik string) (*models.KepegawaianPegawai, error) {
+	args := m.Called(nik)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.KepegawaianPegawai), args.Error(1)
+}
+
+func (m *KepegawaianPegawaiRepositoryMock) GetPegawaiByNomorPegawai(ctx context.Context, nomor string) (*models.KepegawaianPegawai, error) {
+	args := m.Called(nomor)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.KepegawaianPegawai), args.Error(1)
+}
+
+func (m *KepegawaianPegawaiRepositoryMock) GetPegawaiByUserID(ctx context.Context, userID int64) (*models.KepegawaianPegawai, error) {
+	args := m.Called(userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.KepegawaianPegawai), args.Error(1)
+}
+
 func (m *KepegawaianPegawaiRepositoryMock) GetByIDs(ctx context.Context, ids []int64) ([]models.KepegawaianPegawai, error) {
 	args := m.Called(ids)
 	if args.Get(0) == nil {

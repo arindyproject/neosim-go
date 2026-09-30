@@ -26,6 +26,15 @@ func (s *service) CreateJabatan(ctx context.Context, req *dto.CreateKepegawaianJ
 			"Akses ditolak. Anda tidak memiliki hak akses untuk membuat KepegawaianJabatan baru.", nil)
 	}
 
+	// validasi keberadaan Pegawai
+	pegawaiMaster, err := s.pegawaiRepo.GetPegawaiByID(ctx, req.PegawaiID)
+	if err != nil {
+		return nil, appErrors.Internal("gagal mengambil data pegawai")
+	}
+	if pegawaiMaster == nil {
+		return nil, appErrors.Wrap(http.StatusUnprocessableEntity, "ID Pegawai tidak ditemukan.", nil)
+	}
+
 	tanggalMulai, err := parseJabatanDate(req.TanggalMulai)
 	if err != nil {
 		return nil, unprocessable("tanggal_mulai tidak valid (format YYYY-MM-DD)")

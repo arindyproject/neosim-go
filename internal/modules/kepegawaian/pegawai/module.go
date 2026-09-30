@@ -6,9 +6,11 @@ import (
 	"neosim_go/internal/modules/kepegawaian/pegawai/handlers"
 	"neosim_go/internal/modules/kepegawaian/pegawai/repositories"
 	"neosim_go/internal/modules/kepegawaian/pegawai/services"
+	"neosim_go/internal/shared/cache"
 	"neosim_go/internal/shared/utils"
 
 	authContracts "neosim_go/internal/modules/auth/contracts"
+	masterContracts "neosim_go/internal/modules/master/master/contracts"
 	rbacContracts "neosim_go/internal/modules/rbac/contracts"
 	userContracts "neosim_go/internal/modules/users/contracts"
 
@@ -30,10 +32,12 @@ func NewModule(
 	rbacRepo rbacContracts.RBACRepository,
 	authRepo authContracts.AuthRepository,
 	userRepo userContracts.Repository,
+	masterRepo masterContracts.Repository,
 	cfg *config.Config,
+	cacheManager *cache.Manager, // <--- Cache Manager
 ) *Module {
 	repo := repositories.NewKepegawaianPegawaiRepository(db)
-	svc := services.NewKepegawaianPegawaiService(repo, rbacRepo, authRepo,userRepo, cfg)
+	svc := services.NewKepegawaianPegawaiService(repo, rbacRepo, authRepo, userRepo, masterRepo, cfg, cacheManager)
 	handler := handlers.NewKepegawaianPegawaiHandler(svc, cfg)
 
 	return &Module{

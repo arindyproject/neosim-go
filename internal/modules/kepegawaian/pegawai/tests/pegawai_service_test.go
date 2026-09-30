@@ -21,8 +21,11 @@ import (
 
 	pegawaiContracts "neosim_go/internal/modules/kepegawaian/pegawai/contracts"
 	rbacModels "neosim_go/internal/modules/rbac/models"
+	"neosim_go/internal/shared/cache"
 	appErrors "neosim_go/internal/shared/errors"
 	he "neosim_go/internal/shared/httputil"
+
+	masterMock "neosim_go/internal/modules/master/master/tests/mocks"
 )
 
 func TestMain(m *testing.M) {
@@ -46,12 +49,13 @@ func TestMain(m *testing.M) {
 // struct service/repository, satu suite ini sudah cukup untuk semuanya.
 type KepegawaianPegawaiServiceTestSuite struct {
 	suite.Suite
-	repo     *mocks.KepegawaianPegawaiRepositoryMock
-	rbacRepo *mocks.RBACRepositoryMock
-	authRepo *mocks.AuthRepositoryMock
-	userRepo *mocks.UserRepositoryMock
-	svc      pegawaiContracts.Service
-	cfg      *config.Config
+	repo       *mocks.KepegawaianPegawaiRepositoryMock
+	rbacRepo   *mocks.RBACRepositoryMock
+	authRepo   *mocks.AuthRepositoryMock
+	userRepo   *mocks.UserRepositoryMock
+	masterRepo *masterMock.MasterRepositoryMock
+	svc        pegawaiContracts.Service
+	cfg        *config.Config
 }
 
 func (s *KepegawaianPegawaiServiceTestSuite) SetupTest() {
@@ -63,7 +67,9 @@ func (s *KepegawaianPegawaiServiceTestSuite) SetupTest() {
 		DefaultPageSize:    10,
 		DefaultPageSizeMax: 10,
 	}
-	s.svc = services.NewKepegawaianPegawaiService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.cfg)
+	s.masterRepo = new(masterMock.MasterRepositoryMock)
+	cacheManager := cache.NewManager(nil, false, 0)
+	s.svc = services.NewKepegawaianPegawaiService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.masterRepo, s.cfg, cacheManager)
 
 	// Stub default agar buildCreator/buildAuditMaps tidak panic saat memanggil userRepo.
 	// Boleh dipanggil 0 kali atau lebih (.Maybe()) tergantung skenario test.
