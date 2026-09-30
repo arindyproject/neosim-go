@@ -15,6 +15,7 @@ type KepegawaianPegawaiRepository interface {
 	GetPegawaiByID(ctx context.Context, id int64) (*models.KepegawaianPegawai, error)
 	GetPegawaiByNIK(ctx context.Context, nik string) (*models.KepegawaianPegawai, error)
 	GetPegawaiByNomorPegawai(ctx context.Context, nomor string) (*models.KepegawaianPegawai, error)
+	GetPegawaiByIHSNumber(ctx context.Context, ihs string) (*models.KepegawaianPegawai, error)
 	GetPegawaiByUserID(ctx context.Context, userID int64) (*models.KepegawaianPegawai, error)
 	ListPegawai(ctx context.Context, page, pageSize int, filter *dto.FilterKepegawaianPegawaiRequest) ([]models.KepegawaianPegawai, int64, error)
 	UpdatePegawai(ctx context.Context, m *models.KepegawaianPegawai) error

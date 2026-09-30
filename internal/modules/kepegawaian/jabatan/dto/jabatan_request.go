@@ -1,5 +1,7 @@
 package dto
 
+import "neosim_go/internal/shared/types"
+
 // CreateKepegawaianJabatanRequest request body untuk membuat KepegawaianJabatan baru
 type CreateKepegawaianJabatanRequest struct {
 	PegawaiID        int64  `json:"pegawai_id" validate:"required,gt=0"`
@@ -11,11 +13,11 @@ type CreateKepegawaianJabatanRequest struct {
 	IsPrimary *bool `json:"is_primary"`
 
 	// Format tanggal: YYYY-MM-DD
-	TanggalMulai   string  `json:"tanggal_mulai" validate:"required,datetime=2006-01-02"`
-	TanggalSelesai *string `json:"tanggal_selesai" validate:"omitempty,datetime=2006-01-02"`
+	TanggalMulai   types.DateOnly  `json:"tanggal_mulai" validate:"required" swaggertype:"string" format:"date" example:"1990-01-01"`
+	TanggalSelesai *types.DateOnly `json:"tanggal_selesai" validate:"omitempty" swaggertype:"string" format:"date" example:"1990-01-01"`
 
-	NomorSK   *string `json:"nomor_sk" validate:"omitempty,max=100"`
-	TanggalSK *string `json:"tanggal_sk" validate:"omitempty,datetime=2006-01-02"`
+	NomorSK   *string         `json:"nomor_sk" validate:"omitempty,max=100"`
+	TanggalSK *types.DateOnly `json:"tanggal_sk" validate:"omitempty" swaggertype:"string" format:"date" example:"1990-01-01"`
 
 	IsAktif *bool `json:"is_aktif"`
 }
@@ -29,11 +31,11 @@ type UpdateKepegawaianJabatanRequest struct {
 
 	IsPrimary *bool `json:"is_primary"`
 
-	TanggalMulai   *string `json:"tanggal_mulai" validate:"omitempty,datetime=2006-01-02"`
-	TanggalSelesai *string `json:"tanggal_selesai" validate:"omitempty,datetime=2006-01-02"`
+	TanggalMulai   *types.DateOnly `json:"tanggal_mulai" validate:"required" swaggertype:"string" format:"date" example:"1990-01-01"`
+	TanggalSelesai *types.DateOnly `json:"tanggal_selesai" validate:"omitempty" swaggertype:"string" format:"date" example:"1990-01-01"`
 
-	NomorSK   *string `json:"nomor_sk" validate:"omitempty,max=100"`
-	TanggalSK *string `json:"tanggal_sk" validate:"omitempty,datetime=2006-01-02"`
+	NomorSK   *string         `json:"nomor_sk" validate:"omitempty,max=100"`
+	TanggalSK *types.DateOnly `json:"tanggal_sk" validate:"omitempty" swaggertype:"string" format:"date" example:"1990-01-01"`
 
 	IsAktif *bool `json:"is_aktif"`
 }

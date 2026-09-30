@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -17,6 +18,7 @@ import (
 	"neosim_go/internal/modules/kepegawaian/pegawai/services"
 	"neosim_go/internal/modules/kepegawaian/pegawai/tests/factories"
 	"neosim_go/internal/modules/kepegawaian/pegawai/tests/mocks"
+	masterModels "neosim_go/internal/modules/master/master/models"
 	userModels "neosim_go/internal/modules/users/models"
 
 	pegawaiContracts "neosim_go/internal/modules/kepegawaian/pegawai/contracts"
@@ -24,6 +26,7 @@ import (
 	"neosim_go/internal/shared/cache"
 	appErrors "neosim_go/internal/shared/errors"
 	he "neosim_go/internal/shared/httputil"
+	"neosim_go/internal/shared/types"
 
 	masterMock "neosim_go/internal/modules/master/master/tests/mocks"
 )
@@ -97,25 +100,69 @@ func (s *KepegawaianPegawaiServiceTestSuite) mockNoPermissions() {
 	s.rbacRepo.On("HasPermission", regularActor().UserID, mock.Anything, mock.Anything).Return(false, nil)
 }
 
+// ── Helper ────────────────────────────────────────────────────────────────────
+
+func dateOnly(year int, month time.Month, day int) *types.DateOnly {
+	t := time.Date(year, month, day, 0, 0, 0, 0, time.UTC)
+	return types.NewDateOnlyPtr(&t)
+}
+
+func newCreateReq() *dto.CreateKepegawaianPegawaiRequest {
+	golDarah := int64(1)
+	return &dto.CreateKepegawaianPegawaiRequest{
+		NIK:                "3577010101900001",
+		NomorPegawai:       "PEG-000001",
+		NamaLengkap:        "Test Pegawai",
+		JenisKelaminID:     1,
+		TanggalLahir:       dateOnly(1990, 1, 1),
+		TempatLahir:        "Madiun",
+		GolonganDarahID:    &golDarah,
+		AgamaID:            1,
+		StatusPernikahanID: 1,
+		TanggalMasuk:       dateOnly(2020, 1, 1),
+		JenisID:            1,
+		StatusID:           1,
+	}
+}
+
+// mockCreateDeps men-stub semua dependensi jalur sukses CreatePegawai:
+// cek duplikat NIK/nomor, master kepegawaian, dan master umum.
+func (s *KepegawaianPegawaiServiceTestSuite) mockCreateDeps() {
+	s.repo.On("GetPegawaiByNIK", mock.Anything).Return(nil, nil)
+	s.repo.On("GetPegawaiByNomorPegawai", mock.Anything).Return(nil, nil)
+	s.repo.On("GetJenisByID", int64(1)).Return(&models.Jenis{ID: 1}, nil)
+	s.repo.On("GetStatusByID", int64(1)).Return(&models.Status{ID: 1}, nil)
+	s.masterRepo.On("GetByIDJenisKelamin", int64(1)).Return(&masterModels.MasterJenisKelamin{ID: 1}, nil)
+	s.masterRepo.On("GetByIDGolonganDarah", int64(1)).Return(&masterModels.MasterGolonganDarah{ID: 1}, nil)
+	s.masterRepo.On("GetByIDAgama", int64(1)).Return(&masterModels.MasterAgama{ID: 1}, nil)
+	s.masterRepo.On("GetByIDStatusPernikahan", int64(1)).Return(&masterModels.MasterStatusPernikahan{ID: 1}, nil)
+}
+
+// ── Create ────────────────────────────────────────────────────────────────────
+
 func (s *KepegawaianPegawaiServiceTestSuite) Test_CreatePegawai_Superadmin_Success() {
-	req := &dto.CreateKepegawaianPegawaiRequest{Name: "Test KepegawaianPegawai"}
+	req := newCreateReq()
 	actor := superadminActor()
 
+	s.mockCreateDeps()
 	s.repo.On("CreatePegawai", mock.AnythingOfType("*models.KepegawaianPegawai")).Return(nil)
 
 	result, err := s.svc.CreatePegawai(context.Background(), req, actor)
 
 	s.NoError(err)
 	s.NotNil(result)
-	s.Equal(req.Name, result.Name)
+	s.Equal(req.NamaLengkap, result.NamaLengkap)
+	s.Equal(req.NIK, result.NIK)
+	s.True(result.IsAktif)
 	s.repo.AssertExpectations(s.T())
 }
 
 func (s *KepegawaianPegawaiServiceTestSuite) Test_CreatePegawai_WithPermission_Success() {
-	req := &dto.CreateKepegawaianPegawaiRequest{Name: "Test KepegawaianPegawai"}
+	req := newCreateReq()
 	actor := regularActor()
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(true, nil)
+	s.mockCreateDeps()
 	s.repo.On("CreatePegawai", mock.AnythingOfType("*models.KepegawaianPegawai")).Return(nil)
 
 	result, err := s.svc.CreatePegawai(context.Background(), req, actor)
@@ -126,11 +173,12 @@ func (s *KepegawaianPegawaiServiceTestSuite) Test_CreatePegawai_WithPermission_S
 }
 
 func (s *KepegawaianPegawaiServiceTestSuite) Test_CreatePegawai_WithManagePermission_Success() {
-	req := &dto.CreateKepegawaianPegawaiRequest{Name: "Test"}
+	req := newCreateReq()
 	actor := regularActor()
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyCreate).Return(false, nil)
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyManage).Return(true, nil)
+	s.mockCreateDeps()
 	s.repo.On("CreatePegawai", mock.AnythingOfType("*models.KepegawaianPegawai")).Return(nil)
 
 	result, err := s.svc.CreatePegawai(context.Background(), req, actor)
@@ -140,11 +188,10 @@ func (s *KepegawaianPegawaiServiceTestSuite) Test_CreatePegawai_WithManagePermis
 }
 
 func (s *KepegawaianPegawaiServiceTestSuite) Test_CreatePegawai_Forbidden() {
-	req := &dto.CreateKepegawaianPegawaiRequest{Name: "Test"}
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, err := s.svc.CreatePegawai(context.Background(), req, actor)
+	result, err := s.svc.CreatePegawai(context.Background(), newCreateReq(), actor)
 
 	s.Nil(result)
 	s.Error(err)
@@ -154,16 +201,141 @@ func (s *KepegawaianPegawaiServiceTestSuite) Test_CreatePegawai_Forbidden() {
 }
 
 func (s *KepegawaianPegawaiServiceTestSuite) Test_CreatePegawai_RepoError() {
-	req := &dto.CreateKepegawaianPegawaiRequest{Name: "Test"}
 	actor := superadminActor()
 
+	s.mockCreateDeps()
 	s.repo.On("CreatePegawai", mock.AnythingOfType("*models.KepegawaianPegawai")).Return(fmt.Errorf("db error"))
+
+	result, err := s.svc.CreatePegawai(context.Background(), newCreateReq(), actor)
+
+	s.Nil(result)
+	s.Error(err)
+}
+
+func (s *KepegawaianPegawaiServiceTestSuite) Test_CreatePegawai_DuplicateNIK() {
+	actor := superadminActor()
+
+	s.repo.On("GetPegawaiByNIK", mock.Anything).Return(factories.NewKepegawaianPegawaiFactory().Make(), nil)
+
+	result, err := s.svc.CreatePegawai(context.Background(), newCreateReq(), actor)
+
+	s.Nil(result)
+	var appErr *appErrors.AppError
+	s.ErrorAs(err, &appErr)
+	s.Equal(http.StatusConflict, appErr.Code)
+	s.repo.AssertNotCalled(s.T(), "CreatePegawai", mock.Anything)
+}
+
+func (s *KepegawaianPegawaiServiceTestSuite) Test_CreatePegawai_DuplicateNomorPegawai() {
+	actor := superadminActor()
+
+	s.repo.On("GetPegawaiByNIK", mock.Anything).Return(nil, nil)
+	s.repo.On("GetPegawaiByNomorPegawai", mock.Anything).Return(factories.NewKepegawaianPegawaiFactory().Make(), nil)
+
+	result, err := s.svc.CreatePegawai(context.Background(), newCreateReq(), actor)
+
+	s.Nil(result)
+	var appErr *appErrors.AppError
+	s.ErrorAs(err, &appErr)
+	s.Equal(http.StatusConflict, appErr.Code)
+}
+
+func (s *KepegawaianPegawaiServiceTestSuite) Test_CreatePegawai_UserAlreadyLinked() {
+	actor := superadminActor()
+	req := newCreateReq()
+	userID := int64(5)
+	req.UserID = &userID
+
+	s.userRepo.ExpectedCalls = nil // ganti stub default agar user "ditemukan"
+	s.userRepo.On("GetByID", mock.Anything).Return(&userModels.User{ID: userID}, nil)
+	s.userRepo.On("GetByIDs", mock.Anything).Return([]userModels.User{}, nil).Maybe()
+	s.repo.On("GetPegawaiByUserID", userID).Return(factories.NewKepegawaianPegawaiFactory().Make(), nil)
+
+	result, err := s.svc.CreatePegawai(context.Background(), req, actor)
+
+	s.Nil(result)
+	var appErr *appErrors.AppError
+	s.ErrorAs(err, &appErr)
+	s.Equal(http.StatusConflict, appErr.Code)
+}
+
+func (s *KepegawaianPegawaiServiceTestSuite) Test_CreatePegawai_UserNotFound() {
+	actor := superadminActor()
+	req := newCreateReq()
+	userID := int64(999)
+	req.UserID = &userID // stub default GetByID mengembalikan nil, nil
 
 	result, err := s.svc.CreatePegawai(context.Background(), req, actor)
 
 	s.Nil(result)
 	s.Error(err)
+	s.Contains(err.Error(), "tidak ditemukan")
 }
+
+func (s *KepegawaianPegawaiServiceTestSuite) Test_CreatePegawai_TanggalKeluarBeforeMasuk() {
+	actor := superadminActor()
+	req := newCreateReq()
+	req.TanggalKeluar = dateOnly(2019, 12, 31) // masuk 2020-01-01
+
+	result, err := s.svc.CreatePegawai(context.Background(), req, actor)
+
+	s.Nil(result)
+	var appErr *appErrors.AppError
+	s.ErrorAs(err, &appErr)
+	s.Equal(http.StatusBadRequest, appErr.Code)
+}
+
+func (s *KepegawaianPegawaiServiceTestSuite) Test_CreatePegawai_TanggalKeluarForcesInactive() {
+	actor := superadminActor()
+	req := newCreateReq()
+	req.TanggalKeluar = dateOnly(2024, 1, 1)
+	aktif := true
+	req.IsAktif = &aktif // dikirim true, tetapi harus dipaksa false
+
+	s.mockCreateDeps()
+	s.repo.On("CreatePegawai", mock.MatchedBy(func(m *models.KepegawaianPegawai) bool {
+		return !m.IsAktif && m.TanggalKeluar != nil
+	})).Return(nil)
+
+	result, err := s.svc.CreatePegawai(context.Background(), req, actor)
+
+	s.NoError(err)
+	s.False(result.IsAktif)
+}
+
+func (s *KepegawaianPegawaiServiceTestSuite) Test_CreatePegawai_JenisNotFound() {
+	actor := superadminActor()
+
+	s.repo.On("GetPegawaiByNIK", mock.Anything).Return(nil, nil)
+	s.repo.On("GetPegawaiByNomorPegawai", mock.Anything).Return(nil, nil)
+	s.repo.On("GetJenisByID", int64(1)).Return(nil, nil)
+
+	result, err := s.svc.CreatePegawai(context.Background(), newCreateReq(), actor)
+
+	s.Nil(result)
+	s.Error(err)
+	s.Contains(err.Error(), "Jenis pegawai tidak ditemukan")
+}
+
+func (s *KepegawaianPegawaiServiceTestSuite) Test_CreatePegawai_AgamaNotFound() {
+	actor := superadminActor()
+
+	s.repo.On("GetPegawaiByNIK", mock.Anything).Return(nil, nil)
+	s.repo.On("GetPegawaiByNomorPegawai", mock.Anything).Return(nil, nil)
+	s.repo.On("GetJenisByID", int64(1)).Return(&models.Jenis{ID: 1}, nil)
+	s.repo.On("GetStatusByID", int64(1)).Return(&models.Status{ID: 1}, nil)
+	s.masterRepo.On("GetByIDJenisKelamin", int64(1)).Return(&masterModels.MasterJenisKelamin{ID: 1}, nil)
+	s.masterRepo.On("GetByIDGolonganDarah", int64(1)).Return(&masterModels.MasterGolonganDarah{ID: 1}, nil)
+	s.masterRepo.On("GetByIDAgama", int64(1)).Return(nil, nil)
+
+	result, err := s.svc.CreatePegawai(context.Background(), newCreateReq(), actor)
+
+	s.Nil(result)
+	s.Error(err)
+	s.Contains(err.Error(), "Agama tidak ditemukan")
+}
+
+// ── GetByID ───────────────────────────────────────────────────────────────────
 
 func (s *KepegawaianPegawaiServiceTestSuite) Test_GetPegawaiByID_Superadmin_Success() {
 	actor := superadminActor()
@@ -177,7 +349,8 @@ func (s *KepegawaianPegawaiServiceTestSuite) Test_GetPegawaiByID_Superadmin_Succ
 	s.NoError(err)
 	s.NotNil(result)
 	s.Equal(item.ID, result.ID)
-	s.Equal(item.Name, result.Name)
+	s.Equal(item.NamaLengkap, result.NamaLengkap)
+	s.Equal(item.NIK, result.NIK)
 }
 
 func (s *KepegawaianPegawaiServiceTestSuite) Test_GetPegawaiByID_WithPermission_Success() {
@@ -229,6 +402,8 @@ func (s *KepegawaianPegawaiServiceTestSuite) Test_GetPegawaiByID_RepoError() {
 	s.Nil(result)
 	s.Error(err)
 }
+
+// ── List ──────────────────────────────────────────────────────────────────────
 
 func (s *KepegawaianPegawaiServiceTestSuite) Test_ListPegawai_Superadmin_Success() {
 	actor := superadminActor()
@@ -316,12 +491,14 @@ func (s *KepegawaianPegawaiServiceTestSuite) Test_ListPegawai_WithNameFilter() {
 	s.Len(result, 1)
 }
 
+// ── Update ────────────────────────────────────────────────────────────────────
+
 func (s *KepegawaianPegawaiServiceTestSuite) Test_UpdatePegawai_Superadmin_Success() {
 	actor := superadminActor()
 	existing := factories.NewKepegawaianPegawaiFactory().Make()
 	existing.ID = 1
 	newName := "Updated Name"
-	req := &dto.UpdateKepegawaianPegawaiRequest{Name: &newName}
+	req := &dto.UpdateKepegawaianPegawaiRequest{NamaLengkap: &newName}
 
 	s.repo.On("GetPegawaiByID", int64(1)).Return(existing, nil)
 	s.repo.On("UpdatePegawai", mock.AnythingOfType("*models.KepegawaianPegawai")).Return(nil)
@@ -330,7 +507,7 @@ func (s *KepegawaianPegawaiServiceTestSuite) Test_UpdatePegawai_Superadmin_Succe
 
 	s.NoError(err)
 	s.NotNil(result)
-	s.Equal(newName, result.Name)
+	s.Equal(newName, result.NamaLengkap)
 }
 
 func (s *KepegawaianPegawaiServiceTestSuite) Test_UpdatePegawai_WithPermission_Success() {
@@ -338,7 +515,7 @@ func (s *KepegawaianPegawaiServiceTestSuite) Test_UpdatePegawai_WithPermission_S
 	existing := factories.NewKepegawaianPegawaiFactory().Make()
 	existing.ID = 1
 	newName := "Updated"
-	req := &dto.UpdateKepegawaianPegawaiRequest{Name: &newName}
+	req := &dto.UpdateKepegawaianPegawaiRequest{NamaLengkap: &newName}
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyUpdate).Return(true, nil)
 	s.repo.On("GetPegawaiByID", int64(1)).Return(existing, nil)
@@ -381,20 +558,128 @@ func (s *KepegawaianPegawaiServiceTestSuite) Test_UpdatePegawai_PartialFields() 
 	actor := superadminActor()
 	existing := factories.NewKepegawaianPegawaiFactory().Make()
 	existing.ID = 1
-	originalName := existing.Name
-	newDesc := "New description"
-	req := &dto.UpdateKepegawaianPegawaiRequest{Description: &newDesc}
+	originalName := existing.NamaLengkap
+	newTempat := "Ngawi"
+	req := &dto.UpdateKepegawaianPegawaiRequest{TempatLahir: &newTempat}
 
 	s.repo.On("GetPegawaiByID", int64(1)).Return(existing, nil)
 	s.repo.On("UpdatePegawai", mock.MatchedBy(func(m *models.KepegawaianPegawai) bool {
-		return m.Name == originalName && *m.Description == newDesc
+		return m.NamaLengkap == originalName && m.TempatLahir == newTempat
 	})).Return(nil)
 
 	result, err := s.svc.UpdatePegawai(context.Background(), 1, req, actor)
 
 	s.NoError(err)
-	s.Equal(originalName, result.Name)
-	s.Equal(newDesc, *result.Description)
+	s.Equal(originalName, result.NamaLengkap)
+	s.Equal(newTempat, result.TempatLahir)
+}
+
+func (s *KepegawaianPegawaiServiceTestSuite) Test_UpdatePegawai_DuplicateNIK() {
+	actor := superadminActor()
+	existing := factories.NewKepegawaianPegawaiFactory().Make()
+	existing.ID = 1
+	newNIK := "3577999999999999"
+	req := &dto.UpdateKepegawaianPegawaiRequest{NIK: &newNIK}
+
+	s.repo.On("GetPegawaiByID", int64(1)).Return(existing, nil)
+	s.repo.On("GetPegawaiByNIK", newNIK).Return(factories.NewKepegawaianPegawaiFactory().Make(), nil)
+
+	result, err := s.svc.UpdatePegawai(context.Background(), 1, req, actor)
+
+	s.Nil(result)
+	var appErr *appErrors.AppError
+	s.ErrorAs(err, &appErr)
+	s.Equal(http.StatusConflict, appErr.Code)
+	s.repo.AssertNotCalled(s.T(), "UpdatePegawai", mock.Anything)
+}
+
+func (s *KepegawaianPegawaiServiceTestSuite) Test_UpdatePegawai_SameNIK_SkipDuplicateCheck() {
+	actor := superadminActor()
+	existing := factories.NewKepegawaianPegawaiFactory().Make()
+	existing.ID = 1
+	sameNIK := existing.NIK
+	req := &dto.UpdateKepegawaianPegawaiRequest{NIK: &sameNIK}
+
+	s.repo.On("GetPegawaiByID", int64(1)).Return(existing, nil)
+	s.repo.On("UpdatePegawai", mock.AnythingOfType("*models.KepegawaianPegawai")).Return(nil)
+
+	_, err := s.svc.UpdatePegawai(context.Background(), 1, req, actor)
+
+	s.NoError(err)
+	s.repo.AssertNotCalled(s.T(), "GetPegawaiByNIK", mock.Anything)
+}
+
+func (s *KepegawaianPegawaiServiceTestSuite) Test_UpdatePegawai_TanggalKeluar_SetsInactive() {
+	actor := superadminActor()
+	existing := factories.NewKepegawaianPegawaiFactory().Make()
+	existing.ID = 1
+	existing.IsAktif = true
+	existing.TanggalMasuk = time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
+	req := &dto.UpdateKepegawaianPegawaiRequest{TanggalKeluar: dateOnly(2024, 6, 30)}
+
+	s.repo.On("GetPegawaiByID", int64(1)).Return(existing, nil)
+	s.repo.On("UpdatePegawai", mock.MatchedBy(func(m *models.KepegawaianPegawai) bool {
+		return m.TanggalKeluar != nil && !m.IsAktif
+	})).Return(nil)
+
+	result, err := s.svc.UpdatePegawai(context.Background(), 1, req, actor)
+
+	s.NoError(err)
+	s.False(result.IsAktif)
+	s.NotNil(result.TanggalKeluar)
+}
+
+func (s *KepegawaianPegawaiServiceTestSuite) Test_UpdatePegawai_TanggalKeluarBeforeMasuk() {
+	actor := superadminActor()
+	existing := factories.NewKepegawaianPegawaiFactory().Make()
+	existing.ID = 1
+	existing.TanggalMasuk = time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
+	req := &dto.UpdateKepegawaianPegawaiRequest{TanggalKeluar: dateOnly(2019, 1, 1)}
+
+	s.repo.On("GetPegawaiByID", int64(1)).Return(existing, nil)
+
+	result, err := s.svc.UpdatePegawai(context.Background(), 1, req, actor)
+
+	s.Nil(result)
+	var appErr *appErrors.AppError
+	s.ErrorAs(err, &appErr)
+	s.Equal(http.StatusBadRequest, appErr.Code)
+}
+
+func (s *KepegawaianPegawaiServiceTestSuite) Test_UpdatePegawai_TanggalKeluar_WithActiveTrue_Rejected() {
+	actor := superadminActor()
+	existing := factories.NewKepegawaianPegawaiFactory().Make()
+	existing.ID = 1
+	existing.TanggalMasuk = time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
+	aktif := true
+	req := &dto.UpdateKepegawaianPegawaiRequest{TanggalKeluar: dateOnly(2024, 1, 1), IsAktif: &aktif}
+
+	s.repo.On("GetPegawaiByID", int64(1)).Return(existing, nil)
+
+	result, err := s.svc.UpdatePegawai(context.Background(), 1, req, actor)
+
+	s.Nil(result)
+	var appErr *appErrors.AppError
+	s.ErrorAs(err, &appErr)
+	s.Equal(http.StatusBadRequest, appErr.Code)
+}
+
+func (s *KepegawaianPegawaiServiceTestSuite) Test_UpdatePegawai_JenisNotFound() {
+	actor := superadminActor()
+	existing := factories.NewKepegawaianPegawaiFactory().Make()
+	existing.ID = 1
+	existing.JenisID, existing.StatusID = 1, 1
+	newJenis := int64(99)
+	req := &dto.UpdateKepegawaianPegawaiRequest{JenisID: &newJenis}
+
+	s.repo.On("GetPegawaiByID", int64(1)).Return(existing, nil)
+	s.repo.On("GetJenisByID", int64(99)).Return(nil, nil)
+
+	result, err := s.svc.UpdatePegawai(context.Background(), 1, req, actor)
+
+	s.Nil(result)
+	s.Error(err)
+	s.Contains(err.Error(), "Jenis pegawai tidak ditemukan")
 }
 
 func (s *KepegawaianPegawaiServiceTestSuite) Test_UpdatePegawai_RepoError() {
@@ -411,6 +696,9 @@ func (s *KepegawaianPegawaiServiceTestSuite) Test_UpdatePegawai_RepoError() {
 	s.Nil(result)
 	s.Error(err)
 }
+
+// ── Delete ────────────────────────────────────────────────────────────────────
+// (tidak berubah dari versi sebelumnya)
 
 func (s *KepegawaianPegawaiServiceTestSuite) Test_DeletePegawai_Superadmin_Success() {
 	actor := superadminActor()

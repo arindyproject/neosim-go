@@ -6,7 +6,16 @@ import (
 	"neosim_go/internal/shared/types"
 )
 
-const dateLayout = "2006-01-02"
+// MasterRefResponse ringkasan data master (jenis kelamin, agama, dst.)
+type MasterRefResponse struct {
+	ID       int64   `json:"id"`
+	Name     string  `json:"name"`
+	FhirCode *string `json:"fhir_code"`
+}
+
+func newMasterRef(id int64, name string, fhirCode *string) *MasterRefResponse {
+	return &MasterRefResponse{ID: id, Name: name, FhirCode: fhirCode}
+}
 
 // KepegawaianPegawaiResponse response untuk single KepegawaianPegawai
 type KepegawaianPegawaiResponse struct {
@@ -18,16 +27,16 @@ type KepegawaianPegawaiResponse struct {
 	NomorPegawai string  `json:"nomor_pegawai"`
 	NamaLengkap  string  `json:"nama_lengkap"`
 
-	JenisKelamin     string  `json:"jenis_kelamin"`
-	TanggalLahir     string  `json:"tanggal_lahir"`
-	TempatLahir      string  `json:"tempat_lahir"`
-	GolonganDarah    *string `json:"golongan_darah"`
-	Agama            string  `json:"agama"`
-	StatusPerkawinan string  `json:"status_perkawinan"`
-	Kewarganegaraan  string  `json:"kewarganegaraan"`
+	JenisKelamin     *MasterRefResponse `json:"jenis_kelamin"`
+	TanggalLahir     *types.DateOnly    `json:"tanggal_lahir"`
+	TempatLahir      string             `json:"tempat_lahir"`
+	GolonganDarah    *MasterRefResponse `json:"golongan_darah"`
+	Agama            *MasterRefResponse `json:"agama"`
+	StatusPernikahan *MasterRefResponse `json:"status_pernikahan"`
+	Kewarganegaraan  *string            `json:"kewarganegaraan"`
 
-	TanggalMasuk  string                `json:"tanggal_masuk"`
-	TanggalKeluar *string               `json:"tanggal_keluar"`
+	TanggalMasuk  *types.DateOnly       `json:"tanggal_masuk"`
+	TanggalKeluar *types.DateOnly       `json:"tanggal_keluar"`
 	Jenis         *JenisSimpelResponse  `json:"jenis"`
 	Status        *StatusSimpelResponse `json:"status"`
 	FotoURL       *string               `json:"foto_url"`
@@ -45,26 +54,12 @@ type KepegawaianPegawaiResponseParams struct {
 	Updater            *he.UserData
 }
 
-func toFHIRGender(jenisKelamin string) string {
-	switch jenisKelamin {
-	case "Laki-laki":
-		return "male"
-	case "Perempuan":
-		return "female"
-	default:
-		return "unknown"
-	}
-}
-
 // ToKepegawaianPegawaiResponse mengubah model menjadi response
 func ToKepegawaianPegawaiResponse(params KepegawaianPegawaiResponseParams) *KepegawaianPegawaiResponse {
-	m := params.KepegawaianPegawai
-
-	var tglKeluar *string
-	if m.TanggalKeluar != nil {
-		s := m.TanggalKeluar.Format(dateLayout)
-		tglKeluar = &s
+	if params.KepegawaianPegawai == nil {
+		return nil
 	}
+	m := params.KepegawaianPegawai
 
 	var jenis *JenisSimpelResponse
 	if m.Jenis != nil {
@@ -76,6 +71,20 @@ func ToKepegawaianPegawaiResponse(params KepegawaianPegawaiResponseParams) *Kepe
 		status = &StatusSimpelResponse{ID: m.Status.ID, Code: m.Status.Code, Label: m.Status.Label, FHIRCode: m.Status.FHIRCode}
 	}
 
+	var jenisKelamin, golDarah, agama, pernikahan *MasterRefResponse
+	if m.JenisKelamin != nil {
+		jenisKelamin = newMasterRef(m.JenisKelamin.ID, m.JenisKelamin.Name, m.JenisKelamin.FhirCode)
+	}
+	if m.GolonganDarah != nil {
+		golDarah = newMasterRef(m.GolonganDarah.ID, m.GolonganDarah.Name, m.GolonganDarah.FhirCode)
+	}
+	if m.Agama != nil {
+		agama = newMasterRef(m.Agama.ID, m.Agama.Name, m.Agama.FhirCode)
+	}
+	if m.StatusPernikahan != nil {
+		pernikahan = newMasterRef(m.StatusPernikahan.ID, m.StatusPernikahan.Name, m.StatusPernikahan.FhirCode)
+	}
+
 	return &KepegawaianPegawaiResponse{
 		ID:               m.ID,
 		UserID:           m.UserID,
@@ -83,15 +92,15 @@ func ToKepegawaianPegawaiResponse(params KepegawaianPegawaiResponseParams) *Kepe
 		IHSNumber:        m.IHSNumber,
 		NomorPegawai:     m.NomorPegawai,
 		NamaLengkap:      m.NamaLengkap,
-		JenisKelamin:     m.JenisKelamin,
-		TanggalLahir:     m.TanggalLahir.Format(dateLayout),
+		JenisKelamin:     jenisKelamin,
+		TanggalLahir:     types.NewDateOnlyPtr(&m.TanggalLahir),
 		TempatLahir:      m.TempatLahir,
-		GolonganDarah:    m.GolonganDarah,
-		Agama:            m.Agama,
-		StatusPerkawinan: m.StatusPerkawinan,
+		GolonganDarah:    golDarah,
+		Agama:            agama,
+		StatusPernikahan: pernikahan,
 		Kewarganegaraan:  m.Kewarganegaraan,
-		TanggalMasuk:     m.TanggalMasuk.Format(dateLayout),
-		TanggalKeluar:    tglKeluar,
+		TanggalMasuk:     types.NewDateOnlyPtr(&m.TanggalMasuk),
+		TanggalKeluar:    types.NewDateOnlyPtr(m.TanggalKeluar),
 		Jenis:            jenis,
 		Status:           status,
 		FotoURL:          m.FotoURL,

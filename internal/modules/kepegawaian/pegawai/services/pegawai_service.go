@@ -11,18 +11,7 @@ import (
 	he "neosim_go/internal/shared/httputil"
 )
 
-const layoutTanggal = "2006-01-02"
-
-func parseTanggal(label, value string) (time.Time, error) {
-	t, err := time.Parse(layoutTanggal, value)
-	if err != nil {
-		return time.Time{}, appErrors.Wrap(http.StatusBadRequest,
-			label+" tidak valid, gunakan format YYYY-MM-DD", nil)
-	}
-	return t, nil
-}
-
-// cekJenisStatus memastikan jenis_id & status_id ada di tabel master
+// cekJenisStatus memastikan jenis_id & status_id ada di tabel master kepegawaian
 func (s *service) cekJenisStatus(ctx context.Context, jenisID, statusID int64) error {
 	jenis, err := s.repo.GetJenisByID(ctx, jenisID)
 	if err != nil {
@@ -42,6 +31,48 @@ func (s *service) cekJenisStatus(ctx context.Context, jenisID, statusID int64) e
 	return nil
 }
 
+// cekMasterPegawai memvalidasi ID master (modul master/master).
+// Parameter nil = tidak dicek (untuk Update yang parsial / golongan darah opsional).
+func (s *service) cekMasterPegawai(ctx context.Context, jenisKelaminID, golonganDarahID, agamaID, statusPernikahanID *int64) error {
+	if jenisKelaminID != nil {
+		v, err := s.masterRepo.GetByIDJenisKelamin(ctx, *jenisKelaminID)
+		if err != nil {
+			return err
+		}
+		if v == nil {
+			return appErrors.Wrap(http.StatusBadRequest, "Jenis kelamin tidak ditemukan", nil)
+		}
+	}
+	if golonganDarahID != nil {
+		v, err := s.masterRepo.GetByIDGolonganDarah(ctx, *golonganDarahID)
+		if err != nil {
+			return err
+		}
+		if v == nil {
+			return appErrors.Wrap(http.StatusBadRequest, "Golongan darah tidak ditemukan", nil)
+		}
+	}
+	if agamaID != nil {
+		v, err := s.masterRepo.GetByIDAgama(ctx, *agamaID)
+		if err != nil {
+			return err
+		}
+		if v == nil {
+			return appErrors.Wrap(http.StatusBadRequest, "Agama tidak ditemukan", nil)
+		}
+	}
+	if statusPernikahanID != nil {
+		v, err := s.masterRepo.GetByIDStatusPernikahan(ctx, *statusPernikahanID)
+		if err != nil {
+			return err
+		}
+		if v == nil {
+			return appErrors.Wrap(http.StatusBadRequest, "Status pernikahan tidak ditemukan", nil)
+		}
+	}
+	return nil
+}
+
 // ── Create ────────────────────────────────────────────────────────────────────
 func (s *service) CreatePegawai(ctx context.Context, req *dto.CreateKepegawaianPegawaiRequest, actor he.AuthContext) (*dto.KepegawaianPegawaiResponse, error) {
 	can, err := s.canCreateKepegawaianPegawai(ctx, actor)
@@ -53,26 +84,41 @@ func (s *service) CreatePegawai(ctx context.Context, req *dto.CreateKepegawaianP
 			"Akses ditolak. Anda tidak memiliki hak akses untuk membuat Pegawai baru.", nil)
 	}
 
-	// parse tanggal
-	tglLahir, err := parseTanggal("Tanggal lahir", req.TanggalLahir)
-	if err != nil {
-		return nil, err
-	}
-	tglMasuk, err := parseTanggal("Tanggal masuk", req.TanggalMasuk)
-	if err != nil {
-		return nil, err
-	}
-	var tglKeluar *time.Time
-	if req.TanggalKeluar != nil {
-		t, err := parseTanggal("Tanggal keluar", *req.TanggalKeluar)
+	// user ada
+	if req.UserID != nil {
+		dup, err := s.userRepo.GetByID(ctx, *req.UserID)
 		if err != nil {
 			return nil, err
 		}
-		if t.Before(tglMasuk) {
-			return nil, appErrors.Wrap(http.StatusBadRequest,
-				"Tanggal keluar tidak boleh lebih awal dari tanggal masuk", nil)
+		if dup == nil {
+			return nil, appErrors.Wrap(http.StatusConflict, "User ID tidak ditemukan", nil)
 		}
-		tglKeluar = &t
+	}
+
+	// cek user sudah tertaut ke pegawai lain
+	if req.UserID != nil {
+		dup, err := s.repo.GetPegawaiByUserID(ctx, *req.UserID)
+		if err != nil {
+			return nil, err
+		}
+		if dup != nil {
+			return nil, appErrors.Wrap(http.StatusConflict, "User ini sudah tertaut ke pegawai lain", nil)
+		}
+	}
+
+	// tanggal (sudah divalidasi formatnya oleh types.DateOnly saat bind JSON)
+	if req.TanggalLahir == nil || req.TanggalMasuk == nil {
+		return nil, appErrors.Wrap(http.StatusBadRequest,
+			"Tanggal lahir dan tanggal masuk wajib diisi", nil)
+	}
+
+	tglLahir := *req.TanggalLahir.ToTimePtr()
+	tglMasuk := *req.TanggalMasuk.ToTimePtr()
+
+	tglKeluar := req.TanggalKeluar.ToTimePtr() // nil jika tidak dikirim
+	if tglKeluar != nil && tglKeluar.Before(tglMasuk) {
+		return nil, appErrors.Wrap(http.StatusBadRequest,
+			"Tanggal keluar tidak boleh lebih awal dari tanggal masuk", nil)
 	}
 
 	// is_aktif: default true, dipaksa false jika sudah ada tanggal keluar
@@ -102,43 +148,49 @@ func (s *service) CreatePegawai(ctx context.Context, req *dto.CreateKepegawaianP
 		return nil, appErrors.Wrap(http.StatusConflict, "Pegawai dengan nomor pegawai ini sudah ada", nil)
 	}
 
-	// cek user sudah tertaut ke pegawai lain
-	if req.UserID != nil {
-		dup, err = s.repo.GetPegawaiByUserID(ctx, *req.UserID)
+	// cek duplikat IHS number
+	if req.IHSNumber != nil && *req.IHSNumber != "" {
+		dup, err = s.repo.GetPegawaiByIHSNumber(ctx, *req.IHSNumber)
 		if err != nil {
 			return nil, err
 		}
 		if dup != nil {
-			return nil, appErrors.Wrap(http.StatusConflict, "User ini sudah tertaut ke pegawai lain", nil)
+			return nil, appErrors.Wrap(http.StatusConflict, "Pegawai dengan IHS number ini sudah ada", nil)
 		}
 	}
 
-	// cek master jenis & status
+	// cek master kepegawaian (jenis & status)
 	if err := s.cekJenisStatus(ctx, req.JenisID, req.StatusID); err != nil {
 		return nil, err
 	}
 
+	// cek master umum (jenis kelamin, golongan darah, agama, status pernikahan)
+	if err := s.cekMasterPegawai(ctx,
+		&req.JenisKelaminID, req.GolonganDarahID, &req.AgamaID, &req.StatusPernikahanID); err != nil {
+		return nil, err
+	}
+
 	m := &models.KepegawaianPegawai{
-		UserID:           req.UserID,
-		NIK:              req.NIK,
-		IHSNumber:        req.IHSNumber,
-		NomorPegawai:     req.NomorPegawai,
-		NamaLengkap:      req.NamaLengkap,
-		JenisKelamin:     req.JenisKelamin,
-		TanggalLahir:     tglLahir,
-		TempatLahir:      req.TempatLahir,
-		GolonganDarah:    req.GolonganDarah,
-		Agama:            req.Agama,
-		StatusPerkawinan: req.StatusPerkawinan,
-		Kewarganegaraan:  req.Kewarganegaraan,
-		TanggalMasuk:     tglMasuk,
-		TanggalKeluar:    tglKeluar,
-		JenisID:          req.JenisID,
-		StatusID:         req.StatusID,
-		FotoURL:          req.FotoURL,
-		IsAktif:          isAktif,
-		CreatedBy:        &actor.UserID,
-		UpdatedBy:        &actor.UserID,
+		UserID:             req.UserID,
+		NIK:                req.NIK,
+		IHSNumber:          req.IHSNumber,
+		NomorPegawai:       req.NomorPegawai,
+		NamaLengkap:        req.NamaLengkap,
+		JenisKelaminID:     req.JenisKelaminID,
+		TanggalLahir:       tglLahir,
+		TempatLahir:        req.TempatLahir,
+		GolonganDarahID:    req.GolonganDarahID,
+		AgamaID:            req.AgamaID,
+		StatusPernikahanID: req.StatusPernikahanID,
+		Kewarganegaraan:    req.Kewarganegaraan,
+		TanggalMasuk:       tglMasuk,
+		TanggalKeluar:      tglKeluar,
+		JenisID:            req.JenisID,
+		StatusID:           req.StatusID,
+		FotoURL:            req.FotoURL,
+		IsAktif:            isAktif,
+		CreatedBy:          &actor.UserID,
+		UpdatedBy:          &actor.UserID,
 	}
 	if err := s.repo.CreatePegawai(ctx, m); err != nil {
 		return nil, err
@@ -248,18 +300,20 @@ func (s *service) UpdatePegawai(ctx context.Context, id int64, req *dto.UpdateKe
 		}
 		m.NomorPegawai = *req.NomorPegawai
 	}
-	if req.UserID != nil && (m.UserID == nil || *req.UserID != *m.UserID) {
-		dup, err := s.repo.GetPegawaiByUserID(ctx, *req.UserID)
-		if err != nil {
-			return nil, err
+	if req.IHSNumber != nil && (m.IHSNumber == nil || *req.IHSNumber != *m.IHSNumber) {
+		if *req.IHSNumber != "" {
+			dup, err := s.repo.GetPegawaiByIHSNumber(ctx, *req.IHSNumber)
+			if err != nil {
+				return nil, err
+			}
+			if dup != nil && dup.ID != m.ID {
+				return nil, appErrors.Wrap(http.StatusConflict, "Pegawai dengan IHS number ini sudah ada", nil)
+			}
 		}
-		if dup != nil && dup.ID != m.ID {
-			return nil, appErrors.Wrap(http.StatusConflict, "User ini sudah tertaut ke pegawai lain", nil)
-		}
-		m.UserID = req.UserID
+		m.IHSNumber = req.IHSNumber
 	}
 
-	// master jenis & status
+	// master kepegawaian (jenis & status)
 	if req.JenisID != nil || req.StatusID != nil {
 		jenisID, statusID := m.JenisID, m.StatusID
 		if req.JenisID != nil {
@@ -275,56 +329,53 @@ func (s *service) UpdatePegawai(ctx context.Context, id int64, req *dto.UpdateKe
 		m.StatusID = statusID
 	}
 
+	// master umum: hanya validasi ID yang dikirim
+	if err := s.cekMasterPegawai(ctx,
+		req.JenisKelaminID, req.GolonganDarahID, req.AgamaID, req.StatusPernikahanID); err != nil {
+		return nil, err
+	}
+	if req.JenisKelaminID != nil {
+		m.JenisKelaminID = *req.JenisKelaminID
+	}
+	if req.GolonganDarahID != nil {
+		m.GolonganDarahID = req.GolonganDarahID
+	}
+	if req.AgamaID != nil {
+		m.AgamaID = *req.AgamaID
+	}
+	if req.StatusPernikahanID != nil {
+		m.StatusPernikahanID = *req.StatusPernikahanID
+	}
+
 	// tanggal
 	if req.TanggalLahir != nil {
-		t, err := parseTanggal("Tanggal lahir", *req.TanggalLahir)
-		if err != nil {
-			return nil, err
+		if t := req.TanggalLahir.ToTimePtr(); t != nil {
+			m.TanggalLahir = *t
 		}
-		m.TanggalLahir = t
 	}
 	if req.TanggalMasuk != nil {
-		t, err := parseTanggal("Tanggal masuk", *req.TanggalMasuk)
-		if err != nil {
-			return nil, err
+		if t := req.TanggalMasuk.ToTimePtr(); t != nil {
+			m.TanggalMasuk = *t
 		}
-		m.TanggalMasuk = t
 	}
 	if req.TanggalKeluar != nil {
-		t, err := parseTanggal("Tanggal keluar", *req.TanggalKeluar)
-		if err != nil {
-			return nil, err
-		}
-		m.TanggalKeluar = &t
-		if req.IsAktif == nil {
-			m.IsAktif = false
+		if t := req.TanggalKeluar.ToTimePtr(); t != nil {
+			m.TanggalKeluar = t
+			if req.IsAktif == nil {
+				m.IsAktif = false
+			}
 		}
 	}
 
 	// field biasa
-	if req.IHSNumber != nil {
-		m.IHSNumber = req.IHSNumber
-	}
 	if req.NamaLengkap != nil {
 		m.NamaLengkap = *req.NamaLengkap
-	}
-	if req.JenisKelamin != nil {
-		m.JenisKelamin = *req.JenisKelamin
 	}
 	if req.TempatLahir != nil {
 		m.TempatLahir = *req.TempatLahir
 	}
-	if req.GolonganDarah != nil {
-		m.GolonganDarah = req.GolonganDarah
-	}
-	if req.Agama != nil {
-		m.Agama = *req.Agama
-	}
-	if req.StatusPerkawinan != nil {
-		m.StatusPerkawinan = *req.StatusPerkawinan
-	}
 	if req.Kewarganegaraan != nil {
-		m.Kewarganegaraan = *req.Kewarganegaraan
+		m.Kewarganegaraan = req.Kewarganegaraan
 	}
 	if req.FotoURL != nil {
 		m.FotoURL = req.FotoURL

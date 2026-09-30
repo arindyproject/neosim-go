@@ -29,6 +29,14 @@ func (m *KepegawaianPegawaiRepositoryMock) GetPegawaiByID(ctx context.Context, i
 	return args.Get(0).(*models.KepegawaianPegawai), args.Error(1)
 }
 
+func (m *KepegawaianPegawaiRepositoryMock) GetPegawaiByIHSNumber(ctx context.Context, ihs string) (*models.KepegawaianPegawai, error) {
+	args := m.Called(ihs)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.KepegawaianPegawai), args.Error(1)
+}
+
 func (m *KepegawaianPegawaiRepositoryMock) GetPegawaiByNIK(ctx context.Context, nik string) (*models.KepegawaianPegawai, error) {
 	args := m.Called(nik)
 	if args.Get(0) == nil {

@@ -13,8 +13,6 @@ import (
 	he "neosim_go/internal/shared/httputil"
 )
 
-const jabatanDateLayout = "2006-01-02"
-
 // ── Create ────────────────────────────────────────────────────────────────────
 func (s *service) CreateJabatan(ctx context.Context, req *dto.CreateKepegawaianJabatanRequest, actor he.AuthContext) (*dto.KepegawaianJabatanResponse, error) {
 	can, err := s.canCreateKepegawaianJabatan(ctx, actor)
@@ -35,18 +33,9 @@ func (s *service) CreateJabatan(ctx context.Context, req *dto.CreateKepegawaianJ
 		return nil, appErrors.Wrap(http.StatusUnprocessableEntity, "ID Pegawai tidak ditemukan.", nil)
 	}
 
-	tanggalMulai, err := parseJabatanDate(req.TanggalMulai)
-	if err != nil {
-		return nil, unprocessable("tanggal_mulai tidak valid (format YYYY-MM-DD)")
-	}
-	tanggalSelesai, err := parseJabatanDatePtr(req.TanggalSelesai)
-	if err != nil {
-		return nil, unprocessable("tanggal_selesai tidak valid (format YYYY-MM-DD)")
-	}
-	tanggalSK, err := parseJabatanDatePtr(req.TanggalSK)
-	if err != nil {
-		return nil, unprocessable("tanggal_sk tidak valid (format YYYY-MM-DD)")
-	}
+	tanggalMulai := *req.TanggalMulai.ToTimePtr()
+	tanggalSelesai := req.TanggalSelesai.ToTimePtr()
+	tanggalSK := req.TanggalSK.ToTimePtr()
 
 	isPrimary := false
 	if req.IsPrimary != nil {
@@ -217,18 +206,13 @@ func (s *service) UpdateJabatan(ctx context.Context, id int64, req *dto.UpdateKe
 		m.IsPrimary = *req.IsPrimary
 	}
 	if req.TanggalMulai != nil {
-		t, err := parseJabatanDate(*req.TanggalMulai)
-		if err != nil {
-			return nil, unprocessable("tanggal_mulai tidak valid (format YYYY-MM-DD)")
-		}
-		m.TanggalMulai = t
+
+		m.TanggalMulai = *req.TanggalMulai.ToTimePtr()
 	}
 	if req.TanggalSelesai != nil {
-		t, err := parseJabatanDate(*req.TanggalSelesai)
-		if err != nil {
-			return nil, unprocessable("tanggal_selesai tidak valid (format YYYY-MM-DD)")
-		}
-		m.TanggalSelesai = &t
+
+		m.TanggalSelesai = req.TanggalSelesai.ToTimePtr()
+
 		// Menutup jabatan: nonaktifkan otomatis kecuali is_aktif dikirim eksplisit
 		if req.IsAktif == nil {
 			m.IsAktif = false
@@ -238,11 +222,8 @@ func (s *service) UpdateJabatan(ctx context.Context, id int64, req *dto.UpdateKe
 		m.NomorSK = trimPtr(req.NomorSK)
 	}
 	if req.TanggalSK != nil {
-		t, err := parseJabatanDate(*req.TanggalSK)
-		if err != nil {
-			return nil, unprocessable("tanggal_sk tidak valid (format YYYY-MM-DD)")
-		}
-		m.TanggalSK = &t
+
+		m.TanggalSK = req.TanggalSK.ToTimePtr()
 	}
 	if req.IsAktif != nil {
 		m.IsAktif = *req.IsAktif
@@ -340,21 +321,6 @@ func (s *service) validateJabatan(ctx context.Context, m *models.KepegawaianJaba
 
 func unprocessable(msg string) error {
 	return appErrors.Wrap(http.StatusUnprocessableEntity, msg, nil)
-}
-
-func parseJabatanDate(s string) (time.Time, error) {
-	return time.Parse(jabatanDateLayout, strings.TrimSpace(s))
-}
-
-func parseJabatanDatePtr(s *string) (*time.Time, error) {
-	if s == nil || strings.TrimSpace(*s) == "" {
-		return nil, nil
-	}
-	t, err := parseJabatanDate(*s)
-	if err != nil {
-		return nil, err
-	}
-	return &t, nil
 }
 
 func trimPtr(s *string) *string {

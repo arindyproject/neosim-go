@@ -430,15 +430,74 @@ definitions:
     type: object
   dto.CreateKepegawaianPegawaiRequest:
     properties:
-      description:
+      agama_id:
+        type: integer
+      foto_url:
         maxLength: 500
         type: string
-      name:
-        maxLength: 255
+      golongan_darah_id:
+        type: integer
+      ihs_number:
+        maxLength: 50
+        type: string
+      is_aktif:
+        type: boolean
+      jenis_id:
+        type: integer
+      jenis_kelamin_id:
+        description: Biodata
+        type: integer
+      kewarganegaraan:
+        enum:
+        - WNI
+        - WNA
+        type: string
+      nama_lengkap:
+        maxLength: 150
         minLength: 1
         type: string
+      nik:
+        description: Identitas
+        type: string
+      nomor_pegawai:
+        maxLength: 30
+        minLength: 1
+        type: string
+      status_id:
+        type: integer
+      status_pernikahan_id:
+        type: integer
+      tanggal_keluar:
+        example: "2026-12-31"
+        format: date
+        type: string
+      tanggal_lahir:
+        example: "1990-01-01"
+        format: date
+        type: string
+      tanggal_masuk:
+        description: Kepegawaian
+        example: "2026-01-01"
+        format: date
+        type: string
+      tempat_lahir:
+        maxLength: 100
+        minLength: 1
+        type: string
+      user_id:
+        type: integer
     required:
-    - name
+    - agama_id
+    - jenis_id
+    - jenis_kelamin_id
+    - nama_lengkap
+    - nik
+    - nomor_pegawai
+    - status_id
+    - status_pernikahan_id
+    - tanggal_lahir
+    - tanggal_masuk
+    - tempat_lahir
     type: object
   dto.CreateKepegawaianPendidikanRequest:
     properties:
@@ -1409,20 +1468,52 @@ definitions:
     type: object
   dto.KepegawaianPegawaiResponse:
     properties:
+      agama:
+        $ref: '#/definitions/dto.MasterRefResponse'
       created_at:
         type: string
       created_by:
         $ref: '#/definitions/httputil.UserData'
-      description:
+      foto_url:
         type: string
+      golongan_darah:
+        $ref: '#/definitions/dto.MasterRefResponse'
       id:
         type: integer
-      name:
+      ihs_number:
+        type: string
+      is_aktif:
+        type: boolean
+      jenis:
+        $ref: '#/definitions/dto.JenisSimpelResponse'
+      jenis_kelamin:
+        $ref: '#/definitions/dto.MasterRefResponse'
+      kewarganegaraan:
+        type: string
+      nama_lengkap:
+        type: string
+      nik:
+        type: string
+      nomor_pegawai:
+        type: string
+      status:
+        $ref: '#/definitions/dto.StatusSimpelResponse'
+      status_pernikahan:
+        $ref: '#/definitions/dto.MasterRefResponse'
+      tanggal_keluar:
+        $ref: '#/definitions/types.DateOnly'
+      tanggal_lahir:
+        $ref: '#/definitions/types.DateOnly'
+      tanggal_masuk:
+        $ref: '#/definitions/types.DateOnly'
+      tempat_lahir:
         type: string
       updated_at:
         type: string
       updated_by:
         $ref: '#/definitions/httputil.UserData'
+      user_id:
+        type: integer
     type: object
   dto.KepegawaianPendidikanResponse:
     properties:
@@ -1714,6 +1805,15 @@ definitions:
         type: string
       updated_by:
         type: integer
+    type: object
+  dto.MasterRefResponse:
+    properties:
+      fhir_code:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
     type: object
   dto.MasterStatusPernikahanListSimpelResponse:
     properties:
@@ -2189,6 +2289,17 @@ definitions:
       updated_by:
         $ref: '#/definitions/httputil.UserData'
     type: object
+  dto.StatusSimpelResponse:
+    properties:
+      code:
+        type: string
+      fhir_code:
+        type: string
+      id:
+        type: integer
+      label:
+        type: string
+    type: object
   dto.TagResponse:
     properties:
       created_at:
@@ -2529,13 +2640,59 @@ definitions:
     type: object
   dto.UpdateKepegawaianPegawaiRequest:
     properties:
-      description:
+      agama_id:
+        type: integer
+      foto_url:
         maxLength: 500
         type: string
-      name:
-        maxLength: 255
+      golongan_darah_id:
+        type: integer
+      ihs_number:
+        maxLength: 50
+        type: string
+      is_aktif:
+        type: boolean
+      jenis_id:
+        type: integer
+      jenis_kelamin_id:
+        type: integer
+      kewarganegaraan:
+        enum:
+        - WNI
+        - WNA
+        type: string
+      nama_lengkap:
+        maxLength: 150
         minLength: 1
         type: string
+      nik:
+        type: string
+      nomor_pegawai:
+        maxLength: 30
+        minLength: 1
+        type: string
+      status_id:
+        type: integer
+      status_pernikahan_id:
+        type: integer
+      tanggal_keluar:
+        example: "2026-12-31"
+        format: date
+        type: string
+      tanggal_lahir:
+        example: "1990-01-01"
+        format: date
+        type: string
+      tanggal_masuk:
+        example: "2026-01-01"
+        format: date
+        type: string
+      tempat_lahir:
+        maxLength: 100
+        minLength: 1
+        type: string
+      user_id:
+        type: integer
     type: object
   dto.UpdateKepegawaianPendidikanRequest:
     properties:

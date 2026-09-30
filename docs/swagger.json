@@ -14254,17 +14254,93 @@
         "dto.CreateKepegawaianPegawaiRequest": {
             "type": "object",
             "required": [
-                "name"
+                "agama_id",
+                "jenis_id",
+                "jenis_kelamin_id",
+                "nama_lengkap",
+                "nik",
+                "nomor_pegawai",
+                "status_id",
+                "status_pernikahan_id",
+                "tanggal_lahir",
+                "tanggal_masuk",
+                "tempat_lahir"
             ],
             "properties": {
-                "description": {
+                "agama_id": {
+                    "type": "integer"
+                },
+                "foto_url": {
                     "type": "string",
                     "maxLength": 500
                 },
-                "name": {
+                "golongan_darah_id": {
+                    "type": "integer"
+                },
+                "ihs_number": {
                     "type": "string",
-                    "maxLength": 255,
+                    "maxLength": 50
+                },
+                "is_aktif": {
+                    "type": "boolean"
+                },
+                "jenis_id": {
+                    "type": "integer"
+                },
+                "jenis_kelamin_id": {
+                    "description": "Biodata",
+                    "type": "integer"
+                },
+                "kewarganegaraan": {
+                    "type": "string",
+                    "enum": [
+                        "WNI",
+                        "WNA"
+                    ]
+                },
+                "nama_lengkap": {
+                    "type": "string",
+                    "maxLength": 150,
                     "minLength": 1
+                },
+                "nik": {
+                    "description": "Identitas",
+                    "type": "string"
+                },
+                "nomor_pegawai": {
+                    "type": "string",
+                    "maxLength": 30,
+                    "minLength": 1
+                },
+                "status_id": {
+                    "type": "integer"
+                },
+                "status_pernikahan_id": {
+                    "type": "integer"
+                },
+                "tanggal_keluar": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-12-31"
+                },
+                "tanggal_lahir": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "1990-01-01"
+                },
+                "tanggal_masuk": {
+                    "description": "Kepegawaian",
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-01-01"
+                },
+                "tempat_lahir": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
+                },
+                "user_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -15680,19 +15756,64 @@
         "dto.KepegawaianPegawaiResponse": {
             "type": "object",
             "properties": {
+                "agama": {
+                    "$ref": "#/definitions/dto.MasterRefResponse"
+                },
                 "created_at": {
                     "type": "string"
                 },
                 "created_by": {
                     "$ref": "#/definitions/httputil.UserData"
                 },
-                "description": {
+                "foto_url": {
                     "type": "string"
+                },
+                "golongan_darah": {
+                    "$ref": "#/definitions/dto.MasterRefResponse"
                 },
                 "id": {
                     "type": "integer"
                 },
-                "name": {
+                "ihs_number": {
+                    "type": "string"
+                },
+                "is_aktif": {
+                    "type": "boolean"
+                },
+                "jenis": {
+                    "$ref": "#/definitions/dto.JenisSimpelResponse"
+                },
+                "jenis_kelamin": {
+                    "$ref": "#/definitions/dto.MasterRefResponse"
+                },
+                "kewarganegaraan": {
+                    "type": "string"
+                },
+                "nama_lengkap": {
+                    "type": "string"
+                },
+                "nik": {
+                    "type": "string"
+                },
+                "nomor_pegawai": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/dto.StatusSimpelResponse"
+                },
+                "status_pernikahan": {
+                    "$ref": "#/definitions/dto.MasterRefResponse"
+                },
+                "tanggal_keluar": {
+                    "$ref": "#/definitions/types.DateOnly"
+                },
+                "tanggal_lahir": {
+                    "$ref": "#/definitions/types.DateOnly"
+                },
+                "tanggal_masuk": {
+                    "$ref": "#/definitions/types.DateOnly"
+                },
+                "tempat_lahir": {
                     "type": "string"
                 },
                 "updated_at": {
@@ -15700,6 +15821,9 @@
                 },
                 "updated_by": {
                     "$ref": "#/definitions/httputil.UserData"
+                },
+                "user_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -16146,6 +16270,20 @@
                 },
                 "updated_by": {
                     "type": "integer"
+                }
+            }
+        },
+        "dto.MasterRefResponse": {
+            "type": "object",
+            "properties": {
+                "fhir_code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },
@@ -16877,6 +17015,23 @@
                 }
             }
         },
+        "dto.StatusSimpelResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "fhir_code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "label": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.TagResponse": {
             "type": "object",
             "properties": {
@@ -17353,14 +17508,77 @@
         "dto.UpdateKepegawaianPegawaiRequest": {
             "type": "object",
             "properties": {
-                "description": {
+                "agama_id": {
+                    "type": "integer"
+                },
+                "foto_url": {
                     "type": "string",
                     "maxLength": 500
                 },
-                "name": {
+                "golongan_darah_id": {
+                    "type": "integer"
+                },
+                "ihs_number": {
                     "type": "string",
-                    "maxLength": 255,
+                    "maxLength": 50
+                },
+                "is_aktif": {
+                    "type": "boolean"
+                },
+                "jenis_id": {
+                    "type": "integer"
+                },
+                "jenis_kelamin_id": {
+                    "type": "integer"
+                },
+                "kewarganegaraan": {
+                    "type": "string",
+                    "enum": [
+                        "WNI",
+                        "WNA"
+                    ]
+                },
+                "nama_lengkap": {
+                    "type": "string",
+                    "maxLength": 150,
                     "minLength": 1
+                },
+                "nik": {
+                    "type": "string"
+                },
+                "nomor_pegawai": {
+                    "type": "string",
+                    "maxLength": 30,
+                    "minLength": 1
+                },
+                "status_id": {
+                    "type": "integer"
+                },
+                "status_pernikahan_id": {
+                    "type": "integer"
+                },
+                "tanggal_keluar": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-12-31"
+                },
+                "tanggal_lahir": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "1990-01-01"
+                },
+                "tanggal_masuk": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-01-01"
+                },
+                "tempat_lahir": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
+                },
+                "user_id": {
+                    "type": "integer"
                 }
             }
         },

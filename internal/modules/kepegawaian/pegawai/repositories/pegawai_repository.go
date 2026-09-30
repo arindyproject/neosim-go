@@ -11,24 +11,37 @@ import (
 	"gorm.io/gorm"
 )
 
+// relasi yang di-preload untuk response lengkap
+var pegawaiPreloads = []string{
+	"Jenis",
+	"Status",
+	"JenisKelamin",
+	"GolonganDarah",
+	"Agama",
+	"StatusPernikahan",
+}
+
+// withPegawaiPreloads menambahkan semua Preload relasi ke query
+func withPegawaiPreloads(db *gorm.DB) *gorm.DB {
+	for _, rel := range pegawaiPreloads {
+		db = db.Preload(rel)
+	}
+	return db
+}
+
 // ── Create ────────────────────────────────────────────────────────────────────
 func (r *repository) CreatePegawai(ctx context.Context, m *models.KepegawaianPegawai) error {
-	if err := r.db.WithContext(ctx).Create(m).Error; err != nil {
+	if err := r.db.WithContext(ctx).Omit(pegawaiPreloads...).Create(m).Error; err != nil {
 		return err
 	}
-	// muat relasi Jenis & Status agar response langsung lengkap
-	return r.db.WithContext(ctx).
-		Preload("Jenis").
-		Preload("Status").
-		First(m, m.ID).Error
+	// muat relasi agar response langsung lengkap
+	return withPegawaiPreloads(r.db.WithContext(ctx)).First(m, m.ID).Error
 }
 
 // ── GetByID ───────────────────────────────────────────────────────────────────
 func (r *repository) GetPegawaiByID(ctx context.Context, id int64) (*models.KepegawaianPegawai, error) {
 	var m models.KepegawaianPegawai
-	err := r.db.WithContext(ctx).
-		Preload("Jenis").
-		Preload("Status").
+	err := withPegawaiPreloads(r.db.WithContext(ctx)).
 		Where("id = ? AND deleted_at IS NULL", id).
 		First(&m).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -85,6 +98,21 @@ func (r *repository) GetPegawaiByUserID(ctx context.Context, userID int64) (*mod
 	return &m, nil
 }
 
+// ── GetByIHSNumber ────────────────────────────────────────────────────────────
+func (r *repository) GetPegawaiByIHSNumber(ctx context.Context, ihs string) (*models.KepegawaianPegawai, error) {
+	var m models.KepegawaianPegawai
+	err := r.db.WithContext(ctx).
+		Where("ihs_number = ? AND deleted_at IS NULL", ihs).
+		First(&m).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &m, nil
+}
+
 // ── List ──────────────────────────────────────────────────────────────────────
 func (r *repository) ListPegawai(ctx context.Context, page, pageSize int, filter *dto.FilterKepegawaianPegawaiRequest) ([]models.KepegawaianPegawai, int64, error) {
 	var items []models.KepegawaianPegawai
@@ -104,8 +132,14 @@ func (r *repository) ListPegawai(ctx context.Context, page, pageSize int, filter
 		if filter.NomorPegawai != "" {
 			query = query.Where("nomor_pegawai ILIKE ?", "%"+filter.NomorPegawai+"%")
 		}
-		if filter.JenisKelamin != "" {
-			query = query.Where("jenis_kelamin = ?", filter.JenisKelamin)
+		if filter.JenisKelaminID != nil {
+			query = query.Where("jenis_kelamin_id = ?", *filter.JenisKelaminID)
+		}
+		if filter.AgamaID != nil {
+			query = query.Where("agama_id = ?", *filter.AgamaID)
+		}
+		if filter.StatusPernikahanID != nil {
+			query = query.Where("status_pernikahan_id = ?", *filter.StatusPernikahanID)
 		}
 		if filter.JenisID != nil {
 			query = query.Where("jenis_id = ?", *filter.JenisID)
@@ -123,9 +157,7 @@ func (r *repository) ListPegawai(ctx context.Context, page, pageSize int, filter
 	}
 
 	offset := (page - 1) * pageSize
-	if err := query.
-		Preload("Jenis").
-		Preload("Status").
+	if err := withPegawaiPreloads(query).
 		Order("nama_lengkap ASC, id ASC").
 		Offset(offset).
 		Limit(pageSize).
@@ -138,17 +170,14 @@ func (r *repository) ListPegawai(ctx context.Context, page, pageSize int, filter
 
 // ── Update ────────────────────────────────────────────────────────────────────
 func (r *repository) UpdatePegawai(ctx context.Context, m *models.KepegawaianPegawai) error {
-	// Omit relasi agar Save tidak ikut menulis ulang Jenis/Status
+	// Omit semua relasi agar Save tidak menulis ulang data master
 	if err := r.db.WithContext(ctx).
-		Omit("Jenis", "Status").
+		Omit(pegawaiPreloads...).
 		Save(m).Error; err != nil {
 		return err
 	}
-	// muat ulang relasi karena JenisID/StatusID mungkin berubah
-	return r.db.WithContext(ctx).
-		Preload("Jenis").
-		Preload("Status").
-		First(m, m.ID).Error
+	// muat ulang relasi karena ID master mungkin berubah
+	return withPegawaiPreloads(r.db.WithContext(ctx)).First(m, m.ID).Error
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────

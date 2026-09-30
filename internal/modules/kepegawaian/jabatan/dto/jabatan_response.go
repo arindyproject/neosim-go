@@ -1,14 +1,10 @@
 package dto
 
 import (
-	"time"
-
 	"neosim_go/internal/modules/kepegawaian/jabatan/models"
 	he "neosim_go/internal/shared/httputil"
 	"neosim_go/internal/shared/types"
 )
-
-const dateLayout = "2006-01-02"
 
 // KepegawaianJabatanResponse response untuk single KepegawaianJabatan
 type KepegawaianJabatanResponse struct {
@@ -26,11 +22,11 @@ type KepegawaianJabatanResponse struct {
 
 	IsPrimary bool `json:"is_primary"`
 
-	TanggalMulai   string  `json:"tanggal_mulai"`
-	TanggalSelesai *string `json:"tanggal_selesai"`
+	TanggalMulai   *types.DateOnly `json:"tanggal_mulai"`
+	TanggalSelesai *types.DateOnly `json:"tanggal_selesai"`
 
-	NomorSK   *string `json:"nomor_sk"`
-	TanggalSK *string `json:"tanggal_sk"`
+	NomorSK   *string         `json:"nomor_sk"`
+	TanggalSK *types.DateOnly `json:"tanggal_sk"`
 
 	IsAktif bool `json:"is_aktif"`
 
@@ -44,18 +40,6 @@ type KepegawaianJabatanResponseParams struct {
 	KepegawaianJabatan *models.KepegawaianJabatan
 	Creator            *he.UserData
 	Updater            *he.UserData
-}
-
-func formatDate(t time.Time) string {
-	return t.Format(dateLayout)
-}
-
-func formatDatePtr(t *time.Time) *string {
-	if t == nil {
-		return nil
-	}
-	s := t.Format(dateLayout)
-	return &s
 }
 
 // ToKepegawaianJabatanResponse mengubah model menjadi response
@@ -102,10 +86,10 @@ func ToKepegawaianJabatanResponse(params KepegawaianJabatanResponseParams) *Kepe
 		SpecializationID: m.SpecializationID,
 		Specialization:   specialization,
 		IsPrimary:        m.IsPrimary,
-		TanggalMulai:     formatDate(m.TanggalMulai),
-		TanggalSelesai:   formatDatePtr(m.TanggalSelesai),
+		TanggalMulai:     types.NewDateOnlyPtr(&m.TanggalMulai),
+		TanggalSelesai:   types.NewDateOnlyPtr(m.TanggalSelesai),
 		NomorSK:          m.NomorSK,
-		TanggalSK:        formatDatePtr(m.TanggalSK),
+		TanggalSK:        types.NewDateOnlyPtr(m.TanggalSK),
 		IsAktif:          m.IsAktif,
 		CreatedBy:        params.Creator,
 		UpdatedBy:        params.Updater,
