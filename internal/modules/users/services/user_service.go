@@ -8,6 +8,7 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"strings"
 	"time"
 
 	"neosim_go/config"
@@ -176,6 +177,7 @@ func (s *service) GetUserByEmail(ctx context.Context, email string, actor he.Aut
 
 // ListUsers ---------------------------------------------------------------------
 func (s *service) ListUsers(ctx context.Context, page, pageSize int, filter *dto.UserFilter) ([]dto.UserSimpleResponse, int64, error) {
+	// Normalisasi paginasi
 	if page < 1 {
 		page = 1
 	}
@@ -183,26 +185,35 @@ func (s *service) ListUsers(ctx context.Context, page, pageSize int, filter *dto
 		pageSize = 10
 	}
 
+	// Normalisasi filter & sorting (filter bisa nil kalau dipanggil dari tempat lain)
+	if filter == nil {
+		filter = &dto.UserFilter{}
+	}
+	filter.SortBy = strings.ToLower(strings.TrimSpace(filter.SortBy))
+	filter.SortOrder = strings.ToLower(strings.TrimSpace(filter.SortOrder))
+	if filter.SortOrder != "asc" && filter.SortOrder != "desc" {
+		filter.SortOrder = "asc"
+	}
+	// Validasi sort_by dilakukan di repository (whitelist);
+	// nilai tidak valid otomatis jatuh ke default created_at DESC.
+
 	users, total, err := s.repo.List(ctx, page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	// ─── AMANKAN DI SINI: CEK JIKA DATA KOSONG ───────────────────────────
+	// Jika data kosong, kembalikan error spesifik (ditangkap handler jadi 404)
 	if len(users) == 0 {
-		// Mengembalikan error spesifik bahwa data tidak ditemukan
 		return nil, 0, errors.New("user tidak ditemukan")
 	}
-	// ──────────────────────────────────────────────────────────────────────
 
-	// Amankan pemanggilan index [0], sekarang sudah pasti aman karena len > 0
 	// 1. Kumpulkan semua User ID untuk batching query
 	userIDs := make([]int64, len(users))
 	for i, u := range users {
 		userIDs[i] = u.ID
 	}
 
-	// 2. Ambil data roles secara batch (Hanya 1x query tambahan, bukan N kali)
+	// 2. Ambil roles secara batch (1x query tambahan, bukan N kali)
 	userRolesMap := s.buildUsersRBAC(ctx, userIDs)
 
 	return dto.ToUserListResponse(users, userRolesMap), total, nil

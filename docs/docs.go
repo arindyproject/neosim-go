@@ -13018,6 +13018,32 @@ const docTemplate = `{
                         "description": "Filter by staff status",
                         "name": "is_staff",
                         "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "name",
+                            "username",
+                            "email",
+                            "is_active",
+                            "is_staff",
+                            "is_superadmin",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "description": "Sort column (name, username, email, is_active, is_staff, is_superadmin, created_at, updated_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort direction",
+                        "name": "sort_order",
+                        "in": "query"
                     }
                 ],
                 "responses": {

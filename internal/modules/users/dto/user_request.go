@@ -48,6 +48,10 @@ type UserFilter struct {
 	IsSuperadmin *bool  `query:"is_superadmin"`
 	IsActive     *bool  `query:"is_active"`
 	IsStaff      *bool  `query:"is_staff"`
+
+	// Sorting
+	SortBy    string `query:"sort_by"`    // name | username | email | is_active | is_staff | is_superadmin | created_at | updated_at
+	SortOrder string `query:"sort_order"` // asc | desc
 }
 
 type UserDeletedFilter struct {

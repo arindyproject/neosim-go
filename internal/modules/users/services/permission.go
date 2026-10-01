@@ -36,7 +36,8 @@ func (s *service) canUpdateUser(ctx context.Context, actor he.AuthContext, targe
 	return rbacMiddlewares.HasAnyRole(ctx, s.rbacRepo, actor.UserID, "admin", "superadmin", "hrd")
 }
 
-func (s *service) canDeleteUser(ctx context.Context, actor he.AuthContext) (bool, error) {
+func (s *service) canDeleteUser(_ context.Context, actor he.AuthContext) (bool, error) {
+
 	return actor.IsSuperadmin, nil
 }
 

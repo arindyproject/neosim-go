@@ -7,9 +7,28 @@ import (
 	"neosim_go/internal/modules/users/contracts"
 	"neosim_go/internal/modules/users/dto"
 	"neosim_go/internal/modules/users/models"
+	"neosim_go/internal/shared/sorting"
 
 	"gorm.io/gorm"
 )
+
+// allowedUserSortColumns memetakan nilai sort_by dari client ke ekspresi kolom DB.
+// Hanya key di map ini yang boleh dipakai (mencegah SQL injection lewat Order()).
+var userSort = sorting.Config{
+	Allowed: map[string]string{
+		"name":          "name",
+		"username":      "username",
+		"email":         "email",
+		"is_active":     "is_active",
+		"is_staff":      "is_staff",
+		"is_superadmin": "is_superadmin",
+		"created_at":    "created_at",
+		"updated_at":    "updated_at",
+	},
+	DefaultColumn: "created_at",
+	DefaultDesc:   true,
+	TieBreaker:    "id",
+}
 
 // ─── Init ──────────────────────────────────────────────────────────────────────
 // repository implements the contracts.Repository interface
@@ -85,10 +104,10 @@ func (r *repository) List(ctx context.Context, page, pageSize int, filter *dto.U
 	var users []models.User
 	var total int64
 
-	// 1. Inisialisasi basis query & pastikan record yang di-soft delete tidak ikut terbawa
+	// 1. Basis query & pastikan record yang di-soft delete tidak ikut terbawa
 	query := r.db.WithContext(ctx).Model(&models.User{}).Where("deleted_at IS NULL")
 
-	// 2. Filter Teks (Menggunakan ILIKE untuk case-insensitive)
+	// 2. Filter teks (ILIKE = case-insensitive)
 	if filter.Name != "" {
 		query = query.Where("name ILIKE ?", "%"+filter.Name+"%")
 	}
@@ -99,7 +118,7 @@ func (r *repository) List(ctx context.Context, page, pageSize int, filter *dto.U
 		query = query.Where("email ILIKE ?", "%"+filter.Email+"%")
 	}
 
-	// 3. Filter Boolean (Dicek nilainya lewat pointer agar nilai false tidak otomatis memfilter)
+	// 3. Filter boolean (pointer agar nilai false tetap bisa dipakai sebagai filter)
 	if filter.IsSuperadmin != nil {
 		query = query.Where("is_superadmin = ?", *filter.IsSuperadmin)
 	}
@@ -110,14 +129,18 @@ func (r *repository) List(ctx context.Context, page, pageSize int, filter *dto.U
 		query = query.Where("is_staff = ?", *filter.IsStaff)
 	}
 
-	// 4. Hitung total data berdasarkan filter yang aktif
+	// 4. Hitung total berdasarkan filter aktif (sebelum Order/Offset/Limit)
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
-	// 5. Ambil data dengan paginasi dan sorting
+	// 5. Ambil data dengan sorting + paginasi
 	offset := (page - 1) * pageSize
-	if err := query.Offset(offset).Limit(pageSize).Order("created_at DESC").Find(&users).Error; err != nil {
+	if err := query.
+		Scopes(userSort.Scope(filter.SortBy, filter.SortOrder)).
+		Offset(offset).
+		Limit(pageSize).
+		Find(&users).Error; err != nil {
 		return nil, 0, err
 	}
 

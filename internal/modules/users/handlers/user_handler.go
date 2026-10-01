@@ -134,6 +134,8 @@ func (h *Handler) GetByUsernameHandler(c *echo.Context) error {
 //	@Param			is_superadmin	query		bool	false	"Filter by superadmin status"
 //	@Param			is_active		query		bool	false	"Filter by active status"
 //	@Param			is_staff		query		bool	false	"Filter by staff status"
+//	@Param			sort_by			query		string	false	"Sort column (name, username, email, is_active, is_staff, is_superadmin, created_at, updated_at)"	Enums(name, username, email, is_active, is_staff, is_superadmin, created_at, updated_at)
+//	@Param			sort_order		query		string	false	"Sort direction"	Enums(asc, desc)
 //	@Success		200				{object}	response.MyGoResponse{data=[]dto.UserSimpleResponse}
 //	@Router			/users [get]
 //
@@ -157,6 +159,9 @@ func (h *Handler) ListUsersHandler(c *echo.Context) error {
 		Name:     c.QueryParam("name"),
 		Username: c.QueryParam("username"),
 		Email:    c.QueryParam("email"),
+
+		SortBy:    c.QueryParam("sort_by"),
+		SortOrder: c.QueryParam("sort_order"),
 	}
 
 	// Menggunakan pointer untuk boolean agar bisa membedakan antara "false" kiriman user vs default value Go (false)
