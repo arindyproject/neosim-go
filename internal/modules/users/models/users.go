@@ -20,7 +20,7 @@ type User struct {
 	Email             string         `gorm:"column:email;type:varchar(254);uniqueIndex;not null" json:"email"`
 	Name              string         `gorm:"column:name;type:varchar(255);not null;default:''" json:"name"`
 	IsSuperadmin      bool           `gorm:"column:is_superadmin;not null;default:false" json:"is_superadmin"`
-	IsActive          bool           `gorm:"column:is_active;not null;default:true" json:"is_active"`
+	IsActive          bool           `gorm:"column:is_active;not null;default:false" json:"is_active"`
 	IsStaff           bool           `gorm:"column:is_staff;not null;default:false" json:"is_staff"`
 	IsVerified        bool           `gorm:"column:is_verified;not null;default:false" json:"is_verified"`
 	Password          string         `gorm:"column:password;type:varchar(255);not null" json:"-"`
