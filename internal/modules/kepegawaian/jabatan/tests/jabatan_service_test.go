@@ -2,6 +2,7 @@ package tests
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -26,6 +27,7 @@ import (
 	"neosim_go/internal/shared/cache"
 	appErrors "neosim_go/internal/shared/errors"
 	he "neosim_go/internal/shared/httputil"
+	"neosim_go/internal/shared/types"
 
 	masterMocks "neosim_go/internal/modules/master/departemen/tests/mocks"
 )
@@ -47,8 +49,8 @@ func TestMain(m *testing.M) {
 }
 
 // KepegawaianJabatanServiceTestSuite dipakai bersama oleh SELURUH item di dalam
-// sub-module ini (lihat mis. tag_service_test.go) — karena hanya ada satu
-// struct service/repository, satu suite ini sudah cukup untuk semuanya.
+// sub-module ini — karena hanya ada satu struct service/repository,
+// satu suite ini sudah cukup untuk semuanya.
 type KepegawaianJabatanServiceTestSuite struct {
 	suite.Suite
 	repo                 *mocks.KepegawaianJabatanRepositoryMock
@@ -82,7 +84,6 @@ func (s *KepegawaianJabatanServiceTestSuite) SetupTest() {
 	s.userRepo.On("GetByID", mock.Anything).Return(nil, nil).Maybe()
 	s.userRepo.On("GetByIDs", mock.Anything).Return(nil, nil).Maybe()
 
-	// PERBAIKAN: Tambahkan mock.Anything kedua untuk argumen ctx
 	s.repo.On("GetJobTitleKategoriByCode", mock.Anything, mock.Anything).Return(nil, nil).Maybe()
 	s.repo.On("GetJobTitleKategoriByLabel", mock.Anything, mock.Anything).Return(nil, nil).Maybe()
 
@@ -92,14 +93,16 @@ func (s *KepegawaianJabatanServiceTestSuite) SetupTest() {
 	s.repo.On("GetJobTitleRumpunProfesiByCode", mock.Anything, mock.Anything).Return(nil, nil).Maybe()
 	s.repo.On("GetJobTitleRumpunProfesiByLabel", mock.Anything, mock.Anything).Return(nil, nil).Maybe()
 
-	//s.repo.On("GetSpecializationByCode", mock.Anything, mock.Anything).Return(nil, nil).Maybe()
 	s.repo.On("GetSpecializationByLabel", mock.Anything, mock.Anything).Return(nil, nil).Maybe()
 }
+
 func TestKepegawaianJabatanService(t *testing.T) {
 	suite.Run(t, new(KepegawaianJabatanServiceTestSuite))
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────────
+
+const dateLayout = "2006-01-02"
 
 func superadminActor() he.AuthContext {
 	return he.AuthContext{UserID: 1, IsSuperadmin: true}
@@ -110,6 +113,20 @@ func regularActor() he.AuthContext {
 }
 
 func ptrTo[T any](v T) *T { return &v }
+
+// dateOnly membuat *types.DateOnly untuk request DTO.
+func dateOnly(year int, month time.Month, day int) *types.DateOnly {
+	t := time.Date(year, month, day, 0, 0, 0, 0, time.UTC)
+	return types.NewDateOnlyPtr(&t)
+}
+
+// fmtDate memformat *types.DateOnly ke YYYY-MM-DD untuk assertion.
+func fmtDate(d *types.DateOnly) string {
+	if t := d.ToTimePtr(); t != nil {
+		return t.Format(dateLayout)
+	}
+	return ""
+}
 
 func (s *KepegawaianJabatanServiceTestSuite) mockHasPermission(perm string, result bool) {
 	s.rbacRepo.On("HasPermission", regularActor().UserID, perm, mock.Anything).Return(result, nil).Maybe()
@@ -133,7 +150,7 @@ func newCreateReq() *dto.CreateKepegawaianJabatanRequest {
 		DepartmentID: 1,
 		PositionID:   1,
 		JobTitleID:   1,
-		TanggalMulai: "2024-01-15",
+		TanggalMulai: *dateOnly(2024, 1, 15),
 	}
 }
 
@@ -183,7 +200,8 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_CreateJabatan_Superadmin_Succe
 	s.Equal(req.DepartmentID, result.DepartmentID)
 	s.Equal(req.PositionID, result.PositionID)
 	s.Equal(req.JobTitleID, result.JobTitleID)
-	s.Equal("2024-01-15", result.TanggalMulai)
+	s.Require().NotNil(result.TanggalMulai)
+	s.Equal("2024-01-15", fmtDate(result.TanggalMulai))
 	s.Nil(result.TanggalSelesai)
 	s.repo.AssertExpectations(s.T())
 }
@@ -260,7 +278,7 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_CreateJabatan_DefaultIsAktifTr
 
 func (s *KepegawaianJabatanServiceTestSuite) Test_CreateJabatan_DefaultIsAktifFalse_WhenTanggalSelesaiSet() {
 	req := newCreateReq()
-	req.TanggalSelesai = ptrTo("2024-06-30")
+	req.TanggalSelesai = dateOnly(2024, 6, 30)
 	actor := superadminActor()
 
 	s.mockCreateSetsID(1)
@@ -272,8 +290,8 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_CreateJabatan_DefaultIsAktifFa
 
 	s.NoError(err)
 	s.False(result.IsAktif)
-	s.NotNil(result.TanggalSelesai)
-	s.Equal("2024-06-30", *result.TanggalSelesai)
+	s.Require().NotNil(result.TanggalSelesai)
+	s.Equal("2024-06-30", fmtDate(result.TanggalSelesai))
 }
 
 func (s *KepegawaianJabatanServiceTestSuite) Test_CreateJabatan_ExplicitIsAktifOverridesDefault() {
@@ -294,9 +312,9 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_CreateJabatan_ExplicitIsAktifO
 	s.False(result.IsAktif)
 }
 
-func (s *KepegawaianJabatanServiceTestSuite) Test_CreateJabatan_InvalidTanggalMulai() {
+func (s *KepegawaianJabatanServiceTestSuite) Test_CreateJabatan_TanggalMulaiRequired() {
 	req := newCreateReq()
-	req.TanggalMulai = "15-01-2024"
+	req.TanggalMulai = types.DateOnly{} // kosong
 
 	result, err := s.svc.CreateJabatan(context.Background(), req, superadminActor())
 
@@ -305,30 +323,10 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_CreateJabatan_InvalidTanggalMu
 	s.repo.AssertNotCalled(s.T(), "CreateJabatan", mock.Anything)
 }
 
-func (s *KepegawaianJabatanServiceTestSuite) Test_CreateJabatan_InvalidTanggalSelesai() {
-	req := newCreateReq()
-	req.TanggalSelesai = ptrTo("bukan-tanggal")
-
-	result, err := s.svc.CreateJabatan(context.Background(), req, superadminActor())
-
-	s.Nil(result)
-	s.assertAppErrCode(err, http.StatusUnprocessableEntity)
-}
-
-func (s *KepegawaianJabatanServiceTestSuite) Test_CreateJabatan_InvalidTanggalSK() {
-	req := newCreateReq()
-	req.TanggalSK = ptrTo("2024/01/15")
-
-	result, err := s.svc.CreateJabatan(context.Background(), req, superadminActor())
-
-	s.Nil(result)
-	s.assertAppErrCode(err, http.StatusUnprocessableEntity)
-}
-
 func (s *KepegawaianJabatanServiceTestSuite) Test_CreateJabatan_TanggalSelesaiBeforeMulai() {
 	req := newCreateReq()
-	req.TanggalMulai = "2024-06-01"
-	req.TanggalSelesai = ptrTo("2024-01-01")
+	req.TanggalMulai = *dateOnly(2024, 6, 1)
+	req.TanggalSelesai = dateOnly(2024, 1, 1)
 
 	result, err := s.svc.CreateJabatan(context.Background(), req, superadminActor())
 
@@ -421,7 +419,7 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_CreateJabatan_Primary_Success(
 func (s *KepegawaianJabatanServiceTestSuite) Test_CreateJabatan_PrimaryInactive_SkipsPrimaryCheck() {
 	req := newCreateReq()
 	req.IsPrimary = ptrTo(true)
-	req.TanggalSelesai = ptrTo("2024-06-30") // otomatis is_aktif = false
+	req.TanggalSelesai = dateOnly(2024, 6, 30) // otomatis is_aktif = false
 
 	s.repo.On("CreateJabatan", mock.AnythingOfType("*models.KepegawaianJabatan")).
 		Run(func(args mock.Arguments) {
@@ -448,6 +446,14 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_CreateJabatan_PrimaryCheckRepo
 	s.Error(err)
 }
 
+// Format tanggal salah ditolak saat bind JSON (types.DateOnly.UnmarshalJSON),
+// bukan lagi di service.
+func (s *KepegawaianJabatanServiceTestSuite) Test_CreateRequest_InvalidTanggalFormat_RejectedOnBind() {
+	var req dto.CreateKepegawaianJabatanRequest
+	err := json.Unmarshal([]byte(`{"pegawai_id":1,"tanggal_mulai":"15-01-2024"}`), &req)
+	s.Error(err)
+}
+
 // ── GetByID ──────────────────────────────────────────────────────────────────
 
 func (s *KepegawaianJabatanServiceTestSuite) Test_GetJabatanByID_Superadmin_Success() {
@@ -464,7 +470,8 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_GetJabatanByID_Superadmin_Succ
 	s.Equal(item.PegawaiID, result.PegawaiID)
 	s.Equal(item.PositionID, result.PositionID)
 	s.Equal(item.JobTitleID, result.JobTitleID)
-	s.Equal(item.TanggalMulai.Format("2006-01-02"), result.TanggalMulai)
+	s.Require().NotNil(result.TanggalMulai)
+	s.Equal(item.TanggalMulai.Format(dateLayout), fmtDate(result.TanggalMulai))
 }
 
 func (s *KepegawaianJabatanServiceTestSuite) Test_GetJabatanByID_MapsRelations() {
@@ -816,7 +823,7 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_UpdateJabatan_TanggalSelesai_A
 	actor := superadminActor()
 	existing := newJabatan(1)
 	existing.TanggalMulai = time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
-	req := &dto.UpdateKepegawaianJabatanRequest{TanggalSelesai: ptrTo("2024-12-31")}
+	req := &dto.UpdateKepegawaianJabatanRequest{TanggalSelesai: dateOnly(2024, 12, 31)}
 
 	s.repo.On("GetJabatanByID", int64(1)).Return(existing, nil)
 	s.repo.On("UpdateJabatan", mock.MatchedBy(func(m *models.KepegawaianJabatan) bool {
@@ -828,7 +835,7 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_UpdateJabatan_TanggalSelesai_A
 	s.NoError(err)
 	s.False(result.IsAktif)
 	s.Require().NotNil(result.TanggalSelesai)
-	s.Equal("2024-12-31", *result.TanggalSelesai)
+	s.Equal("2024-12-31", fmtDate(result.TanggalSelesai))
 }
 
 func (s *KepegawaianJabatanServiceTestSuite) Test_UpdateJabatan_TanggalSelesai_ExplicitIsAktifWins() {
@@ -836,7 +843,7 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_UpdateJabatan_TanggalSelesai_E
 	existing := newJabatan(1)
 	existing.TanggalMulai = time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
 	req := &dto.UpdateKepegawaianJabatanRequest{
-		TanggalSelesai: ptrTo("2024-12-31"),
+		TanggalSelesai: dateOnly(2024, 12, 31),
 		IsAktif:        ptrTo(true),
 	}
 
@@ -851,38 +858,11 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_UpdateJabatan_TanggalSelesai_E
 	s.True(result.IsAktif)
 }
 
-func (s *KepegawaianJabatanServiceTestSuite) Test_UpdateJabatan_InvalidTanggalMulai() {
-	actor := superadminActor()
-	existing := newJabatan(1)
-	req := &dto.UpdateKepegawaianJabatanRequest{TanggalMulai: ptrTo("31/12/2024")}
-
-	s.repo.On("GetJabatanByID", int64(1)).Return(existing, nil)
-
-	result, err := s.svc.UpdateJabatan(context.Background(), 1, req, actor)
-
-	s.Nil(result)
-	s.assertAppErrCode(err, http.StatusUnprocessableEntity)
-	s.repo.AssertNotCalled(s.T(), "UpdateJabatan", mock.Anything)
-}
-
-func (s *KepegawaianJabatanServiceTestSuite) Test_UpdateJabatan_InvalidTanggalSelesai() {
-	actor := superadminActor()
-	existing := newJabatan(1)
-	req := &dto.UpdateKepegawaianJabatanRequest{TanggalSelesai: ptrTo("xx")}
-
-	s.repo.On("GetJabatanByID", int64(1)).Return(existing, nil)
-
-	result, err := s.svc.UpdateJabatan(context.Background(), 1, req, actor)
-
-	s.Nil(result)
-	s.assertAppErrCode(err, http.StatusUnprocessableEntity)
-}
-
 func (s *KepegawaianJabatanServiceTestSuite) Test_UpdateJabatan_TanggalSelesaiBeforeMulai() {
 	actor := superadminActor()
 	existing := newJabatan(1)
 	existing.TanggalMulai = time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC)
-	req := &dto.UpdateKepegawaianJabatanRequest{TanggalSelesai: ptrTo("2024-01-01")}
+	req := &dto.UpdateKepegawaianJabatanRequest{TanggalSelesai: dateOnly(2024, 1, 1)}
 
 	s.repo.On("GetJabatanByID", int64(1)).Return(existing, nil)
 
@@ -965,7 +945,7 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_UpdateJabatan_ClosePrimary_Ski
 	existing := newJabatan(1)
 	existing.IsPrimary = true
 	existing.TanggalMulai = time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
-	req := &dto.UpdateKepegawaianJabatanRequest{TanggalSelesai: ptrTo("2024-12-31")} // mutasi: tutup jabatan primer
+	req := &dto.UpdateKepegawaianJabatanRequest{TanggalSelesai: dateOnly(2024, 12, 31)} // mutasi: tutup jabatan primer
 
 	s.repo.On("GetJabatanByID", int64(1)).Return(existing, nil)
 	s.repo.On("UpdateJabatan", mock.AnythingOfType("*models.KepegawaianJabatan")).Return(nil)

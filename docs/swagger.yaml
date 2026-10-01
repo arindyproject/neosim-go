@@ -354,10 +354,16 @@ definitions:
         type: integer
       tanggal_mulai:
         description: 'Format tanggal: YYYY-MM-DD'
+        example: "1990-01-01"
+        format: date
         type: string
       tanggal_selesai:
+        example: "1990-01-01"
+        format: date
         type: string
       tanggal_sk:
+        example: "1990-01-01"
+        format: date
         type: string
     required:
     - department_id
@@ -1388,11 +1394,11 @@ definitions:
       specialization_id:
         type: integer
       tanggal_mulai:
-        type: string
+        $ref: '#/definitions/types.DateOnly'
       tanggal_selesai:
-        type: string
+        $ref: '#/definitions/types.DateOnly'
       tanggal_sk:
-        type: string
+        $ref: '#/definitions/types.DateOnly'
       updated_at:
         type: string
       updated_by:
@@ -2583,11 +2589,19 @@ definitions:
       specialization_id:
         type: integer
       tanggal_mulai:
+        example: "1990-01-01"
+        format: date
         type: string
       tanggal_selesai:
+        example: "1990-01-01"
+        format: date
         type: string
       tanggal_sk:
+        example: "1990-01-01"
+        format: date
         type: string
+    required:
+    - tanggal_mulai
     type: object
   dto.UpdateKepegawaianKontakRequest:
     properties:

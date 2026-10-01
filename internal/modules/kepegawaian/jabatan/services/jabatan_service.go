@@ -33,9 +33,14 @@ func (s *service) CreateJabatan(ctx context.Context, req *dto.CreateKepegawaianJ
 		return nil, appErrors.Wrap(http.StatusUnprocessableEntity, "ID Pegawai tidak ditemukan.", nil)
 	}
 
-	tanggalMulai := *req.TanggalMulai.ToTimePtr()
-	tanggalSelesai := req.TanggalSelesai.ToTimePtr()
-	tanggalSK := req.TanggalSK.ToTimePtr()
+	// tanggal (format sudah divalidasi oleh types.DateOnly saat bind JSON)
+	mulai := req.TanggalMulai.ToTimePtr()
+	if mulai == nil {
+		return nil, unprocessable("tanggal_mulai wajib diisi")
+	}
+	tanggalMulai := *mulai
+	tanggalSelesai := req.TanggalSelesai.ToTimePtr() // nil jika kosong
+	tanggalSK := req.TanggalSK.ToTimePtr()           // nil jika kosong
 
 	isPrimary := false
 	if req.IsPrimary != nil {

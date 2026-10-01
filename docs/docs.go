@@ -14162,13 +14162,19 @@ const docTemplate = `{
                 },
                 "tanggal_mulai": {
                     "description": "Format tanggal: YYYY-MM-DD",
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "1990-01-01"
                 },
                 "tanggal_selesai": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "1990-01-01"
                 },
                 "tanggal_sk": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "1990-01-01"
                 }
             }
         },
@@ -15636,13 +15642,13 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "tanggal_mulai": {
-                    "type": "string"
+                    "$ref": "#/definitions/types.DateOnly"
                 },
                 "tanggal_selesai": {
-                    "type": "string"
+                    "$ref": "#/definitions/types.DateOnly"
                 },
                 "tanggal_sk": {
-                    "type": "string"
+                    "$ref": "#/definitions/types.DateOnly"
                 },
                 "updated_at": {
                     "type": "string"
@@ -17409,6 +17415,9 @@ const docTemplate = `{
         },
         "dto.UpdateKepegawaianJabatanRequest": {
             "type": "object",
+            "required": [
+                "tanggal_mulai"
+            ],
             "properties": {
                 "department_id": {
                     "type": "integer"
@@ -17433,13 +17442,19 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "tanggal_mulai": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "1990-01-01"
                 },
                 "tanggal_selesai": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "1990-01-01"
                 },
                 "tanggal_sk": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "1990-01-01"
                 }
             }
         },
