@@ -8,6 +8,7 @@ import (
 	"neosim_go/internal/modules/kepegawaian/jabatan/contracts"
 	"neosim_go/internal/modules/kepegawaian/jabatan/dto"
 	"neosim_go/internal/modules/kepegawaian/jabatan/models"
+	"neosim_go/internal/shared/sorting"
 
 	"gorm.io/gorm"
 )
@@ -18,6 +19,29 @@ import (
 // pakai repo yang sudah dibuat lewat NewKepegawaianJabatanRepository(db).
 func NewJobTitleRepository(db *gorm.DB) contracts.JobTitleRepository {
 	return &repository{db: db}
+}
+
+// allowedSortColumns memetakan nilai sort_by dari client ke ekspresi kolom DB.
+// Hanya key di map ini yang boleh dipakai (mencegah SQL injection lewat Order()).
+var JobTitleSort = sorting.Config{
+	Allowed: map[string]string{
+		"code":              "code",
+		"label":             "label",
+		"kategori_id":       "kategori_id",
+		"rumpun_profesi_id": "rumpun_profesi_id",
+		"point":             "point",
+		"memerlukan_str":    "memerlukan_str",
+		"memerlukan_sip":    "memerlukan_sip",
+		"is_aktif":          "is_aktif",
+		"jenjang_min":       "jenjang_min",
+		"fhir_code":         "fhir_code",
+
+		"created_at": "created_at",
+		"updated_at": "updated_at",
+	},
+	DefaultColumn: "created_at",
+	DefaultDesc:   true,
+	TieBreaker:    "id",
 }
 
 // ── ListSelect ────────────────────────────────────────────────────────────────
@@ -126,10 +150,14 @@ func (r *repository) ListJobTitle(
 
 	offset := (page - 1) * pageSize
 	err := query.
-		Order("created_at DESC").
+		Scopes(JobTitleSort.Scope(filter.SortBy, filter.SortOrder)).
 		Offset(offset).
 		Limit(pageSize).
 		Find(&items).Error
+
+	if err != nil {
+		return nil, 0, err
+	}
 
 	return items, total, err
 }

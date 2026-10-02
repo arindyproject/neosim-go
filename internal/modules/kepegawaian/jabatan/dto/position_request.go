@@ -44,4 +44,8 @@ type FilterPositionRequest struct {
 
 	// IsRoot true → hanya posisi dengan parent_id NULL (puncak bagan organisasi).
 	IsRoot *bool `query:"is_root"`
+
+	// Sorting
+	SortBy    string `query:"sort_by"`    // name | position_kategori_id | parent_id | department_id | is_aktif | created_at | updated_at
+	SortOrder string `query:"sort_order"` // asc | desc
 }

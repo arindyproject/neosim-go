@@ -7,10 +7,32 @@ import (
 
 	"neosim_go/internal/modules/kepegawaian/jabatan/dto"
 	"neosim_go/internal/modules/kepegawaian/jabatan/models"
+	"neosim_go/internal/shared/sorting"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
+
+// allowedSortColumns memetakan nilai sort_by dari client ke ekspresi kolom DB.
+// Hanya key di map ini yang boleh dipakai (mencegah SQL injection lewat Order()).
+var JabatanSort = sorting.Config{
+	Allowed: map[string]string{
+		"pegawai_id":        "pegawai_id",
+		"department_id":     "department_id",
+		"position_id":       "position_id",
+		"job_title_id":      "job_title_id",
+		"specialization_id": "specialization_id",
+		"is_primary":        "is_primary",
+		"is_aktif":          "is_aktif",
+		"tanggal_mulai":     "tanggal_mulai",
+		"tanggal_selesai":   "tanggal_selesai",
+		"created_at":        "created_at",
+		"updated_at":        "updated_at",
+	},
+	DefaultColumn: "created_at",
+	DefaultDesc:   true,
+	TieBreaker:    "id",
+}
 
 // ── Create ────────────────────────────────────────────────────────────────────
 func (r *repository) CreateJabatan(ctx context.Context, m *models.KepegawaianJabatan) error {
@@ -108,9 +130,9 @@ func (r *repository) ListJabatan(ctx context.Context, page, pageSize int, filter
 		Preload("Position").
 		Preload("JobTitle").
 		Preload("Specialization").
+		Scopes(JabatanSort.Scope(filter.SortBy, filter.SortOrder)).
 		Offset(offset).
 		Limit(pageSize).
-		Order("tanggal_mulai DESC, id DESC").
 		Find(&items).Error; err != nil {
 		return nil, 0, err
 	}

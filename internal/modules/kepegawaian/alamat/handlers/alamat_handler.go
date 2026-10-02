@@ -29,6 +29,8 @@ import (
 //	@Param			kota_kabupaten_id		query		int	false	"Filter by kota_kabupaten_id"
 //	@Param			kecamatan_id		query		int	false	"Filter by kecamatan_id"
 //	@Param			kelurahan_desa_id		query		int	false	"Filter by kelurahan_desa_id"
+//	@Param			sort_by			query		string	false	"Sort column (jalan, tipe_id, negara_id,provinsi_id,kota_kabupaten_id,kecamatan_id,kelurahan_desa_id,  created_at, updated_at)"	Enums(jalan, tipe_id, negara_id,provinsi_id,kota_kabupaten_id,kecamatan_id,kelurahan_desa_id,created_at, updated_at)
+//	@Param			sort_order		query		string	false	"Sort direction"	Enums(asc, desc)
 //	@Param			page		query		int		false	"Page number"
 //	@Param			page_size	query		int		false	"Page size"
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.KepegawaianAlamatResponse}

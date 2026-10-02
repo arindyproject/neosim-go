@@ -28,6 +28,8 @@ import (
 //	@Param          is_primary  query       boolean false   "Filter by Is Primary Status"
 //	@Param          is_aktif    query       boolean false   "Filter by Is Aktif Status"
 //	@Param          is_expired  query       boolean false   "Filter identifier yang sudah expired"
+//	@Param			sort_by			query		string	false	"Sort column (pegawai_id,tipe_id,nilai,is_primary,is_aktif,is_expired, created_at, updated_at)"	Enums(pegawai_id,tipe_id,nilai,is_primary,is_aktif,is_expired, created_at, updated_at)
+//	@Param			sort_order		query		string	false	"Sort direction"	Enums(asc, desc)
 //	@Param          page        query       int     false   "Page number"
 //	@Param          page_size   query       int     false   "Page size"
 //	@Success        200         {object}    response.MyGoResponse{data=[]dto.KepegawaianIdentifierResponse}

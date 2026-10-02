@@ -62,6 +62,8 @@ func errInvalidQuery(key string) error { return invalidQueryError(key) }
 //	@Param			specialization_id	query		int		false	"Filter by specialization ID"
 //	@Param			is_primary			query		bool	false	"Filter by jabatan primer"
 //	@Param			is_aktif			query		bool	false	"Filter by status aktif"
+//	@Param			sort_by				query		string	false	"Sort column (pegawai_id,department_id,position_id,job_title_id,specialization_id,is_primary,tanggal_mulai,tanggal_selesai,tanggal_sk,is_aktif, created_at, updated_at)"	Enums(pegawai_id,department_id,position_id,job_title_id,specialization_id,is_primary,tanggal_mulai,tanggal_selesai,tanggal_sk,is_aktif, created_at, updated_at)
+//	@Param			sort_order			query		string	false	"Sort direction"	Enums(asc, desc)
 //	@Param			page				query		int		false	"Page number"
 //	@Param			page_size			query		int		false	"Page size"
 //	@Success		200					{object}	response.MyGoResponse{data=[]dto.KepegawaianJabatanResponse}
@@ -69,6 +71,12 @@ func errInvalidQuery(key string) error { return invalidQueryError(key) }
 func (h *KepegawaianJabatanHandler) ListJabatan(c *echo.Context) error {
 	var filter dto.FilterKepegawaianJabatanRequest
 	var err error
+
+	filter = dto.FilterKepegawaianJabatanRequest{
+		// Sorting ---------------------------
+		SortBy:    c.QueryParam("sort_by"),
+		SortOrder: c.QueryParam("sort_order"),
+	}
 
 	if filter.PegawaiID, err = parseOptionalInt64Query(c, "pegawai_id"); err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)

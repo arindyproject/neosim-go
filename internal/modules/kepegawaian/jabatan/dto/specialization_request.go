@@ -33,4 +33,8 @@ type FilterSpecializationRequest struct {
 	JobTitleID *int64 `query:"job_title_id"`
 	KategoriID *int64 `query:"kategori_id"`
 	IsAktif    *bool  `query:"is_aktif"`
+
+	// Sorting
+	SortBy    string `query:"sort_by"`    // code | label | job_title_id | kategori_id | is_aktif | created_at | updated_at
+	SortOrder string `query:"sort_order"` // asc | desc
 }

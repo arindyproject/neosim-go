@@ -8,6 +8,7 @@ import (
 	"neosim_go/internal/modules/kepegawaian/jabatan/contracts"
 	"neosim_go/internal/modules/kepegawaian/jabatan/dto"
 	"neosim_go/internal/modules/kepegawaian/jabatan/models"
+	"neosim_go/internal/shared/sorting"
 
 	"gorm.io/gorm"
 )
@@ -18,6 +19,25 @@ import (
 // pakai repo yang sudah dibuat lewat NewKepegawaianJabatanRepository(db).
 func NewPositionRepository(db *gorm.DB) contracts.PositionRepository {
 	return &repository{db: db}
+}
+
+// allowedSortColumns memetakan nilai sort_by dari client ke ekspresi kolom DB.
+// Hanya key di map ini yang boleh dipakai (mencegah SQL injection lewat Order()).
+var PositionSort = sorting.Config{
+	Allowed: map[string]string{
+		"name":                 "name",
+		"position_kategori_id": "position_kategori_id",
+		"department_id":        "department_id",
+		"level_hierarki":       "level_hierarki",
+		"kuota":                "kuota",
+		"point":                "point",
+		"is_aktif":             "is_aktif",
+		"created_at":           "created_at",
+		"updated_at":           "updated_at",
+	},
+	DefaultColumn: "created_at",
+	DefaultDesc:   true,
+	TieBreaker:    "id",
 }
 
 // ── Create ────────────────────────────────────────────────────────────────────
@@ -123,7 +143,7 @@ func (r *repository) ListPosition(
 
 	offset := (page - 1) * pageSize
 	err := query.
-		Order("level_hierarki ASC, created_at DESC").
+		Scopes(PositionSort.Scope(filter.SortBy, filter.SortOrder)).
 		Offset(offset).
 		Limit(pageSize).
 		Find(&items).Error

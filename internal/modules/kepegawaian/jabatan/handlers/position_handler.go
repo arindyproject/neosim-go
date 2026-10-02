@@ -33,6 +33,8 @@ import (
 //	@Param			department_id			query		int		false	"Filter by department ID"
 //	@Param			is_aktif				query		bool	false	"Filter by status aktif"
 //	@Param			is_root					query		bool	false	"true = hanya posisi puncak hierarki (parent_id NULL)"
+//	@Param			sort_by					query		string	false	"Sort column (name,position_kategori_id,department_id,level_hierarki,kuota,point,is_aktif, created_at, updated_at)"	Enums(name,position_kategori_id,department_id,level_hierarki,kuota,point,is_aktif, created_at, updated_at)
+//	@Param			sort_order				query		string	false	"Sort direction"	Enums(asc, desc)
 //	@Param			page					query		int		false	"Page number"
 //	@Param			page_size				query		int		false	"Page size"
 //	@Success		200						{object}	response.MyGoResponse{data=[]dto.PositionResponse}
@@ -40,6 +42,10 @@ import (
 func (h *KepegawaianJabatanHandler) ListPosition(c *echo.Context) error {
 	filter := dto.FilterPositionRequest{
 		Name: c.QueryParam("name"),
+
+		// Sorting ---------------------------
+		SortBy:    c.QueryParam("sort_by"),
+		SortOrder: c.QueryParam("sort_order"),
 	}
 
 	if v := c.QueryParam("position_kategori_id"); v != "" {

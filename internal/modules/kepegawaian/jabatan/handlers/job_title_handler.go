@@ -56,6 +56,8 @@ func (h *KepegawaianJabatanHandler) ListSelectJobTitle(c *echo.Context) error {
 //	@Param			memerlukan_str		query		bool	false	"Filter by wajib STR"
 //	@Param			memerlukan_sip		query		bool	false	"Filter by wajib SIP"
 //	@Param			is_aktif			query		bool	false	"Filter by status aktif"
+//	@Param			sort_by			    query		string	false	"Sort column (code,label, kategori_id,rumpun_profesi_id,point,memerlukan_str,memerlukan_sip,jenjang_min,fhir_code, created_at, updated_at)"	Enums(code,label, kategori_id,rumpun_profesi_id,point,memerlukan_str,memerlukan_sip,jenjang_min,fhir_code, created_at, updated_at)
+//	@Param			sort_order		    query		string	false	"Sort direction"	Enums(asc, desc)
 //	@Param			page				query		int		false	"Page number"
 //	@Param			page_size			query		int		false	"Page size"
 //	@Success		200					{object}	response.MyGoResponse{data=[]dto.JobTitleResponse}
@@ -64,6 +66,9 @@ func (h *KepegawaianJabatanHandler) ListJobTitle(c *echo.Context) error {
 	filter := dto.FilterJobTitleRequest{
 		Label: c.QueryParam("label"),
 		Code:  c.QueryParam("code"),
+		// Sorting ---------------------------
+		SortBy:    c.QueryParam("sort_by"),
+		SortOrder: c.QueryParam("sort_order"),
 	}
 
 	if v := c.QueryParam("kategori_id"); v != "" {

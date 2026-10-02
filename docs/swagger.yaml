@@ -4222,6 +4222,28 @@ paths:
         in: query
         name: kelurahan_desa_id
         type: integer
+      - description: Sort column (jalan, tipe_id, negara_id,provinsi_id,kota_kabupaten_id,kecamatan_id,kelurahan_desa_id,  created_at,
+          updated_at)
+        enum:
+        - jalan
+        - tipe_id
+        - negara_id
+        - provinsi_id
+        - kota_kabupaten_id
+        - kecamatan_id
+        - kelurahan_desa_id
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
       - description: Page number
         in: query
         name: page
@@ -4437,6 +4459,22 @@ paths:
         in: query
         name: name
         type: string
+      - description: Sort column (code, label, created_at, updated_at)
+        enum:
+        - label
+        - code
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
       - description: Page number
         in: query
         name: page
@@ -4634,6 +4672,27 @@ paths:
         in: query
         name: is_expired
         type: boolean
+      - description: Sort column (pegawai_id,tipe_id,nilai,is_primary,is_aktif,is_expired,
+          created_at, updated_at)
+        enum:
+        - pegawai_id
+        - tipe_id
+        - nilai
+        - is_primary
+        - is_aktif
+        - is_expired
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
       - description: Page number
         in: query
         name: page
@@ -4891,6 +4950,24 @@ paths:
         in: query
         name: is_required
         type: boolean
+      - description: Sort column (code, label,is_nakes,is_required, created_at, updated_at)
+        enum:
+        - code
+        - label
+        - is_nakes
+        - is_required
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
       - description: Page number
         in: query
         name: page
@@ -5092,6 +5169,31 @@ paths:
         in: query
         name: is_aktif
         type: boolean
+      - description: Sort column (pegawai_id,department_id,position_id,job_title_id,specialization_id,is_primary,tanggal_mulai,tanggal_selesai,tanggal_sk,is_aktif,
+          created_at, updated_at)
+        enum:
+        - pegawai_id
+        - department_id
+        - position_id
+        - job_title_id
+        - specialization_id
+        - is_primary
+        - tanggal_mulai
+        - tanggal_selesai
+        - tanggal_sk
+        - is_aktif
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
       - description: Page number
         in: query
         name: page
@@ -5283,6 +5385,24 @@ paths:
         in: query
         name: label
         type: string
+      - description: Sort column (code, label,fhir_code, created_at, updated_at)
+        enum:
+        - code
+        - label
+        - fhir_code
+        - fhir_code
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
       - description: Page number
         in: query
         name: page
@@ -5456,9 +5576,30 @@ paths:
       - application/json
       description: Get paginated list of JobTitleRumpunProfesi
       parameters:
-      - description: Filter by name (partial match)
+      - description: Filter by code (partial match)
         in: query
-        name: name
+        name: code
+        type: string
+      - description: Filter by label (partial match)
+        in: query
+        name: label
+        type: string
+      - description: Sort column (code, label,fhir_code, created_at, updated_at)
+        enum:
+        - code
+        - label
+        - fhir_code
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
         type: string
       - description: Page number
         in: query
@@ -5661,6 +5802,30 @@ paths:
         in: query
         name: is_aktif
         type: boolean
+      - description: Sort column (code,label, kategori_id,rumpun_profesi_id,point,memerlukan_str,memerlukan_sip,jenjang_min,fhir_code,
+          created_at, updated_at)
+        enum:
+        - code
+        - label
+        - kategori_id
+        - rumpun_profesi_id
+        - point
+        - memerlukan_str
+        - memerlukan_sip
+        - jenjang_min
+        - fhir_code
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
       - description: Page number
         in: query
         name: page
@@ -5841,6 +6006,23 @@ paths:
       - description: Filter by label (partial match)
         in: query
         name: label
+        type: string
+      - description: Sort column (code,label,fhir_code, created_at, updated_at)
+        enum:
+        - code
+        - label
+        - fhir_code
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
         type: string
       - description: Page number
         in: query
@@ -6039,6 +6221,28 @@ paths:
         in: query
         name: is_root
         type: boolean
+      - description: Sort column (name,position_kategori_id,department_id,level_hierarki,kuota,point,is_aktif,
+          created_at, updated_at)
+        enum:
+        - name
+        - position_kategori_id
+        - department_id
+        - level_hierarki
+        - kuota
+        - point
+        - is_aktif
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
       - description: Page number
         in: query
         name: page
@@ -6220,6 +6424,23 @@ paths:
       - description: Filter by label (partial match)
         in: query
         name: label
+        type: string
+      - description: Sort column (code,label,fhir_code, created_at, updated_at)
+        enum:
+        - code
+        - label
+        - fhir_code
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
         type: string
       - description: Page number
         in: query
@@ -6414,6 +6635,28 @@ paths:
         in: query
         name: is_aktif
         type: boolean
+      - description: Sort column (code,label,job_title_id,kategori_id,gelar,lama_pendidikan_tahun,fhir_code,
+          created_at, updated_at)
+        enum:
+        - code
+        - label
+        - job_title_id
+        - kategori_id
+        - gelar
+        - lama_pendidikan_tahun
+        - fhir_code
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
       - description: Page number
         in: query
         name: page

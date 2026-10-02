@@ -8,6 +8,7 @@ import (
 	"neosim_go/internal/modules/kepegawaian/jabatan/contracts"
 	"neosim_go/internal/modules/kepegawaian/jabatan/dto"
 	"neosim_go/internal/modules/kepegawaian/jabatan/models"
+	"neosim_go/internal/shared/sorting"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -19,6 +20,26 @@ import (
 // pakai repo yang sudah dibuat lewat NewKepegawaianJabatanRepository(db).
 func NewSpecializationRepository(db *gorm.DB) contracts.SpecializationRepository {
 	return &repository{db: db}
+}
+
+// allowedSortColumns memetakan nilai sort_by dari client ke ekspresi kolom DB.
+// Hanya key di map ini yang boleh dipakai (mencegah SQL injection lewat Order()).
+var SpecializationSort = sorting.Config{
+	Allowed: map[string]string{
+		"code":                  "code",
+		"label":                 "label",
+		"job_title_id":          "job_title_id",
+		"kategori_id":           "kategori_id",
+		"gelar":                 "gelar",
+		"lama_pendidikan_tahun": "lama_pendidikan_tahun",
+		"fhir_code":             "fhir_code",
+		"is_aktif":              "is_aktif",
+		"created_at":            "created_at",
+		"updated_at":            "updated_at",
+	},
+	DefaultColumn: "created_at",
+	DefaultDesc:   true,
+	TieBreaker:    "id",
 }
 
 // ── Create ────────────────────────────────────────────────────────────────────
@@ -97,7 +118,7 @@ func (r *repository) ListSpecialization(ctx context.Context, page, pageSize int,
 		Preload("Kategori").
 		Offset(offset).
 		Limit(pageSize).
-		Order("created_at DESC").
+		Scopes(SpecializationSort.Scope(filter.SortBy, filter.SortOrder)).
 		Find(&items).Error; err != nil {
 		return nil, 0, err
 	}

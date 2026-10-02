@@ -49,4 +49,8 @@ type FilterKepegawaianJabatanRequest struct {
 	SpecializationID *int64 `query:"specialization_id"`
 	IsPrimary        *bool  `query:"is_primary"`
 	IsAktif          *bool  `query:"is_aktif"`
+
+	// Sorting
+	SortBy    string `query:"sort_by"`    // pegawai_id | department_id | position_id | job_title_id | specializations_id | is_primary | is_aktif | created_at | updated_at
+	SortOrder string `query:"sort_order"` // asc | desc
 }

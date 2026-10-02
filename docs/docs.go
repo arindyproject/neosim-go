@@ -1174,6 +1174,33 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "enum": [
+                            "jalan",
+                            "tipe_id",
+                            "negara_id",
+                            "provinsi_id",
+                            "kota_kabupaten_id",
+                            "kecamatan_id",
+                            "kelurahan_desa_id",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "description": "Sort column (jalan, tipe_id, negara_id,provinsi_id,kota_kabupaten_id,kecamatan_id,kelurahan_desa_id,  created_at, updated_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort direction",
+                        "name": "sort_order",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "description": "Page number",
                         "name": "page",
@@ -1334,6 +1361,28 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Filter by name (partial match)",
                         "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "label",
+                            "code",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "description": "Sort column (code, label, created_at, updated_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort direction",
+                        "name": "sort_order",
                         "in": "query"
                     },
                     {
@@ -1874,6 +1923,32 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "enum": [
+                            "pegawai_id",
+                            "tipe_id",
+                            "nilai",
+                            "is_primary",
+                            "is_aktif",
+                            "is_expired",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "description": "Sort column (pegawai_id,tipe_id,nilai,is_primary,is_aktif,is_expired, created_at, updated_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort direction",
+                        "name": "sort_order",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "description": "Page number",
                         "name": "page",
@@ -2101,6 +2176,30 @@ const docTemplate = `{
                         "type": "boolean",
                         "description": "Filter by is_required",
                         "name": "is_required",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "code",
+                            "label",
+                            "is_nakes",
+                            "is_required",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "description": "Sort column (code, label,is_nakes,is_required, created_at, updated_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort direction",
+                        "name": "sort_order",
                         "in": "query"
                     },
                     {
@@ -2647,6 +2746,36 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "enum": [
+                            "pegawai_id",
+                            "department_id",
+                            "position_id",
+                            "job_title_id",
+                            "specialization_id",
+                            "is_primary",
+                            "tanggal_mulai",
+                            "tanggal_selesai",
+                            "tanggal_sk",
+                            "is_aktif",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "description": "Sort column (pegawai_id,department_id,position_id,job_title_id,specialization_id,is_primary,tanggal_mulai,tanggal_selesai,tanggal_sk,is_aktif, created_at, updated_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort direction",
+                        "name": "sort_order",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "description": "Page number",
                         "name": "page",
@@ -2762,6 +2891,30 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Filter by label (partial match)",
                         "name": "label",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "code",
+                            "label",
+                            "fhir_code",
+                            "fhir_code",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "description": "Sort column (code, label,fhir_code, created_at, updated_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort direction",
+                        "name": "sort_order",
                         "in": "query"
                     },
                     {
@@ -3063,8 +3216,37 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Filter by name (partial match)",
-                        "name": "name",
+                        "description": "Filter by code (partial match)",
+                        "name": "code",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by label (partial match)",
+                        "name": "label",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "code",
+                            "label",
+                            "fhir_code",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "description": "Sort column (code, label,fhir_code, created_at, updated_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort direction",
+                        "name": "sort_order",
                         "in": "query"
                     },
                     {
@@ -3407,6 +3589,35 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "enum": [
+                            "code",
+                            "label",
+                            "kategori_id",
+                            "rumpun_profesi_id",
+                            "point",
+                            "memerlukan_str",
+                            "memerlukan_sip",
+                            "jenjang_min",
+                            "fhir_code",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "description": "Sort column (code,label, kategori_id,rumpun_profesi_id,point,memerlukan_str,memerlukan_sip,jenjang_min,fhir_code, created_at, updated_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort direction",
+                        "name": "sort_order",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "description": "Page number",
                         "name": "page",
@@ -3713,6 +3924,29 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Filter by label (partial match)",
                         "name": "label",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "code",
+                            "label",
+                            "fhir_code",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "description": "Sort column (code,label,fhir_code, created_at, updated_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort direction",
+                        "name": "sort_order",
                         "in": "query"
                     },
                     {
@@ -4049,6 +4283,33 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "enum": [
+                            "name",
+                            "position_kategori_id",
+                            "department_id",
+                            "level_hierarki",
+                            "kuota",
+                            "point",
+                            "is_aktif",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "description": "Sort column (name,position_kategori_id,department_id,level_hierarki,kuota,point,is_aktif, created_at, updated_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort direction",
+                        "name": "sort_order",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "description": "Page number",
                         "name": "page",
@@ -4355,6 +4616,29 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Filter by label (partial match)",
                         "name": "label",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "code",
+                            "label",
+                            "fhir_code",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "description": "Sort column (code,label,fhir_code, created_at, updated_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort direction",
+                        "name": "sort_order",
                         "in": "query"
                     },
                     {
@@ -4682,6 +4966,33 @@ const docTemplate = `{
                         "type": "boolean",
                         "description": "Filter by status aktif",
                         "name": "is_aktif",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "code",
+                            "label",
+                            "job_title_id",
+                            "kategori_id",
+                            "gelar",
+                            "lama_pendidikan_tahun",
+                            "fhir_code",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "description": "Sort column (code,label,job_title_id,kategori_id,gelar,lama_pendidikan_tahun,fhir_code, created_at, updated_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort direction",
+                        "name": "sort_order",
                         "in": "query"
                     },
                     {

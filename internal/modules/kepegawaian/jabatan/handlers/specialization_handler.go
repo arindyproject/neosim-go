@@ -32,6 +32,8 @@ import (
 //	@Param			job_title_id	query		int		false	"Filter by job title ID"
 //	@Param			kategori_id		query		int		false	"Filter by kategori ID"
 //	@Param			is_aktif		query		bool	false	"Filter by status aktif"
+//	@Param			sort_by			query		string	false	"Sort column (code,label,job_title_id,kategori_id,gelar,lama_pendidikan_tahun,fhir_code, created_at, updated_at)"	Enums(code,label,job_title_id,kategori_id,gelar,lama_pendidikan_tahun,fhir_code, created_at, updated_at)
+//	@Param			sort_order		query		string	false	"Sort direction"	Enums(asc, desc)
 //	@Param			page			query		int		false	"Page number"
 //	@Param			page_size		query		int		false	"Page size"
 //	@Success		200				{object}	response.MyGoResponse{data=[]dto.SpecializationResponse}
@@ -40,6 +42,10 @@ func (h *KepegawaianJabatanHandler) ListSpecialization(c *echo.Context) error {
 	filter := dto.FilterSpecializationRequest{
 		Code:  c.QueryParam("code"),
 		Label: c.QueryParam("label"),
+
+		// Sorting ---------------------------
+		SortBy:    c.QueryParam("sort_by"),
+		SortOrder: c.QueryParam("sort_order"),
 	}
 
 	if v := c.QueryParam("job_title_id"); v != "" {

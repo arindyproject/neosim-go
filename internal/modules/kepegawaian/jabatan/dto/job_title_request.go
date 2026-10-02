@@ -55,4 +55,8 @@ type FilterJobTitleRequest struct {
 	MemerlukanSTR   *bool  `query:"memerlukan_str"`
 	MemerlukanSIP   *bool  `query:"memerlukan_sip"`
 	IsAktif         *bool  `query:"is_aktif"`
+
+	// Sorting
+	SortBy    string `query:"sort_by"`    // code | label | kategori_id | rumpun_profesi_id | point | memerlukan_str | memerlukan_sip | is_aktif | created_at | updated_at
+	SortOrder string `query:"sort_order"` // asc | desc
 }
