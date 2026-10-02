@@ -31,4 +31,8 @@ type FilterKepegawaianIdentifierRequest struct {
 	IsPrimary *bool  `query:"is_primary"`
 	IsAktif   *bool  `query:"is_aktif"`
 	IsExpired *bool  `query:"is_expired"`
+
+	// Sorting
+	SortBy    string `query:"sort_by"`    // pegawai_id | tipe_id | nilai | is_primary | is_expired | created_at | updated_at
+	SortOrder string `query:"sort_order"` // asc | desc
 }

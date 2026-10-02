@@ -22,6 +22,8 @@ import (
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Param			name		query		string	false	"Filter by name (partial match)"
+//	@Param			sort_by			query		string	false	"Sort column (name, created_at, updated_at)"	Enums(name, created_at, updated_at)
+//	@Param			sort_order		query		string	false	"Sort direction"	Enums(asc, desc)
 //	@Param			page		query		int		false	"Page number"
 //	@Param			page_size	query		int		false	"Page size"
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.ArtikelKategoriResponse}
@@ -30,6 +32,9 @@ func (h *ArtikelKategoriHandler) ListKategori(c *echo.Context) error {
 
 	filter := dto.FilterArtikelKategoriRequest{
 		Name: c.QueryParam("name"),
+		// Sorting ---------------------------
+		SortBy:    c.QueryParam("sort_by"),
+		SortOrder: c.QueryParam("sort_order"),
 	}
 	page, pageSize := he.ParsePagination(c, h.cfg)
 

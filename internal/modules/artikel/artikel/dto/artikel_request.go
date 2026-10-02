@@ -15,4 +15,8 @@ type UpdateArtikelRequest struct {
 // FilterArtikelRequest request body untuk filter Artikel
 type FilterArtikelRequest struct {
 	Name string `query:"name"`
+
+	// Sorting
+	SortBy    string `query:"sort_by"` // name | created_at | updated_at
+	SortOrder string `query:"sort_order"` // asc | desc
 }

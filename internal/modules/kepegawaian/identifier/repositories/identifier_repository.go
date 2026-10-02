@@ -7,9 +7,27 @@ import (
 
 	"neosim_go/internal/modules/kepegawaian/identifier/dto"
 	"neosim_go/internal/modules/kepegawaian/identifier/models"
+	"neosim_go/internal/shared/sorting"
 
 	"gorm.io/gorm"
 )
+
+// allowedSortColumns memetakan nilai sort_by dari client ke ekspresi kolom DB.
+// Hanya key di map ini yang boleh dipakai (mencegah SQL injection lewat Order()).
+var IdentifierSort = sorting.Config{
+	Allowed: map[string]string{
+		"pegawai_id": "pegawai_id",
+		"tipe_id":    "tipe_id",
+		"nilai":      "nilai",
+		"is_primary": "is_primary",
+		"is_expired": "is_expired",
+		"created_at": "created_at",
+		"updated_at": "updated_at",
+	},
+	DefaultColumn: "created_at",
+	DefaultDesc:   true,
+	TieBreaker:    "id",
+}
 
 // ── Create ────────────────────────────────────────────────────────────────────
 
@@ -97,13 +115,15 @@ func (r *repository) ListIdentifier(
 	}
 
 	offset := (page - 1) * pageSize
-	err := query.
-		Order("created_at DESC").
+	if err := query.
+		Scopes(IdentifierSort.Scope(filter.SortBy, filter.SortOrder)).
 		Offset(offset).
 		Limit(pageSize).
-		Find(&items).Error
+		Find(&items).Error; err != nil {
+		return nil, 0, err
+	}
 
-	return items, total, err
+	return items, total, nil
 }
 
 func (r *repository) FindByPegawaiID(

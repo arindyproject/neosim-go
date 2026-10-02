@@ -7,9 +7,29 @@ import (
 
 	"neosim_go/internal/modules/kepegawaian/alamat/dto"
 	"neosim_go/internal/modules/kepegawaian/alamat/models"
+	"neosim_go/internal/shared/sorting"
 
 	"gorm.io/gorm"
 )
+
+// allowedSortColumns memetakan nilai sort_by dari client ke ekspresi kolom DB.
+// Hanya key di map ini yang boleh dipakai (mencegah SQL injection lewat Order()).
+var AlamatSort = sorting.Config{
+	Allowed: map[string]string{
+		"tipe_id":           "tipe_id",
+		"jalan":             "jalan",
+		"negara_id":         "negara_id",
+		"provinsi_id":       "provinsi_id",
+		"kota_kabupaten_id": "kota_kabupaten_id",
+		"kecamatan_id":      "kecamatan_id",
+		"kelurahan_desa_id": "kelurahan_desa_id",
+		"created_at":        "created_at",
+		"updated_at":        "updated_at",
+	},
+	DefaultColumn: "created_at",
+	DefaultDesc:   true,
+	TieBreaker:    "id",
+}
 
 // ── Create ────────────────────────────────────────────────────────────────────
 func (r *repository) CreateAlamat(ctx context.Context, m *models.KepegawaianAlamat) error {
@@ -99,7 +119,11 @@ func (r *repository) ListAlamat(ctx context.Context, page, pageSize int, filter 
 	}
 
 	offset := (page - 1) * pageSize
-	if err := query.Offset(offset).Limit(pageSize).Order("created_at DESC").Find(&items).Error; err != nil {
+	if err := query.
+		Scopes(AlamatSort.Scope(filter.SortBy, filter.SortOrder)).
+		Offset(offset).
+		Limit(pageSize).
+		Find(&items).Error; err != nil {
 		return nil, 0, err
 	}
 

@@ -562,6 +562,10 @@ type Update{{.ModuleTitle}}Request struct {
 // Filter{{.ModuleTitle}}Request request body untuk filter {{.ModuleTitle}}
 type Filter{{.ModuleTitle}}Request struct {
 	Name string ` + "`" + `query:"name"` + "`" + `
+
+	// Sorting
+	SortBy    string ` + "`" + `query:"sort_by"` + "`" + ` // name | created_at | updated_at
+	SortOrder string ` + "`" + `query:"sort_order"` + "`" + ` // asc | desc
 }
 `
 
@@ -691,7 +695,23 @@ import (
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
 
 	"gorm.io/gorm"
+
+	"neosim_go/internal/shared/sorting"
+
 )
+
+// allowedSortColumns memetakan nilai sort_by dari client ke ekspresi kolom DB.
+// Hanya key di map ini yang boleh dipakai (mencegah SQL injection lewat Order()).
+var {{.MethodSuffix}}Sort = sorting.Config{
+	Allowed: map[string]string{
+		"name":          "name",
+		"created_at":    "created_at",
+		"updated_at":    "updated_at",
+	},
+	DefaultColumn: "created_at",
+	DefaultDesc:   true,
+	TieBreaker:    "id",
+}
 
 // ── Create ────────────────────────────────────────────────────────────────────
 func (r *repository) Create{{.MethodSuffix}}(ctx context.Context, m *models.{{.ModuleTitle}}) error {
@@ -724,7 +744,11 @@ func (r *repository) List{{.MethodSuffix}}(ctx context.Context, page, pageSize i
 	}
 
 	offset := (page - 1) * pageSize
-	if err := query.Offset(offset).Limit(pageSize).Order("created_at DESC").Find(&items).Error; err != nil {
+	if err := query.
+		Scopes({{.MethodSuffix}}Sort.Scope(filter.SortBy, filter.SortOrder)).
+		Offset(offset).
+		Limit(pageSize).
+		Find(&items).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -919,6 +943,7 @@ import (
 	"errors"
 	"net/http"
 	"time"
+	"strings"
 
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
@@ -1004,6 +1029,17 @@ func (s *service) List{{.MethodSuffix}}(ctx context.Context,page, pageSize int, 
 	if pageSize < 1 || pageSize > s.cfg.DefaultPageSizeMax {
 		pageSize = s.cfg.DefaultPageSizeMax
 	}
+
+	// Normalisasi filter & sorting (filter bisa nil kalau dipanggil dari tempat lain)
+	if filter == nil {
+		filter = &dto.Filter{{.ModuleTitle}}Request{}
+	}
+	filter.SortBy = strings.ToLower(strings.TrimSpace(filter.SortBy))
+	filter.SortOrder = strings.ToLower(strings.TrimSpace(filter.SortOrder))
+	if filter.SortOrder != "asc" && filter.SortOrder != "desc" {
+		filter.SortOrder = "asc"
+	}
+
 	items, total, err := s.repo.List{{.MethodSuffix}}(ctx,page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
@@ -1124,6 +1160,8 @@ import (
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Param			name		query		string	false	"Filter by name (partial match)"
+//	@Param			sort_by			query		string	false	"Sort column (name, created_at, updated_at)"	Enums(name, created_at, updated_at)
+//	@Param			sort_order		query		string	false	"Sort direction"	Enums(asc, desc)
 //	@Param			page		query		int		false	"Page number"
 //	@Param			page_size	query		int		false	"Page size"
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.{{.ModuleTitle}}Response}
@@ -1132,6 +1170,9 @@ func (h *{{.ModuleTitle}}Handler) List{{.MethodSuffix}}(c *echo.Context) error {
 
 	filter := dto.Filter{{.ModuleTitle}}Request{
 		Name: c.QueryParam("name"),
+		// Sorting ---------------------------
+		SortBy:    c.QueryParam("sort_by"),
+		SortOrder: c.QueryParam("sort_order"),
 	}
 	page, pageSize := he.ParsePagination(c, h.cfg)
 
@@ -2524,6 +2565,10 @@ type Update{{.ItemTitle}}Request struct {
 // Filter{{.ItemTitle}}Request request body untuk filter {{.ItemTitle}}
 type Filter{{.ItemTitle}}Request struct {
 	Name string ` + "`" + `query:"name"` + "`" + `
+
+	// Sorting
+	SortBy    string ` + "`" + `query:"sort_by"` + "`" + `  // name | created_at | updated_at
+	SortOrder string ` + "`" + `query:"sort_order"` + "`" + ` // asc | desc
 }
 `
 
@@ -2631,6 +2676,7 @@ import (
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
 
 	"gorm.io/gorm"
+	"neosim_go/internal/shared/sorting"
 )
 
 // New{{.ItemTitle}}Repository mengembalikan struct repository yang SAMA
@@ -2639,6 +2685,19 @@ import (
 // pakai repo yang sudah dibuat lewat New{{.SubModuleTitle}}Repository(db).
 func New{{.ItemTitle}}Repository(db *gorm.DB) contracts.{{.ItemTitle}}Repository {
 	return &repository{db: db}
+}
+
+// allowedSortColumns memetakan nilai sort_by dari client ke ekspresi kolom DB.
+// Hanya key di map ini yang boleh dipakai (mencegah SQL injection lewat Order()).
+var {{.ItemTitle}}Sort = sorting.Config{
+	Allowed: map[string]string{
+		"name":          "name",
+		"created_at":    "created_at",
+		"updated_at":    "updated_at",
+	},
+	DefaultColumn: "created_at",
+	DefaultDesc:   true,
+	TieBreaker:    "id",
 }
 
 // ── Create ────────────────────────────────────────────────────────────────────
@@ -2669,7 +2728,11 @@ func (r *repository) List{{.ItemTitle}}(ctx context.Context,page, pageSize int, 
 		return nil, 0, err
 	}
 	offset := (page - 1) * pageSize
-	if err := query.Offset(offset).Limit(pageSize).Order("created_at DESC").Find(&items).Error; err != nil {
+	if err := query.
+		Scopes({{.ItemTitle}}Sort.Scope(filter.SortBy, filter.SortOrder)).
+		Offset(offset).
+		Limit(pageSize).
+		Find(&items).Error; err != nil {
 		return nil, 0, err
 	}
 	return items, total, nil
@@ -2699,6 +2762,7 @@ import (
 	"errors"
 	"net/http"
 	"time"
+	"strings"
 
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/dto"
 	"{{.ProjectModule}}/internal/modules/{{.MainModule}}/{{.SubModule}}/models"
@@ -2787,6 +2851,16 @@ func (s *service) List{{.ItemTitle}}(ctx context.Context,page, pageSize int, fil
 	}
 	if pageSize < 1 || pageSize > s.cfg.DefaultPageSizeMax {
 		pageSize = s.cfg.DefaultPageSizeMax
+	}
+
+	// Normalisasi filter & sorting (filter bisa nil kalau dipanggil dari tempat lain)
+	if filter == nil {
+		filter = &dto.Filter{{.ItemTitle}}Request{}
+	}
+	filter.SortBy = strings.ToLower(strings.TrimSpace(filter.SortBy))
+	filter.SortOrder = strings.ToLower(strings.TrimSpace(filter.SortOrder))
+	if filter.SortOrder != "asc" && filter.SortOrder != "desc" {
+		filter.SortOrder = "asc"
 	}
 	items, total, err := s.repo.List{{.ItemTitle}}(ctx,page, pageSize, filter)
 	if err != nil {
@@ -2992,12 +3066,19 @@ import (
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Param			name		query		string	false	"Filter by name (partial match)"
+//	@Param			sort_by			query		string	false	"Sort column (name, created_at, updated_at)"	Enums(name, created_at, updated_at)
+//	@Param			sort_order		query		string	false	"Sort direction"	Enums(asc, desc)
 //	@Param			page		query		int		false	"Page number"
 //	@Param			page_size	query		int		false	"Page size"
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.{{.ItemTitle}}Response}
 //	@Router			{{.URLPrefixOpenAPI}} [get]
 func (h *{{.SubModuleTitle}}Handler) List{{.ItemTitle}}(c *echo.Context) error {
-	filter := dto.Filter{{.ItemTitle}}Request{Name: c.QueryParam("name")}
+	filter := dto.Filter{{.ItemTitle}}Request{
+		Name: c.QueryParam("name"),
+		// Sorting ---------------------------
+		SortBy:    c.QueryParam("sort_by"),
+		SortOrder: c.QueryParam("sort_order"),
+	}
 	page, pageSize := he.ParsePagination(c, h.cfg)
 
 	actor := he.BuildAuthContext(c)

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"time"
+	"strings"
 
 	"neosim_go/internal/modules/artikel/kategori/dto"
 	"neosim_go/internal/modules/artikel/kategori/models"
@@ -93,6 +94,16 @@ func (s *service) ListTag(ctx context.Context,page, pageSize int, filter *dto.Fi
 	}
 	if pageSize < 1 || pageSize > s.cfg.DefaultPageSizeMax {
 		pageSize = s.cfg.DefaultPageSizeMax
+	}
+
+	// Normalisasi filter & sorting (filter bisa nil kalau dipanggil dari tempat lain)
+	if filter == nil {
+		filter = &dto.FilterTagRequest{}
+	}
+	filter.SortBy = strings.ToLower(strings.TrimSpace(filter.SortBy))
+	filter.SortOrder = strings.ToLower(strings.TrimSpace(filter.SortOrder))
+	if filter.SortOrder != "asc" && filter.SortOrder != "desc" {
+		filter.SortOrder = "asc"
 	}
 	items, total, err := s.repo.ListTag(ctx,page, pageSize, filter)
 	if err != nil {

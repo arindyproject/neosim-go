@@ -35,4 +35,8 @@ type FilterTipeRequest struct {
 	Label      string `query:"label"`
 	IsNakes    *bool  `query:"is_nakes"`
 	IsRequired *bool  `query:"is_required"`
+
+	// Sorting
+	SortBy    string `query:"sort_by"`    // code | label | is_nakes | is_required | created_at | updated_at
+	SortOrder string `query:"sort_order"` // asc | desc
 }

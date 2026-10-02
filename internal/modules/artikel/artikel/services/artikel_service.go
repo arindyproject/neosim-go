@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"time"
+	"strings"
 
 	"neosim_go/internal/modules/artikel/artikel/dto"
 	"neosim_go/internal/modules/artikel/artikel/models"
@@ -90,6 +91,17 @@ func (s *service) ListArtikel(ctx context.Context,page, pageSize int, filter *dt
 	if pageSize < 1 || pageSize > s.cfg.DefaultPageSizeMax {
 		pageSize = s.cfg.DefaultPageSizeMax
 	}
+
+	// Normalisasi filter & sorting (filter bisa nil kalau dipanggil dari tempat lain)
+	if filter == nil {
+		filter = &dto.FilterArtikelRequest{}
+	}
+	filter.SortBy = strings.ToLower(strings.TrimSpace(filter.SortBy))
+	filter.SortOrder = strings.ToLower(strings.TrimSpace(filter.SortOrder))
+	if filter.SortOrder != "asc" && filter.SortOrder != "desc" {
+		filter.SortOrder = "asc"
+	}
+
 	items, total, err := s.repo.ListArtikel(ctx,page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err

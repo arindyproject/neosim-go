@@ -15,4 +15,8 @@ type UpdateTagRequest struct {
 // FilterTagRequest request body untuk filter Tag
 type FilterTagRequest struct {
 	Name string `query:"name"`
+
+	// Sorting
+	SortBy    string `query:"sort_by"`  // name | created_at | updated_at
+	SortOrder string `query:"sort_order"` // asc | desc
 }

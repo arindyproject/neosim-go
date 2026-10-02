@@ -51,4 +51,8 @@ type FilterKepegawaianAlamatRequest struct {
 	KotaKabupatenID *int64 `query:"kota_kabupaten_id"`
 	KecamatanID     *int64 `query:"kecamatan_id"`
 	KelurahanDesaID *int64 `query:"kelurahan_desa_id"`
+
+	// Sorting
+	SortBy    string `query:"sort_by"`    // tipe_id | jalan | negara_id | provinsi_id | kota_kabupaten_id | kecamatan_id | kelurahan_desa_id | created_at | updated_at
+	SortOrder string `query:"sort_order"` // asc | desc
 }

@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
 	"neosim_go/internal/modules/kepegawaian/identifier/dto"
@@ -146,6 +147,16 @@ func (s *service) ListIdentifier(
 	}
 	if pageSize < 1 || pageSize > s.cfg.DefaultPageSizeMax {
 		pageSize = s.cfg.DefaultPageSize
+	}
+
+	// Normalisasi filter & sorting (filter bisa nil kalau dipanggil dari tempat lain)
+	if filter == nil {
+		filter = &dto.FilterKepegawaianIdentifierRequest{}
+	}
+	filter.SortBy = strings.ToLower(strings.TrimSpace(filter.SortBy))
+	filter.SortOrder = strings.ToLower(strings.TrimSpace(filter.SortOrder))
+	if filter.SortOrder != "asc" && filter.SortOrder != "desc" {
+		filter.SortOrder = "asc"
 	}
 
 	items, total, err := s.repo.ListIdentifier(ctx, page, pageSize, filter)

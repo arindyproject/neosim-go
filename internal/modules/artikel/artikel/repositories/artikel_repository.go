@@ -9,7 +9,23 @@ import (
 	"neosim_go/internal/modules/artikel/artikel/models"
 
 	"gorm.io/gorm"
+
+	"neosim_go/internal/shared/sorting"
+
 )
+
+// allowedSortColumns memetakan nilai sort_by dari client ke ekspresi kolom DB.
+// Hanya key di map ini yang boleh dipakai (mencegah SQL injection lewat Order()).
+var ArtikelSort = sorting.Config{
+	Allowed: map[string]string{
+		"name":          "name",
+		"created_at":    "created_at",
+		"updated_at":    "updated_at",
+	},
+	DefaultColumn: "created_at",
+	DefaultDesc:   true,
+	TieBreaker:    "id",
+}
 
 // ── Create ────────────────────────────────────────────────────────────────────
 func (r *repository) CreateArtikel(ctx context.Context, m *models.Artikel) error {
@@ -42,7 +58,11 @@ func (r *repository) ListArtikel(ctx context.Context, page, pageSize int, filter
 	}
 
 	offset := (page - 1) * pageSize
-	if err := query.Offset(offset).Limit(pageSize).Order("created_at DESC").Find(&items).Error; err != nil {
+	if err := query.
+		Scopes(ArtikelSort.Scope(filter.SortBy, filter.SortOrder)).
+		Offset(offset).
+		Limit(pageSize).
+		Find(&items).Error; err != nil {
 		return nil, 0, err
 	}
 

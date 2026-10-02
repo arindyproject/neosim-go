@@ -3543,6 +3543,21 @@ paths:
         in: query
         name: name
         type: string
+      - description: Sort column (name, created_at, updated_at)
+        enum:
+        - name
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
       - description: Page number
         in: query
         name: page
@@ -3691,6 +3706,21 @@ paths:
         in: query
         name: name
         type: string
+      - description: Sort column (name, created_at, updated_at)
+        enum:
+        - name
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
       - description: Page number
         in: query
         name: page
@@ -3838,6 +3868,21 @@ paths:
       - description: Filter by name (partial match)
         in: query
         name: name
+        type: string
+      - description: Sort column (name, created_at, updated_at)
+        enum:
+        - name
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
         type: string
       - description: Page number
         in: query
