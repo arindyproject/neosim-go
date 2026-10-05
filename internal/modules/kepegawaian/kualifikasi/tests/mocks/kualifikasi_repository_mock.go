@@ -29,8 +29,8 @@ func (m *KepegawaianKualifikasiRepositoryMock) GetKualifikasiByID(ctx context.Co
 	return args.Get(0).(*models.KepegawaianKualifikasi), args.Error(1)
 }
 
-func (m *KepegawaianKualifikasiRepositoryMock) GetKualifikasiByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int) ([]models.KepegawaianKualifikasi, int64, error) {
-	args := m.Called(pegawaiID, page, pageSize)
+func (m *KepegawaianKualifikasiRepositoryMock) GetKualifikasiByPegawaiID(ctx context.Context, pegawaiID int64, filter *dto.FilterKepegawaianKualifikasiRequest, page, pageSize int) ([]models.KepegawaianKualifikasi, int64, error) {
+	args := m.Called(pegawaiID, filter, page, pageSize)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
 	}

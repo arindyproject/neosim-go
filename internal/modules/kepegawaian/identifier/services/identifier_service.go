@@ -173,6 +173,7 @@ func (s *service) ListIdentifier(
 func (s *service) ListByPegawai(
 	ctx context.Context,
 	pegawaiID int64,
+	filter *dto.FilterKepegawaianIdentifierRequest,
 	page, pageSize int,
 	actor he.AuthContext,
 ) ([]dto.KepegawaianIdentifierResponse, int64, error) {
@@ -192,7 +193,17 @@ func (s *service) ListByPegawai(
 		pageSize = s.cfg.DefaultPageSize
 	}
 
-	items, total, err := s.repo.FindByPegawaiID(ctx, pegawaiID, page, pageSize)
+	// Normalisasi filter & sorting (filter bisa nil kalau dipanggil dari tempat lain)
+	if filter == nil {
+		filter = &dto.FilterKepegawaianIdentifierRequest{}
+	}
+	filter.SortBy = strings.ToLower(strings.TrimSpace(filter.SortBy))
+	filter.SortOrder = strings.ToLower(strings.TrimSpace(filter.SortOrder))
+	if filter.SortOrder != "asc" && filter.SortOrder != "desc" {
+		filter.SortOrder = "asc"
+	}
+
+	items, total, err := s.repo.FindByPegawaiID(ctx, pegawaiID, page, pageSize, filter)
 
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal mengambil identifier pegawai")

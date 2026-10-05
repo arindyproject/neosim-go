@@ -61,13 +61,37 @@ func (r *repository) GetJabatanByID(ctx context.Context, id int64) (*models.Kepe
 
 // ── GetByPegawaiID ────────────────────────────────────────────────────────────
 // Riwayat penugasan satu pegawai (aktif dan yang sudah ditutup), dengan paginasi.
-func (r *repository) GetJabatanByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int) ([]models.KepegawaianJabatan, int64, error) {
+func (r *repository) GetJabatanByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int, filter *dto.FilterKepegawaianJabatanRequest) ([]models.KepegawaianJabatan, int64, error) {
 	var items []models.KepegawaianJabatan
 	var total int64
 
 	query := r.db.WithContext(ctx).
 		Model(&models.KepegawaianJabatan{}).
 		Where("pegawai_id = ? AND deleted_at IS NULL", pegawaiID)
+
+	if filter != nil {
+		if filter.PegawaiID != nil {
+			query = query.Where("pegawai_id = ?", *filter.PegawaiID)
+		}
+		if filter.DepartmentID != nil {
+			query = query.Where("department_id = ?", *filter.DepartmentID)
+		}
+		if filter.PositionID != nil {
+			query = query.Where("position_id = ?", *filter.PositionID)
+		}
+		if filter.JobTitleID != nil {
+			query = query.Where("job_title_id = ?", *filter.JobTitleID)
+		}
+		if filter.SpecializationID != nil {
+			query = query.Where("specialization_id = ?", *filter.SpecializationID)
+		}
+		if filter.IsPrimary != nil {
+			query = query.Where("is_primary = ?", *filter.IsPrimary)
+		}
+		if filter.IsAktif != nil {
+			query = query.Where("is_aktif = ?", *filter.IsAktif)
+		}
+	}
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
@@ -78,7 +102,7 @@ func (r *repository) GetJabatanByPegawaiID(ctx context.Context, pegawaiID int64,
 		Preload("Position").
 		Preload("JobTitle").
 		Preload("Specialization").
-		Order("is_aktif DESC, is_primary DESC, tanggal_mulai DESC, id DESC").
+		Scopes(JabatanSort.Scope(filter.SortBy, filter.SortOrder)).
 		Offset(offset).
 		Limit(pageSize).
 		Find(&items).Error; err != nil {

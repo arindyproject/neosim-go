@@ -28,15 +28,17 @@ import (
 //	@Param          is_primary  query       boolean false   "Filter by Is Primary Status"
 //	@Param          is_aktif    query       boolean false   "Filter by Is Aktif Status"
 //	@Param          is_expired  query       boolean false   "Filter identifier yang sudah expired"
-//	@Param			sort_by			query		string	false	"Sort column (pegawai_id,tipe_id,nilai,is_primary,is_aktif,is_expired, created_at, updated_at)"	Enums(pegawai_id,tipe_id,nilai,is_primary,is_aktif,is_expired, created_at, updated_at)
-//	@Param			sort_order		query		string	false	"Sort direction"	Enums(asc, desc)
+//	@Param			sort_by		query		string	false	"Sort column (pegawai_id,tipe_id,nilai,is_primary,is_aktif,is_expired, created_at, updated_at)"	Enums(pegawai_id,tipe_id,nilai,is_primary,is_aktif,is_expired, created_at, updated_at)
+//	@Param			sort_order	query		string	false	"Sort direction"	Enums(asc, desc)
 //	@Param          page        query       int     false   "Page number"
 //	@Param          page_size   query       int     false   "Page size"
 //	@Success        200         {object}    response.MyGoResponse{data=[]dto.KepegawaianIdentifierResponse}
 //	@Router         /kepegawaian/identifier [get]
 func (h *KepegawaianIdentifierHandler) ListIdentifier(c *echo.Context) error {
 	filter := dto.FilterKepegawaianIdentifierRequest{
-		Nilai: c.QueryParam("nilai"),
+		Nilai:     c.QueryParam("nilai"),
+		SortBy:    c.QueryParam("sort_by"),
+		SortOrder: c.QueryParam("sort_order"),
 	}
 
 	if pegawaiIDStr := c.QueryParam("pegawai_id"); pegawaiIDStr != "" {
@@ -111,7 +113,14 @@ func (h *KepegawaianIdentifierHandler) GetIdentifierByID(c *echo.Context) error 
 //	@Accept         json
 //	@Produce        json
 //	@Security       BearerAuth
-//	@Param          pegawai_id  path        int true    "ID pegawai"
+//	@Param          pegawai_id  path        int 	true    "ID pegawai"
+//	@Param          tipe_id     query       int     false   "Filter by Tipe ID"
+//	@Param          nilai       query       string  false   "Filter by Nilai / Nomor Identifier (partial match)"
+//	@Param          is_primary  query       boolean false   "Filter by Is Primary Status"
+//	@Param          is_aktif    query       boolean false   "Filter by Is Aktif Status"
+//	@Param          is_expired  query       boolean false   "Filter identifier yang sudah expired"
+//	@Param			sort_by		query		string	false	"Sort column (pegawai_id,tipe_id,nilai,is_primary,is_aktif,is_expired, created_at, updated_at)"	Enums(pegawai_id,tipe_id,nilai,is_primary,is_aktif,is_expired, created_at, updated_at)
+//	@Param			sort_order	query		string	false	"Sort direction"	Enums(asc, desc)
 //	@Param          page        query       int     false   "Page number"
 //	@Param          page_size   query       int     false   "Page size"
 //	@Success        200         {object}    response.MyGoResponse{data=[]dto.KepegawaianIdentifierResponse}
@@ -125,7 +134,47 @@ func (h *KepegawaianIdentifierHandler) ListByPegawai(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
 
-	items, total, err := h.service.ListByPegawai(c.Request().Context(), pegawaiID, page, pageSize, actor)
+	filter := dto.FilterKepegawaianIdentifierRequest{
+		Nilai:     c.QueryParam("nilai"),
+		SortBy:    c.QueryParam("sort_by"),
+		SortOrder: c.QueryParam("sort_order"),
+	}
+
+	if pegawaiIDStr := c.QueryParam("pegawai_id"); pegawaiIDStr != "" {
+		if val, err := strconv.ParseInt(pegawaiIDStr, 10, 64); err == nil {
+			filter.PegawaiID = &val
+		}
+	}
+
+	if tipeIDStr := c.QueryParam("tipe_id"); tipeIDStr != "" {
+		if val, err := strconv.ParseInt(tipeIDStr, 10, 64); err == nil {
+			filter.TipeID = &val
+		}
+	}
+
+	if isPrimaryStr := c.QueryParam("is_primary"); isPrimaryStr != "" {
+		if val, err := strconv.ParseBool(isPrimaryStr); err == nil {
+			filter.IsPrimary = &val
+		}
+	}
+
+	if isAktifStr := c.QueryParam("is_aktif"); isAktifStr != "" {
+		if val, err := strconv.ParseBool(isAktifStr); err == nil {
+			filter.IsAktif = &val
+		}
+	}
+
+	if isExpiredStr := c.QueryParam("is_expired"); isExpiredStr != "" {
+		if val, err := strconv.ParseBool(isExpiredStr); err == nil {
+			filter.IsExpired = &val
+		}
+	}
+
+	if err := c.Bind(filter); err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Gagal membind filter", nil, nil)
+	}
+
+	items, total, err := h.service.ListByPegawai(c.Request().Context(), pegawaiID, &filter, page, pageSize, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}

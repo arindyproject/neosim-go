@@ -7,6 +7,7 @@ import (
 
 	"neosim_go/internal/modules/kepegawaian/pegawai/dto"
 	"neosim_go/internal/modules/kepegawaian/pegawai/models"
+	"neosim_go/internal/shared/sorting"
 
 	"gorm.io/gorm"
 )
@@ -27,6 +28,35 @@ func withPegawaiPreloads(db *gorm.DB) *gorm.DB {
 		db = db.Preload(rel)
 	}
 	return db
+}
+
+// allowedSortColumns memetakan nilai sort_by dari client ke ekspresi kolom DB.
+// Hanya key di map ini yang boleh dipakai (mencegah SQL injection lewat Order()).
+var KepegawaianPegawaiSort = sorting.Config{
+	Allowed: map[string]string{
+		"user_id":              "user_id",
+		"nik":                  "nik",
+		"ihs_number":           "ihs_number",
+		"nomor_pegawai":        "nomor_pegawai",
+		"nama_lengkap":         "nama_lengkap",
+		"tanggal_lahir":        "tanggal_lahir",
+		"tempat_lahir":         "tempat_lahir",
+		"golongan_darah_id":    "golongan_darah_id",
+		"agama_id":             "agama_id",
+		"status_pernikahan_id": "status_pernikahan_id",
+		"kewarganegaraan":      "kewarganegaraan",
+		"tanggal_masuk":        "tanggal_masuk",
+		"tanggal_keluar":       "tanggal_keluar",
+		"jenis_id":             "jenis_id",
+		"status_id":            "status_id",
+		"foto_url":             "foto_url",
+		"is_aktif":             "is_aktif",
+		"created_at":           "created_at",
+		"updated_at":           "updated_at",
+	},
+	DefaultColumn: "created_at",
+	DefaultDesc:   true,
+	TieBreaker:    "id",
 }
 
 // ── Create ────────────────────────────────────────────────────────────────────
@@ -158,7 +188,7 @@ func (r *repository) ListPegawai(ctx context.Context, page, pageSize int, filter
 
 	offset := (page - 1) * pageSize
 	if err := withPegawaiPreloads(query).
-		Order("nama_lengkap ASC, id ASC").
+		Scopes(KepegawaianPegawaiSort.Scope(filter.SortBy, filter.SortOrder)).
 		Offset(offset).
 		Limit(pageSize).
 		Find(&items).Error; err != nil {

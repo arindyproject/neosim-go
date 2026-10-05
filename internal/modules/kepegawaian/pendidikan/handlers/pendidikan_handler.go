@@ -22,13 +22,15 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param          pegawai_id  query       int     false   "Filter by Pegawai ID"
-//	@Param          jenjang_id     query       int     false   "Filter by Jenjang ID"
-//	@Param          nama_institusi       query       string  false   "Filter by nama_institusi "
-//	@Param          bidang_studi       query       string  false   "Filter by bidang_studi "
-//	@Param          nomor_ijazah       query       string  false   "Filter by nomor_ijazah "
-//	@Param			page		query		int		false	"Page number"
-//	@Param			page_size	query		int		false	"Page size"
+//	@Param          pegawai_id 		 	query       int     false   "Filter by Pegawai ID"
+//	@Param          jenjang_id     		query       int     false   "Filter by Jenjang ID"
+//	@Param          nama_institusi      query       string  false   "Filter by nama_institusi "
+//	@Param          bidang_studi       	query       string  false   "Filter by bidang_studi "
+//	@Param          nomor_ijazah       	query       string  false   "Filter by nomor_ijazah "
+//	@Param			sort_by				query		string	false	"Sort column (pegawai_id , jenjang_id , nama_institusi , nomor_ijazah , bidang_studi , alamat_institusi , fhir_code , point , created_at , updated_at)"	Enums(pegawai_id , jenjang_id , nama_institusi , nomor_ijazah , bidang_studi , alamat_institusi , fhir_code , point , created_at , updated_at)
+//	@Param			sort_order			query		string	false	"Sort direction"	Enums(asc, desc)
+//	@Param			page				query		int		false	"Page number"
+//	@Param			page_size			query		int		false	"Page size"
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.KepegawaianPendidikanResponse}
 //	@Router			/kepegawaian/pendidikan [get]
 func (h *KepegawaianPendidikanHandler) ListPendidikan(c *echo.Context) error {
@@ -37,6 +39,10 @@ func (h *KepegawaianPendidikanHandler) ListPendidikan(c *echo.Context) error {
 		NamaInstitusi: c.QueryParam("nama_institusi"),
 		BidangStudi:   c.QueryParam("bidang_studi"),
 		NomorIjazah:   c.QueryParam("nomor_ijazah"),
+
+		// Sorting ---------------------------
+		SortBy:    c.QueryParam("sort_by"),
+		SortOrder: c.QueryParam("sort_order"),
 	}
 
 	if pegawaiIDStr := c.QueryParam("pegawai_id"); pegawaiIDStr != "" {
@@ -73,6 +79,12 @@ func (h *KepegawaianPendidikanHandler) ListPendidikan(c *echo.Context) error {
 //	@Produce        json
 //	@Security       BearerAuth
 //	@Param          pegawai_id  path        int true    "ID pegawai"
+//	@Param          jenjang_id     		query       int     false   "Filter by Jenjang ID"
+//	@Param          nama_institusi      query       string  false   "Filter by nama_institusi "
+//	@Param          bidang_studi       	query       string  false   "Filter by bidang_studi "
+//	@Param          nomor_ijazah       	query       string  false   "Filter by nomor_ijazah "
+//	@Param			sort_by				query		string	false	"Sort column (pegawai_id , jenjang_id , nama_institusi , nomor_ijazah , bidang_studi , alamat_institusi , fhir_code , point , created_at , updated_at)"	Enums(pegawai_id , jenjang_id , nama_institusi , nomor_ijazah , bidang_studi , alamat_institusi , fhir_code , point , created_at , updated_at)
+//	@Param			sort_order			query		string	false	"Sort direction"	Enums(asc, desc)
 //	@Param          page        query       int     false   "Page number"
 //	@Param          page_size   query       int     false   "Page size"
 //	@Success        200         {object}    response.MyGoResponse{data=[]dto.KepegawaianIdentifierResponse}
@@ -81,12 +93,22 @@ func (h *KepegawaianPendidikanHandler) ListByPegawai(c *echo.Context) error {
 	page, pageSize := he.ParsePagination(c, h.cfg)
 	actor := he.BuildAuthContext(c)
 
+	filter := dto.FilterKepegawaianPendidikanRequest{
+		NamaInstitusi: c.QueryParam("nama_institusi"),
+		BidangStudi:   c.QueryParam("bidang_studi"),
+		NomorIjazah:   c.QueryParam("nomor_ijazah"),
+
+		// Sorting ---------------------------
+		SortBy:    c.QueryParam("sort_by"),
+		SortOrder: c.QueryParam("sort_order"),
+	}
+
 	pegawaiID, err := parsePegawaiID(c)
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
 
-	items, total, err := h.service.ListPendidikanByPegawai(c.Request().Context(), pegawaiID, page, pageSize, actor)
+	items, total, err := h.service.ListPendidikanByPegawai(c.Request().Context(), pegawaiID, &filter, page, pageSize, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}

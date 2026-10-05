@@ -46,6 +46,20 @@ func TestMain(m *testing.M) {
 // KepegawaianKontakServiceTestSuite dipakai bersama oleh SELURUH item di dalam
 // sub-module ini (lihat mis. tag_service_test.go) — karena hanya ada satu
 // struct service/repository, satu suite ini sudah cukup untuk semuanya.
+type kepegawaianKontakRepositoryAdapter struct {
+	*mocks.KepegawaianKontakRepositoryMock
+}
+
+func (a *kepegawaianKontakRepositoryAdapter) GetKontakByPegawaiID(
+	ctx context.Context,
+	pegawaiID int64,
+	page int,
+	pageSize int,
+	filter *dto.FilterKepegawaianKontakRequest,
+) ([]models.KepegawaianKontak, int64, error) {
+	return a.KepegawaianKontakRepositoryMock.GetKontakByPegawaiID(ctx, pegawaiID, filter, page, pageSize)
+}
+
 type KepegawaianKontakServiceTestSuite struct {
 	suite.Suite
 	repo        *mocks.KepegawaianKontakRepositoryMock
@@ -68,14 +82,15 @@ func (s *KepegawaianKontakServiceTestSuite) SetupTest() {
 		DefaultPageSizeMax: 10,
 	}
 	cacheManager := cache.NewManager(nil, false, 0)
-	s.svc = services.NewKepegawaianKontakService(s.repo, s.rbacRepo, s.authRepo, s.userRepo, s.pegawaiRepo, s.cfg, cacheManager)
+	repoAdapter := &kepegawaianKontakRepositoryAdapter{KepegawaianKontakRepositoryMock: s.repo}
+	s.svc = services.NewKepegawaianKontakService(repoAdapter, s.rbacRepo, s.authRepo, s.userRepo, s.pegawaiRepo, s.cfg, cacheManager)
 
 	// Stub default agar buildCreator/buildAuditMaps tidak panic saat memanggil userRepo.
 	// Boleh dipanggil 0 kali atau lebih (.Maybe()) tergantung skenario test.
 	s.userRepo.On("GetByID", mock.Anything).Return(nil, nil).Maybe()
 	s.repo.On("GetTipeByCode", mock.Anything).Return(nil, nil).Maybe()
 	s.repo.On("GetTipeByLabel", mock.Anything).Return(nil, nil).Maybe()
-	s.repo.On("GetKontakByPegawaiID", mock.Anything, mock.Anything, mock.Anything).Return(nil, int64(0), nil).Maybe()
+	//s.repo.On("GetKontakByPegawaiID", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, int64(0), nil).Maybe()
 	s.repo.On("ExistsByNilaiAndTipe", mock.Anything, mock.Anything, mock.Anything).Return(false, nil).Maybe()
 	s.repo.On("UnsetPrimaryByPegawaiIDAndTipe", mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
 

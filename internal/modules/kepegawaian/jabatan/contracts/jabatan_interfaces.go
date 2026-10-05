@@ -13,7 +13,7 @@ import (
 type KepegawaianJabatanRepository interface {
 	CreateJabatan(ctx context.Context, m *models.KepegawaianJabatan) error
 	GetJabatanByID(ctx context.Context, id int64) (*models.KepegawaianJabatan, error)
-	GetJabatanByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int) ([]models.KepegawaianJabatan, int64, error)
+	GetJabatanByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int, filter *dto.FilterKepegawaianJabatanRequest) ([]models.KepegawaianJabatan, int64, error)
 	ExistsPrimaryAktifByPegawai(ctx context.Context, pegawaiID, excludeID int64) (bool, error)
 	ListJabatan(ctx context.Context, page, pageSize int, filter *dto.FilterKepegawaianJabatanRequest) ([]models.KepegawaianJabatan, int64, error)
 	UpdateJabatan(ctx context.Context, m *models.KepegawaianJabatan) error
@@ -25,7 +25,7 @@ type KepegawaianJabatanRepository interface {
 // & services/jabatan_service.go).
 type KepegawaianJabatanService interface {
 	CreateJabatan(ctx context.Context, req *dto.CreateKepegawaianJabatanRequest, actor he.AuthContext) (*dto.KepegawaianJabatanResponse, error)
-	GetJabatanByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int, actor he.AuthContext) ([]dto.KepegawaianJabatanResponse, int64, error)
+	GetJabatanByPegawaiID(ctx context.Context, pegawaiID int64, filter *dto.FilterKepegawaianJabatanRequest, page, pageSize int, actor he.AuthContext) ([]dto.KepegawaianJabatanResponse, int64, error)
 	GetJabatanByID(ctx context.Context, id int64, actor he.AuthContext) (*dto.KepegawaianJabatanResponse, error)
 	ListJabatan(ctx context.Context, page, pageSize int, filter *dto.FilterKepegawaianJabatanRequest, actor he.AuthContext) ([]dto.KepegawaianJabatanResponse, int64, error)
 	UpdateJabatan(ctx context.Context, id int64, req *dto.UpdateKepegawaianJabatanRequest, actor he.AuthContext) (*dto.KepegawaianJabatanResponse, error)

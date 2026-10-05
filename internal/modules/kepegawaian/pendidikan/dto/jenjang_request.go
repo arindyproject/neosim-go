@@ -22,4 +22,8 @@ type UpdateJenjangRequest struct {
 type FilterJenjangRequest struct {
 	Code  string `query:"code"`
 	Label string `query:"label"`
+
+	// Sorting
+	SortBy    string `query:"sort_by"`    // code | label | fhir_code | point | created_at | updated_at
+	SortOrder string `query:"sort_order"` // asc | desc
 }

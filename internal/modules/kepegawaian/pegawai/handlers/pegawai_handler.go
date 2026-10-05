@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 
 	"neosim_go/internal/modules/kepegawaian/pegawai/dto"
 	"neosim_go/internal/shared/binding"
@@ -21,16 +23,79 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			name		query		string	false	"Filter by name (partial match)"
-//	@Param			page		query		int		false	"Page number"
-//	@Param			page_size	query		int		false	"Page size"
-//	@Success		200			{object}	response.MyGoResponse{data=[]dto.KepegawaianPegawaiResponse}
+//	@Param			name					query		string	false	"Filter by nama_lengkap (partial match)"
+//	@Param			nik						query		string	false	"Filter by nik (partial match)"
+//	@Param			nomor_pegawai			query		string	false	"Filter by nomor_pegawai (partial match)"
+//	@Param			jenis_kelamin_id		query		int		false	"Filter by jenis_kelamin_id"
+//	@Param			agama_id				query		int		false	"Filter by agama_id"
+//	@Param			status_pernikahan_id	query		int		false	"Filter by status_pernikahan_id"
+//	@Param			jenis_id				query		int		false	"Filter by jenis_id"
+//	@Param			status_id				query		int		false	"Filter by status_id"
+//	@Param			is_aktif				query		bool	false	"Filter by is_aktif"
+//	@Param			sort_by					query		string	false	"Sort column"	Enums(nik, ihs_number, nomor_pegawai, nama_lengkap, jenis_kelamin_id, tanggal_lahir, tempat_lahir, golongan_darah_id, agama_id, status_pernikahan_id, kewarganegaraan, tanggal_masuk, tanggal_keluar, jenis_id, status_id, foto_url, is_aktif, created_at, updated_at)
+//	@Param			sort_order				query		string	false	"Sort direction"	Enums(asc, desc)
+//	@Param			page					query		int		false	"Page number"
+//	@Param			page_size				query		int		false	"Page size"
+//	@Success		200						{object}	response.MyGoResponse{data=[]dto.KepegawaianPegawaiResponse}
+//	@Failure		400						{object}	response.MyGoResponse
 //	@Router			/kepegawaian/pegawai [get]
 func (h *KepegawaianPegawaiHandler) ListPegawai(c *echo.Context) error {
+	// Helper kecil: parse query param opsional jadi pointer, simpan error pertama.
+	var parseErr error
+	int64Q := func(key string) *int64 {
+		v := c.QueryParam(key)
+		if v == "" {
+			return nil
+		}
+		n, err := strconv.ParseInt(v, 10, 64)
+		if err != nil {
+			if parseErr == nil {
+				parseErr = fmt.Errorf("parameter %s harus berupa angka", key)
+			}
+			return nil
+		}
+		return &n
+	}
+	boolQ := func(key string) *bool {
+		v := c.QueryParam(key)
+		if v == "" {
+			return nil
+		}
+		b, err := strconv.ParseBool(v)
+		if err != nil {
+			if parseErr == nil {
+				parseErr = fmt.Errorf("parameter %s harus berupa true atau false", key)
+			}
+			return nil
+		}
+		return &b
+	}
 
 	filter := dto.FilterKepegawaianPegawaiRequest{
-		Name: c.QueryParam("name"),
+		// Filter teks
+		Name:         c.QueryParam("name"),
+		NIK:          c.QueryParam("nik"),
+		NomorPegawai: c.QueryParam("nomor_pegawai"),
+
+		// Filter ID (pointer: nil = tidak difilter)
+		JenisKelaminID:     int64Q("jenis_kelamin_id"),
+		AgamaID:            int64Q("agama_id"),
+		StatusPernikahanID: int64Q("status_pernikahan_id"),
+		JenisID:            int64Q("jenis_id"),
+		StatusID:           int64Q("status_id"),
+
+		// Filter boolean (pointer agar false tetap bisa dipakai)
+		IsAktif: boolQ("is_aktif"),
+
+		// Sorting
+		SortBy:    c.QueryParam("sort_by"),
+		SortOrder: c.QueryParam("sort_order"),
 	}
+
+	if parseErr != nil {
+		return response.Response(c, http.StatusBadRequest, false, parseErr.Error(), nil, nil)
+	}
+
 	page, pageSize := he.ParsePagination(c, h.cfg)
 
 	actor := he.BuildAuthContext(c)

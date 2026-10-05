@@ -8,6 +8,7 @@ import (
 	"neosim_go/internal/modules/kepegawaian/kualifikasi/contracts"
 	"neosim_go/internal/modules/kepegawaian/kualifikasi/dto"
 	"neosim_go/internal/modules/kepegawaian/kualifikasi/models"
+	"neosim_go/internal/shared/sorting"
 
 	"gorm.io/gorm"
 )
@@ -18,6 +19,21 @@ import (
 // pakai repo yang sudah dibuat lewat NewKepegawaianKualifikasiRepository(db).
 func NewTipeRepository(db *gorm.DB) contracts.TipeRepository {
 	return &repository{db: db}
+}
+
+// allowedSortColumns memetakan nilai sort_by dari client ke ekspresi kolom DB.
+// Hanya key di map ini yang boleh dipakai (mencegah SQL injection lewat Order()).
+var TipeSort = sorting.Config{
+	Allowed: map[string]string{
+		"code":       "code",
+		"label":      "label",
+		"fhir_code":  "fhir_code",
+		"created_at": "created_at",
+		"updated_at": "updated_at",
+	},
+	DefaultColumn: "created_at",
+	DefaultDesc:   true,
+	TieBreaker:    "id",
 }
 
 // ── Create ────────────────────────────────────────────────────────────────────
@@ -90,7 +106,11 @@ func (r *repository) ListTipe(ctx context.Context, page, pageSize int, filter *d
 		return nil, 0, err
 	}
 	offset := (page - 1) * pageSize
-	if err := query.Offset(offset).Limit(pageSize).Order("created_at DESC").Find(&items).Error; err != nil {
+	if err := query.
+		Offset(offset).
+		Limit(pageSize).
+		Scopes(TipeSort.Scope(filter.SortBy, filter.SortOrder)).
+		Find(&items).Error; err != nil {
 		return nil, 0, err
 	}
 	return items, total, nil

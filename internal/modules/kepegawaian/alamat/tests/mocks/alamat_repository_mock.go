@@ -37,8 +37,8 @@ func (m *KepegawaianAlamatRepositoryMock) FindAlamatByPegawaiID(ctx context.Cont
 	return args.Get(0).([]models.KepegawaianAlamat), args.Error(1)
 }
 
-func (m *KepegawaianAlamatRepositoryMock) GetAlamatByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int) ([]models.KepegawaianAlamat, int64, error) {
-	args := m.Called(pegawaiID, page, pageSize)
+func (m *KepegawaianAlamatRepositoryMock) GetAlamatByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int, filter *dto.FilterKepegawaianAlamatRequest) ([]models.KepegawaianAlamat, int64, error) {
+	args := m.Called(pegawaiID, page, pageSize, filter)
 	if args.Get(0) == nil {
 		return nil, int64(args.Int(1)), args.Error(2)
 	}

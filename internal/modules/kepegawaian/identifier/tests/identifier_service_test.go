@@ -371,13 +371,10 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_ListByPegawai_Superadmin_Su
 		*factories.NewKepegawaianIdentifierFactory().With("PegawaiID", int64(10)).Make(),
 	}
 
-	// Perbaikan: tambahkan argumen 1 (page), 10 (pageSize), dan return int64(1) untuk total
-	s.repo.On("FindByPegawaiID", s.ctx, int64(10), 1, 10).Return(items, int64(1), nil)
-
-	// Jangan lupa mock userRepo jika buildAuditMaps memanggil GetByIDs
+	s.repo.On("FindByPegawaiID", s.ctx, int64(10), 1, 10, mock.Anything).Return(items, int64(1), nil)
 	s.userRepo.On("GetByIDs", mock.Anything).Return([]userModels.User{}, nil).Maybe()
 
-	result, total, err := s.svc.ListByPegawai(s.ctx, 10, 1, 10, actor)
+	result, total, err := s.svc.ListByPegawai(s.ctx, 10, &dto.FilterKepegawaianIdentifierRequest{}, 1, 10, actor)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
@@ -388,7 +385,7 @@ func (s *KepegawaianIdentifierServiceTestSuite) Test_ListByPegawai_Forbidden() {
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, total, err := s.svc.ListByPegawai(s.ctx, 10, 1, 10, actor)
+	result, total, err := s.svc.ListByPegawai(s.ctx, 10, &dto.FilterKepegawaianIdentifierRequest{}, 1, 10, actor)
 
 	s.Nil(result)
 	s.Equal(int64(0), total)

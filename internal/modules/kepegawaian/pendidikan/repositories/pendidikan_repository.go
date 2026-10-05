@@ -7,9 +7,30 @@ import (
 
 	"neosim_go/internal/modules/kepegawaian/pendidikan/dto"
 	"neosim_go/internal/modules/kepegawaian/pendidikan/models"
+	"neosim_go/internal/shared/sorting"
 
 	"gorm.io/gorm"
 )
+
+var KepegawaianPendidikanSort = sorting.Config{
+	Allowed: map[string]string{
+		"pegawai_id":       "pegawai_id",
+		"jenjang_id":       "jenjang_id",
+		"nomor_ijazah":     "nomor_ijazah",
+		"nama_institusi":   "nama_institusi",
+		"alamat_institusi": "alamat_institusi",
+		"bidang_studi":     "bidang_studi",
+		"tanggal_lulus":    "tanggal_lulus",
+		"tanggal_masuk":    "tanggal_masuk",
+		"fhir_code":        "fhir_code",
+		"point":            "point",
+		"created_at":       "created_at",
+		"updated_at":       "updated_at",
+	},
+	DefaultColumn: "created_at",
+	DefaultDesc:   true,
+	TieBreaker:    "id",
+}
 
 // ── Create ────────────────────────────────────────────────────────────────────
 func (r *repository) CreatePendidikan(ctx context.Context, m *models.KepegawaianPendidikan) error {
@@ -29,6 +50,7 @@ func (r *repository) GetPendidikanByID(ctx context.Context, id int64) (*models.K
 // ── GetByPegawaiID ────────────────────────────────────────────────────────────
 func (r *repository) GetPendidikanByPegawaiID(ctx context.Context,
 	pegawaiID int64,
+	filter *dto.FilterKepegawaianPendidikanRequest,
 	page, pageSize int,
 ) ([]models.KepegawaianPendidikan, int64, error) {
 	var items []models.KepegawaianPendidikan
@@ -39,13 +61,34 @@ func (r *repository) GetPendidikanByPegawaiID(ctx context.Context,
 		Preload("Jenjang").
 		Where("pegawai_id = ? AND deleted_at IS NULL", pegawaiID)
 
+	if filter != nil {
+		if filter.PegawaiID != nil {
+			query = query.Where("pegawai_id = ?", *filter.PegawaiID)
+		}
+		if filter.JenjangID != nil {
+			query = query.Where("jenjang_id = ?", *filter.JenjangID)
+		}
+		if filter.NamaInstitusi != "" {
+			query = query.Where("nama_institusi ILIKE ?", "%"+filter.NamaInstitusi+"%")
+		}
+		if filter.AlamatInstitusi != "" {
+			query = query.Where("alamat_institusi ILIKE ?", "%"+filter.NamaInstitusi+"%")
+		}
+		if filter.BidangStudi != "" {
+			query = query.Where("bidang_studi ILIKE ?", "%"+filter.NamaInstitusi+"%")
+		}
+		if filter.NomorIjazah != "" {
+			query = query.Where("nomor_ijazah = ?", filter.NomorIjazah)
+		}
+	}
+
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
 	offset := (page - 1) * pageSize
 	err := query.
-		Order("jenjang_id ASC,  created_at DESC").
+		Scopes(KepegawaianPendidikanSort.Scope(filter.SortBy, filter.SortOrder)).
 		Offset(offset).
 		Limit(pageSize).
 		Find(&items).Error
@@ -97,7 +140,11 @@ func (r *repository) ListPendidikan(ctx context.Context, page, pageSize int, fil
 	}
 
 	offset := (page - 1) * pageSize
-	if err := query.Offset(offset).Limit(pageSize).Order("created_at DESC").Find(&items).Error; err != nil {
+	if err := query.
+		Offset(offset).
+		Limit(pageSize).
+		Scopes(KepegawaianPendidikanSort.Scope(filter.SortBy, filter.SortOrder)).
+		Find(&items).Error; err != nil {
 		return nil, 0, err
 	}
 

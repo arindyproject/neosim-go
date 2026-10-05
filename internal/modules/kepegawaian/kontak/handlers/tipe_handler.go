@@ -50,12 +50,19 @@ func (h *KepegawaianKontakHandler) ListSelectTipe(c *echo.Context) error {
 //	@Security		BearerAuth
 //	@Param			code		query		string	false	"Filter by code (partial match)"
 //	@Param			label		query		string	false	"Filter by label (partial match)"
+//	@Param			sort_by		query		string	false	"Sort column (code, label,fhir_code, created_at, updated_at)"	Enums(label, code, created_at, updated_at)
+//	@Param			sort_order	query		string	false	"Sort direction"	Enums(asc, desc)
 //	@Param			page		query		int		false	"Page number"
 //	@Param			page_size	query		int		false	"Page size"
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.TipeResponse}
 //	@Router			/kepegawaian/kontak/tipes [get]
 func (h *KepegawaianKontakHandler) ListTipe(c *echo.Context) error {
-	filter := dto.FilterTipeRequest{Code: c.QueryParam("code"), Label: c.QueryParam("label")}
+	filter := dto.FilterTipeRequest{
+		Code:      c.QueryParam("code"),
+		Label:     c.QueryParam("label"),
+		SortBy:    c.QueryParam("sort_by"),
+		SortOrder: c.QueryParam("sort_order"),
+	}
 	page, pageSize := he.ParsePagination(c, h.cfg)
 
 	actor := he.BuildAuthContext(c)

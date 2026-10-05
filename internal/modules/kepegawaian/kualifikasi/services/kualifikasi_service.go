@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"neosim_go/internal/modules/kepegawaian/kualifikasi/dto"
@@ -125,6 +126,17 @@ func (s *service) ListKualifikasi(ctx context.Context, page, pageSize int, filte
 	if pageSize < 1 || pageSize > s.cfg.DefaultPageSizeMax {
 		pageSize = s.cfg.DefaultPageSizeMax
 	}
+
+	// Normalisasi filter & sorting (filter bisa nil kalau dipanggil dari tempat lain)
+	if filter == nil {
+		filter = &dto.FilterKepegawaianKualifikasiRequest{}
+	}
+	filter.SortBy = strings.ToLower(strings.TrimSpace(filter.SortBy))
+	filter.SortOrder = strings.ToLower(strings.TrimSpace(filter.SortOrder))
+	if filter.SortOrder != "asc" && filter.SortOrder != "desc" {
+		filter.SortOrder = "asc"
+	}
+
 	items, total, err := s.repo.ListKualifikasi(ctx, page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
@@ -138,6 +150,7 @@ func (s *service) ListKualifikasi(ctx context.Context, page, pageSize int, filte
 func (s *service) ListByPegawai(
 	ctx context.Context,
 	pegawaiID int64,
+	filter *dto.FilterKepegawaianKualifikasiRequest,
 	page, pageSize int,
 	actor he.AuthContext,
 ) ([]dto.KepegawaianKualifikasiResponse, int64, error) {
@@ -157,7 +170,17 @@ func (s *service) ListByPegawai(
 		pageSize = s.cfg.DefaultPageSize
 	}
 
-	items, total, err := s.repo.GetKualifikasiByPegawaiID(ctx, pegawaiID, page, pageSize)
+	// Normalisasi filter & sorting (filter bisa nil kalau dipanggil dari tempat lain)
+	if filter == nil {
+		filter = &dto.FilterKepegawaianKualifikasiRequest{}
+	}
+	filter.SortBy = strings.ToLower(strings.TrimSpace(filter.SortBy))
+	filter.SortOrder = strings.ToLower(strings.TrimSpace(filter.SortOrder))
+	if filter.SortOrder != "asc" && filter.SortOrder != "desc" {
+		filter.SortOrder = "asc"
+	}
+
+	items, total, err := s.repo.GetKualifikasiByPegawaiID(ctx, pegawaiID, page, pageSize, filter)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal mengambil daftar kualifikasi pegawai")
 	}

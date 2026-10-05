@@ -4393,6 +4393,56 @@ paths:
         name: pegawai_id
         required: true
         type: integer
+      - description: Filter by jalan (partial match)
+        in: query
+        name: jalan
+        type: string
+      - description: Filter by tipe_id
+        in: query
+        name: tipe_id
+        type: string
+      - description: Filter by negara_id
+        in: query
+        name: negara_id
+        type: integer
+      - description: Filter by provinsi_id
+        in: query
+        name: provinsi_id
+        type: integer
+      - description: Filter by kota_kabupaten_id
+        in: query
+        name: kota_kabupaten_id
+        type: integer
+      - description: Filter by kecamatan_id
+        in: query
+        name: kecamatan_id
+        type: integer
+      - description: Filter by kelurahan_desa_id
+        in: query
+        name: kelurahan_desa_id
+        type: integer
+      - description: Sort column (jalan, tipe_id, negara_id,provinsi_id,kota_kabupaten_id,kecamatan_id,kelurahan_desa_id,  created_at,
+          updated_at)
+        enum:
+        - jalan
+        - tipe_id
+        - negara_id
+        - provinsi_id
+        - kota_kabupaten_id
+        - kecamatan_id
+        - kelurahan_desa_id
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
       - description: Page number
         in: query
         name: page
@@ -4459,7 +4509,7 @@ paths:
         in: query
         name: name
         type: string
-      - description: Sort column (code, label, created_at, updated_at)
+      - description: Sort column (code, label,fhir_code, created_at, updated_at)
         enum:
         - label
         - code
@@ -4842,6 +4892,47 @@ paths:
         name: pegawai_id
         required: true
         type: integer
+      - description: Filter by Tipe ID
+        in: query
+        name: tipe_id
+        type: integer
+      - description: Filter by Nilai / Nomor Identifier (partial match)
+        in: query
+        name: nilai
+        type: string
+      - description: Filter by Is Primary Status
+        in: query
+        name: is_primary
+        type: boolean
+      - description: Filter by Is Aktif Status
+        in: query
+        name: is_aktif
+        type: boolean
+      - description: Filter identifier yang sudah expired
+        in: query
+        name: is_expired
+        type: boolean
+      - description: Sort column (pegawai_id,tipe_id,nilai,is_primary,is_aktif,is_expired,
+          created_at, updated_at)
+        enum:
+        - pegawai_id
+        - tipe_id
+        - nilai
+        - is_primary
+        - is_aktif
+        - is_expired
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
       - description: Page number
         in: query
         name: page
@@ -5344,6 +5435,55 @@ paths:
         name: pegawai_id
         required: true
         type: integer
+      - description: Filter by department ID
+        in: query
+        name: department_id
+        type: integer
+      - description: Filter by position ID
+        in: query
+        name: position_id
+        type: integer
+      - description: Filter by job title ID
+        in: query
+        name: job_title_id
+        type: integer
+      - description: Filter by specialization ID
+        in: query
+        name: specialization_id
+        type: integer
+      - description: Filter by jabatan primer
+        in: query
+        name: is_primary
+        type: boolean
+      - description: Filter by status aktif
+        in: query
+        name: is_aktif
+        type: boolean
+      - description: Sort column (pegawai_id,department_id,position_id,job_title_id,specialization_id,is_primary,tanggal_mulai,tanggal_selesai,tanggal_sk,is_aktif,
+          created_at, updated_at)
+        enum:
+        - pegawai_id
+        - department_id
+        - position_id
+        - job_title_id
+        - specialization_id
+        - is_primary
+        - tanggal_mulai
+        - tanggal_selesai
+        - tanggal_sk
+        - is_aktif
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
       - description: Page number
         in: query
         name: page
@@ -6850,6 +6990,23 @@ paths:
         in: query
         name: is_aktif
         type: boolean
+      - description: Sort column (pegawai_id, tipe_id,nilai,is_primary,is_aktif, created_at,
+          updated_at)
+        enum:
+        - label
+        - code
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
       - description: Page number
         in: query
         name: page
@@ -6994,6 +7151,43 @@ paths:
       - application/json
       description: Get KepegawaianKontak by :id
       parameters:
+      - description: Filter by Pegawai ID
+        in: query
+        name: pegawai_id
+        type: integer
+      - description: Filter by Tipe ID
+        in: query
+        name: tipe_id
+        type: integer
+      - description: Filter by Nilai / Nomor Identifier (partial match)
+        in: query
+        name: nilai
+        type: string
+      - description: Filter by Is Primary Status
+        in: query
+        name: is_primary
+        type: boolean
+      - description: Filter by Is Aktif Status
+        in: query
+        name: is_aktif
+        type: boolean
+      - description: Sort column (pegawai_id, tipe_id,nilai,is_primary,is_aktif, created_at,
+          updated_at)
+        enum:
+        - label
+        - code
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
       - description: Page number
         in: query
         name: page
@@ -7037,6 +7231,22 @@ paths:
       - description: Filter by label (partial match)
         in: query
         name: label
+        type: string
+      - description: Sort column (code, label,fhir_code, created_at, updated_at)
+        enum:
+        - label
+        - code
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
         type: string
       - description: Page number
         in: query

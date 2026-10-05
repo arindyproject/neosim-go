@@ -1371,7 +1371,7 @@ const docTemplate = `{
                             "updated_at"
                         ],
                         "type": "string",
-                        "description": "Sort column (code, label, created_at, updated_at)",
+                        "description": "Sort column (code, label,fhir_code, created_at, updated_at)",
                         "name": "sort_by",
                         "in": "query"
                     },
@@ -1828,6 +1828,75 @@ const docTemplate = `{
                         "name": "pegawai_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by jalan (partial match)",
+                        "name": "jalan",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by tipe_id",
+                        "name": "tipe_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by negara_id",
+                        "name": "negara_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by provinsi_id",
+                        "name": "provinsi_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by kota_kabupaten_id",
+                        "name": "kota_kabupaten_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by kecamatan_id",
+                        "name": "kecamatan_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by kelurahan_desa_id",
+                        "name": "kelurahan_desa_id",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "jalan",
+                            "tipe_id",
+                            "negara_id",
+                            "provinsi_id",
+                            "kota_kabupaten_id",
+                            "kecamatan_id",
+                            "kelurahan_desa_id",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "description": "Sort column (jalan, tipe_id, negara_id,provinsi_id,kota_kabupaten_id,kecamatan_id,kelurahan_desa_id,  created_at, updated_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort direction",
+                        "name": "sort_order",
+                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -2645,6 +2714,62 @@ const docTemplate = `{
                         "name": "pegawai_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by Tipe ID",
+                        "name": "tipe_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by Nilai / Nomor Identifier (partial match)",
+                        "name": "nilai",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by Is Primary Status",
+                        "name": "is_primary",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by Is Aktif Status",
+                        "name": "is_aktif",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter identifier yang sudah expired",
+                        "name": "is_expired",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "pegawai_id",
+                            "tipe_id",
+                            "nilai",
+                            "is_primary",
+                            "is_aktif",
+                            "is_expired",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "description": "Sort column (pegawai_id,tipe_id,nilai,is_primary,is_aktif,is_expired, created_at, updated_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort direction",
+                        "name": "sort_order",
+                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -5441,6 +5566,72 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
+                        "description": "Filter by department ID",
+                        "name": "department_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by position ID",
+                        "name": "position_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by job title ID",
+                        "name": "job_title_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by specialization ID",
+                        "name": "specialization_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by jabatan primer",
+                        "name": "is_primary",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by status aktif",
+                        "name": "is_aktif",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "pegawai_id",
+                            "department_id",
+                            "position_id",
+                            "job_title_id",
+                            "specialization_id",
+                            "is_primary",
+                            "tanggal_mulai",
+                            "tanggal_selesai",
+                            "tanggal_sk",
+                            "is_aktif",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "description": "Sort column (pegawai_id,department_id,position_id,job_title_id,specialization_id,is_primary,tanggal_mulai,tanggal_selesai,tanggal_sk,is_aktif, created_at, updated_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort direction",
+                        "name": "sort_order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
                         "description": "Page number",
                         "name": "page",
                         "in": "query"
@@ -5524,6 +5715,28 @@ const docTemplate = `{
                         "type": "boolean",
                         "description": "Filter by Is Aktif Status",
                         "name": "is_aktif",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "label",
+                            "code",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "description": "Sort column (pegawai_id, tipe_id,nilai,is_primary,is_aktif, created_at, updated_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort direction",
+                        "name": "sort_order",
                         "in": "query"
                     },
                     {
@@ -5642,6 +5855,28 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Filter by label (partial match)",
                         "name": "label",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "label",
+                            "code",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "description": "Sort column (code, label,fhir_code, created_at, updated_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort direction",
+                        "name": "sort_order",
                         "in": "query"
                     },
                     {
@@ -6081,6 +6316,58 @@ const docTemplate = `{
                 ],
                 "summary": "Get KepegawaianKontak",
                 "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Filter by Pegawai ID",
+                        "name": "pegawai_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by Tipe ID",
+                        "name": "tipe_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by Nilai / Nomor Identifier (partial match)",
+                        "name": "nilai",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by Is Primary Status",
+                        "name": "is_primary",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by Is Aktif Status",
+                        "name": "is_aktif",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "label",
+                            "code",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "description": "Sort column (pegawai_id, tipe_id,nilai,is_primary,is_aktif, created_at, updated_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort direction",
+                        "name": "sort_order",
+                        "in": "query"
+                    },
                     {
                         "type": "integer",
                         "description": "Page number",

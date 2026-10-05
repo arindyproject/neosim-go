@@ -13,7 +13,7 @@ import (
 type KepegawaianAlamatRepository interface {
 	CreateAlamat(ctx context.Context, m *models.KepegawaianAlamat) error
 	FindAlamatByPegawaiID(ctx context.Context, pegawaiID int64) ([]models.KepegawaianAlamat, error)
-	GetAlamatByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int) ([]models.KepegawaianAlamat, int64, error)
+	GetAlamatByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int, filter *dto.FilterKepegawaianAlamatRequest) ([]models.KepegawaianAlamat, int64, error)
 	GetAlamatByID(ctx context.Context, id int64) (*models.KepegawaianAlamat, error)
 	ListAlamat(ctx context.Context, page, pageSize int, filter *dto.FilterKepegawaianAlamatRequest) ([]models.KepegawaianAlamat, int64, error)
 	UpdateAlamat(ctx context.Context, m *models.KepegawaianAlamat) error
@@ -27,7 +27,7 @@ type KepegawaianAlamatRepository interface {
 // & services/alamat_service.go).
 type KepegawaianAlamatService interface {
 	CreateAlamat(ctx context.Context, req *dto.CreateKepegawaianAlamatRequest, actor he.AuthContext) (*dto.KepegawaianAlamatResponse, error)
-	GetAlamatByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int, actor he.AuthContext) ([]dto.KepegawaianAlamatResponse, int64, error)
+	GetAlamatByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int, filter *dto.FilterKepegawaianAlamatRequest, actor he.AuthContext) ([]dto.KepegawaianAlamatResponse, int64, error)
 	GetAlamatByID(ctx context.Context, id int64, actor he.AuthContext) (*dto.KepegawaianAlamatResponse, error)
 	ListAlamat(ctx context.Context, page, pageSize int, filter *dto.FilterKepegawaianAlamatRequest, actor he.AuthContext) ([]dto.KepegawaianAlamatResponse, int64, error)
 	UpdateAlamat(ctx context.Context, id int64, req *dto.UpdateKepegawaianAlamatRequest, actor he.AuthContext) (*dto.KepegawaianAlamatResponse, error)

@@ -7,9 +7,31 @@ import (
 
 	"neosim_go/internal/modules/kepegawaian/kualifikasi/dto"
 	"neosim_go/internal/modules/kepegawaian/kualifikasi/models"
+	"neosim_go/internal/shared/sorting"
 
 	"gorm.io/gorm"
 )
+
+// allowedSortColumns memetakan nilai sort_by dari client ke ekspresi kolom DB.
+// Hanya key di map ini yang boleh dipakai (mencegah SQL injection lewat Order()).
+var KepegawaianKualifikasiSort = sorting.Config{
+	Allowed: map[string]string{
+		"pegawai_id":      "pegawai_id",
+		"tipe_id":         "tipe_id",
+		"nama":            "nama",
+		"penyelenggara":   "penyelenggara",
+		"is_aktif":        "is_aktif",
+		"is_expired":      "is_expired",
+		"tanggal_terbit":  "tanggal_terbit",
+		"tanggal_expired": "tanggal_expired",
+		"fhir_code":       "fhir_code",
+		"created_at":      "created_at",
+		"updated_at":      "updated_at",
+	},
+	DefaultColumn: "created_at",
+	DefaultDesc:   true,
+	TieBreaker:    "id",
+}
 
 // ── Create ────────────────────────────────────────────────────────────────────
 func (r *repository) CreateKualifikasi(ctx context.Context, m *models.KepegawaianKualifikasi) error {
@@ -35,6 +57,7 @@ func (r *repository) GetKualifikasiByPegawaiID(
 	ctx context.Context,
 	pegawaiID int64,
 	page, pageSize int,
+	filter *dto.FilterKepegawaianKualifikasiRequest,
 ) ([]models.KepegawaianKualifikasi, int64, error) {
 	var items []models.KepegawaianKualifikasi
 	var total int64
@@ -50,7 +73,7 @@ func (r *repository) GetKualifikasiByPegawaiID(
 
 	offset := (page - 1) * pageSize
 	err := query.
-		Order("tipe_id ASC,  created_at DESC").
+		Scopes(KepegawaianKualifikasiSort.Scope(filter.SortBy, filter.SortOrder)).
 		Offset(offset).
 		Limit(pageSize).
 		Find(&items).Error
@@ -186,7 +209,11 @@ func (r *repository) ListKualifikasi(ctx context.Context, page, pageSize int, fi
 	}
 
 	offset := (page - 1) * pageSize
-	if err := query.Offset(offset).Limit(pageSize).Order("created_at DESC").Find(&items).Error; err != nil {
+	if err := query.
+		Offset(offset).
+		Limit(pageSize).
+		Scopes(KepegawaianKualifikasiSort.Scope(filter.SortBy, filter.SortOrder)).
+		Find(&items).Error; err != nil {
 		return nil, 0, err
 	}
 

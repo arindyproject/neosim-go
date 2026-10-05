@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"neosim_go/internal/modules/kepegawaian/kontak/dto"
@@ -116,7 +117,7 @@ func (s *service) GetKontakByID(ctx context.Context, id int64, actor he.AuthCont
 }
 
 // ─── GetByPegawaiID ───────────────────────────────────────────────────────────────────────────────
-func (s *service) GetKontakByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int, actor he.AuthContext) ([]dto.KepegawaianKontakResponse, int64, error) {
+func (s *service) GetKontakByPegawaiID(ctx context.Context, pegawaiID int64, filter *dto.FilterKepegawaianKontakRequest, page, pageSize int, actor he.AuthContext) ([]dto.KepegawaianKontakResponse, int64, error) {
 	can, err := s.canReadKepegawaianKontak(ctx, actor)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal cek akses")
@@ -126,7 +127,17 @@ func (s *service) GetKontakByPegawaiID(ctx context.Context, pegawaiID int64, pag
 			"Akses ditolak. Anda tidak memiliki hak akses untuk Melihat KepegawaianKontak.", nil)
 	}
 
-	items, total, err := s.repo.GetKontakByPegawaiID(ctx, pegawaiID, page, pageSize)
+	// Normalisasi filter & sorting (filter bisa nil kalau dipanggil dari tempat lain)
+	if filter == nil {
+		filter = &dto.FilterKepegawaianKontakRequest{}
+	}
+	filter.SortBy = strings.ToLower(strings.TrimSpace(filter.SortBy))
+	filter.SortOrder = strings.ToLower(strings.TrimSpace(filter.SortOrder))
+	if filter.SortOrder != "asc" && filter.SortOrder != "desc" {
+		filter.SortOrder = "asc"
+	}
+
+	items, total, err := s.repo.GetKontakByPegawaiID(ctx, pegawaiID, page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -155,6 +166,17 @@ func (s *service) ListKontak(ctx context.Context, page, pageSize int, filter *dt
 	if pageSize < 1 || pageSize > s.cfg.DefaultPageSizeMax {
 		pageSize = s.cfg.DefaultPageSizeMax
 	}
+
+	// Normalisasi filter & sorting (filter bisa nil kalau dipanggil dari tempat lain)
+	if filter == nil {
+		filter = &dto.FilterKepegawaianKontakRequest{}
+	}
+	filter.SortBy = strings.ToLower(strings.TrimSpace(filter.SortBy))
+	filter.SortOrder = strings.ToLower(strings.TrimSpace(filter.SortOrder))
+	if filter.SortOrder != "asc" && filter.SortOrder != "desc" {
+		filter.SortOrder = "asc"
+	}
+
 	items, total, err := s.repo.ListKontak(ctx, page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err

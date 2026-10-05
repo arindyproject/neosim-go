@@ -25,6 +25,8 @@ import (
 //	@Param          nilai       query       string  false   "Filter by Nilai / Nomor Identifier (partial match)"
 //	@Param          is_primary  query       boolean false   "Filter by Is Primary Status"
 //	@Param          is_aktif    query       boolean false   "Filter by Is Aktif Status"
+//	@Param			sort_by		query		string	false	"Sort column (pegawai_id, tipe_id,nilai,is_primary,is_aktif, created_at, updated_at)"	Enums(label, code, created_at, updated_at)
+//	@Param			sort_order	query		string	false	"Sort direction"	Enums(asc, desc)
 //	@Param			page		query		int		false	"Page number"
 //	@Param			page_size	query		int		false	"Page size"
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.KepegawaianKontakResponse}
@@ -33,7 +35,9 @@ func (h *KepegawaianKontakHandler) ListKontak(c *echo.Context) error {
 
 	nilai := c.QueryParam("nilai")
 	filter := dto.FilterKepegawaianKontakRequest{
-		Nilai: &nilai,
+		Nilai:     &nilai,
+		SortBy:    c.QueryParam("sort_by"),
+		SortOrder: c.QueryParam("sort_order"),
 	}
 
 	if pegawaiIDStr := c.QueryParam("pegawai_id"); pegawaiIDStr != "" {
@@ -102,6 +106,13 @@ func (h *KepegawaianKontakHandler) GetKontakByID(c *echo.Context) error {
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
+//	@Param          pegawai_id  query       int     false   "Filter by Pegawai ID"
+//	@Param          tipe_id     query       int     false   "Filter by Tipe ID"
+//	@Param          nilai       query       string  false   "Filter by Nilai / Nomor Identifier (partial match)"
+//	@Param          is_primary  query       boolean false   "Filter by Is Primary Status"
+//	@Param          is_aktif    query       boolean false   "Filter by Is Aktif Status"
+//	@Param			sort_by		query		string	false	"Sort column (pegawai_id, tipe_id,nilai,is_primary,is_aktif, created_at, updated_at)"	Enums(label, code, created_at, updated_at)
+//	@Param			sort_order	query		string	false	"Sort direction"	Enums(asc, desc)
 //	@Param			page		query		int		false	"Page number"
 //	@Param			page_size	query		int		false	"Page size"
 //	@Param          pegawai_id  path        int true    "ID pegawai"
@@ -111,12 +122,43 @@ func (h *KepegawaianKontakHandler) ListKontakByPegawai(c *echo.Context) error {
 	actor := he.BuildAuthContext(c)
 	pegawaiID, err := parsePegawaiID(c)
 
+	nilai := c.QueryParam("nilai")
+	filter := dto.FilterKepegawaianKontakRequest{
+		Nilai:     &nilai,
+		SortBy:    c.QueryParam("sort_by"),
+		SortOrder: c.QueryParam("sort_order"),
+	}
+
+	if pegawaiIDStr := c.QueryParam("pegawai_id"); pegawaiIDStr != "" {
+		if val, err := strconv.ParseInt(pegawaiIDStr, 10, 64); err == nil {
+			filter.PegawaiID = &val
+		}
+	}
+
+	if tipeIDStr := c.QueryParam("tipe_id"); tipeIDStr != "" {
+		if val, err := strconv.ParseInt(tipeIDStr, 10, 64); err == nil {
+			filter.TipeID = &val
+		}
+	}
+
+	if isPrimaryStr := c.QueryParam("is_primary"); isPrimaryStr != "" {
+		if val, err := strconv.ParseBool(isPrimaryStr); err == nil {
+			filter.IsPrimary = &val
+		}
+	}
+
+	if isAktifStr := c.QueryParam("is_aktif"); isAktifStr != "" {
+		if val, err := strconv.ParseBool(isAktifStr); err == nil {
+			filter.IsAktif = &val
+		}
+	}
+
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
 
 	page, pageSize := he.ParsePagination(c, h.cfg)
-	items, total, err := h.service.GetKontakByPegawaiID(c.Request().Context(), pegawaiID, page, pageSize, actor)
+	items, total, err := h.service.GetKontakByPegawaiID(c.Request().Context(), pegawaiID, &filter, page, pageSize, actor)
 
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)

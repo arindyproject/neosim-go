@@ -41,4 +41,8 @@ type FilterKepegawaianPendidikanRequest struct {
 	NomorIjazah     string `query:"nomor_ijazah"`
 	BidangStudi     string `query:"bidang_studi"`
 	AlamatInstitusi string `query:"alamat_institusi"`
+
+	// Sorting
+	SortBy    string `query:"sort_by"`    // pegawai_id | jenjang_id | nama_institusi | nomor_ijazah | bidang_studi | alamat_institusi | fhir_code | point | created_at | updated_at
+	SortOrder string `query:"sort_order"` // asc | desc
 }

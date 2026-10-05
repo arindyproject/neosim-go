@@ -27,6 +27,8 @@ import (
 //	@Param			penyelenggara		query		string	false	"Filter by penyelenggara (partial match)"
 //	@Param          is_aktif    query       boolean false   "Filter by Is Aktif Status"
 //	@Param          is_expired  query       boolean false   "Filter identifier yang sudah expired"
+//	@Param			sort_by		query		string	false	"Sort column (pegawai_id, tipe_id,nama, penyelenggara, nomor_sertifikat, tanggal_terbit, tanggal_expired, is_aktif, point, fhir_code , created_at, updated_at)"	Enums(pegawai_id, tipe_id,nama, penyelenggara, nomor_sertifikat, tanggal_terbit, tanggal_expired, is_aktif, point, fhir_code , created_at, updated_at)
+//	@Param			sort_order	query		string	false	"Sort direction"	Enums(asc, desc)
 //	@Param			page		query		int		false	"Page number"
 //	@Param			page_size	query		int		false	"Page size"
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.KepegawaianKualifikasiResponse}
@@ -35,6 +37,10 @@ func (h *KepegawaianKualifikasiHandler) ListKualifikasi(c *echo.Context) error {
 
 	filter := dto.FilterKepegawaianKualifikasiRequest{
 		Nama: c.QueryParam("nama"),
+
+		// Sorting ---------------------------
+		SortBy:    c.QueryParam("sort_by"),
+		SortOrder: c.QueryParam("sort_order"),
 	}
 
 	if tipeIDStr := c.QueryParam("tipe_id"); tipeIDStr != "" {
@@ -98,6 +104,13 @@ func (h *KepegawaianKualifikasiHandler) GetKualifikasiByID(c *echo.Context) erro
 //	@Produce        json
 //	@Security       BearerAuth
 //	@Param          pegawai_id  path        int true    "ID pegawai"
+//	@Param          tipe_id     query       int     false   "Filter by Tipe ID"
+//	@Param			nama		query		string	false	"Filter by nama (partial match)"
+//	@Param			penyelenggara		query		string	false	"Filter by penyelenggara (partial match)"
+//	@Param          is_aktif    query       boolean false   "Filter by Is Aktif Status"
+//	@Param          is_expired  query       boolean false   "Filter identifier yang sudah expired"
+//	@Param			sort_by		query		string	false	"Sort column (pegawai_id, tipe_id,nama, penyelenggara, nomor_sertifikat, tanggal_terbit, tanggal_expired, is_aktif, point, fhir_code , created_at, updated_at)"	Enums(pegawai_id, tipe_id,nama, penyelenggara, nomor_sertifikat, tanggal_terbit, tanggal_expired, is_aktif, point, fhir_code , created_at, updated_at)
+//	@Param			sort_order	query		string	false	"Sort direction"	Enums(asc, desc)
 //	@Param          page        query       int     false   "Page number"
 //	@Param          page_size   query       int     false   "Page size"
 //	@Success        200         {object}    response.MyGoResponse{data=[]dto.KepegawaianKualifikasiResponse}
@@ -111,7 +124,33 @@ func (h *KepegawaianKualifikasiHandler) ListKualifikasiByPegawai(c *echo.Context
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
 
-	items, total, err := h.service.ListByPegawai(c.Request().Context(), pegawaiID, page, pageSize, actor)
+	filter := dto.FilterKepegawaianKualifikasiRequest{
+		Nama: c.QueryParam("nama"),
+
+		// Sorting ---------------------------
+		SortBy:    c.QueryParam("sort_by"),
+		SortOrder: c.QueryParam("sort_order"),
+	}
+
+	if tipeIDStr := c.QueryParam("tipe_id"); tipeIDStr != "" {
+		if val, err := strconv.ParseInt(tipeIDStr, 10, 64); err == nil {
+			filter.TipeID = &val
+		}
+	}
+
+	if isAktifStr := c.QueryParam("is_aktif"); isAktifStr != "" {
+		if val, err := strconv.ParseBool(isAktifStr); err == nil {
+			filter.IsAktif = &val
+		}
+	}
+
+	if isExpiredStr := c.QueryParam("is_expired"); isExpiredStr != "" {
+		if val, err := strconv.ParseBool(isExpiredStr); err == nil {
+			filter.IsExpired = &val
+		}
+	}
+
+	items, total, err := h.service.ListByPegawai(c.Request().Context(), pegawaiID, &filter, page, pageSize, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}

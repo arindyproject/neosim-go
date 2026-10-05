@@ -47,7 +47,7 @@ func (r *repository) GetAlamatByID(ctx context.Context, id int64) (*models.Kepeg
 }
 
 // ── GetByPegawaiID ────────────────────────────────────────────────────────────
-func (r *repository) GetAlamatByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int) ([]models.KepegawaianAlamat, int64, error) {
+func (r *repository) GetAlamatByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int, filter *dto.FilterKepegawaianAlamatRequest) ([]models.KepegawaianAlamat, int64, error) {
 	var items []models.KepegawaianAlamat
 	var total int64
 
@@ -56,13 +56,42 @@ func (r *repository) GetAlamatByPegawaiID(ctx context.Context, pegawaiID int64, 
 		Preload("Tipe").
 		Where("pegawai_id = ? AND deleted_at IS NULL", pegawaiID)
 
+	if filter.Jalan != nil {
+		// Ubah "name ILIKE ?" menjadi "jalan ILIKE ?"
+		query = query.Where("jalan ILIKE ?", "%"+*filter.Jalan+"%")
+	}
+
+	// Ubah operator '==' menjadi '='
+	if filter.NegaraID != nil {
+		query = query.Where("negara_id = ?", filter.NegaraID)
+	}
+
+	if filter.ProvinsiID != nil {
+		query = query.Where("provinsi_id = ?", filter.ProvinsiID)
+	}
+
+	if filter.KotaKabupatenID != nil {
+		query = query.Where("kota_kabupaten_id = ?", filter.KotaKabupatenID)
+	}
+
+	if filter.KecamatanID != nil {
+		query = query.Where("kecamatan_id = ?", filter.KecamatanID)
+	}
+
+	if filter.KelurahanDesaID != nil {
+		query = query.Where("kelurahan_desa_id = ?", filter.KelurahanDesaID)
+	}
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
 	offset := (page - 1) * pageSize
 	err := query.
-		Order("tipe_id ASC, is_primary DESC, created_at DESC").
+		Scopes(AlamatSort.Scope(filter.SortBy, filter.SortOrder)).
 		Offset(offset).
 		Limit(pageSize).
 		Find(&items).Error

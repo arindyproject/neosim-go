@@ -43,12 +43,25 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
+type kepegawaianKualifikasiRepoAdapter struct {
+	*mocks.KepegawaianKualifikasiRepositoryMock
+}
+
+func (a *kepegawaianKualifikasiRepoAdapter) GetKualifikasiByPegawaiID(
+	ctx context.Context,
+	pegawaiID int64,
+	page, pageSize int,
+	filter *dto.FilterKepegawaianKualifikasiRequest,
+) ([]models.KepegawaianKualifikasi, int64, error) {
+	return a.KepegawaianKualifikasiRepositoryMock.GetKualifikasiByPegawaiID(ctx, pegawaiID, filter, page, pageSize)
+}
+
 // KepegawaianKualifikasiServiceTestSuite dipakai bersama oleh SELURUH item di dalam
 // sub-module ini — karena hanya ada satu struct service/repository, satu suite
 // ini sudah cukup untuk semuanya.
 type KepegawaianKualifikasiServiceTestSuite struct {
 	suite.Suite
-	repo        *mocks.KepegawaianKualifikasiRepositoryMock
+	repo        *kepegawaianKualifikasiRepoAdapter
 	rbacRepo    *mocks.RBACRepositoryMock
 	authRepo    *mocks.AuthRepositoryMock
 	userRepo    *mocks.UserRepositoryMock
@@ -58,7 +71,7 @@ type KepegawaianKualifikasiServiceTestSuite struct {
 }
 
 func (s *KepegawaianKualifikasiServiceTestSuite) SetupTest() {
-	s.repo = new(mocks.KepegawaianKualifikasiRepositoryMock)
+	s.repo = &kepegawaianKualifikasiRepoAdapter{KepegawaianKualifikasiRepositoryMock: new(mocks.KepegawaianKualifikasiRepositoryMock)}
 	s.rbacRepo = new(mocks.RBACRepositoryMock)
 	s.authRepo = new(mocks.AuthRepositoryMock)
 	s.userRepo = new(mocks.UserRepositoryMock)

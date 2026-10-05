@@ -26,4 +26,8 @@ type FilterKepegawaianKontakRequest struct {
 	Nilai     *string `query:"nilai"`
 	IsPrimary *bool   `query:"is_primary"`
 	IsAktif   *bool   `query:"is_aktif"`
+
+	// Sorting
+	SortBy    string `query:"sort_by"`    // pegawai_id | tipe_id | nilai | is_primary | is_aktif | created_at | updated_at
+	SortOrder string `query:"sort_order"` // asc | desc
 }

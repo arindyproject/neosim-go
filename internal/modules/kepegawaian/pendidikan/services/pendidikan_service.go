@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"neosim_go/internal/modules/kepegawaian/pendidikan/dto"
@@ -133,6 +134,16 @@ func (s *service) ListPendidikan(ctx context.Context, page, pageSize int, filter
 	if pageSize < 1 || pageSize > s.cfg.DefaultPageSizeMax {
 		pageSize = s.cfg.DefaultPageSizeMax
 	}
+
+	// Normalisasi filter & sorting (filter bisa nil kalau dipanggil dari tempat lain)
+	if filter == nil {
+		filter = &dto.FilterKepegawaianPendidikanRequest{}
+	}
+	filter.SortBy = strings.ToLower(strings.TrimSpace(filter.SortBy))
+	filter.SortOrder = strings.ToLower(strings.TrimSpace(filter.SortOrder))
+	if filter.SortOrder != "asc" && filter.SortOrder != "desc" {
+		filter.SortOrder = "asc"
+	}
 	items, total, err := s.repo.ListPendidikan(ctx, page, pageSize, filter)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal mengambil daftar pendidikan")
@@ -146,6 +157,7 @@ func (s *service) ListPendidikan(ctx context.Context, page, pageSize int, filter
 func (s *service) ListPendidikanByPegawai(
 	ctx context.Context,
 	pegawaiID int64,
+	filter *dto.FilterKepegawaianPendidikanRequest,
 	page, pageSize int,
 	actor he.AuthContext,
 ) ([]dto.KepegawaianPendidikanResponse, int64, error) {
@@ -165,7 +177,17 @@ func (s *service) ListPendidikanByPegawai(
 		pageSize = s.cfg.DefaultPageSize
 	}
 
-	items, total, err := s.repo.GetPendidikanByPegawaiID(ctx, pegawaiID, page, pageSize)
+	// Normalisasi filter & sorting (filter bisa nil kalau dipanggil dari tempat lain)
+	if filter == nil {
+		filter = &dto.FilterKepegawaianPendidikanRequest{}
+	}
+	filter.SortBy = strings.ToLower(strings.TrimSpace(filter.SortBy))
+	filter.SortOrder = strings.ToLower(strings.TrimSpace(filter.SortOrder))
+	if filter.SortOrder != "asc" && filter.SortOrder != "desc" {
+		filter.SortOrder = "asc"
+	}
+
+	items, total, err := s.repo.GetPendidikanByPegawaiID(ctx, pegawaiID, filter, page, pageSize)
 
 	if total <= 0 {
 		return nil, 0, appErrors.Internal("Data tidak ditemukan")

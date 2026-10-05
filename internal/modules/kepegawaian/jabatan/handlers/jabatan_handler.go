@@ -118,9 +118,17 @@ func (h *KepegawaianJabatanHandler) ListJabatan(c *echo.Context) error {
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			pegawai_id	path		int	true	"Pegawai ID"
-//	@Param			page		query		int	false	"Page number"
-//	@Param			page_size	query		int	false	"Page size"
+//	@Param			pegawai_id			path	int	true	"Pegawai ID"
+//	@Param			department_id		query	int		false	"Filter by department ID"
+//	@Param			position_id			query	int		false	"Filter by position ID"
+//	@Param			job_title_id		query	int		false	"Filter by job title ID"
+//	@Param			specialization_id	query	int		false	"Filter by specialization ID"
+//	@Param			is_primary			query	bool	false	"Filter by jabatan primer"
+//	@Param			is_aktif			query	bool	false	"Filter by status aktif"
+//	@Param			sort_by				query	string	false	"Sort column (pegawai_id,department_id,position_id,job_title_id,specialization_id,is_primary,tanggal_mulai,tanggal_selesai,tanggal_sk,is_aktif, created_at, updated_at)"	Enums(pegawai_id,department_id,position_id,job_title_id,specialization_id,is_primary,tanggal_mulai,tanggal_selesai,tanggal_sk,is_aktif, created_at, updated_at)
+//	@Param			sort_order			query	string	false	"Sort direction"	Enums(asc, desc)
+//	@Param			page				query	int	false	"Page number"
+//	@Param			page_size			query	int	false	"Page size"
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.KepegawaianJabatanResponse}
 //	@Router			/kepegawaian/jabatan/{pegawai_id}/pegawai [get]
 func (h *KepegawaianJabatanHandler) GetJabatanByPegawaiID(c *echo.Context) error {
@@ -129,10 +137,38 @@ func (h *KepegawaianJabatanHandler) GetJabatanByPegawaiID(c *echo.Context) error
 		return response.Response(c, http.StatusBadRequest, false, "Pegawai ID tidak valid", nil, nil)
 	}
 
+	filter := dto.FilterKepegawaianJabatanRequest{
+		// Sorting ---------------------------
+		SortBy:    c.QueryParam("sort_by"),
+		SortOrder: c.QueryParam("sort_order"),
+	}
+
+	if filter.PegawaiID, err = parseOptionalInt64Query(c, "pegawai_id"); err != nil {
+		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
+	}
+	if filter.DepartmentID, err = parseOptionalInt64Query(c, "department_id"); err != nil {
+		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
+	}
+	if filter.PositionID, err = parseOptionalInt64Query(c, "position_id"); err != nil {
+		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
+	}
+	if filter.JobTitleID, err = parseOptionalInt64Query(c, "job_title_id"); err != nil {
+		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
+	}
+	if filter.SpecializationID, err = parseOptionalInt64Query(c, "specialization_id"); err != nil {
+		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
+	}
+	if filter.IsPrimary, err = parseOptionalBoolQuery(c, "is_primary"); err != nil {
+		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
+	}
+	if filter.IsAktif, err = parseOptionalBoolQuery(c, "is_aktif"); err != nil {
+		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
+	}
+
 	page, pageSize := he.ParsePagination(c, h.cfg)
 
 	actor := he.BuildAuthContext(c)
-	items, total, err := h.service.GetJabatanByPegawaiID(c.Request().Context(), pegawaiID, page, pageSize, actor)
+	items, total, err := h.service.GetJabatanByPegawaiID(c.Request().Context(), pegawaiID, &filter, page, pageSize, actor)
 	if err != nil {
 		return response.Response(c, http.StatusInternalServerError, false, err.Error(), nil, nil)
 	}

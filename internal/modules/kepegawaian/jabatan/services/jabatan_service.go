@@ -124,7 +124,7 @@ func (s *service) GetJabatanByID(ctx context.Context, id int64, actor he.AuthCon
 }
 
 // ── GetByPegawaiID ────────────────────────────────────────────────────────────
-func (s *service) GetJabatanByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int, actor he.AuthContext) ([]dto.KepegawaianJabatanResponse, int64, error) {
+func (s *service) GetJabatanByPegawaiID(ctx context.Context, pegawaiID int64, filter *dto.FilterKepegawaianJabatanRequest, page, pageSize int, actor he.AuthContext) ([]dto.KepegawaianJabatanResponse, int64, error) {
 	can, err := s.canReadKepegawaianJabatan(ctx, actor)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal cek akses")
@@ -141,7 +141,17 @@ func (s *service) GetJabatanByPegawaiID(ctx context.Context, pegawaiID int64, pa
 		pageSize = s.cfg.DefaultPageSizeMax
 	}
 
-	items, total, err := s.repo.GetJabatanByPegawaiID(ctx, pegawaiID, page, pageSize)
+	// Normalisasi filter & sorting (filter bisa nil kalau dipanggil dari tempat lain)
+	if filter == nil {
+		filter = &dto.FilterKepegawaianJabatanRequest{}
+	}
+	filter.SortBy = strings.ToLower(strings.TrimSpace(filter.SortBy))
+	filter.SortOrder = strings.ToLower(strings.TrimSpace(filter.SortOrder))
+	if filter.SortOrder != "asc" && filter.SortOrder != "desc" {
+		filter.SortOrder = "asc"
+	}
+
+	items, total, err := s.repo.GetJabatanByPegawaiID(ctx, pegawaiID, page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}

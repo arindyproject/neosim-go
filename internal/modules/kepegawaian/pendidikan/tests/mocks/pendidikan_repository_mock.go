@@ -37,8 +37,8 @@ func (m *KepegawaianPendidikanRepositoryMock) GetByIDs(ctx context.Context, ids 
 	return args.Get(0).([]models.KepegawaianPendidikan), args.Error(1)
 }
 
-func (m *KepegawaianPendidikanRepositoryMock) GetPendidikanByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int) ([]models.KepegawaianPendidikan, int64, error) {
-	args := m.Called(pegawaiID)
+func (m *KepegawaianPendidikanRepositoryMock) GetPendidikanByPegawaiID(ctx context.Context, pegawaiID int64, filter *dto.FilterKepegawaianPendidikanRequest, page, pageSize int) ([]models.KepegawaianPendidikan, int64, error) {
+	args := m.Called(pegawaiID, filter, page, pageSize)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
 	}

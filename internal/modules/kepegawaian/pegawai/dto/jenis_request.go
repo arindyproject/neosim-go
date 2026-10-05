@@ -19,4 +19,8 @@ type FilterJenisRequest struct {
 	Search string `query:"search"`
 	Code   string `query:"code"`
 	Label  string `query:"label"`
+
+	// Sorting
+	SortBy    string `query:"sort_by"`    // code | label | fhir_code | created_at | updated_at
+	SortOrder string `query:"sort_order"` // asc | desc
 }

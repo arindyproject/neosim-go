@@ -8,6 +8,7 @@ import (
 	"neosim_go/internal/modules/kepegawaian/pendidikan/contracts"
 	"neosim_go/internal/modules/kepegawaian/pendidikan/dto"
 	"neosim_go/internal/modules/kepegawaian/pendidikan/models"
+	"neosim_go/internal/shared/sorting"
 
 	"gorm.io/gorm"
 )
@@ -18,6 +19,22 @@ import (
 // pakai repo yang sudah dibuat lewat NewKepegawaianPendidikanRepository(db).
 func NewJenjangRepository(db *gorm.DB) contracts.JenjangRepository {
 	return &repository{db: db}
+}
+
+// allowedSortColumns memetakan nilai sort_by dari client ke ekspresi kolom DB.
+// Hanya key di map ini yang boleh dipakai (mencegah SQL injection lewat Order()).
+var JenjangSort = sorting.Config{
+	Allowed: map[string]string{
+		"code":       "code",
+		"label":      "label",
+		"point":      "point",
+		"fhir_code":  "fhir_code",
+		"created_at": "created_at",
+		"updated_at": "updated_at",
+	},
+	DefaultColumn: "created_at",
+	DefaultDesc:   true,
+	TieBreaker:    "id",
 }
 
 // ── Create ────────────────────────────────────────────────────────────────────
@@ -72,7 +89,11 @@ func (r *repository) ListJenjang(ctx context.Context, page, pageSize int, filter
 		return nil, 0, err
 	}
 	offset := (page - 1) * pageSize
-	if err := query.Offset(offset).Limit(pageSize).Order("created_at DESC").Find(&items).Error; err != nil {
+	if err := query.
+		Offset(offset).
+		Limit(pageSize).
+		Scopes(JenjangSort.Scope(filter.SortBy, filter.SortOrder)).
+		Find(&items).Error; err != nil {
 		return nil, 0, err
 	}
 	return items, total, nil

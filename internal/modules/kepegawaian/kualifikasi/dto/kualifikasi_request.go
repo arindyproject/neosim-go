@@ -48,4 +48,8 @@ type FilterKepegawaianKualifikasiRequest struct {
 	Penyelenggara string `query:"penyelenggara"`
 	IsAktif       *bool  `query:"is_aktif"`
 	IsExpired     *bool  `query:"is_expired"`
+
+	// Sorting
+	SortBy    string `query:"sort_by"`    // tipe_id | nama | penyelenggara | is_aktif | is_expired | tanggal_terbit | tanggal_expired | fhir_code | created_at | updated_at
+	SortOrder string `query:"sort_order"` // asc | desc
 }

@@ -7,9 +7,26 @@ import (
 
 	"neosim_go/internal/modules/kepegawaian/kontak/dto"
 	"neosim_go/internal/modules/kepegawaian/kontak/models"
+	"neosim_go/internal/shared/sorting"
 
 	"gorm.io/gorm"
 )
+
+// allowedSortColumns memetakan nilai sort_by dari client ke ekspresi kolom DB.
+// Hanya key di map ini yang boleh dipakai (mencegah SQL injection lewat Order()).
+var KontakSort = sorting.Config{
+	Allowed: map[string]string{
+		"pegawai_id": "pegawai_id",
+		"nilai":      "nilai",
+		"is_primary": "is_primary",
+		"is_aktif":   "is_aktif",
+		"created_at": "created_at",
+		"updated_at": "updated_at",
+	},
+	DefaultColumn: "created_at",
+	DefaultDesc:   true,
+	TieBreaker:    "id",
+}
 
 // ── Create ────────────────────────────────────────────────────────────────────
 func (r *repository) CreateKontak(ctx context.Context, m *models.KepegawaianKontak) error {
@@ -27,7 +44,7 @@ func (r *repository) GetKontakByID(ctx context.Context, id int64) (*models.Kepeg
 }
 
 // ── GetByPegawaiID ───────────────────────────────────────────────────────────
-func (r *repository) GetKontakByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int) ([]models.KepegawaianKontak, int64, error) {
+func (r *repository) GetKontakByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int, filter *dto.FilterKepegawaianKontakRequest) ([]models.KepegawaianKontak, int64, error) {
 	var items []models.KepegawaianKontak
 	var total int64
 
@@ -36,13 +53,33 @@ func (r *repository) GetKontakByPegawaiID(ctx context.Context, pegawaiID int64, 
 		Preload("Tipe").
 		Where("pegawai_id = ? AND deleted_at IS NULL", pegawaiID)
 
+	if filter.PegawaiID != nil {
+		query = query.Where("pegawai_id = ?", *filter.PegawaiID)
+	}
+	if filter.TipeID != nil {
+		query = query.Where("tipe_id = ?", *filter.TipeID)
+	}
+	if filter.Nilai != nil {
+		query = query.Where("nilai ILIKE ?", "%"+*filter.Nilai+"%")
+	}
+	if filter.IsPrimary != nil {
+		query = query.Where("is_primary = ?", *filter.IsPrimary)
+	}
+	if filter.IsAktif != nil {
+		query = query.Where("is_aktif = ?", *filter.IsAktif)
+	}
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
 	offset := (page - 1) * pageSize
 	err := query.
-		Order("tipe_id ASC, is_primary DESC, created_at DESC").
+		Scopes(KontakSort.Scope(filter.SortBy, filter.SortOrder)).
 		Offset(offset).
 		Limit(pageSize).
 		Find(&items).Error
@@ -103,7 +140,11 @@ func (r *repository) ListKontak(ctx context.Context, page, pageSize int, filter 
 	}
 
 	offset := (page - 1) * pageSize
-	if err := query.Offset(offset).Limit(pageSize).Order("created_at DESC").Find(&items).Error; err != nil {
+	if err := query.
+		Offset(offset).
+		Limit(pageSize).
+		Scopes(KontakSort.Scope(filter.SortBy, filter.SortOrder)).
+		Find(&items).Error; err != nil {
 		return nil, 0, err
 	}
 

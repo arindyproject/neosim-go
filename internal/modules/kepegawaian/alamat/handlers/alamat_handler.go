@@ -22,24 +22,26 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			jalan		query		string	false	"Filter by jalan (partial match)"
-//	@Param			tipe_id		query		string	false	"Filter by tipe_id"
-//	@Param			negara_id		query		int	false	"Filter by negara_id"
-//	@Param			provinsi_id		query		int	false	"Filter by provinsi_id"
-//	@Param			kota_kabupaten_id		query		int	false	"Filter by kota_kabupaten_id"
-//	@Param			kecamatan_id		query		int	false	"Filter by kecamatan_id"
-//	@Param			kelurahan_desa_id		query		int	false	"Filter by kelurahan_desa_id"
-//	@Param			sort_by			query		string	false	"Sort column (jalan, tipe_id, negara_id,provinsi_id,kota_kabupaten_id,kecamatan_id,kelurahan_desa_id,  created_at, updated_at)"	Enums(jalan, tipe_id, negara_id,provinsi_id,kota_kabupaten_id,kecamatan_id,kelurahan_desa_id,created_at, updated_at)
-//	@Param			sort_order		query		string	false	"Sort direction"	Enums(asc, desc)
-//	@Param			page		query		int		false	"Page number"
-//	@Param			page_size	query		int		false	"Page size"
+//	@Param			jalan				query		string	false	"Filter by jalan (partial match)"
+//	@Param			tipe_id				query		string	false	"Filter by tipe_id"
+//	@Param			negara_id			query		int		false	"Filter by negara_id"
+//	@Param			provinsi_id			query		int		false	"Filter by provinsi_id"
+//	@Param			kota_kabupaten_id	query		int		false	"Filter by kota_kabupaten_id"
+//	@Param			kecamatan_id		query		int		false	"Filter by kecamatan_id"
+//	@Param			kelurahan_desa_id	query		int		false	"Filter by kelurahan_desa_id"
+//	@Param			sort_by				query		string	false	"Sort column (jalan, tipe_id, negara_id,provinsi_id,kota_kabupaten_id,kecamatan_id,kelurahan_desa_id,  created_at, updated_at)"	Enums(jalan, tipe_id, negara_id,provinsi_id,kota_kabupaten_id,kecamatan_id,kelurahan_desa_id,created_at, updated_at)
+//	@Param			sort_order			query		string	false	"Sort direction"	Enums(asc, desc)
+//	@Param			page				query		int		false	"Page number"
+//	@Param			page_size			query		int		false	"Page size"
 //	@Success		200			{object}	response.MyGoResponse{data=[]dto.KepegawaianAlamatResponse}
 //	@Router			/kepegawaian/alamat [get]
 func (h *KepegawaianAlamatHandler) ListAlamat(c *echo.Context) error {
 
 	jalan := c.QueryParam("jalan")
 	filter := dto.FilterKepegawaianAlamatRequest{
-		Jalan: &jalan,
+		Jalan:     &jalan,
+		SortBy:    c.QueryParam("sort_by"),
+		SortOrder: c.QueryParam("sort_order"),
 	}
 
 	if tipeIDStr := c.QueryParam("tipe_id"); tipeIDStr != "" {
@@ -120,21 +122,74 @@ func (h *KepegawaianAlamatHandler) GetAlamatByID(c *echo.Context) error {
 //	@Accept         json
 //	@Produce        json
 //	@Security       BearerAuth
-//	@Param          pegawai_id  path        int true    "ID pegawai"
-//	@Param          page        query       int     false   "Page number"
-//	@Param          page_size   query       int     false   "Page size"
+//	@Param          pegawai_id  		path        int     true    "ID pegawai"
+//	@Param			jalan				query		string	false	"Filter by jalan (partial match)"
+//	@Param			tipe_id				query		string	false	"Filter by tipe_id"
+//	@Param			negara_id			query		int		false	"Filter by negara_id"
+//	@Param			provinsi_id			query		int		false	"Filter by provinsi_id"
+//	@Param			kota_kabupaten_id	query		int		false	"Filter by kota_kabupaten_id"
+//	@Param			kecamatan_id		query		int		false	"Filter by kecamatan_id"
+//	@Param			kelurahan_desa_id	query		int		false	"Filter by kelurahan_desa_id"
+//	@Param			sort_by				query		string	false	"Sort column (jalan, tipe_id, negara_id,provinsi_id,kota_kabupaten_id,kecamatan_id,kelurahan_desa_id,  created_at, updated_at)"	Enums(jalan, tipe_id, negara_id,provinsi_id,kota_kabupaten_id,kecamatan_id,kelurahan_desa_id,created_at, updated_at)
+//	@Param			sort_order			query		string	false	"Sort direction"	Enums(asc, desc)
+//	@Param          page        		query       int     false   "Page number"
+//	@Param          page_size   		query       int     false   "Page size"
 //	@Success        200         {object}    response.MyGoResponse{data=[]dto.KepegawaianAlamatResponse}
 //	@Router         /kepegawaian/alamat/{pegawai_id}/pegawai [get]
 func (h *KepegawaianAlamatHandler) ListAlamatByPegawai(c *echo.Context) error {
 	page, pageSize := he.ParsePagination(c, h.cfg)
 	actor := he.BuildAuthContext(c)
 
+	jalan := c.QueryParam("jalan")
+	filter := &dto.FilterKepegawaianAlamatRequest{
+		Jalan:     &jalan,
+		SortBy:    c.QueryParam("sort_by"),
+		SortOrder: c.QueryParam("sort_order"),
+	}
+
 	pegawaiID, err := parsePegawaiID(c)
+
+	if tipeIDStr := c.QueryParam("tipe_id"); tipeIDStr != "" {
+		if val, err := strconv.ParseInt(tipeIDStr, 10, 64); err == nil {
+			filter.TipeID = &val
+		}
+	}
+
+	if negaraIDStr := c.QueryParam("negara_id"); negaraIDStr != "" {
+		if val, err := strconv.ParseInt(negaraIDStr, 10, 64); err == nil {
+			filter.NegaraID = &val
+		}
+	}
+
+	if provensiIDStr := c.QueryParam("provinsi_id"); provensiIDStr != "" {
+		if val, err := strconv.ParseInt(provensiIDStr, 10, 64); err == nil {
+			filter.ProvinsiID = &val
+		}
+	}
+
+	if kotaKabupatenIDStr := c.QueryParam("kota_kabupaten_id"); kotaKabupatenIDStr != "" {
+		if val, err := strconv.ParseInt(kotaKabupatenIDStr, 10, 64); err == nil {
+			filter.KotaKabupatenID = &val
+		}
+	}
+
+	if kecamatanIDStr := c.QueryParam("kecamatan_id"); kecamatanIDStr != "" {
+		if val, err := strconv.ParseInt(kecamatanIDStr, 10, 64); err == nil {
+			filter.KecamatanID = &val
+		}
+	}
+
+	if kelurahanDesaIDStr := c.QueryParam("kelurahan_desa_id"); kelurahanDesaIDStr != "" {
+		if val, err := strconv.ParseInt(kelurahanDesaIDStr, 10, 64); err == nil {
+			filter.KelurahanDesaID = &val
+		}
+	}
+
 	if err != nil {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
 
-	items, total, err := h.service.GetAlamatByPegawaiID(c.Request().Context(), pegawaiID, page, pageSize, actor)
+	items, total, err := h.service.GetAlamatByPegawaiID(c.Request().Context(), pegawaiID, page, pageSize, filter, actor)
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}

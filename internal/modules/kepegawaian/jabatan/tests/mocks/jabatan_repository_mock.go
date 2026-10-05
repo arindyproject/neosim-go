@@ -60,8 +60,8 @@ func (m *KepegawaianJabatanRepositoryMock) ExistsPrimaryAktifByPegawai(ctx conte
 	return args.Bool(0), args.Error(1)
 }
 
-func (m *KepegawaianJabatanRepositoryMock) GetJabatanByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int) ([]models.KepegawaianJabatan, int64, error) {
-	args := m.Called(pegawaiID, page, pageSize)
+func (m *KepegawaianJabatanRepositoryMock) GetJabatanByPegawaiID(ctx context.Context, pegawaiID int64, filter *dto.FilterKepegawaianJabatanRequest, page, pageSize int) ([]models.KepegawaianJabatan, int64, error) {
+	args := m.Called(pegawaiID, filter, page, pageSize)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
 	}

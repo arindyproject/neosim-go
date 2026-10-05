@@ -27,6 +27,7 @@ var TipeSort = sorting.Config{
 	Allowed: map[string]string{
 		"code":       "code",
 		"label":      "label",
+		"fhir_code":  "fhir_code",
 		"created_at": "created_at",
 		"updated_at": "updated_at",
 	},

@@ -206,7 +206,7 @@ func (s *service) GetAlamatByID(ctx context.Context, id int64, actor he.AuthCont
 }
 
 // ─── GetByPegawaiID ───────────────────────────────────────────────────────────
-func (s *service) GetAlamatByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int, actor he.AuthContext) ([]dto.KepegawaianAlamatResponse, int64, error) {
+func (s *service) GetAlamatByPegawaiID(ctx context.Context, pegawaiID int64, page, pageSize int, filter *dto.FilterKepegawaianAlamatRequest, actor he.AuthContext) ([]dto.KepegawaianAlamatResponse, int64, error) {
 	can, err := s.canReadKepegawaianAlamat(ctx, actor)
 	if err != nil {
 		return nil, 0, appErrors.Internal("gagal cek akses : " + err.Error())
@@ -216,7 +216,17 @@ func (s *service) GetAlamatByPegawaiID(ctx context.Context, pegawaiID int64, pag
 			"Akses ditolak. Anda tidak memiliki hak akses untuk Melihat Kepegawaian Alamat.", nil)
 	}
 
-	items, total, err := s.repo.GetAlamatByPegawaiID(ctx, pegawaiID, page, pageSize)
+	// Normalisasi filter & sorting (filter bisa nil kalau dipanggil dari tempat lain)
+	if filter == nil {
+		filter = &dto.FilterKepegawaianAlamatRequest{}
+	}
+	filter.SortBy = strings.ToLower(strings.TrimSpace(filter.SortBy))
+	filter.SortOrder = strings.ToLower(strings.TrimSpace(filter.SortOrder))
+	if filter.SortOrder != "asc" && filter.SortOrder != "desc" {
+		filter.SortOrder = "asc"
+	}
+
+	items, total, err := s.repo.GetAlamatByPegawaiID(ctx, pegawaiID, page, pageSize, filter)
 	if err != nil {
 		return nil, 0, err
 	}

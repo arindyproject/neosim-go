@@ -8,6 +8,7 @@ import (
 	"neosim_go/internal/modules/kepegawaian/pegawai/contracts"
 	"neosim_go/internal/modules/kepegawaian/pegawai/dto"
 	"neosim_go/internal/modules/kepegawaian/pegawai/models"
+	"neosim_go/internal/shared/sorting"
 
 	"gorm.io/gorm"
 )
@@ -18,6 +19,21 @@ import (
 // pakai repo yang sudah dibuat lewat NewKepegawaianPegawaiRepository(db).
 func NewStatusRepository(db *gorm.DB) contracts.StatusRepository {
 	return &repository{db: db}
+}
+
+// allowedSortColumns memetakan nilai sort_by dari client ke ekspresi kolom DB.
+// Hanya key di map ini yang boleh dipakai (mencegah SQL injection lewat Order()).
+var StatusSort = sorting.Config{
+	Allowed: map[string]string{
+		"code":       "code",
+		"label":      "label",
+		"fhir_code":  "fhir_code",
+		"created_at": "created_at",
+		"updated_at": "updated_at",
+	},
+	DefaultColumn: "created_at",
+	DefaultDesc:   true,
+	TieBreaker:    "id",
 }
 
 // ── Create ────────────────────────────────────────────────────────────────────
@@ -90,7 +106,11 @@ func (r *repository) ListStatus(ctx context.Context, page, pageSize int, filter 
 		return nil, 0, err
 	}
 	offset := (page - 1) * pageSize
-	if err := query.Offset(offset).Limit(pageSize).Order("created_at DESC").Find(&items).Error; err != nil {
+	if err := query.
+		Offset(offset).
+		Limit(pageSize).
+		Scopes(StatusSort.Scope(filter.SortBy, filter.SortOrder)).
+		Find(&items).Error; err != nil {
 		return nil, 0, err
 	}
 	return items, total, nil

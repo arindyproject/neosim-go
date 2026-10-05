@@ -66,4 +66,8 @@ type FilterKepegawaianPegawaiRequest struct {
 	JenisID            *int64 `query:"jenis_id"`
 	StatusID           *int64 `query:"status_id"`
 	IsAktif            *bool  `query:"is_aktif"`
+
+	// Sorting
+	SortBy    string `query:"sort_by"`    // user_id | nik | ihs_number | nomor_pegawai | nama_lengkap | tanggal_lahir | tempat_lahir | golongan_darah_id | agama_id | status_pernikahan_id | kewarganegaraan | tanggal_masuk | tanggal_keluar | jenis_id | status_id | foto_url | is_aktif | created_at | updated_at
+	SortOrder string `query:"sort_order"` // asc | desc
 }

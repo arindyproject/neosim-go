@@ -51,9 +51,17 @@ func TestMain(m *testing.M) {
 // KepegawaianJabatanServiceTestSuite dipakai bersama oleh SELURUH item di dalam
 // sub-module ini — karena hanya ada satu struct service/repository,
 // satu suite ini sudah cukup untuk semuanya.
+type kepegawaianJabatanRepositoryAdapter struct {
+	*mocks.KepegawaianJabatanRepositoryMock
+}
+
+func (a *kepegawaianJabatanRepositoryAdapter) GetJabatanByPegawaiID(ctx context.Context, pegawaiID int64, page int, pageSize int, filter *dto.FilterKepegawaianJabatanRequest) ([]models.KepegawaianJabatan, int64, error) {
+	return a.KepegawaianJabatanRepositoryMock.GetJabatanByPegawaiID(ctx, pegawaiID, filter, page, pageSize)
+}
+
 type KepegawaianJabatanServiceTestSuite struct {
 	suite.Suite
-	repo                 *mocks.KepegawaianJabatanRepositoryMock
+	repo                 *kepegawaianJabatanRepositoryAdapter
 	rbacRepo             *mocks.RBACRepositoryMock
 	authRepo             *mocks.AuthRepositoryMock
 	userRepo             *mocks.UserRepositoryMock
@@ -64,7 +72,7 @@ type KepegawaianJabatanServiceTestSuite struct {
 }
 
 func (s *KepegawaianJabatanServiceTestSuite) SetupTest() {
-	s.repo = new(mocks.KepegawaianJabatanRepositoryMock)
+	s.repo = &kepegawaianJabatanRepositoryAdapter{KepegawaianJabatanRepositoryMock: new(mocks.KepegawaianJabatanRepositoryMock)}
 	s.rbacRepo = new(mocks.RBACRepositoryMock)
 	s.authRepo = new(mocks.AuthRepositoryMock)
 	s.userRepo = new(mocks.UserRepositoryMock)
@@ -548,9 +556,10 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_GetJabatanByPegawaiID_Superadm
 	actor := superadminActor()
 	items := []models.KepegawaianJabatan{*newJabatan(1), *newJabatan(2)}
 
-	s.repo.On("GetJabatanByPegawaiID", int64(1), 1, 10).Return(items, int64(2), nil)
+	s.repo.On("GetJabatanByPegawaiID", int64(1), mock.Anything, 1, 10).
+		Return(items, int64(2), nil)
 
-	result, total, err := s.svc.GetJabatanByPegawaiID(context.Background(), 1, 1, 10, actor)
+	result, total, err := s.svc.GetJabatanByPegawaiID(context.Background(), 1, &dto.FilterKepegawaianJabatanRequest{}, 1, 10, actor)
 
 	s.NoError(err)
 	s.Equal(int64(2), total)
@@ -562,9 +571,10 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_GetJabatanByPegawaiID_WithPerm
 	items := []models.KepegawaianJabatan{*newJabatan(1)}
 
 	s.rbacRepo.On("HasPermission", actor.UserID, rbacModels.PermAnyRead).Return(true, nil)
-	s.repo.On("GetJabatanByPegawaiID", int64(1), 1, 10).Return(items, int64(1), nil)
+	s.repo.On("GetJabatanByPegawaiID", int64(1), mock.Anything, 1, 10).
+		Return(items, int64(1), nil)
 
-	result, total, err := s.svc.GetJabatanByPegawaiID(context.Background(), 1, 1, 10, actor)
+	result, total, err := s.svc.GetJabatanByPegawaiID(context.Background(), 1, &dto.FilterKepegawaianJabatanRequest{}, 1, 10, actor)
 
 	s.NoError(err)
 	s.Equal(int64(1), total)
@@ -575,7 +585,7 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_GetJabatanByPegawaiID_Forbidde
 	actor := regularActor()
 	s.mockNoPermissions()
 
-	result, total, err := s.svc.GetJabatanByPegawaiID(context.Background(), 1, 1, 10, actor)
+	result, total, err := s.svc.GetJabatanByPegawaiID(context.Background(), 1, &dto.FilterKepegawaianJabatanRequest{}, 1, 10, actor)
 
 	s.Nil(result)
 	s.Equal(int64(0), total)
@@ -585,9 +595,13 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_GetJabatanByPegawaiID_Forbidde
 func (s *KepegawaianJabatanServiceTestSuite) Test_GetJabatanByPegawaiID_DefaultPagination() {
 	actor := superadminActor()
 
-	s.repo.On("GetJabatanByPegawaiID", int64(1), 1, 10).Return([]models.KepegawaianJabatan{}, int64(0), nil)
+	s.repo.On("GetJabatanByPegawaiID", int64(1),
+		mock.MatchedBy(func(f *dto.FilterKepegawaianJabatanRequest) bool {
+			return f != nil && f.SortOrder == "asc"
+		}), 1, 10,
+	).Return([]models.KepegawaianJabatan{}, int64(0), nil)
 
-	result, total, err := s.svc.GetJabatanByPegawaiID(context.Background(), 1, 0, 0, actor)
+	result, total, err := s.svc.GetJabatanByPegawaiID(context.Background(), 1, &dto.FilterKepegawaianJabatanRequest{}, 1, 10, actor)
 
 	s.NoError(err)
 	s.Equal(int64(0), total)
@@ -597,20 +611,24 @@ func (s *KepegawaianJabatanServiceTestSuite) Test_GetJabatanByPegawaiID_DefaultP
 func (s *KepegawaianJabatanServiceTestSuite) Test_GetJabatanByPegawaiID_PageSizeCapped() {
 	actor := superadminActor()
 
-	s.repo.On("GetJabatanByPegawaiID", int64(1), 1, 10).Return([]models.KepegawaianJabatan{}, int64(0), nil)
+	expectedFilter := &dto.FilterKepegawaianJabatanRequest{SortOrder: "asc"}
 
-	_, _, err := s.svc.GetJabatanByPegawaiID(context.Background(), 1, 1, 999, actor)
+	s.repo.On("GetJabatanByPegawaiID", int64(1), expectedFilter, 1, 10).
+		Return([]models.KepegawaianJabatan{}, int64(0), nil)
+
+	_, _, err := s.svc.GetJabatanByPegawaiID(context.Background(), 1, &dto.FilterKepegawaianJabatanRequest{}, 1, 999, actor)
 
 	s.NoError(err)
-	s.repo.AssertCalled(s.T(), "GetJabatanByPegawaiID", int64(1), 1, 10)
+	s.repo.AssertCalled(s.T(), "GetJabatanByPegawaiID", int64(1), expectedFilter, 1, 10)
 }
 
 func (s *KepegawaianJabatanServiceTestSuite) Test_GetJabatanByPegawaiID_RepoError() {
 	actor := superadminActor()
 
-	s.repo.On("GetJabatanByPegawaiID", int64(1), 1, 10).Return(nil, int64(0), fmt.Errorf("db error"))
+	s.repo.On("GetJabatanByPegawaiID", int64(1), mock.Anything, 1, 10).
+		Return(nil, int64(0), fmt.Errorf("db error"))
 
-	result, total, err := s.svc.GetJabatanByPegawaiID(context.Background(), 1, 1, 10, actor)
+	result, total, err := s.svc.GetJabatanByPegawaiID(context.Background(), 1, &dto.FilterKepegawaianJabatanRequest{}, 1, 10, actor)
 
 	s.Nil(result)
 	s.Equal(int64(0), total)

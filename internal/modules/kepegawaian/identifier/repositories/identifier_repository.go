@@ -130,6 +130,7 @@ func (r *repository) FindByPegawaiID(
 	ctx context.Context,
 	pegawaiID int64,
 	page, pageSize int,
+	filter *dto.FilterKepegawaianIdentifierRequest,
 ) ([]models.KepegawaianIdentifier, int64, error) {
 	var items []models.KepegawaianIdentifier
 	var total int64
@@ -139,13 +140,39 @@ func (r *repository) FindByPegawaiID(
 		Preload("Tipe").
 		Where("pegawai_id = ? AND deleted_at IS NULL", pegawaiID)
 
+	if filter != nil {
+		if filter.PegawaiID != nil {
+			query = query.Where("pegawai_id = ?", *filter.PegawaiID)
+		}
+		if filter.TipeID != nil {
+			query = query.Where("tipe_id = ?", *filter.TipeID)
+		}
+		if filter.Nilai != "" {
+			query = query.Where("nilai ILIKE ?", "%"+filter.Nilai+"%")
+		}
+		if filter.IsPrimary != nil {
+			query = query.Where("is_primary = ?", *filter.IsPrimary)
+		}
+		if filter.IsAktif != nil {
+			query = query.Where("is_aktif = ?", *filter.IsAktif)
+		}
+		// true = sudah expired, false = belum expired / tidak ada tanggal
+		if filter.IsExpired != nil {
+			if *filter.IsExpired {
+				query = query.Where("tanggal_expired IS NOT NULL AND tanggal_expired < ?", time.Now())
+			} else {
+				query = query.Where("tanggal_expired IS NULL OR tanggal_expired >= ?", time.Now())
+			}
+		}
+	}
+
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
 	offset := (page - 1) * pageSize
 	err := query.
-		Order("tipe_id ASC, is_primary DESC, created_at DESC").
+		Scopes(IdentifierSort.Scope(filter.SortBy, filter.SortOrder)).
 		Offset(offset).
 		Limit(pageSize).
 		Find(&items).Error
