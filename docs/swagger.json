@@ -1353,14 +1353,21 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Filter by name (partial match)",
-                        "name": "name",
+                        "description": "Filter by label (partial match)",
+                        "name": "label",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by code (partial match)",
+                        "name": "code",
                         "in": "query"
                     },
                     {
                         "enum": [
                             "label",
                             "code",
+                            "fhir_code",
                             "created_at",
                             "updated_at"
                         ],
@@ -6454,6 +6461,36 @@
                         "in": "query"
                     },
                     {
+                        "enum": [
+                            "pegawai_id",
+                            "tipe_id",
+                            "nama",
+                            "penyelenggara",
+                            "nomor_sertifikat",
+                            "tanggal_terbit",
+                            "tanggal_expired",
+                            "is_aktif",
+                            "point",
+                            "fhir_code",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "description": "Sort column (pegawai_id, tipe_id,nama, penyelenggara, nomor_sertifikat, tanggal_terbit, tanggal_expired, is_aktif, point, fhir_code , created_at, updated_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort direction",
+                        "name": "sort_order",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "description": "Page number",
                         "name": "page",
@@ -6606,6 +6643,29 @@
                         "type": "string",
                         "description": "Filter by name (partial match)",
                         "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "label",
+                            "code",
+                            "fhir_code",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "description": "Sort column (code, label,fhir_code, created_at, updated_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort direction",
+                        "name": "sort_order",
                         "in": "query"
                     },
                     {
@@ -7110,8 +7170,93 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Filter by name (partial match)",
+                        "description": "Filter by nama_lengkap (partial match)",
                         "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by nik (partial match)",
+                        "name": "nik",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by nomor_pegawai (partial match)",
+                        "name": "nomor_pegawai",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by jenis_kelamin_id",
+                        "name": "jenis_kelamin_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by agama_id",
+                        "name": "agama_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by status_pernikahan_id",
+                        "name": "status_pernikahan_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by jenis_id",
+                        "name": "jenis_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by status_id",
+                        "name": "status_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by is_aktif",
+                        "name": "is_aktif",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "nik",
+                            "ihs_number",
+                            "nomor_pegawai",
+                            "nama_lengkap",
+                            "jenis_kelamin_id",
+                            "tanggal_lahir",
+                            "tempat_lahir",
+                            "golongan_darah_id",
+                            "agama_id",
+                            "status_pernikahan_id",
+                            "kewarganegaraan",
+                            "tanggal_masuk",
+                            "tanggal_keluar",
+                            "jenis_id",
+                            "status_id",
+                            "foto_url",
+                            "is_aktif",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "description": "Sort column",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort direction",
+                        "name": "sort_order",
                         "in": "query"
                     },
                     {
@@ -7147,6 +7292,12 @@
                                     }
                                 }
                             ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.MyGoResponse"
                         }
                     }
                 }
@@ -7222,8 +7373,37 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Filter by name (partial match)",
-                        "name": "name",
+                        "description": "Filter by label (partial match)",
+                        "name": "label",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by code (partial match)",
+                        "name": "code",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "label",
+                            "code",
+                            "fhir_code",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "description": "Sort column (code, label,fhir_code, created_at, updated_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort direction",
+                        "name": "sort_order",
                         "in": "query"
                     },
                     {
@@ -7474,8 +7654,37 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Filter by name (partial match)",
-                        "name": "name",
+                        "description": "Filter by label (partial match)",
+                        "name": "label",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by code (partial match)",
+                        "name": "code",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "label",
+                            "code",
+                            "fhir_code",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "description": "Sort column (code, label,fhir_code, created_at, updated_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort direction",
+                        "name": "sort_order",
                         "in": "query"
                     },
                     {
@@ -7946,6 +8155,34 @@
                         "in": "query"
                     },
                     {
+                        "enum": [
+                            "pegawai_id",
+                            "jenjang_id",
+                            "nama_institusi",
+                            "nomor_ijazah",
+                            "bidang_studi",
+                            "alamat_institusi",
+                            "fhir_code",
+                            "point",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "description": "Sort column (pegawai_id , jenjang_id , nama_institusi , nomor_ijazah , bidang_studi , alamat_institusi , fhir_code , point , created_at , updated_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort direction",
+                        "name": "sort_order",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "description": "Page number",
                         "name": "page",
@@ -8053,8 +8290,37 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Filter by name (partial match)",
-                        "name": "name",
+                        "description": "Filter by label (partial match)",
+                        "name": "label",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by code (partial match)",
+                        "name": "code",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "label",
+                            "code",
+                            "fhir_code",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "description": "Sort column (code, label,fhir_code, created_at, updated_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort direction",
+                        "name": "sort_order",
                         "in": "query"
                     },
                     {
@@ -8500,6 +8766,58 @@
                         "name": "pegawai_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by Jenjang ID",
+                        "name": "jenjang_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by nama_institusi ",
+                        "name": "nama_institusi",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by bidang_studi ",
+                        "name": "bidang_studi",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by nomor_ijazah ",
+                        "name": "nomor_ijazah",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "pegawai_id",
+                            "jenjang_id",
+                            "nama_institusi",
+                            "nomor_ijazah",
+                            "bidang_studi",
+                            "alamat_institusi",
+                            "fhir_code",
+                            "point",
+                            "created_at",
+                            "updated_at"
+                        ],
+                        "type": "string",
+                        "description": "Sort column (pegawai_id , jenjang_id , nama_institusi , nomor_ijazah , bidang_studi , alamat_institusi , fhir_code , point , created_at , updated_at)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "description": "Sort direction",
+                        "name": "sort_order",
+                        "in": "query"
                     },
                     {
                         "type": "integer",

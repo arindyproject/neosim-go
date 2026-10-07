@@ -4505,14 +4505,19 @@ paths:
       - application/json
       description: Get paginated list of Tipe
       parameters:
-      - description: Filter by name (partial match)
+      - description: Filter by label (partial match)
         in: query
-        name: name
+        name: label
+        type: string
+      - description: Filter by code (partial match)
+        in: query
+        name: code
         type: string
       - description: Sort column (code, label,fhir_code, created_at, updated_at)
         enum:
         - label
         - code
+        - fhir_code
         - created_at
         - updated_at
         in: query
@@ -7441,6 +7446,32 @@ paths:
         in: query
         name: is_expired
         type: boolean
+      - description: Sort column (pegawai_id, tipe_id,nama, penyelenggara, nomor_sertifikat,
+          tanggal_terbit, tanggal_expired, is_aktif, point, fhir_code , created_at,
+          updated_at)
+        enum:
+        - pegawai_id
+        - tipe_id
+        - nama
+        - penyelenggara
+        - nomor_sertifikat
+        - tanggal_terbit
+        - tanggal_expired
+        - is_aktif
+        - point
+        - fhir_code
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
       - description: Page number
         in: query
         name: page
@@ -7650,6 +7681,23 @@ paths:
         in: query
         name: name
         type: string
+      - description: Sort column (code, label,fhir_code, created_at, updated_at)
+        enum:
+        - label
+        - code
+        - fhir_code
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
       - description: Page number
         in: query
         name: page
@@ -7823,9 +7871,72 @@ paths:
       - application/json
       description: Get paginated list of KepegawaianPegawai
       parameters:
-      - description: Filter by name (partial match)
+      - description: Filter by nama_lengkap (partial match)
         in: query
         name: name
+        type: string
+      - description: Filter by nik (partial match)
+        in: query
+        name: nik
+        type: string
+      - description: Filter by nomor_pegawai (partial match)
+        in: query
+        name: nomor_pegawai
+        type: string
+      - description: Filter by jenis_kelamin_id
+        in: query
+        name: jenis_kelamin_id
+        type: integer
+      - description: Filter by agama_id
+        in: query
+        name: agama_id
+        type: integer
+      - description: Filter by status_pernikahan_id
+        in: query
+        name: status_pernikahan_id
+        type: integer
+      - description: Filter by jenis_id
+        in: query
+        name: jenis_id
+        type: integer
+      - description: Filter by status_id
+        in: query
+        name: status_id
+        type: integer
+      - description: Filter by is_aktif
+        in: query
+        name: is_aktif
+        type: boolean
+      - description: Sort column
+        enum:
+        - nik
+        - ihs_number
+        - nomor_pegawai
+        - nama_lengkap
+        - jenis_kelamin_id
+        - tanggal_lahir
+        - tempat_lahir
+        - golongan_darah_id
+        - agama_id
+        - status_pernikahan_id
+        - kewarganegaraan
+        - tanggal_masuk
+        - tanggal_keluar
+        - jenis_id
+        - status_id
+        - foto_url
+        - is_aktif
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
         type: string
       - description: Page number
         in: query
@@ -7849,6 +7960,10 @@ paths:
                     $ref: '#/definitions/dto.KepegawaianPegawaiResponse'
                   type: array
               type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.MyGoResponse'
       security:
       - BearerAuth: []
       summary: Get list of KepegawaianPegawai
@@ -7971,9 +8086,30 @@ paths:
       - application/json
       description: Get paginated list of Jenis
       parameters:
-      - description: Filter by name (partial match)
+      - description: Filter by label (partial match)
         in: query
-        name: name
+        name: label
+        type: string
+      - description: Filter by code (partial match)
+        in: query
+        name: code
+        type: string
+      - description: Sort column (code, label,fhir_code, created_at, updated_at)
+        enum:
+        - label
+        - code
+        - fhir_code
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
         type: string
       - description: Page number
         in: query
@@ -8119,9 +8255,30 @@ paths:
       - application/json
       description: Get paginated list of Status
       parameters:
-      - description: Filter by name (partial match)
+      - description: Filter by label (partial match)
         in: query
-        name: name
+        name: label
+        type: string
+      - description: Filter by code (partial match)
+        in: query
+        name: code
+        type: string
+      - description: Sort column (code, label,fhir_code, created_at, updated_at)
+        enum:
+        - label
+        - code
+        - fhir_code
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
         type: string
       - description: Page number
         in: query
@@ -8316,6 +8473,29 @@ paths:
         in: query
         name: nomor_ijazah
         type: string
+      - description: Sort column (pegawai_id , jenjang_id , nama_institusi , nomor_ijazah
+          , bidang_studi , alamat_institusi , fhir_code , point , created_at , updated_at)
+        enum:
+        - pegawai_id
+        - jenjang_id
+        - nama_institusi
+        - nomor_ijazah
+        - bidang_studi
+        - alamat_institusi
+        - fhir_code
+        - point
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
       - description: Page number
         in: query
         name: page
@@ -8465,6 +8645,45 @@ paths:
         name: pegawai_id
         required: true
         type: integer
+      - description: Filter by Jenjang ID
+        in: query
+        name: jenjang_id
+        type: integer
+      - description: 'Filter by nama_institusi '
+        in: query
+        name: nama_institusi
+        type: string
+      - description: 'Filter by bidang_studi '
+        in: query
+        name: bidang_studi
+        type: string
+      - description: 'Filter by nomor_ijazah '
+        in: query
+        name: nomor_ijazah
+        type: string
+      - description: Sort column (pegawai_id , jenjang_id , nama_institusi , nomor_ijazah
+          , bidang_studi , alamat_institusi , fhir_code , point , created_at , updated_at)
+        enum:
+        - pegawai_id
+        - jenjang_id
+        - nama_institusi
+        - nomor_ijazah
+        - bidang_studi
+        - alamat_institusi
+        - fhir_code
+        - point
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
       - description: Page number
         in: query
         name: page
@@ -8498,9 +8717,30 @@ paths:
       - application/json
       description: Get paginated list of Jenjang
       parameters:
-      - description: Filter by name (partial match)
+      - description: Filter by label (partial match)
         in: query
-        name: name
+        name: label
+        type: string
+      - description: Filter by code (partial match)
+        in: query
+        name: code
+        type: string
+      - description: Sort column (code, label,fhir_code, created_at, updated_at)
+        enum:
+        - label
+        - code
+        - fhir_code
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
         type: string
       - description: Page number
         in: query
