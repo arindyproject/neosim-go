@@ -15,6 +15,8 @@ import (
 	"neosim_go/internal/modules/users/dto"
 	"neosim_go/internal/modules/users/models"
 
+	authModels "neosim_go/internal/modules/auth/models"
+
 	appErrors "neosim_go/internal/shared/errors"
 
 	"golang.org/x/crypto/bcrypt"
@@ -112,8 +114,17 @@ func (s *service) GetUserByID(ctx context.Context, id int64, actor he.AuthContex
 	// Ambil creator
 	creator := s.buildCreator(ctx, user.CreatedBy)
 
-	// Ambil login histories
-	histories, _ := s.authRepo.GetUserLoginHistories(ctx, user.ID, 10)
+	// Ambil login histories jika user memiliki akses untuk melihatnya
+	// Jika tidak memiliki akses, histories akan tetap kosong
+	// jiks user superadmin atau staff, maka bisa melihat histories login user lain
+	canViewHistories, _ := s.canReadUserHistoryLogin(ctx, actor, user.ID)
+	histories := []authModels.LoginHistory{}
+	if canViewHistories {
+		h, err := s.authRepo.GetUserLoginHistories(ctx, user.ID, 10)
+		if err == nil {
+			histories = h
+		}
+	}
 
 	return dto.ToUserResponse(dto.UserResponseParams{
 		User:        user,
@@ -139,7 +150,18 @@ func (s *service) GetUserByUsername(ctx context.Context, username string, actor 
 
 	roles, permissions := s.buildUserRBAC(ctx, user.ID)
 	creator := s.buildCreator(ctx, user.CreatedBy)
-	histories, _ := s.authRepo.GetUserLoginHistories(ctx, user.ID, 10)
+
+	// Ambil login histories jika user memiliki akses untuk melihatnya
+	// Jika tidak memiliki akses, histories akan tetap kosong
+	// jiks user superadmin atau staff, maka bisa melihat histories login user lain
+	canViewHistories, _ := s.canReadUserHistoryLogin(ctx, actor, user.ID)
+	histories := []authModels.LoginHistory{}
+	if canViewHistories {
+		h, err := s.authRepo.GetUserLoginHistories(ctx, user.ID, 10)
+		if err == nil {
+			histories = h
+		}
+	}
 
 	return dto.ToUserResponse(dto.UserResponseParams{
 		User:        user,
