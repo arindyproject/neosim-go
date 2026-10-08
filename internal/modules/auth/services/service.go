@@ -575,6 +575,7 @@ func (s *authService) buildTokenResponse(ctx context.Context, accessToken, refre
 			Name:           user.Name,
 			IsSuperadmin:   user.IsSuperadmin,
 			IsStaff:        user.IsStaff,
+			IsActive:       user.IsActive,
 			IsVerified:     user.IsVerified,
 			Roles:          roleSimple, // ← Inject Roles ke DTO Response
 			Permissions:    permList,   // ← Inject Permissions ke DTO Response
