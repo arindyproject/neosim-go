@@ -26,19 +26,19 @@ type UpdateUserRequest struct {
 }
 
 type AdminUserRequest struct {
-	IsSuperadmin bool `json:"is_superadmin" validate:"required"`
+	IsSuperadmin *bool `json:"is_superadmin" validate:"required"`
 }
 
 type StaffUserRequest struct {
-	IsStaff bool `json:"is_staff" validate:"required"`
+	IsStaff *bool `json:"is_staff" validate:"required"`
 }
 
 type ActiveUserRequest struct {
-	IsActive bool `json:"is_active" validate:"required"`
+	IsActive *bool `json:"is_active" validate:"required"`
 }
 
 type VerifyUserRequest struct {
-	IsVerified bool `json:"is_verified" validate:"required"`
+	IsVerified *bool `json:"is_verified" validate:"required"`
 }
 
 type ChangePasswordRequest struct {

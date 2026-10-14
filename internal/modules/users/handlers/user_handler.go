@@ -611,7 +611,7 @@ func (h *Handler) SetActiveStatusHandler(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	user, err := h.service.SetActiveStatus(c.Request().Context(), id, req.IsActive, actor)
+	user, err := h.service.SetActiveStatus(c.Request().Context(), id, *req.IsActive, actor)
 	if err != nil {
 		if appErr, ok := err.(interface{ StatusCode() int }); ok {
 			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
@@ -655,7 +655,7 @@ func (h *Handler) SetStaffStatusHandler(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	user, err := h.service.SetStaffStatus(c.Request().Context(), id, req.IsStaff, actor)
+	user, err := h.service.SetStaffStatus(c.Request().Context(), id, *req.IsStaff, actor)
 	if err != nil {
 		if appErr, ok := err.(interface{ StatusCode() int }); ok {
 			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
@@ -699,7 +699,7 @@ func (h *Handler) SetVerifiedStatusHandler(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	user, err := h.service.SetVerifiedStatus(c.Request().Context(), id, req.IsVerified, actor)
+	user, err := h.service.SetVerifiedStatus(c.Request().Context(), id, *req.IsVerified, actor)
 	if err != nil {
 		if appErr, ok := err.(interface{ StatusCode() int }); ok {
 			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
@@ -743,7 +743,7 @@ func (h *Handler) SetSuperadminStatusHandler(c *echo.Context) error {
 	}
 
 	actor := he.BuildAuthContext(c)
-	user, err := h.service.SetSuperadminStatus(c.Request().Context(), id, req.IsSuperadmin, actor)
+	user, err := h.service.SetSuperadminStatus(c.Request().Context(), id, *req.IsSuperadmin, actor)
 	if err != nil {
 		if appErr, ok := err.(interface{ StatusCode() int }); ok {
 			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
