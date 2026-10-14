@@ -56,8 +56,8 @@ type Service interface {
 	DeletePhoto(ctx context.Context, id int64, actor he.AuthContext) (*dto.UserResponse, error)
 
 	// Status
-	SetActiveStatus(ctx context.Context, id int64, isActive bool) error
-	SetVerifiedStatus(ctx context.Context, id int64, isVerified bool) error
-	SetSuperadminStatus(ctx context.Context, id int64, isSuperadmin bool) error
-	SetStaffStatus(ctx context.Context, id int64, isStaff bool) error
+	SetActiveStatus(ctx context.Context, id int64, isActive bool, actor he.AuthContext) (*dto.UserResponse, error)
+	SetVerifiedStatus(ctx context.Context, id int64, isVerified bool, actor he.AuthContext) (*dto.UserResponse, error)
+	SetSuperadminStatus(ctx context.Context, id int64, isSuperadmin bool, actor he.AuthContext) (*dto.UserResponse, error)
+	SetStaffStatus(ctx context.Context, id int64, isStaff bool, actor he.AuthContext) (*dto.UserResponse, error)
 }

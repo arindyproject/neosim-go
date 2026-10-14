@@ -1,5 +1,19 @@
 basePath: /api/v1
 definitions:
+  dto.ActiveUserRequest:
+    properties:
+      is_active:
+        type: boolean
+    required:
+    - is_active
+    type: object
+  dto.AdminUserRequest:
+    properties:
+      is_superadmin:
+        type: boolean
+    required:
+    - is_superadmin
+    type: object
   dto.ArtikelKategoriResponse:
     properties:
       created_at:
@@ -2276,6 +2290,13 @@ definitions:
       label:
         type: string
     type: object
+  dto.StaffUserRequest:
+    properties:
+      is_staff:
+        type: boolean
+    required:
+    - is_staff
+    type: object
   dto.StatusResponse:
     properties:
       code:
@@ -3155,6 +3176,13 @@ definitions:
         type: string
       username:
         type: string
+    type: object
+  dto.VerifyUserRequest:
+    properties:
+      is_verified:
+        type: boolean
+    required:
+    - is_verified
     type: object
   dto.WilayahSimpelResponse:
     properties:
@@ -12080,6 +12108,40 @@ paths:
       summary: Update user
       tags:
       - Users
+  /users/{id}/active:
+    put:
+      consumes:
+      - application/json
+      description: Activate or deactivate user by :id
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Active Status Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ActiveUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Set user active status
+      tags:
+      - Users
   /users/{id}/change-password:
     put:
       consumes:
@@ -12253,6 +12315,108 @@ paths:
       security:
       - BearerAuth: []
       summary: Update user settings
+      tags:
+      - Users
+  /users/{id}/staff:
+    put:
+      consumes:
+      - application/json
+      description: Set or unset staff status of user by :id
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Staff Status Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.StaffUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Set user staff status
+      tags:
+      - Users
+  /users/{id}/superadmin:
+    put:
+      consumes:
+      - application/json
+      description: Grant or revoke superadmin of user by :id
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Superadmin Status Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.AdminUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Set user superadmin status
+      tags:
+      - Users
+  /users/{id}/verify:
+    put:
+      consumes:
+      - application/json
+      description: Verify or unverify user by :id
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Verified Status Request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.VerifyUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Set user verified status
       tags:
       - Users
   /users/deleted:

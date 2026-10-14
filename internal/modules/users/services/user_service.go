@@ -648,51 +648,153 @@ func (s *service) DeletePhoto(ctx context.Context, id int64, actor he.AuthContex
 }
 
 // SetActiveStatus ---------------------------------------------------------------
-func (s *service) SetActiveStatus(ctx context.Context, id int64, isActive bool) error {
+func (s *service) SetActiveStatus(ctx context.Context, id int64, isActive bool, actor he.AuthContext) (*dto.UserResponse, error) {
+	can, err := s.canSetStatusUser(ctx, actor)
+	if err != nil {
+		return nil, appErrors.Internal("gagal cek akses")
+	}
+	if !can {
+		return nil, appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda Tidak bisa mengubah data ini.", nil)
+	}
+
 	user, err := s.repo.GetByID(ctx, id)
 	if err != nil || user == nil {
-		return appErrors.NotFound("user tidak ditemukan")
+		return nil, appErrors.NotFound("user tidak ditemukan")
+	}
+	if user.ID == actor.UserID && !isActive {
+		return nil, appErrors.BadRequest("tidak bisa menonaktifkan akun sendiri")
 	}
 
 	user.IsActive = isActive
+	user.UpdatedBy = &actor.UserID
 	user.UpdatedAt = time.Now()
-	return s.repo.Update(ctx, user)
+	if err := s.repo.Update(ctx, user); err != nil {
+		return nil, appErrors.Internal("gagal mengupdate status aktif user")
+	}
+
+	roles, permissions := s.buildUserRBAC(ctx, user.ID)
+	creator := s.buildCreator(ctx, user.CreatedBy)
+	histories, _ := s.authRepo.GetUserLoginHistories(ctx, user.ID, 10)
+
+	return dto.ToUserResponse(dto.UserResponseParams{
+		User:        user,
+		Roles:       roles,
+		Permissions: permissions,
+		Histories:   histories,
+		Creator:     creator,
+	}, true), nil
 } // SetActiveStatus -------------------------------------------------------------
 
 // SetStaffStatus ----------------------------------------------------------------
-func (s *service) SetStaffStatus(ctx context.Context, id int64, isStaff bool) error {
+func (s *service) SetStaffStatus(ctx context.Context, id int64, isStaff bool, actor he.AuthContext) (*dto.UserResponse, error) {
+	can, err := s.canSetStatusUser(ctx, actor)
+	if err != nil {
+		return nil, appErrors.Internal("gagal cek akses")
+	}
+	if !can {
+		return nil, appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda Tidak bisa mengubah data ini.", nil)
+	}
+
 	user, err := s.repo.GetByID(ctx, id)
 	if err != nil || user == nil {
-		return appErrors.NotFound("user tidak ditemukan")
+		return nil, appErrors.NotFound("user tidak ditemukan")
 	}
 
 	user.IsStaff = isStaff
+	user.UpdatedBy = &actor.UserID
 	user.UpdatedAt = time.Now()
-	return s.repo.Update(ctx, user)
+	if err := s.repo.Update(ctx, user); err != nil {
+		return nil, appErrors.Internal("gagal mengupdate status staff user")
+	}
+
+	roles, permissions := s.buildUserRBAC(ctx, user.ID)
+	creator := s.buildCreator(ctx, user.CreatedBy)
+	histories, _ := s.authRepo.GetUserLoginHistories(ctx, user.ID, 10)
+
+	return dto.ToUserResponse(dto.UserResponseParams{
+		User:        user,
+		Roles:       roles,
+		Permissions: permissions,
+		Histories:   histories,
+		Creator:     creator,
+	}, true), nil
 } // SetStaffStatus --------------------------------------------------------------
 
 // SetVerifiedStatus -------------------------------------------------------------
-func (s *service) SetVerifiedStatus(ctx context.Context, id int64, isVerified bool) error {
+func (s *service) SetVerifiedStatus(ctx context.Context, id int64, isVerified bool, actor he.AuthContext) (*dto.UserResponse, error) {
+	can, err := s.canSetStatusUser(ctx, actor)
+	if err != nil {
+		return nil, appErrors.Internal("gagal cek akses")
+	}
+	if !can {
+		return nil, appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda Tidak bisa mengubah data ini.", nil)
+	}
+
 	user, err := s.repo.GetByID(ctx, id)
 	if err != nil || user == nil {
-		return appErrors.NotFound("user tidak ditemukan")
+		return nil, appErrors.NotFound("user tidak ditemukan")
 	}
 
 	user.IsVerified = isVerified
+	user.UpdatedBy = &actor.UserID
 	user.UpdatedAt = time.Now()
-	return s.repo.Update(ctx, user)
+	if err := s.repo.Update(ctx, user); err != nil {
+		return nil, appErrors.Internal("gagal mengupdate status verifikasi user")
+	}
+
+	roles, permissions := s.buildUserRBAC(ctx, user.ID)
+	creator := s.buildCreator(ctx, user.CreatedBy)
+	histories, _ := s.authRepo.GetUserLoginHistories(ctx, user.ID, 10)
+
+	return dto.ToUserResponse(dto.UserResponseParams{
+		User:        user,
+		Roles:       roles,
+		Permissions: permissions,
+		Histories:   histories,
+		Creator:     creator,
+	}, true), nil
 } // SetVerifiedStatus -----------------------------------------------------------
 
 // SetSuperadminStatus -----------------------------------------------------------
-func (s *service) SetSuperadminStatus(ctx context.Context, id int64, isSuperadmin bool) error {
+func (s *service) SetSuperadminStatus(ctx context.Context, id int64, isSuperadmin bool, actor he.AuthContext) (*dto.UserResponse, error) {
+	can, err := s.canSetStatusUser(ctx, actor)
+	if err != nil {
+		return nil, appErrors.Internal("gagal cek akses")
+	}
+	if !can {
+		return nil, appErrors.Wrap(http.StatusForbidden,
+			"Akses ditolak. Anda Tidak bisa mengubah data ini.", nil)
+	}
+
 	user, err := s.repo.GetByID(ctx, id)
 	if err != nil || user == nil {
-		return appErrors.NotFound("user tidak ditemukan")
+		return nil, appErrors.NotFound("user tidak ditemukan")
+	}
+	if user.ID == actor.UserID && !isSuperadmin {
+		return nil, appErrors.BadRequest("tidak bisa mencabut superadmin dari akun sendiri")
 	}
 
 	user.IsSuperadmin = isSuperadmin
+	user.UpdatedBy = &actor.UserID
 	user.UpdatedAt = time.Now()
-	return s.repo.Update(ctx, user)
+	if err := s.repo.Update(ctx, user); err != nil {
+		return nil, appErrors.Internal("gagal mengupdate status superadmin user")
+	}
+
+	roles, permissions := s.buildUserRBAC(ctx, user.ID)
+	creator := s.buildCreator(ctx, user.CreatedBy)
+	histories, _ := s.authRepo.GetUserLoginHistories(ctx, user.ID, 10)
+
+	return dto.ToUserResponse(dto.UserResponseParams{
+		User:        user,
+		Roles:       roles,
+		Permissions: permissions,
+		Histories:   histories,
+		Creator:     creator,
+	}, true), nil
 } // SetSuperadminStatus ---------------------------------------------------------
 
 // ─── Private Helpers ───────────────────────────────────────────────────────────

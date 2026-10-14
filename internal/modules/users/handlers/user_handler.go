@@ -576,7 +576,6 @@ func (h *Handler) DeletePhoto(c *echo.Context) error {
 
 	return response.Response(c, http.StatusOK, true, "Foto berhasil dihapus", result, nil)
 } // ─── Delete Photo	 ─────────────────────────────────────────────────────────────────
-
 // ─── Status Toggles ────────────────────────────────────────────────────────────────
 // SetActiveStatusHandler godoc
 //
@@ -588,11 +587,11 @@ func (h *Handler) DeletePhoto(c *echo.Context) error {
 //	@Security		BearerAuth
 //	@Param			id		path		int						true	"User ID"
 //	@Param			body	body		dto.ActiveUserRequest	true	"Active Status Request"
-//	@Success		200		{object}	response.MyGoResponse
+//	@Success		200		{object}	response.MyGoResponse{data=dto.UserResponse}
 //	@Router			/users/{id}/active [put]
 //
 // SetActiveStatusHandler handles PUT /api/v1/users/:id/active
-// Siapa yang bisa: superadmin
+// Siapa yang bisa: superadmin (dicek di service)
 func (h *Handler) SetActiveStatusHandler(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
@@ -611,13 +610,15 @@ func (h *Handler) SetActiveStatusHandler(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 
-	if err := h.service.SetActiveStatus(c.Request().Context(), id, req.IsActive); err != nil {
+	actor := he.BuildAuthContext(c)
+	user, err := h.service.SetActiveStatus(c.Request().Context(), id, req.IsActive, actor)
+	if err != nil {
 		if appErr, ok := err.(interface{ StatusCode() int }); ok {
 			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
 		}
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
-	return response.Response(c, http.StatusOK, true, "Status aktif user berhasil diubah", nil, nil)
+	return response.Response(c, http.StatusOK, true, "Status aktif user berhasil diubah", user, nil)
 } // ─── SetActiveStatusHandler ──────────────────────────────────────────────────────
 
 // SetStaffStatusHandler godoc
@@ -630,11 +631,11 @@ func (h *Handler) SetActiveStatusHandler(c *echo.Context) error {
 //	@Security		BearerAuth
 //	@Param			id		path		int						true	"User ID"
 //	@Param			body	body		dto.StaffUserRequest	true	"Staff Status Request"
-//	@Success		200		{object}	response.MyGoResponse
+//	@Success		200		{object}	response.MyGoResponse{data=dto.UserResponse}
 //	@Router			/users/{id}/staff [put]
 //
 // SetStaffStatusHandler handles PUT /api/v1/users/:id/staff
-// Siapa yang bisa: superadmin
+// Siapa yang bisa: superadmin (dicek di service)
 func (h *Handler) SetStaffStatusHandler(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
@@ -653,13 +654,15 @@ func (h *Handler) SetStaffStatusHandler(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 
-	if err := h.service.SetStaffStatus(c.Request().Context(), id, req.IsStaff); err != nil {
+	actor := he.BuildAuthContext(c)
+	user, err := h.service.SetStaffStatus(c.Request().Context(), id, req.IsStaff, actor)
+	if err != nil {
 		if appErr, ok := err.(interface{ StatusCode() int }); ok {
 			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
 		}
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
-	return response.Response(c, http.StatusOK, true, "Status staff user berhasil diubah", nil, nil)
+	return response.Response(c, http.StatusOK, true, "Status staff user berhasil diubah", user, nil)
 } // ─── SetStaffStatusHandler ───────────────────────────────────────────────────────
 
 // SetVerifiedStatusHandler godoc
@@ -672,11 +675,11 @@ func (h *Handler) SetStaffStatusHandler(c *echo.Context) error {
 //	@Security		BearerAuth
 //	@Param			id		path		int						true	"User ID"
 //	@Param			body	body		dto.VerifyUserRequest	true	"Verified Status Request"
-//	@Success		200		{object}	response.MyGoResponse
+//	@Success		200		{object}	response.MyGoResponse{data=dto.UserResponse}
 //	@Router			/users/{id}/verify [put]
 //
 // SetVerifiedStatusHandler handles PUT /api/v1/users/:id/verify
-// Siapa yang bisa: superadmin
+// Siapa yang bisa: superadmin (dicek di service)
 func (h *Handler) SetVerifiedStatusHandler(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
@@ -695,13 +698,15 @@ func (h *Handler) SetVerifiedStatusHandler(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 
-	if err := h.service.SetVerifiedStatus(c.Request().Context(), id, req.IsVerified); err != nil {
+	actor := he.BuildAuthContext(c)
+	user, err := h.service.SetVerifiedStatus(c.Request().Context(), id, req.IsVerified, actor)
+	if err != nil {
 		if appErr, ok := err.(interface{ StatusCode() int }); ok {
 			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
 		}
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
-	return response.Response(c, http.StatusOK, true, "Status verifikasi user berhasil diubah", nil, nil)
+	return response.Response(c, http.StatusOK, true, "Status verifikasi user berhasil diubah", user, nil)
 } // ─── SetVerifiedStatusHandler ────────────────────────────────────────────────────
 
 // SetSuperadminStatusHandler godoc
@@ -714,11 +719,11 @@ func (h *Handler) SetVerifiedStatusHandler(c *echo.Context) error {
 //	@Security		BearerAuth
 //	@Param			id		path		int						true	"User ID"
 //	@Param			body	body		dto.AdminUserRequest	true	"Superadmin Status Request"
-//	@Success		200		{object}	response.MyGoResponse
+//	@Success		200		{object}	response.MyGoResponse{data=dto.UserResponse}
 //	@Router			/users/{id}/superadmin [put]
 //
 // SetSuperadminStatusHandler handles PUT /api/v1/users/:id/superadmin
-// Siapa yang bisa: superadmin
+// Siapa yang bisa: superadmin (dicek di service)
 func (h *Handler) SetSuperadminStatusHandler(c *echo.Context) error {
 	id, err := he.ParseID(c)
 	if err != nil {
@@ -737,11 +742,13 @@ func (h *Handler) SetSuperadminStatusHandler(c *echo.Context) error {
 		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
 	}
 
-	if err := h.service.SetSuperadminStatus(c.Request().Context(), id, req.IsSuperadmin); err != nil {
+	actor := he.BuildAuthContext(c)
+	user, err := h.service.SetSuperadminStatus(c.Request().Context(), id, req.IsSuperadmin, actor)
+	if err != nil {
 		if appErr, ok := err.(interface{ StatusCode() int }); ok {
 			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
 		}
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
-	return response.Response(c, http.StatusOK, true, "Status superadmin user berhasil diubah", nil, nil)
+	return response.Response(c, http.StatusOK, true, "Status superadmin user berhasil diubah", user, nil)
 } // ─── Status Toggles ──────────────────────────────────────────────────────────────

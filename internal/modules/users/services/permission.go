@@ -76,3 +76,20 @@ func (s *service) canReadUserHistoryLogin(ctx context.Context, actor he.AuthCont
 
 	return false, nil
 }
+
+func (s *service) canSetStatusUser(ctx context.Context, actor he.AuthContext) (bool, error) {
+	if actor.IsSuperadmin {
+		return true, nil
+	}
+	if has, err := rbacMiddlewares.HasRole(ctx, s.rbacRepo, actor.UserID, "superuser"); err != nil || has {
+		return has, err
+	}
+	if has, err := rbacMiddlewares.HasRole(ctx, s.rbacRepo, actor.UserID, "admin"); err != nil || has {
+		return has, err
+	}
+	if has, err := rbacMiddlewares.HasRole(ctx, s.rbacRepo, actor.UserID, "kepegawaian"); err != nil || has {
+		return has, err
+	}
+
+	return false, nil
+}
