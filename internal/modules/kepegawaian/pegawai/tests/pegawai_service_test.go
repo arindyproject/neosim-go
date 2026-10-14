@@ -20,6 +20,7 @@ import (
 	"neosim_go/internal/modules/kepegawaian/pegawai/tests/mocks"
 	masterModels "neosim_go/internal/modules/master/master/models"
 	userModels "neosim_go/internal/modules/users/models"
+	userMocks "neosim_go/internal/modules/users/tests/mocks"
 
 	pegawaiContracts "neosim_go/internal/modules/kepegawaian/pegawai/contracts"
 	rbacModels "neosim_go/internal/modules/rbac/models"
@@ -55,7 +56,7 @@ type KepegawaianPegawaiServiceTestSuite struct {
 	repo       *mocks.KepegawaianPegawaiRepositoryMock
 	rbacRepo   *mocks.RBACRepositoryMock
 	authRepo   *mocks.AuthRepositoryMock
-	userRepo   *mocks.UserRepositoryMock
+	userRepo   *userMocks.MockUserRepository
 	masterRepo *masterMock.MasterRepositoryMock
 	svc        pegawaiContracts.Service
 	cfg        *config.Config
@@ -65,7 +66,7 @@ func (s *KepegawaianPegawaiServiceTestSuite) SetupTest() {
 	s.repo = new(mocks.KepegawaianPegawaiRepositoryMock)
 	s.rbacRepo = new(mocks.RBACRepositoryMock)
 	s.authRepo = new(mocks.AuthRepositoryMock)
-	s.userRepo = new(mocks.UserRepositoryMock)
+	s.userRepo = new(userMocks.MockUserRepository)
 	s.cfg = &config.Config{
 		DefaultPageSize:    10,
 		DefaultPageSizeMax: 10,

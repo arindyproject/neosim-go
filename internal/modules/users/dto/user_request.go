@@ -25,6 +25,22 @@ type UpdateUserRequest struct {
 	Username *string `json:"username"     validate:"omitempty,min=3,max=150"`
 }
 
+type AdminUserRequest struct {
+	IsSuperadmin bool `json:"is_superadmin" validate:"required"`
+}
+
+type StaffUserRequest struct {
+	IsStaff bool `json:"is_staff" validate:"required"`
+}
+
+type ActiveUserRequest struct {
+	IsActive bool `json:"is_active" validate:"required"`
+}
+
+type VerifyUserRequest struct {
+	IsVerified bool `json:"is_verified" validate:"required"`
+}
+
 type ChangePasswordRequest struct {
 	OldPassword     string `json:"old_password" validate:"required"`
 	NewPassword     string `json:"new_password" validate:"required"` // Validasi min length dipindah ke custom validator

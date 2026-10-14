@@ -576,3 +576,172 @@ func (h *Handler) DeletePhoto(c *echo.Context) error {
 
 	return response.Response(c, http.StatusOK, true, "Foto berhasil dihapus", result, nil)
 } // ─── Delete Photo	 ─────────────────────────────────────────────────────────────────
+
+// ─── Status Toggles ────────────────────────────────────────────────────────────────
+// SetActiveStatusHandler godoc
+//
+//	@Summary		Set user active status
+//	@Description	Activate or deactivate user by :id
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		int						true	"User ID"
+//	@Param			body	body		dto.ActiveUserRequest	true	"Active Status Request"
+//	@Success		200		{object}	response.MyGoResponse
+//	@Router			/users/{id}/active [put]
+//
+// SetActiveStatusHandler handles PUT /api/v1/users/:id/active
+// Siapa yang bisa: superadmin
+func (h *Handler) SetActiveStatusHandler(c *echo.Context) error {
+	id, err := he.ParseID(c)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
+	}
+
+	var req dto.ActiveUserRequest
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Gagal membaca request body", nil, err.Error())
+	}
+	if errs := binding.BindErrors(body, &req); len(errs) > 0 {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
+	}
+	if errs := validator.Validate(req); errs != nil {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
+	}
+
+	if err := h.service.SetActiveStatus(c.Request().Context(), id, req.IsActive); err != nil {
+		if appErr, ok := err.(interface{ StatusCode() int }); ok {
+			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
+		}
+		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Status aktif user berhasil diubah", nil, nil)
+} // ─── SetActiveStatusHandler ──────────────────────────────────────────────────────
+
+// SetStaffStatusHandler godoc
+//
+//	@Summary		Set user staff status
+//	@Description	Set or unset staff status of user by :id
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		int						true	"User ID"
+//	@Param			body	body		dto.StaffUserRequest	true	"Staff Status Request"
+//	@Success		200		{object}	response.MyGoResponse
+//	@Router			/users/{id}/staff [put]
+//
+// SetStaffStatusHandler handles PUT /api/v1/users/:id/staff
+// Siapa yang bisa: superadmin
+func (h *Handler) SetStaffStatusHandler(c *echo.Context) error {
+	id, err := he.ParseID(c)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
+	}
+
+	var req dto.StaffUserRequest
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Gagal membaca request body", nil, err.Error())
+	}
+	if errs := binding.BindErrors(body, &req); len(errs) > 0 {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
+	}
+	if errs := validator.Validate(req); errs != nil {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
+	}
+
+	if err := h.service.SetStaffStatus(c.Request().Context(), id, req.IsStaff); err != nil {
+		if appErr, ok := err.(interface{ StatusCode() int }); ok {
+			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
+		}
+		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Status staff user berhasil diubah", nil, nil)
+} // ─── SetStaffStatusHandler ───────────────────────────────────────────────────────
+
+// SetVerifiedStatusHandler godoc
+//
+//	@Summary		Set user verified status
+//	@Description	Verify or unverify user by :id
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		int						true	"User ID"
+//	@Param			body	body		dto.VerifyUserRequest	true	"Verified Status Request"
+//	@Success		200		{object}	response.MyGoResponse
+//	@Router			/users/{id}/verify [put]
+//
+// SetVerifiedStatusHandler handles PUT /api/v1/users/:id/verify
+// Siapa yang bisa: superadmin
+func (h *Handler) SetVerifiedStatusHandler(c *echo.Context) error {
+	id, err := he.ParseID(c)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
+	}
+
+	var req dto.VerifyUserRequest
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Gagal membaca request body", nil, err.Error())
+	}
+	if errs := binding.BindErrors(body, &req); len(errs) > 0 {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
+	}
+	if errs := validator.Validate(req); errs != nil {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
+	}
+
+	if err := h.service.SetVerifiedStatus(c.Request().Context(), id, req.IsVerified); err != nil {
+		if appErr, ok := err.(interface{ StatusCode() int }); ok {
+			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
+		}
+		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Status verifikasi user berhasil diubah", nil, nil)
+} // ─── SetVerifiedStatusHandler ────────────────────────────────────────────────────
+
+// SetSuperadminStatusHandler godoc
+//
+//	@Summary		Set user superadmin status
+//	@Description	Grant or revoke superadmin of user by :id
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		int						true	"User ID"
+//	@Param			body	body		dto.AdminUserRequest	true	"Superadmin Status Request"
+//	@Success		200		{object}	response.MyGoResponse
+//	@Router			/users/{id}/superadmin [put]
+//
+// SetSuperadminStatusHandler handles PUT /api/v1/users/:id/superadmin
+// Siapa yang bisa: superadmin
+func (h *Handler) SetSuperadminStatusHandler(c *echo.Context) error {
+	id, err := he.ParseID(c)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "ID tidak valid", nil, nil)
+	}
+
+	var req dto.AdminUserRequest
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return response.Response(c, http.StatusBadRequest, false, "Gagal membaca request body", nil, err.Error())
+	}
+	if errs := binding.BindErrors(body, &req); len(errs) > 0 {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
+	}
+	if errs := validator.Validate(req); errs != nil {
+		return response.Response(c, http.StatusUnprocessableEntity, false, "Validasi gagal", nil, errs)
+	}
+
+	if err := h.service.SetSuperadminStatus(c.Request().Context(), id, req.IsSuperadmin); err != nil {
+		if appErr, ok := err.(interface{ StatusCode() int }); ok {
+			return response.Response(c, appErr.StatusCode(), false, err.Error(), nil, nil)
+		}
+		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Status superadmin user berhasil diubah", nil, nil)
+} // ─── Status Toggles ──────────────────────────────────────────────────────────────

@@ -243,3 +243,59 @@ func (r *repository) UpdateSettings(ctx context.Context, id int64, settings []mo
 
 	return r.Update(ctx, user)
 }
+
+// set Superadmin status for a user
+func (r *repository) SetSuperadminStatus(ctx context.Context, id int64, isSuperadmin bool) error {
+	user, err := r.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return gorm.ErrRecordNotFound
+	}
+
+	user.IsSuperadmin = isSuperadmin
+	return r.Update(ctx, user)
+}
+
+// set Staff status for a user
+func (r *repository) SetStaffStatus(ctx context.Context, id int64, isStaff bool) error {
+	user, err := r.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return gorm.ErrRecordNotFound
+	}
+
+	user.IsStaff = isStaff
+	return r.Update(ctx, user)
+}
+
+// set Active status for a user
+func (r *repository) SetActiveStatus(ctx context.Context, id int64, isActive bool) error {
+	user, err := r.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return gorm.ErrRecordNotFound
+	}
+
+	user.IsActive = isActive
+	return r.Update(ctx, user)
+}
+
+// set Verified status for a user
+func (r *repository) SetVerifiedStatus(ctx context.Context, id int64, isVerified bool) error {
+	user, err := r.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return gorm.ErrRecordNotFound
+	}
+
+	user.IsVerified = isVerified
+	return r.Update(ctx, user)
+}

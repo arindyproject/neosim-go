@@ -23,6 +23,7 @@ import (
 	pegawaiMock "neosim_go/internal/modules/kepegawaian/pegawai/tests/mocks"
 	rbacModels "neosim_go/internal/modules/rbac/models"
 	userModels "neosim_go/internal/modules/users/models"
+	userMocks "neosim_go/internal/modules/users/tests/mocks"
 	"neosim_go/internal/shared/cache"
 	appErrors "neosim_go/internal/shared/errors"
 	he "neosim_go/internal/shared/httputil"
@@ -49,7 +50,7 @@ type KepegawaianIdentifierServiceTestSuite struct {
 	repo        *mocks.KepegawaianIdentifierRepositoryMock
 	rbacRepo    *mocks.RBACRepositoryMock
 	authRepo    *mocks.AuthRepositoryMock
-	userRepo    *mocks.UserRepositoryMock
+	userRepo    *userMocks.MockUserRepository
 	pegawaiRepo *pegawaiMock.KepegawaianPegawaiRepositoryMock
 	svc         identifierContracts.Service
 	cfg         *config.Config
@@ -60,7 +61,7 @@ func (s *KepegawaianIdentifierServiceTestSuite) SetupTest() {
 	s.repo = new(mocks.KepegawaianIdentifierRepositoryMock)
 	s.rbacRepo = new(mocks.RBACRepositoryMock)
 	s.authRepo = new(mocks.AuthRepositoryMock)
-	s.userRepo = new(mocks.UserRepositoryMock)
+	s.userRepo = new(userMocks.MockUserRepository)
 	s.pegawaiRepo = new(pegawaiMock.KepegawaianPegawaiRepositoryMock)
 	s.cfg = &config.Config{DefaultPageSize: 10, DefaultPageSizeMax: 100}
 	cacheManager := cache.NewManager(nil, false, 0)

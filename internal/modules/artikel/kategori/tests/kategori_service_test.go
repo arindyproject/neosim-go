@@ -18,6 +18,9 @@ import (
 	"neosim_go/internal/modules/artikel/kategori/tests/factories"
 	"neosim_go/internal/modules/artikel/kategori/tests/mocks"
 
+	userMocks "neosim_go/internal/modules/users/tests/mocks"
+	rbacMocks "neosim_go/internal/modules/rbac/tests/mocks"
+
 	kategoriContracts "neosim_go/internal/modules/artikel/kategori/contracts"
 	rbacModels "neosim_go/internal/modules/rbac/models"
 	appErrors "neosim_go/internal/shared/errors"
@@ -46,18 +49,18 @@ func TestMain(m *testing.M) {
 type ArtikelKategoriServiceTestSuite struct {
 	suite.Suite
 	repo     *mocks.ArtikelKategoriRepositoryMock
-	rbacRepo *mocks.RBACRepositoryMock
+	rbacRepo *rbacMocks.MockRBACRepository
 	authRepo *mocks.AuthRepositoryMock
-	userRepo *mocks.UserRepositoryMock
+	userRepo *userMocks.MockUserRepository
 	svc      kategoriContracts.Service
 	cfg      *config.Config
 }
 
 func (s *ArtikelKategoriServiceTestSuite) SetupTest() {
 	s.repo     = new(mocks.ArtikelKategoriRepositoryMock)
-	s.rbacRepo = new(mocks.RBACRepositoryMock)
+	s.rbacRepo = new(rbacMocks.MockRBACRepository)
 	s.authRepo = new(mocks.AuthRepositoryMock)
-	s.userRepo = new(mocks.UserRepositoryMock)
+	s.userRepo = new(userMocks.MockUserRepository)
 	s.cfg = &config.Config{
 		DefaultPageSize:    10,
 		DefaultPageSizeMax: 10,

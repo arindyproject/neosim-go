@@ -82,3 +82,23 @@ func (m *MockUserRepository) UpdateSettings(ctx context.Context, id int64, setti
 	args := m.Called(id, settings)
 	return args.Error(0)
 }
+
+func (m *MockUserRepository) SetSuperadminStatus(ctx context.Context, id int64, isSuperadmin bool) error {
+	args := m.Called(id, isSuperadmin)
+	return args.Error(0)
+}
+
+func (m *MockUserRepository) SetStaffStatus(ctx context.Context, id int64, isStaff bool) error {
+	args := m.Called(id, isStaff)
+	return args.Error(0)
+}
+
+func (m *MockUserRepository) SetActiveStatus(ctx context.Context, id int64, isActive bool) error {
+	args := m.Called(id, isActive)
+	return args.Error(0)
+}
+
+func (m *MockUserRepository) SetVerifiedStatus(ctx context.Context, id int64, isVerified bool) error {
+	args := m.Called(id, isVerified)
+	return args.Error(0)
+}

@@ -22,6 +22,11 @@ type Repository interface {
 	DeletedList(ctx context.Context, page, pageSize int, filter *dto.UserDeletedFilter) ([]models.User, int64, error)
 	GetSettings(ctx context.Context, id int64) ([]models.UserSetting, error)
 	UpdateSettings(ctx context.Context, id int64, settings []models.UserSetting) error
+
+	SetSuperadminStatus(ctx context.Context, id int64, isSuperadmin bool) error
+	SetStaffStatus(ctx context.Context, id int64, isStaff bool) error
+	SetActiveStatus(ctx context.Context, id int64, isActive bool) error
+	SetVerifiedStatus(ctx context.Context, id int64, isVerified bool) error
 }
 
 // ─── Service ───────────────────────────────────────────────────────────────────
@@ -49,4 +54,10 @@ type Service interface {
 	//Photo
 	UploadPhoto(ctx context.Context, id int64, filename string, reader io.Reader, actor he.AuthContext) (*dto.UserResponse, error)
 	DeletePhoto(ctx context.Context, id int64, actor he.AuthContext) (*dto.UserResponse, error)
+
+	// Status
+	SetActiveStatus(ctx context.Context, id int64, isActive bool) error
+	SetVerifiedStatus(ctx context.Context, id int64, isVerified bool) error
+	SetSuperadminStatus(ctx context.Context, id int64, isSuperadmin bool) error
+	SetStaffStatus(ctx context.Context, id int64, isStaff bool) error
 }

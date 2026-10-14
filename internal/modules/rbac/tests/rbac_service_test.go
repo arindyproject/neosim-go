@@ -17,6 +17,8 @@ import (
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+
+	userMocks "neosim_go/internal/modules/users/tests/mocks"
 )
 
 // ─── Suite ─────────────────────────────────────────────────────────────────────
@@ -42,7 +44,7 @@ func TestMain(m *testing.M) {
 type RBACServiceTestSuite struct {
 	suite.Suite
 	rbacRepo *mocks.MockRBACRepository
-	userRepo *mocks.MockUserRepository
+	userRepo *userMocks.MockUserRepository
 	service  interface {
 		// Permission
 		CreatePermission(ctx context.Context, req *dto.CreatePermissionRequest, createdBy *int64) (*dto.PermissionResponse, error)
@@ -78,7 +80,7 @@ type RBACServiceTestSuite struct {
 
 func (s *RBACServiceTestSuite) SetupTest() {
 	s.rbacRepo = new(mocks.MockRBACRepository)
-	s.userRepo = new(mocks.MockUserRepository)
+	s.userRepo = new(userMocks.MockUserRepository)
 	s.service = services.NewRBACService(s.rbacRepo, s.userRepo)
 	id := int64(1)
 	s.actorID = &id

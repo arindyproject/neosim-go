@@ -24,6 +24,9 @@ import (
 	pegawaiModels "neosim_go/internal/modules/kepegawaian/pegawai/models"
 	pegawaiMock "neosim_go/internal/modules/kepegawaian/pegawai/tests/mocks"
 	rbacModels "neosim_go/internal/modules/rbac/models"
+
+	rbacMocks "neosim_go/internal/modules/rbac/tests/mocks"
+	userMocks "neosim_go/internal/modules/users/tests/mocks"
 	"neosim_go/internal/shared/cache"
 	appErrors "neosim_go/internal/shared/errors"
 	he "neosim_go/internal/shared/httputil"
@@ -62,9 +65,9 @@ func (a *kepegawaianJabatanRepositoryAdapter) GetJabatanByPegawaiID(ctx context.
 type KepegawaianJabatanServiceTestSuite struct {
 	suite.Suite
 	repo                 *kepegawaianJabatanRepositoryAdapter
-	rbacRepo             *mocks.RBACRepositoryMock
+	rbacRepo             *rbacMocks.MockRBACRepository
 	authRepo             *mocks.AuthRepositoryMock
-	userRepo             *mocks.UserRepositoryMock
+	userRepo             *userMocks.MockUserRepository
 	masterDepartemenRepo *masterMocks.MasterDepartemenRepositoryMock
 	pegawaiRepo          *pegawaiMock.KepegawaianPegawaiRepositoryMock
 	svc                  jabatanContracts.Service
@@ -73,9 +76,9 @@ type KepegawaianJabatanServiceTestSuite struct {
 
 func (s *KepegawaianJabatanServiceTestSuite) SetupTest() {
 	s.repo = &kepegawaianJabatanRepositoryAdapter{KepegawaianJabatanRepositoryMock: new(mocks.KepegawaianJabatanRepositoryMock)}
-	s.rbacRepo = new(mocks.RBACRepositoryMock)
+	s.rbacRepo = new(rbacMocks.MockRBACRepository)
 	s.authRepo = new(mocks.AuthRepositoryMock)
-	s.userRepo = new(mocks.UserRepositoryMock)
+	s.userRepo = new(userMocks.MockUserRepository)
 	s.masterDepartemenRepo = new(masterMocks.MasterDepartemenRepositoryMock)
 	s.pegawaiRepo = new(pegawaiMock.KepegawaianPegawaiRepositoryMock)
 	cacheManager := cache.NewManager(nil, false, 0)

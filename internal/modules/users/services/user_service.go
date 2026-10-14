@@ -647,6 +647,54 @@ func (s *service) DeletePhoto(ctx context.Context, id int64, actor he.AuthContex
 	}, true), nil
 }
 
+// SetActiveStatus ---------------------------------------------------------------
+func (s *service) SetActiveStatus(ctx context.Context, id int64, isActive bool) error {
+	user, err := s.repo.GetByID(ctx, id)
+	if err != nil || user == nil {
+		return appErrors.NotFound("user tidak ditemukan")
+	}
+
+	user.IsActive = isActive
+	user.UpdatedAt = time.Now()
+	return s.repo.Update(ctx, user)
+} // SetActiveStatus -------------------------------------------------------------
+
+// SetStaffStatus ----------------------------------------------------------------
+func (s *service) SetStaffStatus(ctx context.Context, id int64, isStaff bool) error {
+	user, err := s.repo.GetByID(ctx, id)
+	if err != nil || user == nil {
+		return appErrors.NotFound("user tidak ditemukan")
+	}
+
+	user.IsStaff = isStaff
+	user.UpdatedAt = time.Now()
+	return s.repo.Update(ctx, user)
+} // SetStaffStatus --------------------------------------------------------------
+
+// SetVerifiedStatus -------------------------------------------------------------
+func (s *service) SetVerifiedStatus(ctx context.Context, id int64, isVerified bool) error {
+	user, err := s.repo.GetByID(ctx, id)
+	if err != nil || user == nil {
+		return appErrors.NotFound("user tidak ditemukan")
+	}
+
+	user.IsVerified = isVerified
+	user.UpdatedAt = time.Now()
+	return s.repo.Update(ctx, user)
+} // SetVerifiedStatus -----------------------------------------------------------
+
+// SetSuperadminStatus -----------------------------------------------------------
+func (s *service) SetSuperadminStatus(ctx context.Context, id int64, isSuperadmin bool) error {
+	user, err := s.repo.GetByID(ctx, id)
+	if err != nil || user == nil {
+		return appErrors.NotFound("user tidak ditemukan")
+	}
+
+	user.IsSuperadmin = isSuperadmin
+	user.UpdatedAt = time.Now()
+	return s.repo.Update(ctx, user)
+} // SetSuperadminStatus ---------------------------------------------------------
+
 // ─── Private Helpers ───────────────────────────────────────────────────────────
 func (s *service) UpdateLastLogin(ctx context.Context, id int64) error {
 	user, err := s.repo.GetByID(ctx, id)

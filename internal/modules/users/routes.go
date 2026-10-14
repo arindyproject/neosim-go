@@ -30,5 +30,11 @@ func RegisterRoutes(e *echo.Echo, h *handlers.Handler, rbacRepo rbacContracts.RB
 	protected.PUT("/:id/settings", h.UpdateSettingsHandler)
 	protected.PUT("/:id/photo", h.UploadPhoto)
 	protected.DELETE("/:id/photo", h.DeletePhoto)
+
+	// Status toggles
+	protected.PUT("/:id/active", h.SetActiveStatusHandler)
+	protected.PUT("/:id/staff", h.SetStaffStatusHandler)
+	protected.PUT("/:id/verify", h.SetVerifiedStatusHandler)
+	protected.PUT("/:id/superadmin", h.SetSuperadminStatusHandler)
 	// ─── End Protected ─────────────────────────────────────────
 }
