@@ -17,6 +17,7 @@ type RBACRepository interface {
 	ListPermissions(ctx context.Context, page, pageSize int) ([]models.Permission, int64, error)
 	UpdatePermission(ctx context.Context, p *models.Permission) error
 	DeletePermission(ctx context.Context, id int64) error
+	ListSelectPermission(ctx context.Context, search string) ([]models.Permission, error)
 
 	// Role
 	CreateRole(ctx context.Context, r *models.Role) error
@@ -26,6 +27,7 @@ type RBACRepository interface {
 	UpdateRole(ctx context.Context, r *models.Role) error
 	DeleteRole(ctx context.Context, id int64) error
 	GetUsersRoles(ctx context.Context, userIDs []int64) (map[int64][]models.Role, error)
+	ListSelectRole(ctx context.Context, search string) ([]models.Role, error)
 
 	// Role ↔ Permission
 	AssignPermissionsToRole(ctx context.Context, roleID int64, permissionIDs []int64) error
@@ -58,6 +60,7 @@ type RBACService interface {
 	ListPermissions(ctx context.Context, page, pageSize int) ([]dto.PermissionResponse, int64, error)
 	UpdatePermission(ctx context.Context, id int64, req *dto.UpdatePermissionRequest, updatedBy *int64) (*dto.PermissionResponse, error)
 	DeletePermission(ctx context.Context, id int64) error
+	ListSelectPermission(ctx context.Context, search string) ([]dto.PermissionSelectResponse, error)
 
 	// Role CRUD
 	CreateRole(ctx context.Context, req *dto.CreateRoleRequest, createdBy *int64) (*dto.RoleResponse, error)
@@ -65,6 +68,7 @@ type RBACService interface {
 	ListRoles(ctx context.Context, page, pageSize int) ([]dto.RoleResponse, int64, error)
 	UpdateRole(ctx context.Context, id int64, req *dto.UpdateRoleRequest, updatedBy *int64) (*dto.RoleResponse, error)
 	DeleteRole(ctx context.Context, id int64) error
+	ListSelectRole(ctx context.Context, search string) ([]dto.RoleSelectResponse, error)
 
 	// Role ↔ Permission
 	AssignPermissionsToRole(ctx context.Context, roleID int64, req *dto.AssignPermissionsRequest) error

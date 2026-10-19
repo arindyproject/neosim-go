@@ -20,9 +20,12 @@ import (
 
 	kontakContracts "neosim_go/internal/modules/kepegawaian/kontak/contracts"
 	pegawaiModels "neosim_go/internal/modules/kepegawaian/pegawai/models"
-	pegawaiMock "neosim_go/internal/modules/kepegawaian/pegawai/tests/mocks"
 	rbacModels "neosim_go/internal/modules/rbac/models"
+
+	pegawaiMock "neosim_go/internal/modules/kepegawaian/pegawai/tests/mocks"
+	rbacMocks "neosim_go/internal/modules/rbac/tests/mocks"
 	userMocks "neosim_go/internal/modules/users/tests/mocks"
+
 	"neosim_go/internal/shared/cache"
 	appErrors "neosim_go/internal/shared/errors"
 	he "neosim_go/internal/shared/httputil"
@@ -64,7 +67,7 @@ func (a *kepegawaianKontakRepositoryAdapter) GetKontakByPegawaiID(
 type KepegawaianKontakServiceTestSuite struct {
 	suite.Suite
 	repo        *mocks.KepegawaianKontakRepositoryMock
-	rbacRepo    *mocks.RBACRepositoryMock
+	rbacRepo    *rbacMocks.MockRBACRepository
 	authRepo    *mocks.AuthRepositoryMock
 	userRepo    *userMocks.MockUserRepository
 	pegawaiRepo *pegawaiMock.KepegawaianPegawaiRepositoryMock
@@ -74,7 +77,7 @@ type KepegawaianKontakServiceTestSuite struct {
 
 func (s *KepegawaianKontakServiceTestSuite) SetupTest() {
 	s.repo = new(mocks.KepegawaianKontakRepositoryMock)
-	s.rbacRepo = new(mocks.RBACRepositoryMock)
+	s.rbacRepo = new(rbacMocks.MockRBACRepository)
 	s.authRepo = new(mocks.AuthRepositoryMock)
 	s.userRepo = new(userMocks.MockUserRepository)
 	s.pegawaiRepo = new(pegawaiMock.KepegawaianPegawaiRepositoryMock)

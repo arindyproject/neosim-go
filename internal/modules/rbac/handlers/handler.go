@@ -180,6 +180,26 @@ func (h *RBACHandler) DeletePermission(c *echo.Context) error {
 	return response.Response(c, http.StatusOK, true, "Permission berhasil dihapus", nil, nil)
 }
 
+// ─── ListSelectPermission ────────────────────────────────────────────────
+//
+//	@Summary		Get list of Permission for select
+//	@Description	Get list of Permission for select with optional search
+//	@Tags			RBAC
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			search	query	string	false	"Search by name or display_name"
+//	@Success		200		{object}	response.MyGoResponse{data=[]dto.PermissionSelectResponse}
+//	@Router			/rbac/permissions/select [get]
+func (h *RBACHandler) ListSelectPermission(c *echo.Context) error {
+	search := c.QueryParam("search")
+	items, err := h.service.ListSelectPermission(c.Request().Context(), search)
+	if err != nil {
+		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data : "+err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", items, nil)
+}
+
 // ─── Role Handlers ─────────────────────────────────────────────────────────────
 
 // ListRoles handles GET /roles
@@ -328,6 +348,26 @@ func (h *RBACHandler) DeleteRole(c *echo.Context) error {
 		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
 	}
 	return response.Response(c, http.StatusOK, true, "Role berhasil dihapus", nil, nil)
+}
+
+// ─── ListSelectRole ────────────────────────────────────────────────
+//
+//	@Summary		Get list of Role for select
+//	@Description	Get list of Role for select with optional search
+//	@Tags			RBAC
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			search	query	string	false	"Search by name or display_name"
+//	@Success		200		{object}	response.MyGoResponse{data=[]dto.RoleSelectResponse}
+//	@Router			/rbac/roles/select [get]
+func (h *RBACHandler) ListSelectRole(c *echo.Context) error {
+	search := c.QueryParam("search")
+	items, err := h.service.ListSelectRole(c.Request().Context(), search)
+	if err != nil {
+		return response.Response(c, http.StatusInternalServerError, false, "Gagal mengambil data : "+err.Error(), nil, nil)
+	}
+	return response.Response(c, http.StatusOK, true, "Berhasil mengambil data", items, nil)
 }
 
 // ─── Role ↔ Permission Handlers ────────────────────────────────────────────────

@@ -11,6 +11,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	rbacModels "neosim_go/internal/modules/rbac/models"
+	rbacMocks "neosim_go/internal/modules/rbac/tests/mocks"
 	userContracts "neosim_go/internal/modules/users/contracts"
 	"neosim_go/internal/modules/users/dto"
 	"neosim_go/internal/modules/users/models"
@@ -45,7 +46,7 @@ func TestMain(m *testing.M) {
 type UserServiceTestSuite struct {
 	suite.Suite
 	repo         *mocks.MockUserRepository
-	rbacRepo     *mocks.MockRBACRepository
+	rbacRepo     *rbacMocks.MockRBACRepository
 	authRepo     *mocks.MockAuthRepository
 	imgStorage   *mocks.MockImageStorage
 	service      userContracts.Service
@@ -55,7 +56,7 @@ type UserServiceTestSuite struct {
 
 func (s *UserServiceTestSuite) SetupTest() {
 	s.repo = new(mocks.MockUserRepository)
-	s.rbacRepo = new(mocks.MockRBACRepository)
+	s.rbacRepo = new(rbacMocks.MockRBACRepository)
 	s.authRepo = new(mocks.MockAuthRepository)
 	s.imgStorage = new(mocks.MockImageStorage)
 	s.service = services.NewUserService(s.repo, s.rbacRepo, s.authRepo, s.imgStorage)

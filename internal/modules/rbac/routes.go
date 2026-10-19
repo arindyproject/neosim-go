@@ -36,6 +36,7 @@ func RegisterRoutes(e *echo.Echo, h *handlers.RBACHandler, repo contracts.RBACRe
 		rbacMiddlewares.RequirePermission(repo, rbacModels.PermPermissionsManage), // alternatif: bisa punya perm manage untuk akses semua aksi terkait permissions
 		rbacMiddlewares.RequireSuperadmin(),
 	)
+	perms.GET("/select", h.ListSelectPermission)
 
 	// ─── Roles ─────────────────────────────────────────────────
 	roles := e.Group("/api/v1/rbac/roles", jwt)
@@ -56,6 +57,7 @@ func RegisterRoutes(e *echo.Echo, h *handlers.RBACHandler, repo contracts.RBACRe
 		rbacMiddlewares.RequirePermission(repo, rbacModels.PermRolesManage),
 		rbacMiddlewares.RequireSuperadmin(),
 	)
+	roles.GET("/select", h.ListSelectRole)
 
 	// ─── Role ↔ Permission ─────────────────────────────────────
 	roles.POST("/:id/permissions", h.AssignPermissionsToRole,

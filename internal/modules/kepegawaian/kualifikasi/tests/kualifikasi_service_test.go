@@ -20,8 +20,10 @@ import (
 
 	kualifikasiContracts "neosim_go/internal/modules/kepegawaian/kualifikasi/contracts"
 	pegawaiModels "neosim_go/internal/modules/kepegawaian/pegawai/models"
-	pegawaiMock "neosim_go/internal/modules/kepegawaian/pegawai/tests/mocks"
 	rbacModels "neosim_go/internal/modules/rbac/models"
+
+	pegawaiMock "neosim_go/internal/modules/kepegawaian/pegawai/tests/mocks"
+	rbacMocks "neosim_go/internal/modules/rbac/tests/mocks"
 	userMocks "neosim_go/internal/modules/users/tests/mocks"
 	"neosim_go/internal/shared/cache"
 	appErrors "neosim_go/internal/shared/errors"
@@ -63,7 +65,7 @@ func (a *kepegawaianKualifikasiRepoAdapter) GetKualifikasiByPegawaiID(
 type KepegawaianKualifikasiServiceTestSuite struct {
 	suite.Suite
 	repo        *kepegawaianKualifikasiRepoAdapter
-	rbacRepo    *mocks.RBACRepositoryMock
+	rbacRepo    *rbacMocks.MockRBACRepository
 	authRepo    *mocks.AuthRepositoryMock
 	userRepo    *userMocks.MockUserRepository
 	pegawaiRepo *pegawaiMock.KepegawaianPegawaiRepositoryMock
@@ -73,7 +75,7 @@ type KepegawaianKualifikasiServiceTestSuite struct {
 
 func (s *KepegawaianKualifikasiServiceTestSuite) SetupTest() {
 	s.repo = &kepegawaianKualifikasiRepoAdapter{KepegawaianKualifikasiRepositoryMock: new(mocks.KepegawaianKualifikasiRepositoryMock)}
-	s.rbacRepo = new(mocks.RBACRepositoryMock)
+	s.rbacRepo = new(rbacMocks.MockRBACRepository)
 	s.authRepo = new(mocks.AuthRepositoryMock)
 	s.userRepo = new(userMocks.MockUserRepository)
 	s.pegawaiRepo = new(pegawaiMock.KepegawaianPegawaiRepositoryMock)

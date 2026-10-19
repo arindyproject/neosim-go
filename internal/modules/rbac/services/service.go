@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	"neosim_go/internal/modules/rbac/contracts"
@@ -100,6 +101,19 @@ func (s *rbacService) DeletePermission(ctx context.Context, id int64) error {
 	return s.rbacRepo.DeletePermission(ctx, id)
 }
 
+func (s *rbacService) ListSelectPermission(ctx context.Context, search string) ([]dto.PermissionSelectResponse, error) {
+	items, err := s.rbacRepo.ListSelectPermission(ctx, search)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(items) == 0 {
+		return nil, appErrors.Wrap(http.StatusNotFound, "data Permission tidak ditemukan", nil)
+	}
+	res := dto.ToPermissionSelectResponse(items)
+	return res, nil
+}
+
 // ─── Role CRUD ─────────────────────────────────────────────────────────────────
 
 func (s *rbacService) CreateRole(ctx context.Context, req *dto.CreateRoleRequest, createdBy *int64) (*dto.RoleResponse, error) {
@@ -177,6 +191,19 @@ func (s *rbacService) DeleteRole(ctx context.Context, id int64) error {
 		return errors.New("system role tidak bisa dihapus")
 	}
 	return s.rbacRepo.DeleteRole(ctx, id)
+}
+
+func (s *rbacService) ListSelectRole(ctx context.Context, search string) ([]dto.RoleSelectResponse, error) {
+	items, err := s.rbacRepo.ListSelectRole(ctx, search)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(items) == 0 {
+		return nil, appErrors.Wrap(http.StatusNotFound, "data Role tidak ditemukan", nil)
+	}
+	res := dto.ToRoleSelectResponse(items)
+	return res, nil
 }
 
 // ─── Role ↔ Permission ─────────────────────────────────────────────────────────

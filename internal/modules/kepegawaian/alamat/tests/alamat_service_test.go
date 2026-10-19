@@ -27,6 +27,7 @@ import (
 	he "neosim_go/internal/shared/httputil"
 
 	masterAlamatMock "neosim_go/internal/modules/master/alamat/tests/mocks"
+	rbacMocks "neosim_go/internal/modules/rbac/tests/mocks"
 	userMocks "neosim_go/internal/modules/users/tests/mocks"
 )
 
@@ -52,7 +53,7 @@ func TestMain(m *testing.M) {
 type KepegawaianAlamatServiceTestSuite struct {
 	suite.Suite
 	repo             *mocks.KepegawaianAlamatRepositoryMock
-	rbacRepo         *mocks.RBACRepositoryMock
+	rbacRepo         *rbacMocks.MockRBACRepository
 	authRepo         *mocks.AuthRepositoryMock
 	userRepo         *userMocks.MockUserRepository
 	pegawaiRepo      *pegawaiMock.KepegawaianPegawaiRepositoryMock
@@ -63,7 +64,7 @@ type KepegawaianAlamatServiceTestSuite struct {
 
 func (s *KepegawaianAlamatServiceTestSuite) SetupTest() {
 	s.repo = new(mocks.KepegawaianAlamatRepositoryMock)
-	s.rbacRepo = new(mocks.RBACRepositoryMock)
+	s.rbacRepo = new(rbacMocks.MockRBACRepository)
 	s.authRepo = new(mocks.AuthRepositoryMock)
 	s.userRepo = new(userMocks.MockUserRepository)
 	s.pegawaiRepo = new(pegawaiMock.KepegawaianPegawaiRepositoryMock)

@@ -19,6 +19,7 @@ import (
 
 	alamatContracts "neosim_go/internal/modules/master/alamat/contracts"
 	rbacModels "neosim_go/internal/modules/rbac/models"
+	rbacMocks "neosim_go/internal/modules/rbac/tests/mocks"
 	"neosim_go/internal/shared/cache"
 	appErrors "neosim_go/internal/shared/errors"
 	he "neosim_go/internal/shared/httputil"
@@ -43,14 +44,14 @@ func TestMain(m *testing.M) {
 type MasterAlamatServiceTestSuite struct {
 	suite.Suite
 	repo     *mocks.MasterAlamatRepositoryMock
-	rbacRepo *mocks.RBACRepositoryMock
+	rbacRepo *rbacMocks.MockRBACRepository
 	authRepo *mocks.AuthRepositoryMock
 	svc      alamatContracts.Service
 }
 
 func (s *MasterAlamatServiceTestSuite) SetupTest() {
 	s.repo = new(mocks.MasterAlamatRepositoryMock)
-	s.rbacRepo = new(mocks.RBACRepositoryMock)
+	s.rbacRepo = new(rbacMocks.MockRBACRepository)
 	s.authRepo = new(mocks.AuthRepositoryMock)
 	// ─── PENYESUAIAN CACHE ───────────────────────────────────────────────────
 	// Kita passing `nil` untuk redis.Client dan `false` untuk cacheEnabled.

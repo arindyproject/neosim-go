@@ -15,6 +15,7 @@ import (
 	"neosim_go/internal/modules/master/master/tests/mocks"
 
 	masterContracts "neosim_go/internal/modules/master/master/contracts"
+	rbacMocks "neosim_go/internal/modules/rbac/tests/mocks"
 	"neosim_go/internal/shared/cache"
 
 	he "neosim_go/internal/shared/httputil"
@@ -39,7 +40,7 @@ func TestMain(m *testing.M) {
 type MasterServiceTestSuite struct {
 	suite.Suite
 	repo     *mocks.MasterRepositoryMock
-	rbacRepo *mocks.RBACRepositoryMock
+	rbacRepo *rbacMocks.MockRBACRepository
 	authRepo *mocks.AuthRepositoryMock
 	svc      masterContracts.Service
 	cfg      *config.Config
@@ -47,7 +48,7 @@ type MasterServiceTestSuite struct {
 
 func (s *MasterServiceTestSuite) SetupTest() {
 	s.repo = new(mocks.MasterRepositoryMock)
-	s.rbacRepo = new(mocks.RBACRepositoryMock)
+	s.rbacRepo = new(rbacMocks.MockRBACRepository)
 	s.authRepo = new(mocks.AuthRepositoryMock)
 
 	// 1. INSIALISASI CONFIG (Mencegah nil pointer dereference pada s.cfg)

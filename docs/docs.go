@@ -13079,6 +13079,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/rbac/permissions/select": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get list of Permission for select with optional search",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "RBAC"
+                ],
+                "summary": "Get list of Permission for select",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search by name or display_name",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.PermissionSelectResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/rbac/permissions/{id}": {
             "get": {
                 "security": [
@@ -13328,6 +13379,57 @@ const docTemplate = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/dto.RoleResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/rbac/roles/select": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get list of Role for select with optional search",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "RBAC"
+                ],
+                "summary": "Get list of Role for select",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search by name or display_name",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.RoleSelectResponse"
+                                            }
                                         }
                                     }
                                 }
@@ -17719,6 +17821,20 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.PermissionSelectResponse": {
+            "type": "object",
+            "properties": {
+                "display_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.PositionKategoriResponse": {
             "type": "object",
             "properties": {
@@ -18087,6 +18203,20 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/dto.PermissionResponse"
                     }
+                }
+            }
+        },
+        "dto.RoleSelectResponse": {
+            "type": "object",
+            "properties": {
+                "display_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },

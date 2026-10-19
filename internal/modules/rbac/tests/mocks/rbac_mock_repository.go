@@ -51,6 +51,11 @@ func (m *MockRBACRepository) DeletePermission(ctx context.Context, id int64) err
 	return m.Called(id).Error(0)
 }
 
+func (m *MockRBACRepository) ListSelectPermission(ctx context.Context, search string) ([]models.Permission, error) {
+	args := m.Called(search)
+	return args.Get(0).([]models.Permission), args.Error(1)
+}
+
 // ─── Role ──────────────────────────────────────────────────────────────────────
 
 func (m *MockRBACRepository) CreateRole(ctx context.Context, r *models.Role) error {
@@ -92,6 +97,11 @@ func (m *MockRBACRepository) GetUsersRoles(ctx context.Context, userIDs []int64)
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(map[int64][]models.Role), args.Error(1)
+}
+
+func (m *MockRBACRepository) ListSelectRole(ctx context.Context, search string) ([]models.Role, error) {
+	args := m.Called(search)
+	return args.Get(0).([]models.Role), args.Error(1)
 }
 
 // ─── Role ↔ Permission ─────────────────────────────────────────────────────────

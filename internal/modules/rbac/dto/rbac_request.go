@@ -19,6 +19,16 @@ type UpdatePermissionRequest struct {
 	Description *string `json:"description"  validate:"omitempty,max=500"`
 }
 
+type FilterPermissionRequest struct {
+	Search      string `query:"search"`
+	Name        string `query:"name"`
+	DisplayName string `query:"display_name"`
+
+	// Sorting
+	SortBy    string `query:"sort_by"`    // Name
+	SortOrder string `query:"sort_order"` // asc | desc
+}
+
 // ─── Role ──────────────────────────────────────────────────────
 
 type CreateRoleRequest struct {
@@ -30,6 +40,16 @@ type CreateRoleRequest struct {
 type UpdateRoleRequest struct {
 	DisplayName *string `json:"display_name" validate:"omitempty,min=3,max=255"`
 	Description *string `json:"description"  validate:"omitempty,max=500"`
+}
+
+type FilterRoleRequest struct {
+	Search      string `query:"search"`
+	Name        string `query:"name"`
+	DisplayName string `query:"display_name"`
+
+	// Sorting
+	SortBy    string `query:"sort_by"`    // Name
+	SortOrder string `query:"sort_order"` // asc | desc
 }
 
 // ─── Assignment ────────────────────────────────────────────────

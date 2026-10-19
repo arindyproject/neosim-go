@@ -19,6 +19,7 @@ import (
 	"neosim_go/internal/modules/kepegawaian/pegawai/tests/factories"
 	"neosim_go/internal/modules/kepegawaian/pegawai/tests/mocks"
 	masterModels "neosim_go/internal/modules/master/master/models"
+	rbacMocks "neosim_go/internal/modules/rbac/tests/mocks"
 	userModels "neosim_go/internal/modules/users/models"
 	userMocks "neosim_go/internal/modules/users/tests/mocks"
 
@@ -54,7 +55,7 @@ func TestMain(m *testing.M) {
 type KepegawaianPegawaiServiceTestSuite struct {
 	suite.Suite
 	repo       *mocks.KepegawaianPegawaiRepositoryMock
-	rbacRepo   *mocks.RBACRepositoryMock
+	rbacRepo   *rbacMocks.MockRBACRepository
 	authRepo   *mocks.AuthRepositoryMock
 	userRepo   *userMocks.MockUserRepository
 	masterRepo *masterMock.MasterRepositoryMock
@@ -64,7 +65,7 @@ type KepegawaianPegawaiServiceTestSuite struct {
 
 func (s *KepegawaianPegawaiServiceTestSuite) SetupTest() {
 	s.repo = new(mocks.KepegawaianPegawaiRepositoryMock)
-	s.rbacRepo = new(mocks.RBACRepositoryMock)
+	s.rbacRepo = new(rbacMocks.MockRBACRepository)
 	s.authRepo = new(mocks.AuthRepositoryMock)
 	s.userRepo = new(userMocks.MockUserRepository)
 	s.cfg = &config.Config{

@@ -85,6 +85,25 @@ func (r *rbacRepository) DeletePermission(ctx context.Context, id int64) error {
 	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&models.Permission{}).Error
 }
 
+// ── ListSelect ────────────────────────────────────────────────────────────────
+func (r *rbacRepository) ListSelectPermission(ctx context.Context, search string) ([]models.Permission, error) {
+	var items []models.Permission
+
+	query := r.db.WithContext(ctx).Model(&models.Permission{}).
+		Select("id, name, display_name").
+		Where("permissions.deleted_at IS NULL")
+
+	if search != "" {
+		query = query.Where("name ILIKE ? OR display_name ILIKE ?", "%"+search+"%", "%"+search+"%")
+	}
+
+	if err := query.Order("name ASC").Find(&items).Error; err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
 // ─── Role ──────────────────────────────────────────────────────────────────────
 
 func (r *rbacRepository) CreateRole(ctx context.Context, role *models.Role) error {
@@ -184,6 +203,25 @@ func (r *rbacRepository) GetUsersRoles(ctx context.Context, userIDs []int64) (ma
 	}
 
 	return userRolesMap, nil
+}
+
+// ── ListSelect ────────────────────────────────────────────────────────────────
+func (r *rbacRepository) ListSelectRole(ctx context.Context, search string) ([]models.Role, error) {
+	var items []models.Role
+
+	query := r.db.WithContext(ctx).Model(&models.Role{}).
+		Select("id, name, display_name").
+		Where("roles.deleted_at IS NULL")
+
+	if search != "" {
+		query = query.Where("name ILIKE ? OR display_name ILIKE ?", "%"+search+"%", "%"+search+"%")
+	}
+
+	if err := query.Order("name ASC").Find(&items).Error; err != nil {
+		return nil, err
+	}
+
+	return items, nil
 }
 
 // ─── Role ↔ Permission ─────────────────────────────────────────────────────────

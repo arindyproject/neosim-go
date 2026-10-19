@@ -22,7 +22,9 @@ import (
 	pegawaiMock "neosim_go/internal/modules/kepegawaian/pegawai/tests/mocks"
 	pendidikanContracts "neosim_go/internal/modules/kepegawaian/pendidikan/contracts"
 	rbacModels "neosim_go/internal/modules/rbac/models"
+	rbacMocks "neosim_go/internal/modules/rbac/tests/mocks"
 	userMocks "neosim_go/internal/modules/users/tests/mocks"
+
 	"neosim_go/internal/shared/cache"
 	appErrors "neosim_go/internal/shared/errors"
 	he "neosim_go/internal/shared/httputil"
@@ -50,7 +52,7 @@ func TestMain(m *testing.M) {
 type KepegawaianPendidikanServiceTestSuite struct {
 	suite.Suite
 	repo        *mocks.KepegawaianPendidikanRepositoryMock
-	rbacRepo    *mocks.RBACRepositoryMock
+	rbacRepo    *rbacMocks.MockRBACRepository
 	authRepo    *mocks.AuthRepositoryMock
 	userRepo    *userMocks.MockUserRepository
 	pegawaiRepo *pegawaiMock.KepegawaianPegawaiRepositoryMock
@@ -60,7 +62,7 @@ type KepegawaianPendidikanServiceTestSuite struct {
 
 func (s *KepegawaianPendidikanServiceTestSuite) SetupTest() {
 	s.repo = new(mocks.KepegawaianPendidikanRepositoryMock)
-	s.rbacRepo = new(mocks.RBACRepositoryMock)
+	s.rbacRepo = new(rbacMocks.MockRBACRepository)
 	s.authRepo = new(mocks.AuthRepositoryMock)
 	s.userRepo = new(userMocks.MockUserRepository)
 	s.pegawaiRepo = new(pegawaiMock.KepegawaianPegawaiRepositoryMock)

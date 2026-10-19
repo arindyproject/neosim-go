@@ -17,6 +17,7 @@ import (
 	"neosim_go/internal/modules/master/departemen/services"
 	"neosim_go/internal/modules/master/departemen/tests/factories"
 	"neosim_go/internal/modules/master/departemen/tests/mocks"
+	rbacMocks "neosim_go/internal/modules/rbac/tests/mocks"
 	userModels "neosim_go/internal/modules/users/models"
 	userMocks "neosim_go/internal/modules/users/tests/mocks"
 
@@ -48,7 +49,7 @@ func TestMain(m *testing.M) {
 type MasterDepartemenServiceTestSuite struct {
 	suite.Suite
 	repo     *mocks.MasterDepartemenRepositoryMock
-	rbacRepo *mocks.RBACRepositoryMock
+	rbacRepo *rbacMocks.MockRBACRepository
 	authRepo *mocks.AuthRepositoryMock
 	userRepo *userMocks.MockUserRepository
 	svc      departemenContracts.Service
@@ -57,7 +58,7 @@ type MasterDepartemenServiceTestSuite struct {
 
 func (s *MasterDepartemenServiceTestSuite) SetupTest() {
 	s.repo = new(mocks.MasterDepartemenRepositoryMock)
-	s.rbacRepo = new(mocks.RBACRepositoryMock)
+	s.rbacRepo = new(rbacMocks.MockRBACRepository)
 	s.authRepo = new(mocks.AuthRepositoryMock)
 	s.userRepo = new(userMocks.MockUserRepository)
 	s.cfg = &config.Config{

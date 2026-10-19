@@ -1940,6 +1940,15 @@ definitions:
       resource:
         type: string
     type: object
+  dto.PermissionSelectResponse:
+    properties:
+      display_name:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
   dto.PositionKategoriResponse:
     properties:
       code:
@@ -2180,6 +2189,15 @@ definitions:
         items:
           $ref: '#/definitions/dto.PermissionResponse'
         type: array
+    type: object
+  dto.RoleSelectResponse:
+    properties:
+      display_name:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
     type: object
   dto.RoleSimpleResponse:
     properties:
@@ -11503,6 +11521,35 @@ paths:
       summary: Update a permission
       tags:
       - RBAC
+  /rbac/permissions/select:
+    get:
+      consumes:
+      - application/json
+      description: Get list of Permission for select with optional search
+      parameters:
+      - description: Search by name or display_name
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.PermissionSelectResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Permission for select
+      tags:
+      - RBAC
   /rbac/roles:
     get:
       consumes:
@@ -11718,6 +11765,35 @@ paths:
       security:
       - BearerAuth: []
       summary: Sync permissions of a role
+      tags:
+      - RBAC
+  /rbac/roles/select:
+    get:
+      consumes:
+      - application/json
+      description: Get list of Role for select with optional search
+      parameters:
+      - description: Search by name or display_name
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.RoleSelectResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get list of Role for select
       tags:
       - RBAC
   /rbac/users/{user_id}/permissions:

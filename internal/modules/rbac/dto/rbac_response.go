@@ -17,6 +17,24 @@ type PermissionResponse struct {
 	//UpdatedAt   time.Time `json:"updated_at"`
 }
 
+type PermissionSelectResponse struct {
+	ID          int64  `json:"id"`
+	Name        string `json:"name"`
+	DisplayName string `json:"display_name"`
+}
+
+func ToPermissionSelectResponse(items []models.Permission) []PermissionSelectResponse {
+	responses := make([]PermissionSelectResponse, 0, len(items))
+	for _, item := range items {
+		responses = append(responses, PermissionSelectResponse{
+			ID:          item.ID,
+			Name:        item.Name,
+			DisplayName: item.DisplayName,
+		})
+	}
+	return responses
+}
+
 func ToPermissionResponse(p *models.Permission) *PermissionResponse {
 	return &PermissionResponse{
 		ID:          p.ID,
@@ -48,6 +66,24 @@ type RoleResponse struct {
 	Permissions []PermissionResponse `json:"permissions,omitempty"`
 	//CreatedAt   time.Time            `json:"created_at"`
 	//UpdatedAt   time.Time            `json:"updated_at"`
+}
+
+type RoleSelectResponse struct {
+	ID          int64  `json:"id"`
+	Name        string `json:"name"`
+	DisplayName string `json:"display_name"`
+}
+
+func ToRoleSelectResponse(items []models.Role) []RoleSelectResponse {
+	responses := make([]RoleSelectResponse, 0, len(items))
+	for _, item := range items {
+		responses = append(responses, RoleSelectResponse{
+			ID:          item.ID,
+			Name:        item.Name,
+			DisplayName: item.DisplayName,
+		})
+	}
+	return responses
 }
 
 func ToRoleResponse(r *models.Role) *RoleResponse {
