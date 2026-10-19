@@ -9,6 +9,7 @@ import (
 	userModel "neosim_go/internal/modules/users/models"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type rbacRepository struct {
@@ -227,12 +228,16 @@ func (r *rbacRepository) ListSelectRole(ctx context.Context, search string) ([]m
 // ─── Role ↔ Permission ─────────────────────────────────────────────────────────
 
 func (r *rbacRepository) AssignPermissionsToRole(ctx context.Context, roleID int64, permissionIDs []int64) error {
-	var pivots []models.RolePermission
-	for _, pID := range permissionIDs {
-		pivots = append(pivots, models.RolePermission{RoleID: roleID, PermissionID: pID})
+	if len(permissionIDs) == 0 {
+		return nil
 	}
-	return r.db.WithContext(ctx).Where("role_id = ? AND permission_id IN ?", roleID, permissionIDs).
-		FirstOrCreate(&pivots).Error
+	rps := make([]models.RolePermission, 0, len(permissionIDs))
+	for _, pid := range permissionIDs {
+		rps = append(rps, models.RolePermission{RoleID: roleID, PermissionID: pid})
+	}
+	return r.db.WithContext(ctx).
+		Clauses(clause.OnConflict{DoNothing: true}). // abaikan yang sudah ada, tidak perlu filter manual
+		Create(&rps).Error
 }
 
 func (r *rbacRepository) RevokePermissionsFromRole(ctx context.Context, roleID int64, permissionIDs []int64) error {
