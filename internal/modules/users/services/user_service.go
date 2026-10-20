@@ -397,20 +397,55 @@ func (s *service) UpdateSettings(ctx context.Context, id int64, req *dto.UpdateS
 		return nil, appErrors.NotFound("user tidak ditemukan")
 	}
 
-	if err := s.repo.UpdateSettings(ctx, id, req.Settings); err != nil {
-		return nil, appErrors.Internal("gagal mengupdate settings user")
+	// 1. Ambil settings yang sudah tersimpan
+	current, err := user.GetSettings()
+	if err != nil {
+		return nil, appErrors.Internal("gagal membaca settings user")
+	}
+
+	// 2. Index posisi tiap key di settings saat ini
+	indexByKey := make(map[string]int, len(current))
+	for i, st := range current {
+		indexByKey[st.Key] = i
+	}
+
+	// 3. Validasi dulu semua input (all-or-nothing)
+	var unknownKeys, invalidType []string
+	for _, in := range req.Settings {
+		idx, ok := indexByKey[in.Key]
+		if !ok {
+			unknownKeys = append(unknownKeys, in.Key)
+			continue
+		}
+		if !isValueMatchType(current[idx].Type, in.Value) {
+			invalidType = append(invalidType,
+				fmt.Sprintf("%s (harus bertipe %s)", in.Key, current[idx].Type))
+		}
+	}
+	if len(unknownKeys) > 0 {
+		return nil, appErrors.BadRequest(
+			"setting tidak ditemukan: " + strings.Join(unknownKeys, ", "))
+	}
+	if len(invalidType) > 0 {
+		return nil, appErrors.BadRequest(
+			"tipe value tidak sesuai: " + strings.Join(invalidType, ", "))
+	}
+
+	// 4. Merge: hanya Value yang diubah, Type/Description/key lain tetap
+	for _, in := range req.Settings {
+		current[indexByKey[in.Key]].Value = in.Value
+	}
+
+	if err := user.SetSettings(current); err != nil {
+		return nil, appErrors.Internal("gagal memproses settings user")
 	}
 
 	user.UpdatedBy = &actor.UserID
 	user.UpdatedAt = time.Now()
-	if err := s.repo.Update(ctx, user); err != nil {
-		return nil, appErrors.Internal("gagal mengupdate user setelah update settings")
-	}
 
-	// Refresh data user setelah update settings
-	user, err = s.repo.GetByID(ctx, id)
-	if err != nil || user == nil {
-		return nil, appErrors.NotFound("user tidak ditemukan setelah update settings")
+	// 5. Satu kali simpan
+	if err := s.repo.Update(ctx, user); err != nil {
+		return nil, appErrors.Internal("gagal mengupdate settings user")
 	}
 
 	roles, permissions := s.buildUserRBAC(ctx, user.ID)
@@ -424,6 +459,23 @@ func (s *service) UpdateSettings(ctx context.Context, id int64, req *dto.UpdateS
 		Histories:   histories,
 		Creator:     creator,
 	}, true), nil
+}
+
+// isValueMatchType memastikan value dari JSON sesuai tipe yang didefinisikan setting.
+func isValueMatchType(settingType string, value interface{}) bool {
+	switch settingType {
+	case "boolean":
+		_, ok := value.(bool)
+		return ok
+	case "string":
+		_, ok := value.(string)
+		return ok
+	case "number", "integer", "float":
+		_, ok := value.(float64) // angka JSON di-decode jadi float64
+		return ok
+	default:
+		return true // tipe lain (json/array/dll) tidak divalidasi
+	}
 } // ─── Settings ────────────────────────────────────────────────────────────────
 
 // ─── Password ──────────────────────────────────────────────────────────────────
