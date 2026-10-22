@@ -131,50 +131,17 @@ func (h *KepegawaianIdentifierHandler) ListByPegawai(c *echo.Context) error {
 
 	pegawaiID, err := parsePegawaiID(c)
 	if err != nil {
-		return response.Response(c, http.StatusBadRequest, false, err.Error(), nil, nil)
+		return response.Response(c, http.StatusBadRequest, false, "pegawai_id tidak valid", nil, nil)
 	}
 
-	filter := dto.FilterKepegawaianIdentifierRequest{
-		Nilai:     c.QueryParam("nilai"),
-		SortBy:    c.QueryParam("sort_by"),
-		SortOrder: c.QueryParam("sort_order"),
-	}
-
-	if pegawaiIDStr := c.QueryParam("pegawai_id"); pegawaiIDStr != "" {
-		if val, err := strconv.ParseInt(pegawaiIDStr, 10, 64); err == nil {
-			filter.PegawaiID = &val
-		}
-	}
-
-	if tipeIDStr := c.QueryParam("tipe_id"); tipeIDStr != "" {
-		if val, err := strconv.ParseInt(tipeIDStr, 10, 64); err == nil {
-			filter.TipeID = &val
-		}
-	}
-
-	if isPrimaryStr := c.QueryParam("is_primary"); isPrimaryStr != "" {
-		if val, err := strconv.ParseBool(isPrimaryStr); err == nil {
-			filter.IsPrimary = &val
-		}
-	}
-
-	if isAktifStr := c.QueryParam("is_aktif"); isAktifStr != "" {
-		if val, err := strconv.ParseBool(isAktifStr); err == nil {
-			filter.IsAktif = &val
-		}
-	}
-
-	if isExpiredStr := c.QueryParam("is_expired"); isExpiredStr != "" {
-		if val, err := strconv.ParseBool(isExpiredStr); err == nil {
-			filter.IsExpired = &val
-		}
-	}
-
-	if err := c.Bind(filter); err != nil {
+	var filter dto.FilterKepegawaianIdentifierRequest
+	if err := c.Bind(&filter); err != nil { // pointer
 		return response.Response(c, http.StatusBadRequest, false, "Gagal membind filter", nil, nil)
 	}
+	filter.PegawaiID = nil // path param yang menentukan, abaikan query pegawai_id
 
 	items, total, err := h.service.ListByPegawai(c.Request().Context(), pegawaiID, &filter, page, pageSize, actor)
+
 	if err != nil {
 		return response.Response(c, http.StatusNotFound, false, err.Error(), nil, nil)
 	}
