@@ -28,7 +28,7 @@ import (
 //	@Security		BearerAuth
 //	@Param			search	query	string	false	"Search by label or code"
 //	@Success		200		{object}	response.MyGoResponse{data=[]dto.JenisSimpelResponse}
-//	@Router			/kepegawaian/alamat/pegawai/jeniss [get]
+//	@Router			/kepegawaian/pegawai/jeniss/select [get]
 func (h *KepegawaianPegawaiHandler) ListSelectJenis(c *echo.Context) error {
 	search := c.QueryParam("search")
 

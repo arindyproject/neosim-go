@@ -2,6 +2,7 @@ package pegawai
 
 import (
 	"database/sql"
+	"log"
 
 	"neosim_go/config"
 	"neosim_go/internal/apps"
@@ -41,6 +42,20 @@ func (r *registryModule) SetDB(db *gorm.DB) {
 
 func (r *registryModule) SetConfig(cfg *config.Config) {
 	r.cfg = cfg
+
+	// ─── Inisialisasi Cache Manager ─────────────────────────────────────────
+	if cfg.CacheMasterAlamat {
+		client, err := cfg.ConnectRedis()
+		if err != nil {
+			log.Printf("⚠️ Warning: Gagal koneksi ke Redis untuk cache Kepegawaian -> Pegawai: %v", err)
+			r.cacheManager = cache.NewManager(nil, false, 0)
+		} else {
+			r.cacheManager = cache.NewManager(client, true, cfg.CacheMasterAlamatTTLDay)
+			log.Println("✅ Cache Manager untuk Kepegawaian -> Pegawai berhasil diinisialisasi")
+		}
+	} else {
+		r.cacheManager = cache.NewManager(nil, false, 0)
+	}
 }
 
 func (r *registryModule) InitRoutes(e *echo.Echo) {

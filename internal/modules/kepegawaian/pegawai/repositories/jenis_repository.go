@@ -77,7 +77,7 @@ func (r *repository) ListSelectJenis(ctx context.Context, search string) ([]mode
 
 	query := r.db.WithContext(ctx).Model(&models.Jenis{}).
 		Select("id, code, label").
-		Where("kepegawaian_alamat_Jeniss.deleted_at IS NULL")
+		Where("kepegawaian_pegawai_Jeniss.deleted_at IS NULL")
 
 	if search != "" {
 		query = query.Where("label ILIKE ? OR code ILIKE ?", "%"+search+"%", "%"+search+"%")
