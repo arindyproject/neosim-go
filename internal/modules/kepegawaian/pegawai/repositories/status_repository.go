@@ -77,7 +77,7 @@ func (r *repository) ListSelectStatus(ctx context.Context, search string) ([]mod
 
 	query := r.db.WithContext(ctx).Model(&models.Status{}).
 		Select("id, code, label").
-		Where("kepegawaian_alamat_Statuss.deleted_at IS NULL")
+		Where("kepegawaian_pegawai_statuss.deleted_at IS NULL")
 
 	if search != "" {
 		query = query.Where("label ILIKE ? OR code ILIKE ?", "%"+search+"%", "%"+search+"%")
