@@ -3,6 +3,7 @@ package mocks
 import (
 	"context"
 	"neosim_go/internal/modules/auth/dto"
+	userDto "neosim_go/internal/modules/users/dto"
 
 	"github.com/stretchr/testify/mock"
 )
@@ -92,4 +93,19 @@ func (m *MockAuthService) ResetPassword(
 
 	args := m.Called(req)
 	return args.Error(0)
+}
+
+func (m *MockAuthService) Me(
+	ctx context.Context,
+	userID int64,
+) (*userDto.UserResponse, error) {
+
+	args := m.Called(userID)
+
+	var resp *userDto.UserResponse
+	if v := args.Get(0); v != nil {
+		resp = v.(*userDto.UserResponse)
+	}
+
+	return resp, args.Error(1)
 }
