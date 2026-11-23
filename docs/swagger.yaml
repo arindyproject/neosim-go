@@ -986,14 +986,6 @@ definitions:
       name:
         type: string
     type: object
-  dto.ForgotPasswordRequest:
-    properties:
-      identifier:
-        description: email atau username
-        type: string
-    required:
-    - identifier
-    type: object
   dto.JenisResponse:
     properties:
       code:
@@ -1629,25 +1621,6 @@ definitions:
       provinsi_id:
         type: integer
     type: object
-  dto.LoginRequest:
-    properties:
-      identifier:
-        example: superadmin
-        type: string
-      password:
-        example: password123
-        type: string
-    required:
-    - identifier
-    - password
-    type: object
-  dto.LogoutRequest:
-    properties:
-      refresh_token:
-        type: string
-    required:
-    - refresh_token
-    type: object
   dto.MasterAgamaListSimpelResponse:
     properties:
       id:
@@ -2118,61 +2091,6 @@ definitions:
       negara_id:
         type: integer
     type: object
-  dto.RefreshTokenRequest:
-    properties:
-      refresh_token:
-        type: string
-    required:
-    - refresh_token
-    type: object
-  dto.RegisterRequest:
-    properties:
-      email:
-        type: string
-      name:
-        type: string
-      password:
-        minLength: 8
-        type: string
-      username:
-        maxLength: 50
-        minLength: 3
-        type: string
-    required:
-    - email
-    - password
-    - username
-    type: object
-  dto.RegisterResponse:
-    properties:
-      created_at:
-        type: string
-      email:
-        type: string
-      id:
-        type: integer
-      is_active:
-        type: boolean
-      is_verified:
-        type: boolean
-      name:
-        type: string
-      username:
-        type: string
-    type: object
-  dto.ResetPasswordRequest:
-    properties:
-      confirm_password:
-        type: string
-      new_password:
-        type: string
-      token:
-        type: string
-    required:
-    - confirm_password
-    - new_password
-    - token
-    type: object
   dto.RoleResponse:
     properties:
       description:
@@ -2370,21 +2288,6 @@ definitions:
         type: integer
       label:
         type: string
-    type: object
-  dto.TokenResponse:
-    properties:
-      access_token:
-        type: string
-      expires_in:
-        description: detik
-        type: integer
-      refresh_token:
-        type: string
-      token_type:
-        description: Bearer
-        type: string
-      user:
-        $ref: '#/definitions/dto.UserResponse'
     type: object
   dto.UpdateArtikelKategoriRequest:
     properties:
@@ -3125,7 +3028,7 @@ definitions:
         type: string
       histories:
         items:
-          $ref: '#/definitions/models.LoginHistory'
+          $ref: '#/definitions/neosim_go_internal_modules_auth_models.LoginHistory'
         type: array
       id:
         type: integer
@@ -3218,26 +3121,6 @@ definitions:
       username:
         type: string
     type: object
-  models.LoginHistory:
-    properties:
-      created_at:
-        type: string
-      failure_reason:
-        type: string
-      id:
-        type: integer
-      identifier:
-        type: string
-      ip_address:
-        type: string
-      status:
-        description: success | failed
-        type: string
-      user_agent:
-        type: string
-      user_id:
-        type: integer
-    type: object
   models.UserCreator:
     properties:
       id:
@@ -3256,6 +3139,123 @@ definitions:
       type:
         type: string
       value: {}
+    type: object
+  neosim_go_internal_modules_auth_dto.ForgotPasswordRequest:
+    properties:
+      identifier:
+        description: email atau username
+        type: string
+    required:
+    - identifier
+    type: object
+  neosim_go_internal_modules_auth_dto.LoginRequest:
+    properties:
+      identifier:
+        example: superadmin
+        type: string
+      password:
+        example: password123
+        type: string
+    required:
+    - identifier
+    - password
+    type: object
+  neosim_go_internal_modules_auth_dto.LogoutRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  neosim_go_internal_modules_auth_dto.RefreshTokenRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  neosim_go_internal_modules_auth_dto.RegisterRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      username:
+        maxLength: 50
+        minLength: 3
+        type: string
+    required:
+    - email
+    - password
+    - username
+    type: object
+  neosim_go_internal_modules_auth_dto.RegisterResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      is_verified:
+        type: boolean
+      name:
+        type: string
+      username:
+        type: string
+    type: object
+  neosim_go_internal_modules_auth_dto.ResetPasswordRequest:
+    properties:
+      confirm_password:
+        type: string
+      new_password:
+        type: string
+      token:
+        type: string
+    required:
+    - confirm_password
+    - new_password
+    - token
+    type: object
+  neosim_go_internal_modules_auth_dto.TokenResponse:
+    properties:
+      access_token:
+        type: string
+      expires_in:
+        description: detik
+        type: integer
+      refresh_token:
+        type: string
+      token_type:
+        description: Bearer
+        type: string
+      user:
+        $ref: '#/definitions/dto.UserResponse'
+    type: object
+  neosim_go_internal_modules_auth_models.LoginHistory:
+    properties:
+      created_at:
+        type: string
+      failure_reason:
+        type: string
+      id:
+        type: integer
+      identifier:
+        type: string
+      ip_address:
+        type: string
+      status:
+        description: success | failed
+        type: string
+      user_agent:
+        type: string
+      user_id:
+        type: integer
     type: object
   neosim_go_internal_modules_kepegawaian_alamat_dto.CreateTipeRequest:
     properties:
@@ -4079,7 +4079,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.ForgotPasswordRequest'
+          $ref: '#/definitions/neosim_go_internal_modules_auth_dto.ForgotPasswordRequest'
       produces:
       - application/json
       responses:
@@ -4101,7 +4101,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.LoginRequest'
+          $ref: '#/definitions/neosim_go_internal_modules_auth_dto.LoginRequest'
       produces:
       - application/json
       responses:
@@ -4112,7 +4112,7 @@ paths:
             - $ref: '#/definitions/response.MyGoResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/dto.TokenResponse'
+                  $ref: '#/definitions/neosim_go_internal_modules_auth_dto.TokenResponse'
               type: object
       summary: Login user
       tags:
@@ -4129,7 +4129,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.LogoutRequest'
+          $ref: '#/definitions/neosim_go_internal_modules_auth_dto.LogoutRequest'
       produces:
       - application/json
       responses:
@@ -4158,6 +4158,27 @@ paths:
       summary: Logout dari semua device
       tags:
       - Auth
+  /auth/me:
+    get:
+      description: 'Mengembalikan data user dari access token: profil, roles, permissions,
+        settings, dan riwayat login'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.MyGoResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Profil user yang sedang login
+      tags:
+      - Auth
   /auth/refresh:
     post:
       consumes:
@@ -4169,7 +4190,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.RefreshTokenRequest'
+          $ref: '#/definitions/neosim_go_internal_modules_auth_dto.RefreshTokenRequest'
       produces:
       - application/json
       responses:
@@ -4180,7 +4201,7 @@ paths:
             - $ref: '#/definitions/response.MyGoResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/dto.TokenResponse'
+                  $ref: '#/definitions/neosim_go_internal_modules_auth_dto.TokenResponse'
               type: object
       summary: Refresh access token
       tags:
@@ -4196,7 +4217,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.RegisterRequest'
+          $ref: '#/definitions/neosim_go_internal_modules_auth_dto.RegisterRequest'
       produces:
       - application/json
       responses:
@@ -4207,7 +4228,7 @@ paths:
             - $ref: '#/definitions/response.MyGoResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/dto.RegisterResponse'
+                  $ref: '#/definitions/neosim_go_internal_modules_auth_dto.RegisterResponse'
               type: object
       summary: Register user baru
       tags:
@@ -4223,7 +4244,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.ResetPasswordRequest'
+          $ref: '#/definitions/neosim_go_internal_modules_auth_dto.ResetPasswordRequest'
       produces:
       - application/json
       responses:

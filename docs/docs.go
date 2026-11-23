@@ -862,7 +862,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.ForgotPasswordRequest"
+                            "$ref": "#/definitions/neosim_go_internal_modules_auth_dto.ForgotPasswordRequest"
                         }
                     }
                 ],
@@ -896,7 +896,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.LoginRequest"
+                            "$ref": "#/definitions/neosim_go_internal_modules_auth_dto.LoginRequest"
                         }
                     }
                 ],
@@ -912,7 +912,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dto.TokenResponse"
+                                            "$ref": "#/definitions/neosim_go_internal_modules_auth_dto.TokenResponse"
                                         }
                                     }
                                 }
@@ -947,7 +947,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.LogoutRequest"
+                            "$ref": "#/definitions/neosim_go_internal_modules_auth_dto.LogoutRequest"
                         }
                     }
                 ],
@@ -986,6 +986,43 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengembalikan data user dari access token: profil, roles, permissions, settings, dan riwayat login",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Profil user yang sedang login",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.MyGoResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.UserResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/auth/refresh": {
             "post": {
                 "description": "Memperbarui access token menggunakan refresh token",
@@ -1006,7 +1043,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.RefreshTokenRequest"
+                            "$ref": "#/definitions/neosim_go_internal_modules_auth_dto.RefreshTokenRequest"
                         }
                     }
                 ],
@@ -1022,7 +1059,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dto.TokenResponse"
+                                            "$ref": "#/definitions/neosim_go_internal_modules_auth_dto.TokenResponse"
                                         }
                                     }
                                 }
@@ -1052,7 +1089,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.RegisterRequest"
+                            "$ref": "#/definitions/neosim_go_internal_modules_auth_dto.RegisterRequest"
                         }
                     }
                 ],
@@ -1068,7 +1105,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dto.RegisterResponse"
+                                            "$ref": "#/definitions/neosim_go_internal_modules_auth_dto.RegisterResponse"
                                         }
                                     }
                                 }
@@ -1098,7 +1135,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.ResetPasswordRequest"
+                            "$ref": "#/definitions/neosim_go_internal_modules_auth_dto.ResetPasswordRequest"
                         }
                     }
                 ],
@@ -16355,18 +16392,6 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.ForgotPasswordRequest": {
-            "type": "object",
-            "required": [
-                "identifier"
-            ],
-            "properties": {
-                "identifier": {
-                    "description": "email atau username",
-                    "type": "string"
-                }
-            }
-        },
         "dto.JenisResponse": {
             "type": "object",
             "properties": {
@@ -17345,34 +17370,6 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.LoginRequest": {
-            "type": "object",
-            "required": [
-                "identifier",
-                "password"
-            ],
-            "properties": {
-                "identifier": {
-                    "type": "string",
-                    "example": "superadmin"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "password123"
-                }
-            }
-        },
-        "dto.LogoutRequest": {
-            "type": "object",
-            "required": [
-                "refresh_token"
-            ],
-            "properties": {
-                "refresh_token": {
-                    "type": "string"
-                }
-            }
-        },
         "dto.MasterAgamaListSimpelResponse": {
             "type": "object",
             "properties": {
@@ -18099,87 +18096,6 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.RefreshTokenRequest": {
-            "type": "object",
-            "required": [
-                "refresh_token"
-            ],
-            "properties": {
-                "refresh_token": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.RegisterRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "password",
-                "username"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string",
-                    "minLength": 8
-                },
-                "username": {
-                    "type": "string",
-                    "maxLength": 50,
-                    "minLength": 3
-                }
-            }
-        },
-        "dto.RegisterResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "is_verified": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.ResetPasswordRequest": {
-            "type": "object",
-            "required": [
-                "confirm_password",
-                "new_password",
-                "token"
-            ],
-            "properties": {
-                "confirm_password": {
-                    "type": "string"
-                },
-                "new_password": {
-                    "type": "string"
-                },
-                "token": {
-                    "type": "string"
-                }
-            }
-        },
         "dto.RoleResponse": {
             "type": "object",
             "properties": {
@@ -18481,28 +18397,6 @@ const docTemplate = `{
                 },
                 "label": {
                     "type": "string"
-                }
-            }
-        },
-        "dto.TokenResponse": {
-            "type": "object",
-            "properties": {
-                "access_token": {
-                    "type": "string"
-                },
-                "expires_in": {
-                    "description": "detik",
-                    "type": "integer"
-                },
-                "refresh_token": {
-                    "type": "string"
-                },
-                "token_type": {
-                    "description": "Bearer",
-                    "type": "string"
-                },
-                "user": {
-                    "$ref": "#/definitions/dto.UserResponse"
                 }
             }
         },
@@ -19524,7 +19418,7 @@ const docTemplate = `{
                 "histories": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.LoginHistory"
+                        "$ref": "#/definitions/neosim_go_internal_modules_auth_models.LoginHistory"
                     }
                 },
                 "id": {
@@ -19665,36 +19559,6 @@ const docTemplate = `{
                 }
             }
         },
-        "models.LoginHistory": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "failure_reason": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "identifier": {
-                    "type": "string"
-                },
-                "ip_address": {
-                    "type": "string"
-                },
-                "status": {
-                    "description": "success | failed",
-                    "type": "string"
-                },
-                "user_agent": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "integer"
-                }
-            }
-        },
         "models.UserCreator": {
             "type": "object",
             "properties": {
@@ -19722,6 +19586,179 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "value": {}
+            }
+        },
+        "neosim_go_internal_modules_auth_dto.ForgotPasswordRequest": {
+            "type": "object",
+            "required": [
+                "identifier"
+            ],
+            "properties": {
+                "identifier": {
+                    "description": "email atau username",
+                    "type": "string"
+                }
+            }
+        },
+        "neosim_go_internal_modules_auth_dto.LoginRequest": {
+            "type": "object",
+            "required": [
+                "identifier",
+                "password"
+            ],
+            "properties": {
+                "identifier": {
+                    "type": "string",
+                    "example": "superadmin"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "password123"
+                }
+            }
+        },
+        "neosim_go_internal_modules_auth_dto.LogoutRequest": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "neosim_go_internal_modules_auth_dto.RefreshTokenRequest": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "neosim_go_internal_modules_auth_dto.RegisterRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password",
+                "username"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 3
+                }
+            }
+        },
+        "neosim_go_internal_modules_auth_dto.RegisterResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "is_verified": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "neosim_go_internal_modules_auth_dto.ResetPasswordRequest": {
+            "type": "object",
+            "required": [
+                "confirm_password",
+                "new_password",
+                "token"
+            ],
+            "properties": {
+                "confirm_password": {
+                    "type": "string"
+                },
+                "new_password": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "neosim_go_internal_modules_auth_dto.TokenResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "expires_in": {
+                    "description": "detik",
+                    "type": "integer"
+                },
+                "refresh_token": {
+                    "type": "string"
+                },
+                "token_type": {
+                    "description": "Bearer",
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/dto.UserResponse"
+                }
+            }
+        },
+        "neosim_go_internal_modules_auth_models.LoginHistory": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "failure_reason": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "identifier": {
+                    "type": "string"
+                },
+                "ip_address": {
+                    "type": "string"
+                },
+                "status": {
+                    "description": "success | failed",
+                    "type": "string"
+                },
+                "user_agent": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
             }
         },
         "neosim_go_internal_modules_kepegawaian_alamat_dto.CreateTipeRequest": {

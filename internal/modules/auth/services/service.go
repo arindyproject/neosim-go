@@ -589,6 +589,113 @@ func (s *authService) buildTokenResponse(ctx context.Context, accessToken, refre
 	}
 }
 
+// ─── Me ────────────────────────────────────────────────────────────────────────
+
+// Me mengembalikan profil lengkap user yang sedang login.
+// Data selalu diambil dari DB (bukan dari JWT claims) agar roles/permissions up-to-date.
+func (s *authService) Me(ctx context.Context, userID int64) (*userDto.UserResponse, error) {
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, NewAuthError(500, "Terjadi kesalahan sistem.")
+	}
+	if user == nil {
+		return nil, NewAuthError(404, "User tidak ditemukan.")
+	}
+	if !user.IsActive {
+		return nil, NewAuthError(403, "Akun Anda tidak aktif. Hubungi administrator.")
+	}
+
+	return s.buildUserResponse(ctx, user), nil
+}
+
+// buildUserResponse membangun UserResponse lengkap (roles, permissions, settings, histories).
+// Dipakai oleh Login, RefreshToken, dan Me agar bentuk datanya selalu konsisten.
+func (s *authService) buildUserResponse(ctx context.Context, user *userModels.User) *userDto.UserResponse {
+	settings, _ := user.GetSettings()
+	histories, _ := s.repo.GetUserLoginHistories(ctx, user.ID, 10)
+
+	// 1. Ambil roles dari DB — tanpa preload permissions agar ringan
+	roles, err := s.rbacRepo.GetUserRoles(ctx, user.ID)
+	var roleSimple []rbacDto.RoleSimpleResponse
+	if err == nil {
+		roleSimple = rbacDto.ToRoleSimpleListResponse(roles)
+	} else {
+		roleSimple = []rbacDto.RoleSimpleResponse{}
+	}
+
+	// 2. Ambil semua permissions (dari role + direct) sebagai object lengkap
+	// Gunakan map untuk deduplication berdasarkan permission ID
+	permMap := make(map[int64]rbacDto.PermissionResponse)
+
+	// 2a. Permissions dari role
+	for _, role := range roles {
+		for _, p := range role.Permissions {
+			if _, exists := permMap[p.ID]; !exists {
+				permMap[p.ID] = *rbacDto.ToPermissionResponse(&p)
+			}
+		}
+	}
+
+	// 2b. Direct permissions yang di-grant — override/tambah ke map
+	directPerms, err := s.rbacRepo.GetUserDirectPermissions(ctx, user.ID)
+	if err == nil {
+		for _, up := range directPerms {
+			if !up.IsGranted {
+				// Direct deny — hapus dari map jika ada
+				delete(permMap, up.PermissionID)
+				continue
+			}
+			// Direct grant — tambah jika belum ada
+			if _, exists := permMap[up.PermissionID]; !exists {
+				perm, err := s.rbacRepo.GetPermissionByID(ctx, up.PermissionID)
+				if err == nil && perm != nil {
+					permMap[perm.ID] = *rbacDto.ToPermissionResponse(perm)
+				}
+			}
+		}
+	}
+
+	// 2. Ambil data creator jika CreatedBy tidak nil
+	var creatorDTO *userModels.UserCreator
+	if user.CreatedBy != nil {
+		creatorUser, err := s.userRepo.GetByID(ctx, *user.CreatedBy)
+		if err == nil && creatorUser != nil {
+			creatorDTO = &userModels.UserCreator{
+				ID:       creatorUser.ID,
+				Username: creatorUser.Username,
+				Name:     creatorUser.Name,
+			}
+		}
+	}
+
+	// 3. Convert map ke slice
+	permList := make([]rbacDto.PermissionResponse, 0, len(permMap))
+	for _, p := range permMap {
+		permList = append(permList, p)
+	}
+
+	return &userDto.UserResponse{
+		ID:             user.ID,
+		Photo:          user.Photo,
+		PhotoThumbnail: user.PhotoThumbnail,
+		Username:       user.Username,
+		Email:          user.Email,
+		Name:           user.Name,
+		IsSuperadmin:   user.IsSuperadmin,
+		IsStaff:        user.IsStaff,
+		IsActive:       user.IsActive,
+		IsVerified:     user.IsVerified,
+		Roles:          roleSimple,
+		Permissions:    permList,
+		Settings:       settings,
+		Histories:      histories,
+		LastLoginAt:    user.LastLoginAt,
+		Creator:        creatorDTO,
+		CreatedAt:      types.CustomTime(user.CreatedAt),
+		UpdatedAt:      types.CustomTime(user.UpdatedAt),
+	}
+}
+
 // ─── Auth Error ────────────────────────────────────────────────────────────────
 
 type AuthError struct {

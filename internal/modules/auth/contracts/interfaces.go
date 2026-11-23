@@ -4,6 +4,8 @@ import (
 	"context"
 	"neosim_go/internal/modules/auth/dto"
 	"neosim_go/internal/modules/auth/models"
+
+	userDto "neosim_go/internal/modules/users/dto"
 )
 
 // ─── Repository ────────────────────────────────────────────────────────────────
@@ -42,4 +44,7 @@ type AuthService interface {
 	// Password
 	ForgotPassword(ctx context.Context, req *dto.ForgotPasswordRequest) error
 	ResetPassword(ctx context.Context, req *dto.ResetPasswordRequest) error
+
+	// Me — profil user yang sedang login (roles, permissions, settings, histories)
+	Me(ctx context.Context, userID int64) (*userDto.UserResponse, error)
 }

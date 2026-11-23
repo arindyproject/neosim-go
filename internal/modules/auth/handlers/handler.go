@@ -234,6 +234,32 @@ func (h *AuthHandler) LogoutAll(c *echo.Context) error {
 	return response.Response(c, http.StatusOK, true, "Berhasil logout dari semua perangkat", nil, nil)
 }
 
+// ─── Me ────────────────────────────────────────────────────────────────────────
+// Me godoc
+//
+//	@Summary		Profil user yang sedang login
+//	@Description	Mengembalikan data user dari access token: profil, roles, permissions, settings, dan riwayat login
+//	@Tags			Auth
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{object}	response.MyGoResponse
+//	@Router			/auth/me [get]
+//
+// Me handles GET /api/v1/auth/me
+func (h *AuthHandler) Me(c *echo.Context) error {
+	userID, ok := authMiddlewares.GetUserID(c)
+	if !ok {
+		return response.Response(c, http.StatusUnauthorized, false, "Autentikasi diperlukan", nil, nil)
+	}
+
+	result, err := h.service.Me(c.Request().Context(), userID)
+	if err != nil {
+		return handleAuthError(c, err)
+	}
+
+	return response.Response(c, http.StatusOK, true, "Data user berhasil diambil", result, nil)
+}
+
 // ─── Helper ────────────────────────────────────────────────────────────────────
 
 // handleAuthError mengubah AuthError menjadi response yang sesuai

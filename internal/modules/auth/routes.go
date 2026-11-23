@@ -23,6 +23,7 @@ func RegisterRoutes(e *echo.Echo, h *handlers.AuthHandler, jwtManager *utils.JWT
 	// ─── Protected routes ──────────────────────────────────────
 	// JWTMiddleware sekarang terima db untuk query isSuperadmin realtime
 	protected := e.Group("/api/v1/auth", authMiddlewares.JWTMiddleware(jwtManager, db))
+	protected.GET("/me", h.Me)
 	protected.POST("/logout", h.Logout)
 	protected.POST("/logout-all", h.LogoutAll)
 }
